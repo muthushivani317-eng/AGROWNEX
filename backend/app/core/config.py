@@ -35,6 +35,10 @@ class Settings(BaseSettings):
         default="postgresql+asyncpg://agrowai:agrowai@localhost:5432/agrowai",
     )
     db_echo: bool = Field(default=False)
+    # Connection pool sizing (docs/DEPLOYMENT.md → scaling).
+    db_pool_size: int = Field(default=10)
+    db_max_overflow: int = Field(default=20)
+    db_pool_timeout: int = Field(default=30)
 
     # --- Cache / broker ---
     redis_url: str = Field(default="redis://localhost:6379/0")
