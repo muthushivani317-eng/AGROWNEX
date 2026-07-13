@@ -6,7 +6,7 @@ _Senior-engineer pass against the instruction files in `agrow-ai/`._
 
 | Check | Before | After |
 |-------|--------|-------|
-| Backend `pytest backend/tests -q` | 514 passed | **559 passed** (+45) |
+| Backend `pytest backend/tests -q` | 514 passed | **578 passed** (+64) |
 | Backend `ruff check app` | clean | **clean** |
 | Mobile `npx tsc --noEmit` | clean | **clean** (untouched) |
 | Mobile `npx jest` | 440 passed | **440 passed** (untouched) |
@@ -26,7 +26,7 @@ Merged, de-duplicated execution order (per the task's ordering rule — backend
 security & AI first, then scalability/observability, then mobile, then QA):
 
 1. **Group 1** — AI routing/cost (P1) + security (P2)  ✅ done
-2. **Group 2** — scalability (P3) + observability (P4)  ✅ P4 done, P3 partial
+2. **Group 2** — scalability (P3) + observability (P4)  ✅ P4 done, **P3 complete**
 3. **Group 3** — product & mobile (P5 + A–F)  ◐ documentation + honesty done; app UX deferred
 4. **Group 4** — final QA (P6)  ◐ lint/tests green; cleanup partial
 
@@ -87,13 +87,35 @@ ledger → 429. Production boot guards (`validate_production`): refuse dev secre
 wildcard/empty CORS, or debug on; docs hidden unless `EXPOSE_DOCS`. `auth/sms.py`
 MSG91 seam (§3). **Tests**: boot guards, middleware, SMS selection+send, quota.
 
-### Phase 3 — Scalability & reliability (commit `4def63e`, **partial**)
-**Done**: `/healthz` + `/readyz` (DB + Redis; 503 when not ready) at root;
-DB pool settings (`pool_size`/`max_overflow`/`pool_timeout`); migration 0020 —
-`(user_id, created_at)` composite indexes on disease_reports, ai_conversations,
-notifications + `(latitude, longitude)` on farm_locations. **Tests**: liveness +
-readiness matrix. **Deferred** (§5): ARQ worker, FCM provider + device tokens,
-shared httpx client factory.
+### Phase 3 — Scalability & reliability (commits `4def63e` + `2e97f88`, **complete**)
+**First pass** (`4def63e`): `/healthz` + `/readyz` (DB + Redis; 503 when not
+ready) at root; DB pool settings (`pool_size`/`max_overflow`/`pool_timeout`);
+migration 0020 — `(user_id, created_at)` composite indexes on disease_reports,
+ai_conversations, notifications + `(latitude, longitude)` on farm_locations.
+**Completion pass** (`2e97f88`) closes the three deferred items:
+
+- **ARQ background worker** (`app/worker.py` + `docker-compose` `worker`
+  service): market price refresh (every 2h), weather-alert evaluation (every
+  30m), failed-notification retry (every 5m). Job *logic* lives in
+  `market/jobs.py` + `notifications/jobs.py` — pure orchestration over the
+  existing service/repository, unit-tested with mocked providers (no network,
+  no worker). Repo helpers added: `distinct_favourite_targets`,
+  `list_owner_ids`, `list_retryable`.
+- **Real `FCMProvider`** (Firebase Admin `messaging`) selected by
+  `NOTIFICATION_PROVIDER=fcm`; `device_tokens` table (migration 0021),
+  `POST`/`DELETE /api/v1/notifications/devices`, bilingual (ta/en) push title +
+  a data payload of localization keys the app deep-links from. Degrades
+  honestly — FCM misconfigured → in-app mock; no registered device → `skipped`;
+  send error / zero accepted → `failed` (never a fabricated "delivered"). The
+  mock stays in-app-only, so existing delivery audits are byte-unchanged; push
+  is only attempted under a live FCM provider with `push_enabled`.
+- **Shared httpx client factory** (`app/core/http.py`): one process-wide pooled
+  `AsyncClient` (connection limits) reused by the Gemini chat/vision,
+  Open-Meteo and Agmarknet providers instead of a new client+TLS per request;
+  per-call timeouts preserved; closed on shutdown via the app lifespan.
+
+**Tests**: liveness + readiness matrix, worker job units, client-reuse,
+device-token repo/service, FCM delivery outcomes + provider selection.
 
 ### Phase 4 — Observability & operations (commit `009230d`)
 Structured JSON logs in prod (human-readable dev) with a scrubbing filter
@@ -119,9 +141,7 @@ were faked.
 
 | Gap | Source | Why deferred |
 |-----|--------|--------------|
-| ARQ background worker (weather alerts, price refresh, retry dispatch) + compose service | P3 | Needs Redis broker + scheduled-job verification; pure job logic should be extracted and unit-tested first. |
-| Real `FCMProvider` + device-token migration/endpoint | P3 | Needs Firebase Admin messaging + a device to verify delivery; provider seam exists (`notifications/provider.py`). |
-| Shared httpx client factory | P3 | Optimization touching both AI providers; deferred to protect the green suite. |
+| End-to-end FCM delivery on a physical device | P3 | Provider + token storage + endpoint are done and unit-tested against a faked SDK; a real push to a handset needs Firebase credentials + a device (infra, not code). |
 | Full server-side MSG91 OTP (code gen + hashing + verify) | P2 | Would replace the working Firebase-on-device flow; seam delivered, live wiring is a larger auth change. |
 | Voice STT/TTS backend (`/ai/voice`, Sarvam seam) + mobile mic/read-aloud | P5 / Phase B | New provider seams + audio upload + app recording; multi-day. |
 | Mobile Phases A–F (home redesign, onboarding, offline queue, perf, retention, store readiness, in-app deletion UI) | `claude_code_3.md` | Large UX program on an already-working app (tsc clean, 440 jest green); each phase is its own reviewed slice. |
@@ -132,6 +152,7 @@ were faked.
 ## 6. Commits
 
 ```
+2e97f88 phase 3 (complete): ARQ worker, FCM push + device tokens, shared httpx client
 009230d phase 4: JSON logging + Sentry, /metrics, secret scrubbing, RUNBOOK, CI
 4def63e phase 3 (partial): readiness probes, connection pool, hot-path indexes
 2347df9 phase 2: rate limiting, production boot guards, security middleware, MSG91 OTP seam
@@ -147,8 +168,10 @@ b099be1 chore: baseline snapshot before production-hardening pass
 - **Security** — from open CORS/no rate limit/no boot guards to sliding-window
   limiting, per-farmer AI quotas, security headers, body-size limits, and a
   production that refuses to boot misconfigured.
-- **Scalability** — added readiness probes, connection pooling, and hot-path
-  composite indexes (worker + push remain).
+- **Scalability** — readiness probes, connection pooling, hot-path composite
+  indexes, an ARQ worker for the recurring jobs (price/weather/retry), real FCM
+  push behind the notification seam, and a shared pooled HTTP client across all
+  outbound providers.
 - **Observability** — from print-style logs to structured JSON + secret
   scrubbing, `/metrics`, optional Sentry, a RUNBOOK, and CI.
 - **Product honesty** — mocks self-identify and are prod-gated; errors are
