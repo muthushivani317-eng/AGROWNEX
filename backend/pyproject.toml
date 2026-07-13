@@ -1,0 +1,25 @@
+[project]
+name = "agrowai-backend"
+version = "1.0.0"
+description = "AgrowAI backend API (FastAPI)"
+requires-python = ">=3.12"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["app"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N", "ASYNC"]
+ignore = ["B008"]  # FastAPI Depends() in defaults is idiomatic.
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+log_cli = false
+log_level = "WARNING"

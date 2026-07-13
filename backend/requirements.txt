@@ -1,0 +1,22 @@
+# AgrowAI backend (docs/BACKEND_ARCHITECTURE.md). Python 3.12+.
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.1
+sqlalchemy[asyncio]==2.0.36
+asyncpg==0.30.0
+alembic==1.14.0
+geoalchemy2==0.16.0
+redis==5.2.1
+firebase-admin==6.6.0
+python-multipart==0.0.20
+httpx==0.28.1
+# Optional image-quality metrics (imported lazily; module degrades gracefully).
+pillow==11.1.0
+
+# Dev / test
+pytest==8.3.4
+pytest-asyncio==0.25.0
+ruff==0.8.4
+black==24.10.0
+aiosqlite==0.20.0
