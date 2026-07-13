@@ -11,6 +11,8 @@ redis==5.2.1
 firebase-admin==6.6.0
 python-multipart==0.0.20
 httpx==0.28.1
+# Error monitoring (Phase 4). Imported lazily; a missing SDK degrades to no-op.
+sentry-sdk==2.19.2
 # Optional image-quality metrics (imported lazily; module degrades gracefully).
 pillow==11.1.0
 

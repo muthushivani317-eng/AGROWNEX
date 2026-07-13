@@ -9,13 +9,15 @@ The existing ``/api/v1/health`` endpoints are kept as backward-compatible aliase
 """
 from __future__ import annotations
 
-from fastapi import APIRouter
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Header
+from fastapi.responses import JSONResponse, PlainTextResponse
 from sqlalchemy import text
 
 from app.core.config import settings
 from app.core.database import SessionLocal
+from app.core.exceptions import ForbiddenError
 from app.core.logging import get_logger
+from app.core.metrics import metrics
 
 logger = get_logger("probes")
 router = APIRouter(tags=["probes"])
@@ -73,3 +75,11 @@ async def readyz():
         db_ok=await _check_db(), redis_ok=await _check_redis()
     )
     return JSONResponse(status_code=status_code, content=body)
+
+
+@router.get("/metrics")
+async def prometheus_metrics(x_metrics_token: str | None = Header(default=None)):
+    """Prometheus metrics, guarded by an internal token (403 unless it matches)."""
+    if not settings.metrics_token or x_metrics_token != settings.metrics_token:
+        raise ForbiddenError("Metrics access denied.")
+    return PlainTextResponse(metrics.render())

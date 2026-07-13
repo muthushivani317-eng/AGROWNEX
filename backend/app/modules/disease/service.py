@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.exceptions import QuotaExceededError
 from app.core.logging import get_logger
+from app.core.metrics import metrics
 from app.modules.ai.context import build_farm_memory
 from app.modules.ai.repositories import TokenUsageRepository
 from app.modules.auth.models import User
@@ -125,6 +126,7 @@ class DiseaseService:
         # later rejected, so it must still be accounted for (Phase 1 cost control).
         model_used = analysis.model_used or self.provider.model
         is_sample = "mock" in model_used.lower()
+        metrics.observe_ai_call(model_used)
         await self.token_usage.record(
             farmer_id=user.id,
             module="disease",

@@ -29,7 +29,10 @@ class NoPlantDetectedError(ValidationError):
 class DiseaseAnalysisError(AppError):
     status_code = 503
     error_code = "disease_analysis_failed"
-    message = "Could not analyse the image right now. Please try again."
+    message = (
+        "படத்தை இப்போது பகுப்பாய்வு செய்ய முடியவில்லை. சிறிது நேரம் கழித்து முயற்சிக்கவும். "
+        "/ Could not analyse the image right now. Please try again."
+    )
 
 
 class DiseaseReportNotFoundError(NotFoundError):

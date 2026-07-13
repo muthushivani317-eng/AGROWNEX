@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.exceptions import QuotaExceededError
 from app.core.logging import get_logger
+from app.core.metrics import metrics
 from app.modules.ai.constants import (
     DEFAULT_LANGUAGE,
     GEMINI_ROLE,
@@ -109,6 +110,7 @@ class AIService:
         result = await self.provider.generate(
             system=system, history=turns, message=message
         )
+        metrics.observe_ai_call(result.model)
         await self.token_usage.record(
             farmer_id=user.id,
             module="ai_chat",

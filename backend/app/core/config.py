@@ -84,9 +84,20 @@ class Settings(BaseSettings):
     msg91_template_id: str = Field(default="")
     msg91_base_url: str = Field(default="https://control.msg91.com/api/v5")
 
+    # --- Observability (Phase 4) ---
+    sentry_dsn: str = Field(default="")
+    # Structured JSON logs. Defaults to on in production, human-readable in dev.
+    log_json: bool | None = Field(default=None)
+    # Guards the /metrics endpoint; when empty, /metrics is closed (403).
+    metrics_token: str = Field(default="")
+
     @property
     def is_production(self) -> bool:
         return self.environment.lower() == "production"
+
+    @property
+    def use_json_logs(self) -> bool:
+        return self.is_production if self.log_json is None else self.log_json
 
     def validate_production(self) -> None:
         """Fail fast at boot on an unsafe production configuration (docs/SECURITY.md).

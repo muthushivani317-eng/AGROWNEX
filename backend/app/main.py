@@ -12,7 +12,8 @@ from app.api.errors import register_exception_handlers
 from app.api.probes import router as probes_router
 from app.api.v1.router import api_router
 from app.core.config import settings
-from app.core.logging import configure_logging, get_logger
+from app.core.logging import configure_logging, get_logger, init_sentry
+from app.core.metrics import MetricsMiddleware
 from app.core.middleware import (
     BodySizeLimitMiddleware,
     RateLimitMiddleware,
@@ -22,6 +23,7 @@ from app.core.middleware import (
 )
 
 configure_logging()
+init_sentry()
 logger = get_logger("main")
 
 
@@ -64,6 +66,7 @@ def create_app() -> FastAPI:
         auth_prefixes=(f"{settings.api_v1_prefix}/auth",),
     )
     app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(MetricsMiddleware)
     app.add_middleware(RequestIDMiddleware)
 
     register_exception_handlers(app)
