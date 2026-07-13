@@ -10,6 +10,14 @@ from functools import lru_cache
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# The insecure default secret shipped for local dev. Production must override it;
+# booting production with this value is refused (docs/SECURITY.md).
+DEV_SESSION_SECRET = "dev-only-insecure-secret-change-me"
+
+
+class ProductionConfigError(RuntimeError):
+    """Raised when production is booted with an unsafe configuration."""
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -40,18 +48,61 @@ class Settings(BaseSettings):
 
     # Server-side pepper for hashing refresh tokens / OTP fingerprints. MUST be
     # overridden in production via env; never commit a real secret.
-    session_secret: str = Field(default="dev-only-insecure-secret-change-me")
+    session_secret: str = Field(default=DEV_SESSION_SECRET)
 
     # --- CORS ---
     cors_origins: list[str] = Field(default_factory=lambda: ["*"])
 
-    # --- Rate limiting (requests/minute) ---
+    # --- Docs exposure ---
+    # In production, /docs and /openapi.json are disabled unless this is true.
+    expose_docs: bool = Field(default=False)
+
+    # --- Rate limiting (requests/minute per client) ---
     rate_limit_default: int = 100
     rate_limit_auth: int = 10
+    rate_limit_window_seconds: int = 60
+    # Reject request bodies larger than this before reading them into memory (8MB).
+    max_request_body_bytes: int = 8 * 1024 * 1024
+
+    # --- Per-farmer daily AI quota (protects the Gemini budget from abuse) ---
+    ai_daily_disease_quota: int = 30
+    ai_daily_chat_quota: int = 100
+
+    # --- Mock-provider safety (product rule 5) ---
+    # Production refuses to boot with a mock provider active unless allow-listed here.
+    allow_mock_providers: bool = Field(default=False)
+
+    # --- SMS / OTP delivery (MSG91) ---
+    # "mock" (default; Firebase dispatches on-device) or "msg91" (server-side SMS).
+    otp_provider: str = Field(default="mock")
+    msg91_auth_key: str = Field(default="")
+    msg91_sender_id: str = Field(default="AGROAI")
+    msg91_template_id: str = Field(default="")
+    msg91_base_url: str = Field(default="https://control.msg91.com/api/v5")
 
     @property
     def is_production(self) -> bool:
         return self.environment.lower() == "production"
+
+    def validate_production(self) -> None:
+        """Fail fast at boot on an unsafe production configuration (docs/SECURITY.md).
+
+        Never let production start with wildcard CORS, the dev secret, or debug on —
+        a farmer's data and the AI budget depend on these guards.
+        """
+        if not self.is_production:
+            return
+        problems: list[str] = []
+        if self.session_secret == DEV_SESSION_SECRET:
+            problems.append("SESSION_SECRET must be overridden (still the dev default).")
+        if not self.cors_origins or "*" in self.cors_origins:
+            problems.append("CORS_ORIGINS must be an explicit list (no '*').")
+        if self.debug:
+            problems.append("DEBUG must be false in production.")
+        if problems:
+            raise ProductionConfigError(
+                "Refusing to boot production: " + " ".join(problems)
+            )
 
 
 @lru_cache

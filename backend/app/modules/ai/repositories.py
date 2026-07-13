@@ -124,6 +124,22 @@ class TokenUsageRepository(BaseRepository[TokenUsage]):
             for r in result
         ]
 
+    async def count_today(
+        self, farmer_id: uuid.UUID, module: str, *, since: datetime
+    ) -> int:
+        """How many AI calls this farmer made for a module since ``since`` (a day
+        boundary) — the basis for the per-farmer daily quota."""
+        result = await self.session.execute(
+            select(func.count())
+            .select_from(TokenUsage)
+            .where(
+                TokenUsage.farmer_id == farmer_id,
+                TokenUsage.module == module,
+                TokenUsage.created_at >= since,
+            )
+        )
+        return int(result.scalar_one())
+
     async def by_model(self, *, since: datetime | None = None) -> list[CostRow]:
         return await self._grouped(TokenUsage.model, since=since)
 

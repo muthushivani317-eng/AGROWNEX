@@ -15,6 +15,8 @@ from datetime import UTC, datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
+from app.core.exceptions import QuotaExceededError
 from app.core.logging import get_logger
 from app.modules.ai.context import build_farm_memory
 from app.modules.ai.repositories import TokenUsageRepository
@@ -102,6 +104,12 @@ class DiseaseService:
         farm = await self._load_farm(user, req.farm_id)
         weather = await self._safe_weather(user, farm)
         farm_context = build_farm_memory(profile, farm, weather)
+
+        # Per-farmer daily scan quota — protect the shared Gemini budget from abuse.
+        day_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+        used = await self.token_usage.count_today(user.id, "disease", since=day_start)
+        if used >= settings.ai_daily_disease_quota:
+            raise QuotaExceededError()
 
         # STEP 2-5 — plant presence + crop id + disease, with parse retry.
         analysis = await self.provider.analyze(

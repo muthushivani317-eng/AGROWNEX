@@ -17,7 +17,9 @@ logger = get_logger("api.errors")
 
 
 def _request_id(request: Request) -> str:
-    return request.headers.get("X-Request-ID", "")
+    # Prefer the id assigned by RequestIDMiddleware; fall back to an inbound header.
+    rid = getattr(request.state, "request_id", "")
+    return rid or request.headers.get("X-Request-ID", "")
 
 
 def _envelope(

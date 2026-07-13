@@ -12,6 +12,8 @@ from datetime import UTC, datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
+from app.core.exceptions import QuotaExceededError
 from app.core.logging import get_logger
 from app.modules.ai.constants import (
     DEFAULT_LANGUAGE,
@@ -47,6 +49,10 @@ def _derive_title(message: str) -> str:
     return single[:TITLE_MAX_CHARS] if single else "Chat"
 
 
+def _day_start() -> datetime:
+    return datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+
+
 class AIService:
     def __init__(
         self,
@@ -74,6 +80,11 @@ class AIService:
             or (profile.language if profile else None)
             or DEFAULT_LANGUAGE
         )
+
+        # Per-farmer daily quota — one script must not drain the shared Gemini budget.
+        used = await self.token_usage.count_today(user.id, "ai_chat", since=_day_start())
+        if used >= settings.ai_daily_chat_quota:
+            raise QuotaExceededError()
 
         conversation, prior = await self._get_or_create(user, req, language)
         message = req.message.strip()

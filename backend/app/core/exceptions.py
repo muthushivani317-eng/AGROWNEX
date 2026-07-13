@@ -56,3 +56,14 @@ class ConflictError(AppError):
     status_code = 409
     error_code = "conflict"
     message = "The request conflicts with the current state."
+
+
+class QuotaExceededError(AppError):
+    """A farmer's daily AI quota is exhausted (protects the shared Gemini budget)."""
+
+    status_code = 429
+    error_code = "ai_daily_quota_exceeded"
+    message = (
+        "இன்றைய AI பயன்பாட்டு வரம்பை எட்டிவிட்டீர்கள். நாளை மீண்டும் முயற்சிக்கவும். "
+        "/ You have reached today's AI usage limit. Please try again tomorrow."
+    )
