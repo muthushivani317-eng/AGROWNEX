@@ -102,6 +102,28 @@ class Notification(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     )
 
 
+class DeviceToken(UUIDMixin, TimestampMixin, Base):
+    """A farmer's push (FCM) device token (Phase 3 — real push delivery).
+
+    Unique per token; a token is deactivated (``is_active=False``) rather than
+    deleted so delivery history stays coherent. ``platform`` is ios|android.
+    """
+
+    __tablename__ = "device_tokens"
+    __table_args__ = (
+        UniqueConstraint("token", name="uq_device_tokens_token"),
+    )
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("users.id"), index=True, nullable=False
+    )
+    token: Mapped[str] = mapped_column(String(255), nullable=False)
+    platform: Mapped[str] = mapped_column(String(10), nullable=False)
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False, index=True
+    )
+
+
 class NotificationPreferences(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "notification_preferences"
     __table_args__ = (

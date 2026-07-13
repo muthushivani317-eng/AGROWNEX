@@ -11,6 +11,7 @@ from typing import Any, Protocol
 
 import httpx
 
+from app.core.http import get_http_client
 from app.core.logging import get_logger
 from app.modules.weather.constants import (
     CURRENT_FIELDS,
@@ -67,10 +68,10 @@ class OpenMeteoClient:
 
         for attempt in range(1, self.max_retries + 1):
             try:
-                async with httpx.AsyncClient(timeout=self.timeout) as client:
-                    response = await client.get(url, params=params)
-                    response.raise_for_status()
-                    return response.json()
+                client = get_http_client()
+                response = await client.get(url, params=params, timeout=self.timeout)
+                response.raise_for_status()
+                return response.json()
             except (httpx.TransportError, httpx.TimeoutException) as exc:
                 last_error = exc
             except httpx.HTTPStatusError as exc:

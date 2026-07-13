@@ -13,6 +13,7 @@ from sqlalchemy import Select, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.notifications.models import (
+    DeviceToken,
     FutureNotificationQueue,
     Notification,
     NotificationDeliveryLog,
@@ -175,6 +176,80 @@ class NotificationRepository:
         self.session.add(entry)
         await self.session.flush()
         return entry
+
+    # ----------------------------------------------------------------- #
+    # Device tokens (FCM push)
+    # ----------------------------------------------------------------- #
+    async def upsert_device_token(
+        self, *, user_id: uuid.UUID, token: str, platform: str
+    ) -> DeviceToken:
+        """Register (or re-activate/re-own) a push token; unique by token."""
+        existing = (
+            await self.session.execute(
+                select(DeviceToken).where(DeviceToken.token == token)
+            )
+        ).scalar_one_or_none()
+        if existing is not None:
+            existing.user_id = user_id
+            existing.platform = platform
+            existing.is_active = True
+            await self.session.flush()
+            return existing
+        row = DeviceToken(
+            user_id=user_id, token=token, platform=platform, is_active=True
+        )
+        self.session.add(row)
+        await self.session.flush()
+        return row
+
+    async def deactivate_device_token(
+        self, *, user_id: uuid.UUID, token: str
+    ) -> bool:
+        row = (
+            await self.session.execute(
+                select(DeviceToken).where(
+                    DeviceToken.token == token, DeviceToken.user_id == user_id
+                )
+            )
+        ).scalar_one_or_none()
+        if row is None:
+            return False
+        row.is_active = False
+        await self.session.flush()
+        return True
+
+    async def list_active_tokens(self, user_id: uuid.UUID) -> list[str]:
+        result = await self.session.execute(
+            select(DeviceToken.token).where(
+                DeviceToken.user_id == user_id, DeviceToken.is_active.is_(True)
+            )
+        )
+        return [row[0] for row in result.all()]
+
+    async def list_retryable(
+        self, *, now: datetime, max_attempts: int = 3, limit: int = 100
+    ) -> list[Notification]:
+        """Undelivered, non-dismissed, unexpired notifications that have a failed
+        delivery attempt — the retry job's queue. Attempt-count is capped by the
+        caller using the eager-loaded ``deliveries`` (fewer than ``max_attempts``)."""
+        stmt = (
+            select(Notification)
+            .join(NotificationDeliveryLog)
+            .where(
+                Notification.delivered_at.is_(None),
+                Notification.dismissed.is_(False),
+                or_(
+                    Notification.expires_at.is_(None),
+                    Notification.expires_at > now,
+                ),
+                NotificationDeliveryLog.status == "failed",
+            )
+            .distinct()
+            .limit(limit)
+        )
+        result = await self.session.execute(stmt)
+        candidates = list(result.scalars().unique().all())
+        return [n for n in candidates if len(n.deliveries) < max_attempts]
 
     # ----------------------------------------------------------------- #
     # Templates (seeded rule table)

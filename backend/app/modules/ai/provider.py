@@ -14,6 +14,7 @@ from typing import Any, Protocol, TypedDict
 
 import httpx
 
+from app.core.http import get_http_client
 from app.core.logging import get_logger
 from app.modules.ai.constants import (
     GEMINI_API_KEY,
@@ -98,13 +99,13 @@ class GeminiClient:
 
         for attempt in range(1, self.max_retries + 1):
             try:
-                async with httpx.AsyncClient(timeout=self.timeout) as client:
-                    response = await client.post(
-                        url, params={"key": self.api_key}, json=body
-                    )
-                    response.raise_for_status()
-                    latency_ms = int((time.monotonic() - started) * 1000)
-                    return self._parse(response.json(), latency_ms)
+                client = get_http_client()
+                response = await client.post(
+                    url, params={"key": self.api_key}, json=body, timeout=self.timeout
+                )
+                response.raise_for_status()
+                latency_ms = int((time.monotonic() - started) * 1000)
+                return self._parse(response.json(), latency_ms)
             except (httpx.TransportError, httpx.TimeoutException) as exc:
                 last_error = exc
             except httpx.HTTPStatusError as exc:

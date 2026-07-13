@@ -34,6 +34,7 @@ from app.modules.notifications.constants import (
 from app.modules.notifications.engine import NotificationDraft, build_drafts
 from app.modules.notifications.exceptions import NotificationNotFoundError
 from app.modules.notifications.models import (
+    DeviceToken,
     FutureNotificationQueue,
     Notification,
     NotificationDeliveryLog,
@@ -65,13 +66,19 @@ class NotificationService:
     ) -> None:
         self.session = session
         self.repo = NotificationRepository(session)
-        self.provider = provider or get_default_provider()
+        self.provider = provider or get_default_provider(
+            token_lookup=self._lookup_device_tokens
+        )
         self._now = now
         self._enable_weather = enable_weather
         self._sources_override = sources
 
     def _now_dt(self) -> datetime:
         return self._now or datetime.now(UTC)
+
+    async def _lookup_device_tokens(self, user_id: str) -> list[str]:
+        """Active FCM tokens for a user id (string) — the FCM provider's lookup."""
+        return await self.repo.list_active_tokens(uuid.UUID(user_id))
 
     def _sources(self, now: datetime) -> NotificationSources:
         return self._sources_override or NotificationSources(
@@ -233,10 +240,14 @@ class NotificationService:
     # Delivery (provider seam + audit)
     # ----------------------------------------------------------------- #
     def _channels_for(self, prefs: NotificationPreferences) -> tuple[str, ...]:
-        # In-app is the only V1 channel; future channels join as preferences enable.
+        # In-app is always attempted; push joins only when a real FCM provider is
+        # active and the farmer hasn't opted out (mock stays in-app-only, so the
+        # audit trail never shows an unconfigured "push" attempt).
         channels = list(DEFAULT_DELIVERY_CHANNELS)
         if prefs.in_app_enabled and DeliveryChannel.IN_APP.value not in channels:
             channels.append(DeliveryChannel.IN_APP.value)
+        if getattr(self.provider, "name", "") == "fcm" and prefs.push_enabled:
+            channels.append(DeliveryChannel.PUSH.value)
         return tuple(channels)
 
     async def _deliver(
@@ -359,3 +370,18 @@ class NotificationService:
             setattr(prefs, key, value.value if isinstance(value, Severity) else value)
         await self.session.flush()
         return prefs
+
+    # ----------------------------------------------------------------- #
+    # Device tokens (push registration)
+    # ----------------------------------------------------------------- #
+    async def register_device(
+        self, user: User, *, token: str, platform: str
+    ) -> DeviceToken:
+        """Register (or re-activate) a farmer's push device token for FCM."""
+        return await self.repo.upsert_device_token(
+            user_id=user.id, token=token, platform=platform
+        )
+
+    async def unregister_device(self, user: User, *, token: str) -> bool:
+        """Deactivate a device token (e.g. on logout). Returns False if unknown."""
+        return await self.repo.deactivate_device_token(user_id=user.id, token=token)

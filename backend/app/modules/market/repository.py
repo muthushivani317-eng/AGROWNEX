@@ -302,6 +302,23 @@ class MarketRepository:
         )
         return list(result.scalars().all())
 
+    async def distinct_favourite_targets(
+        self,
+    ) -> list[tuple[str, str | None, str | None, str | None]]:
+        """Distinct (commodity, market, district, state) across all farmers'
+        favourites — the set of prices the background scheduler keeps fresh."""
+        result = await self.session.execute(
+            select(
+                MarketFavourite.commodity,
+                MarketFavourite.market_name,
+                MarketFavourite.district,
+                MarketFavourite.state,
+            )
+            .where(MarketFavourite.is_deleted.is_(False))
+            .distinct()
+        )
+        return [tuple(row) for row in result.all()]
+
     async def find_favourite(
         self, user_id: uuid.UUID, *, commodity: str, market: str, district: str
     ) -> MarketFavourite | None:

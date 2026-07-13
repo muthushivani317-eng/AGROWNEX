@@ -8,11 +8,16 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.modules.notifications.constants import Severity
-from app.modules.notifications.models import Notification, NotificationPreferences
+from app.modules.notifications.models import (
+    DeviceToken,
+    Notification,
+    NotificationPreferences,
+)
 
 
 # --------------------------------------------------------------------------- #
@@ -58,6 +63,18 @@ class UnreadCountOut(BaseModel):
     unread: int
 
 
+class DeviceTokenOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    platform: str
+    is_active: bool
+
+    @classmethod
+    def from_model(cls, d: DeviceToken) -> DeviceTokenOut:
+        return cls.model_validate(d)
+
+
 class MarkReadResultOut(BaseModel):
     updated: int
 
@@ -91,6 +108,13 @@ class NotificationPreferencesOut(BaseModel):
 # --------------------------------------------------------------------------- #
 # Inputs
 # --------------------------------------------------------------------------- #
+class DeviceTokenRegister(BaseModel):
+    """Register a push device token (docs/API_CONTRACT.md → NOTIFICATIONS)."""
+
+    token: str = Field(min_length=8, max_length=255)
+    platform: Literal["ios", "android"]
+
+
 class NotificationPreferencesUpdate(BaseModel):
     """Partial update — only provided fields change."""
 

@@ -14,6 +14,7 @@ from typing import Any, Protocol
 
 import httpx
 
+from app.core.http import get_http_client
 from app.core.logging import get_logger
 from app.modules.disease.constants import (
     GEMINI_API_KEY,
@@ -121,15 +122,15 @@ class GeminiVisionProvider:
         started = time.monotonic()
         for attempt in range(1, 3):
             try:
-                async with httpx.AsyncClient(timeout=self.timeout) as client:
-                    response = await client.post(
-                        url, params={"key": self.api_key}, json=body
-                    )
-                    response.raise_for_status()
-                    data = response.json()
-                    self._last_usage = data.get("usageMetadata", {}) or {}
-                    self._last_latency_ms = int((time.monotonic() - started) * 1000)
-                    return self._text(data)
+                client = get_http_client()
+                response = await client.post(
+                    url, params={"key": self.api_key}, json=body, timeout=self.timeout
+                )
+                response.raise_for_status()
+                data = response.json()
+                self._last_usage = data.get("usageMetadata", {}) or {}
+                self._last_latency_ms = int((time.monotonic() - started) * 1000)
+                return self._text(data)
             except (httpx.TransportError, httpx.TimeoutException) as exc:
                 last_error = exc
             except httpx.HTTPStatusError as exc:

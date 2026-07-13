@@ -5,6 +5,8 @@ error handlers into a single app (docs/BACKEND_ARCHITECTURE.md).
 """
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -12,6 +14,7 @@ from app.api.errors import register_exception_handlers
 from app.api.probes import router as probes_router
 from app.api.v1.router import api_router
 from app.core.config import settings
+from app.core.http import close_http_client
 from app.core.logging import configure_logging, get_logger, init_sentry
 from app.core.metrics import MetricsMiddleware
 from app.core.middleware import (
@@ -25,6 +28,14 @@ from app.core.middleware import (
 configure_logging()
 init_sentry()
 logger = get_logger("main")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: nothing eager (providers lazily create the shared HTTP client).
+    yield
+    # Shutdown: release the shared pooled HTTP client.
+    await close_http_client()
 
 
 def create_app() -> FastAPI:
@@ -42,6 +53,7 @@ def create_app() -> FastAPI:
         docs_url="/docs" if docs_visible else None,
         redoc_url="/redoc" if docs_visible else None,
         openapi_url="/openapi.json" if docs_visible else None,
+        lifespan=lifespan,
     )
 
     # NOTE: middleware runs in reverse order of registration (last added = outermost).

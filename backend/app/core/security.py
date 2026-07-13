@@ -35,6 +35,16 @@ def _get_firebase_app() -> Any | None:
         return None
 
 
+def ensure_firebase_app() -> Any | None:
+    """Public accessor: initialise (once) and return the Admin app, or None.
+
+    Used by push delivery (FCM) to guarantee the default Admin app exists before
+    calling ``firebase_admin.messaging`` — and to degrade honestly when Firebase
+    is not configured instead of pretending a push was sent.
+    """
+    return _get_firebase_app()
+
+
 def verify_id_token(token: str) -> dict[str, Any]:
     """Verify a Firebase ID token and return its decoded claims.
 

@@ -8,6 +8,8 @@ asyncpg==0.30.0
 alembic==1.14.0
 geoalchemy2==0.16.0
 redis==5.2.1
+# Background worker (Phase 3): ARQ (Redis-based, async, lightweight).
+arq==0.26.3
 firebase-admin==6.6.0
 python-multipart==0.0.20
 httpx==0.28.1

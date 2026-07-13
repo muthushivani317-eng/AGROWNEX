@@ -20,6 +20,7 @@ from typing import Any, Protocol
 
 import httpx
 
+from app.core.http import get_http_client
 from app.core.logging import get_logger
 from app.modules.market.constants import (
     AGMARKNET_FETCH_LIMIT,
@@ -169,10 +170,10 @@ class AgmarknetProvider:
 
         for attempt in range(1, self.max_retries + 1):
             try:
-                async with httpx.AsyncClient(timeout=self.timeout) as client:
-                    response = await client.get(url, params=params)
-                    response.raise_for_status()
-                    payload = response.json()
+                client = get_http_client()
+                response = await client.get(url, params=params, timeout=self.timeout)
+                response.raise_for_status()
+                payload = response.json()
                 records = payload.get("records", []) if isinstance(payload, dict) else []
                 return [
                     price

@@ -49,6 +49,14 @@ class FarmRepository(BaseRepository[Farm]):
             stmt = stmt.where(Farm.name.ilike(f"%{search.strip()}%"))
         return stmt
 
+    async def list_owner_ids(self) -> list[uuid.UUID]:
+        """Distinct user ids that own at least one active farm — the audience the
+        weather-alert background job evaluates."""
+        result = await self.session.execute(
+            select(Farm.user_id).where(Farm.is_deleted.is_(False)).distinct()
+        )
+        return [row[0] for row in result.all()]
+
     async def list_for_user(
         self,
         user_id: uuid.UUID,

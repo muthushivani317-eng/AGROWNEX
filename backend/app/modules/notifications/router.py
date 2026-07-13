@@ -7,6 +7,8 @@
     DELETE /notifications/{id}           (dismiss — never hard-deleted)
     GET    /notifications/preferences    (get preferences)
     PUT    /notifications/preferences    (update preferences)
+    POST   /notifications/devices        (register a push/FCM device token)
+    DELETE /notifications/devices        (deactivate a push token)
 
 Thin routes — generation, dedup, delivery, the queue and preference gating all
 live in ``NotificationService``. Static routes precede ``/{notification_id}``. All
@@ -24,6 +26,8 @@ from app.modules.notifications.constants import (
 )
 from app.modules.notifications.dependencies import CurrentUser, NotificationServiceDep
 from app.modules.notifications.schemas import (
+    DeviceTokenOut,
+    DeviceTokenRegister,
     MarkReadResultOut,
     NotificationOut,
     NotificationPreferencesOut,
@@ -99,6 +103,34 @@ async def update_preferences(
         NotificationPreferencesOut.from_model(prefs),
         message="Preferences updated",
     )
+
+
+@router.post(
+    "/devices",
+    response_model=SuccessResponse[DeviceTokenOut],
+    status_code=201,
+)
+async def register_device(
+    payload: DeviceTokenRegister,
+    current_user: CurrentUser,
+    service: NotificationServiceDep,
+):
+    """Register this device's push token so the farmer receives FCM notifications."""
+    device = await service.register_device(
+        current_user, token=payload.token, platform=payload.platform
+    )
+    return success(DeviceTokenOut.from_model(device), message="Device registered")
+
+
+@router.delete("/devices", response_model=SuccessResponse[None])
+async def unregister_device(
+    payload: DeviceTokenRegister,
+    current_user: CurrentUser,
+    service: NotificationServiceDep,
+):
+    """Deactivate a push token (e.g. on logout); idempotent."""
+    await service.unregister_device(current_user, token=payload.token)
+    return success(None, message="Device unregistered")
 
 
 @router.put("/read-all", response_model=SuccessResponse[MarkReadResultOut])
