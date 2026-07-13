@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.modules.ai.context import build_farm_memory
+from app.modules.ai.repositories import TokenUsageRepository
 from app.modules.auth.models import User
 from app.modules.auth.repositories import FarmerProfileRepository
 from app.modules.disease.constants import (
@@ -74,6 +75,7 @@ class DiseaseService:
     ) -> None:
         self.session = session
         self.reports = DiseaseReportRepository(session)
+        self.token_usage = TokenUsageRepository(session)
         self.profiles = FarmerProfileRepository(session)
         self.farms = FarmRepository(session)
         self.provider = provider or get_default_provider()
@@ -111,6 +113,21 @@ class DiseaseService:
                 farm_context=farm_context,
             )
         )
+        # Record AI usage/cost — the model call happened even if the image is
+        # later rejected, so it must still be accounted for (Phase 1 cost control).
+        model_used = analysis.model_used or self.provider.model
+        is_sample = "mock" in model_used.lower()
+        await self.token_usage.record(
+            farmer_id=user.id,
+            module="disease",
+            model=model_used,
+            input_tokens=analysis.input_tokens,
+            output_tokens=analysis.output_tokens,
+            latency_ms=analysis.latency_ms,
+            provider="mock" if is_sample else "gemini",
+            is_sample=is_sample,
+        )
+
         if not analysis.plant_present:
             raise NoPlantDetectedError(analysis.reject_reason)
 

@@ -30,6 +30,9 @@ class Settings(BaseSettings):
 
     # --- Cache / broker ---
     redis_url: str = Field(default="redis://localhost:6379/0")
+    # Response cache backend for idempotent reads (weather/market): "memory" (default,
+    # process-local) or "redis" (shared across workers). Diagnoses/chat are never cached.
+    cache_backend: str = Field(default="memory")
 
     # --- Auth (Firebase) ---
     firebase_project_id: str = Field(default="")

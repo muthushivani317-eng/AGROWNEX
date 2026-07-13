@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -45,10 +45,40 @@ from app.modules.admin.models import (
 from app.modules.admin.provider import BroadcastProvider, get_default_broadcast_provider
 from app.modules.admin.queries import AdminQueries
 from app.modules.admin.repository import AdminRepository
+from app.modules.ai.repositories import CostRow, TokenUsageRepository
 from app.modules.auth.models import User
 from app.schemas.response import PaginatedData
 
 logger = get_logger("admin.service")
+
+
+def _roll_up_weekly(daily: list[CostRow]) -> list[CostRow]:
+    """Roll per-day cost rows up into ISO-week buckets (keyed ``YYYY-Www``)."""
+    weeks: dict[str, CostRow] = {}
+    for row in daily:
+        try:
+            iso = date.fromisoformat(row.key[:10]).isocalendar()
+        except ValueError:
+            continue
+        wk = f"{iso.year}-W{iso.week:02d}"
+        prev = weeks.get(wk)
+        if prev is None:
+            weeks[wk] = CostRow(
+                key=wk,
+                requests=row.requests,
+                input_tokens=row.input_tokens,
+                output_tokens=row.output_tokens,
+                cost_inr=row.cost_inr,
+            )
+        else:
+            weeks[wk] = CostRow(
+                key=wk,
+                requests=prev.requests + row.requests,
+                input_tokens=prev.input_tokens + row.input_tokens,
+                output_tokens=prev.output_tokens + row.output_tokens,
+                cost_inr=round(prev.cost_inr + row.cost_inr, 6),
+            )
+    return sorted(weeks.values(), key=lambda r: r.key)
 
 
 @dataclass
@@ -235,6 +265,30 @@ class AdminService:
         data = await self.metrics.ai_monitoring()
         await self._audit(ctx, AuditAction.VIEW_AI)
         return data
+
+    async def ai_costs(self, ctx: AdminContext, *, window_days: int = 30) -> dict:
+        """Real AI spend per model and per module over a window (Phase 1).
+
+        Daily/weekly series and per-model/per-module totals are computed from the
+        ``token_usage`` ledger. Nothing is fabricated: unknown token counts cost 0.
+        """
+        self._require(ctx, AdminPermission.VIEW_AI)
+        repo = TokenUsageRepository(self.session)
+        since = self._now_dt() - timedelta(days=window_days)
+        by_model = await repo.by_model(since=since)
+        by_module = await repo.by_module(since=since)
+        daily = await repo.daily(since=since)
+        await self._audit(ctx, AuditAction.VIEW_AI)
+        return {
+            "window_days": window_days,
+            "total_requests": sum(r.requests for r in by_model),
+            "total_cost_inr": round(sum(r.cost_inr for r in by_model), 6),
+            "by_model": by_model,
+            "by_module": by_module,
+            "daily": daily,
+            "weekly": _roll_up_weekly(daily),
+            "generated_at": self._now_dt(),
+        }
 
     # ----------------------------------------------------------------- #
     # Notification management

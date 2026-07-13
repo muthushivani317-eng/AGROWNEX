@@ -214,6 +214,33 @@ class AIMonitoringOut(BaseModel):
     api_failures: int | None
 
 
+class CostBucketOut(BaseModel):
+    """One aggregation bucket for the AI cost dashboard (by model/module/date/week)."""
+
+    key: str
+    requests: int
+    input_tokens: int
+    output_tokens: int
+    cost_inr: float
+
+
+class AICostsOut(BaseModel):
+    """Real AI spend aggregated per model and per module (Phase 1 cost control).
+
+    Costs are estimated from the env-overridable INR cost table; requests with
+    unknown token counts contribute 0 and are never fabricated.
+    """
+
+    window_days: int
+    total_requests: int
+    total_cost_inr: float
+    by_model: list[CostBucketOut]
+    by_module: list[CostBucketOut]
+    daily: list[CostBucketOut]
+    weekly: list[CostBucketOut]
+    generated_at: datetime
+
+
 # --------------------------------------------------------------------------- #
 # Broadcast / notifications
 # --------------------------------------------------------------------------- #

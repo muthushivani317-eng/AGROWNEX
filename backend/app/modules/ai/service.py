@@ -25,7 +25,11 @@ from app.modules.ai.exceptions import ConversationNotFoundError
 from app.modules.ai.models import AIConversation, AIMessage
 from app.modules.ai.prompts import build_system_instruction
 from app.modules.ai.provider import AIProvider, ChatTurn, get_default_provider
-from app.modules.ai.repositories import ConversationRepository, MessageRepository
+from app.modules.ai.repositories import (
+    ConversationRepository,
+    MessageRepository,
+    TokenUsageRepository,
+)
 from app.modules.ai.schemas import ChatRequest
 from app.modules.ai.validator import validate_response
 from app.modules.auth.models import User
@@ -54,6 +58,7 @@ class AIService:
         self.session = session
         self.conversations = ConversationRepository(session)
         self.messages = MessageRepository(session)
+        self.token_usage = TokenUsageRepository(session)
         self.profiles = FarmerProfileRepository(session)
         self.farms = FarmRepository(session)
         self.provider = provider or get_default_provider()
@@ -92,6 +97,16 @@ class AIService:
         ]
         result = await self.provider.generate(
             system=system, history=turns, message=message
+        )
+        await self.token_usage.record(
+            farmer_id=user.id,
+            module="ai_chat",
+            model=result.model,
+            input_tokens=result.input_tokens,
+            output_tokens=result.output_tokens,
+            latency_ms=result.latency_ms,
+            provider=result.provider,
+            is_sample=result.is_sample,
         )
         text = validate_response(result.text, language)
 

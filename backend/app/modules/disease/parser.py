@@ -35,6 +35,11 @@ class DiseaseAnalysis:
     explanation_english: str
     model_used: str = ""
     raw: dict[str, Any] = field(default_factory=dict)
+    # AI usage accounting (Phase 1). ``None`` when the provider does not report
+    # usage (e.g. the offline mock) — cost is then treated as 0, never fabricated.
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    latency_ms: int | None = None
 
 
 def _extract_json(text: str) -> dict[str, Any]:

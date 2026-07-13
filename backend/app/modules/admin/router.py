@@ -29,6 +29,7 @@ from app.modules.admin.constants import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
 from app.modules.admin.dependencies import AdminContextDep, AdminServiceDep
 from app.modules.admin.schemas import (
     AdminMeOut,
+    AICostsOut,
     AIMonitoringOut,
     AnalyticsOut,
     AnnouncementIn,
@@ -36,6 +37,7 @@ from app.modules.admin.schemas import (
     AuditRowOut,
     BroadcastIn,
     BroadcastOut,
+    CostBucketOut,
     DashboardOut,
     FarmerDetailOut,
     FarmerRowOut,
@@ -208,6 +210,45 @@ async def get_ai_monitoring(ctx: AdminContextDep, service: AdminServiceDep):
     """AI usage metrics — uninstrumented metrics are surfaced as null, never faked."""
     data = await service.ai_monitoring(ctx)
     return success(AIMonitoringOut(**data))
+
+
+@router.get("/ai-costs", response_model=SuccessResponse[AICostsOut])
+async def get_ai_costs(
+    ctx: AdminContextDep,
+    service: AdminServiceDep,
+    window_days: int = Query(30, ge=1, le=365),
+):
+    """Real AI spend aggregated per model and per module, with daily/weekly series.
+
+    Costs come from the ``token_usage`` ledger via the env-overridable INR cost
+    table; requests with unknown token counts contribute 0 (never fabricated).
+    """
+    data = await service.ai_costs(ctx, window_days=window_days)
+
+    def _buckets(rows) -> list[CostBucketOut]:
+        return [
+            CostBucketOut(
+                key=r.key,
+                requests=r.requests,
+                input_tokens=r.input_tokens,
+                output_tokens=r.output_tokens,
+                cost_inr=r.cost_inr,
+            )
+            for r in rows
+        ]
+
+    return success(
+        AICostsOut(
+            window_days=data["window_days"],
+            total_requests=data["total_requests"],
+            total_cost_inr=data["total_cost_inr"],
+            by_model=_buckets(data["by_model"]),
+            by_module=_buckets(data["by_module"]),
+            daily=_buckets(data["daily"]),
+            weekly=_buckets(data["weekly"]),
+            generated_at=data["generated_at"],
+        )
+    )
 
 
 # --------------------------------------------------------------------------- #

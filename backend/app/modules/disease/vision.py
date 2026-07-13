@@ -8,6 +8,7 @@ retry — STEP 5) and a deterministic mock used when no API key is set.
 from __future__ import annotations
 
 import asyncio
+import time
 from dataclasses import dataclass
 from typing import Any, Protocol
 
@@ -63,6 +64,10 @@ class GeminiVisionProvider:
         self.model = model
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
+        # Usage/latency of the most recent real call (Phase 1 cost accounting).
+        # Subclasses that override ``_generate`` leave these unset → unknown → cost 0.
+        self._last_usage: dict[str, Any] = {}
+        self._last_latency_ms: int | None = None
 
     def _body(self, request: AnalysisRequest) -> dict[str, Any]:
         prompt = build_disease_prompt(
@@ -98,6 +103,11 @@ class GeminiVisionProvider:
             try:
                 result = parse_analysis(raw)
                 result.model_used = self.model
+                # AI usage accounting (Phase 1 — cost control). ``_generate`` records
+                # the usage/latency of the real call; unknown values stay None.
+                result.input_tokens = self._last_usage.get("promptTokenCount")
+                result.output_tokens = self._last_usage.get("candidatesTokenCount")
+                result.latency_ms = self._last_latency_ms
                 return result
             except AnalysisParseError as exc:
                 last_error = exc
@@ -108,6 +118,7 @@ class GeminiVisionProvider:
         url = f"{self.base_url}/models/{self.model}:generateContent"
         body = self._body(request)
         last_error: Exception | None = None
+        started = time.monotonic()
         for attempt in range(1, 3):
             try:
                 async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -115,7 +126,10 @@ class GeminiVisionProvider:
                         url, params={"key": self.api_key}, json=body
                     )
                     response.raise_for_status()
-                    return self._text(response.json())
+                    data = response.json()
+                    self._last_usage = data.get("usageMetadata", {}) or {}
+                    self._last_latency_ms = int((time.monotonic() - started) * 1000)
+                    return self._text(data)
             except (httpx.TransportError, httpx.TimeoutException) as exc:
                 last_error = exc
             except httpx.HTTPStatusError as exc:

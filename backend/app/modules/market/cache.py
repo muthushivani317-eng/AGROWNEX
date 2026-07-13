@@ -1,29 +1,29 @@
 """Market cache layer (docs/API_CONTRACT.md → Market Prices cache 15 minutes).
 
-An in-process TTL cache keyed by the normalized price query. The interface is
-deliberately tiny so a Redis-backed implementation can replace it in production
-without touching the service (docs/BACKEND_ARCHITECTURE.md → Redis cache).
+Caches the normalized price query behind the shared cache seam
+(``app.core.cache``): process-local in dev/tests, Redis-backed in production
+(``CACHE_BACKEND=redis``) without touching the service.
 """
 from __future__ import annotations
 
-import time
-from dataclasses import dataclass
 from typing import Any
 
+from app.core.cache import Cache, build_cache
 from app.modules.market.constants import MARKET_CACHE_TTL_SECONDS
 from app.modules.market.provider import PriceQuery
 
 
-@dataclass
-class _Entry:
-    value: Any
-    expires_at: float
-
-
 class MarketCache:
-    def __init__(self, ttl_seconds: int = MARKET_CACHE_TTL_SECONDS) -> None:
+    def __init__(
+        self,
+        ttl_seconds: int = MARKET_CACHE_TTL_SECONDS,
+        *,
+        backend: Cache | None = None,
+    ) -> None:
         self.ttl = ttl_seconds
-        self._store: dict[str, _Entry] = {}
+        self._backend = backend or build_cache(
+            namespace="market", ttl_seconds=ttl_seconds
+        )
 
     @staticmethod
     def key(query: PriceQuery) -> str:
@@ -36,19 +36,13 @@ class MarketCache:
         return "|".join(parts)
 
     def get(self, key: str) -> Any | None:
-        entry = self._store.get(key)
-        if entry is None:
-            return None
-        if entry.expires_at <= time.monotonic():
-            self._store.pop(key, None)
-            return None
-        return entry.value
+        return self._backend.get(key)
 
     def set(self, key: str, value: Any) -> None:
-        self._store[key] = _Entry(value=value, expires_at=time.monotonic() + self.ttl)
+        self._backend.set(key, value)
 
     def clear(self) -> None:
-        self._store.clear()
+        self._backend.clear()
 
 
 # Process-wide singleton so cached prices are shared across requests.
