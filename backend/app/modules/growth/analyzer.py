@@ -219,6 +219,9 @@ class GeminiGrowthProvider:
                 "temperature": 0.2,
                 "responseMimeType": "application/json",
                 "maxOutputTokens": 1200,
+                "thinkingConfig": {
+                    "thinkingBudget": 0
+                },
             },
         }
 

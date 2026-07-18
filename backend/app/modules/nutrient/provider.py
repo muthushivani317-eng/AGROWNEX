@@ -99,6 +99,9 @@ class GeminiNutrientProvider:
                 "temperature": 0.2,
                 "responseMimeType": "application/json",
                 "maxOutputTokens": 1000,
+                "thinkingConfig": {
+                    "thinkingBudget": 0
+                },
             },
         }
 

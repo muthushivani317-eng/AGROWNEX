@@ -19,8 +19,8 @@ from app.core.logging import get_logger
 from app.modules.disease.constants import (
     GEMINI_API_KEY,
     GEMINI_BASE_URL,
-    GEMINI_MODEL,
     GEMINI_TIMEOUT_SECONDS,
+    GEMINI_VISION_MODEL,
 )
 from app.modules.disease.exceptions import DiseaseAnalysisError
 from app.modules.disease.parser import (
@@ -51,13 +51,13 @@ class AnalysisProvider(Protocol):
 class GeminiVisionProvider:
     """Gemini 2.5 Pro multimodal analysis with structured parsing + one retry."""
 
-    model = GEMINI_MODEL
+    model = GEMINI_VISION_MODEL
 
     def __init__(
         self,
         *,
         api_key: str = GEMINI_API_KEY,
-        model: str = GEMINI_MODEL,
+        model: str = GEMINI_VISION_MODEL,
         base_url: str = GEMINI_BASE_URL,
         timeout: float = GEMINI_TIMEOUT_SECONDS,
     ) -> None:
@@ -94,6 +94,9 @@ class GeminiVisionProvider:
                 "temperature": 0.2,
                 "responseMimeType": "application/json",
                 "maxOutputTokens": 1200,
+                "thinkingConfig": {
+                    "thinkingBudget": 0
+                },
             },
         }
 
@@ -199,7 +202,7 @@ class MockAnalysisProvider:
 
 def get_default_provider() -> AnalysisProvider:
     if GEMINI_API_KEY:
-        logger.info("disease vision provider: Gemini (%s)", GEMINI_MODEL)
+        logger.info("disease vision provider: Gemini (%s)", GEMINI_VISION_MODEL)
         return GeminiVisionProvider()
     logger.info("disease vision provider: mock (no GEMINI_API_KEY)")
     return MockAnalysisProvider()

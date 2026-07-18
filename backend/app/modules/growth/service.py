@@ -277,6 +277,13 @@ class GrowthService:
         # Roll up the session with the latest observation.
         await self._roll_up(session, analysis, risk, crop, req.variety)
 
+        # _roll_up flushes, which expires server-generated columns (e.g.
+        # updated_at via DB onupdate). Refresh here so those attributes are
+        # loaded inside async context, before GrowthSessionOut.from_row reads
+        # them synchronously during response serialization (avoids
+        # sqlalchemy.exc.MissingGreenlet).
+        await self.session.refresh(session)
+
         logger.info(
             "Growth upload saved image=%s session=%s user=%s",
             image.id,

@@ -57,8 +57,9 @@ def verify_id_token(token: str) -> dict[str, Any]:
     try:
         from firebase_admin import auth as firebase_auth
 
-        return firebase_auth.verify_id_token(token, app=app)
+        return firebase_auth.verify_id_token(token, app=app, clock_skew_seconds=30)
     except Exception as exc:  # noqa: BLE001
         # Do not log the token itself (docs/SECURITY.md → Logging).
         logger.info("Token verification failed: %s", type(exc).__name__)
         raise UnauthorizedError("Invalid or expired authentication token.") from exc
+

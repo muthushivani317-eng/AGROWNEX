@@ -10,6 +10,7 @@ from app.modules.ai.constants import (  # noqa: F401 — re-exported for the vis
     GEMINI_BASE_URL,
     GEMINI_MODEL,
     GEMINI_TIMEOUT_SECONDS,
+    GEMINI_VISION_MODEL,
 )
 
 DEFAULT_LANGUAGE = "ta"
