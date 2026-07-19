@@ -343,11 +343,23 @@ class ProduceOfferView:
     farm_id: str | None
     crop: str
     days_to_harvest: int
+    is_submitted: bool = False
 
 
 def collect_produce(view: ProduceOfferView) -> list[CandidateEvent]:
+    events: list[CandidateEvent] = []
+    if view.is_submitted:
+        events.append(
+            CandidateEvent(
+                module=_M.PRODUCE.value,
+                event_type="offer_submitted",
+                dedup_key=_key(_M.PRODUCE.value, "offer_submitted", view.offer_id),
+                payload={"offer_id": view.offer_id, "crop": view.crop},
+                farm_id=view.farm_id,
+            )
+        )
     if 0 <= view.days_to_harvest <= HARVEST_APPROACHING_WINDOW_DAYS:
-        return [
+        events.append(
             CandidateEvent(
                 module=_M.PRODUCE.value,
                 event_type="harvest_approaching",
@@ -359,9 +371,9 @@ def collect_produce(view: ProduceOfferView) -> list[CandidateEvent]:
                 },
                 farm_id=view.farm_id,
             )
-        ]
-    if -OFFER_EXPIRING_WINDOW_DAYS <= view.days_to_harvest < 0:
-        return [
+        )
+    elif -OFFER_EXPIRING_WINDOW_DAYS <= view.days_to_harvest < 0:
+        events.append(
             CandidateEvent(
                 module=_M.PRODUCE.value,
                 event_type="offer_expiring",
@@ -369,8 +381,8 @@ def collect_produce(view: ProduceOfferView) -> list[CandidateEvent]:
                 payload={"offer_id": view.offer_id, "crop": view.crop},
                 farm_id=view.farm_id,
             )
-        ]
-    return []
+        )
+    return events
 
 
 # --------------------------------------------------------------------------- #

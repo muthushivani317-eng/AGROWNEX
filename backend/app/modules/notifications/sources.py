@@ -278,6 +278,7 @@ class NotificationSources:
                         farm_id=str(offer.farm_id) if offer.farm_id else None,
                         crop=offer.crop_name,
                         days_to_harvest=days,
+                        is_submitted=offer.status == ProduceStatus.SUBMITTED.value,
                     )
                 )
             )

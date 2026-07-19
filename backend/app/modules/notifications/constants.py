@@ -176,6 +176,8 @@ _RULE_LIST: tuple[NotificationRule, ...] = (
     _rule(_M.SCHEMES, "new_scheme", severity=_S.INFO, priority=_P.LOW,
           expires_after_hours=336, action_route="/schemes"),
     # Sell My Produce
+    _rule(_M.PRODUCE, "offer_submitted", severity=_S.INFO, priority=_P.MEDIUM,
+          expires_after_hours=72, action_route=_PRODUCE_ROUTE),
     _rule(_M.PRODUCE, "harvest_approaching", severity=_S.INFO, priority=_P.HIGH,
           expires_after_hours=336, action_route=_PRODUCE_ROUTE),
     _rule(_M.PRODUCE, "buyer_interest", severity=_S.INFO, priority=_P.HIGH,
