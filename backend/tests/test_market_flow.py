@@ -87,6 +87,27 @@ async def test_offline_fallback_serves_stored_prices(db_session) -> None:
     assert result.total >= 1  # graceful degradation, no exception
 
 
+async def test_provider_failure_is_cached_to_avoid_retry_storm(db_session) -> None:
+    # A timing-out / failing provider must be marked fresh after the first read
+    # so it is not re-hit on every request (which would make each response block
+    # on the full retry budget and exceed the client timeout).
+    class CountingFailingProvider:
+        source = "counting-failing"
+
+        def __init__(self) -> None:
+            self.calls = 0
+
+        async def fetch_prices(self, query: PriceQuery) -> list[ProviderPrice]:
+            self.calls += 1
+            raise MarketDataUnavailableError()
+
+    provider = CountingFailingProvider()
+    service = MarketService(db_session, provider=provider, cache=MarketCache())
+    await service.get_prices(MarketPriceFilters())
+    await service.get_prices(MarketPriceFilters())  # same key → served from cache
+    assert provider.calls == 1
+
+
 async def test_cache_prevents_duplicate_provider_calls(db_session) -> None:
     class CountingProvider:
         source = "counting"

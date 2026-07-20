@@ -120,16 +120,22 @@ class MarketService:
     async def _ensure_fresh(self, query: PriceQuery) -> None:
         """Populate the DB from the provider unless a fresh cache entry exists.
 
-        A provider failure is non-fatal: reads fall back to stored prices.
+        A provider failure is non-fatal: reads fall back to stored prices. The
+        freshness marker is set on *both* outcomes (fetched or gracefully
+        unavailable) so a timing-out upstream (e.g. Agmarknet) is not re-hit on
+        every request — otherwise each read would block on the full retry budget
+        and exceed the client's request timeout, leaving the screen stuck on the
+        error state. Stored prices are served until the cache TTL expires.
+        Unexpected errors still propagate uncached.
         """
         key = self.cache.key(query)
         if self.cache.get(key) is not None:
             return
         try:
             await self._fetch_and_store(query)
-            self.cache.set(key, True)
         except MarketDataUnavailableError:
             logger.info("market provider unavailable; serving stored prices")
+        self.cache.set(key, True)
 
     async def _fetch_and_store(self, query: PriceQuery) -> list[ProviderPrice]:
         records = await self.provider.fetch_prices(query)
