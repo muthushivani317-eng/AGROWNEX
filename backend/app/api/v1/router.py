@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
+from app.crop_runtime.router import router as crop_runtime_router
 from app.api.v1.health import router as health_router
 from app.modules.admin.router import router as admin_router
 from app.modules.ai.router import router as ai_router
@@ -35,6 +36,7 @@ api_router.include_router(farms_router)
 api_router.include_router(weather_router)
 api_router.include_router(ai_router)
 api_router.include_router(disease_router)
+api_router.include_router(crop_runtime_router)
 api_router.include_router(calendar_router)
 api_router.include_router(market_router)
 api_router.include_router(growth_router)

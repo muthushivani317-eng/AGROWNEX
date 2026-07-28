@@ -10,8 +10,10 @@ from __future__ import annotations
 import math
 import uuid
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 
+from app.crop_runtime.registry import load_registry
+from app.crop_runtime.schemas import ModelAvailabilityStatus, ModelUnavailableResponse
 from app.modules.disease.dependencies import CurrentUser, DiseaseServiceDep
 from app.modules.disease.schemas import (
     AnalyzeRequest,
@@ -30,6 +32,25 @@ async def analyze(
     payload: AnalyzeRequest, current_user: CurrentUser, service: DiseaseServiceDep
 ):
     """Validate a photo, run Gemini vision analysis, store and return the report."""
+    if payload.crop:
+        try:
+            entry = load_registry().get(payload.crop)
+        except KeyError:
+            entry = None
+        if (
+            entry is not None
+            and entry.model_status == ModelAvailabilityStatus.FROZEN_RUNTIME_READY
+            and not entry.disease_detection_enabled
+        ):
+            unavailable = ModelUnavailableResponse(
+                crop_id=entry.crop_id,
+                message_en=entry.limitation_message_en,
+                message_ta=entry.limitation_message_ta,
+                limitation=entry.model_status,
+            )
+            raise HTTPException(
+                status_code=503, detail=unavailable.model_dump(mode="json")
+            )
     report = await service.analyze(current_user, payload)
     return success(DiseaseReportOut.from_report(report), message="Analysis complete")
 

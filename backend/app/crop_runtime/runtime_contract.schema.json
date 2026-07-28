@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agrowai.local/schemas/runtime-contract/1.0.0",
+  "title": "AgrowAI frozen crop runtime configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "crop_id",
+    "model_version",
+    "model_format",
+    "preprocessing_file",
+    "class_mapping_file",
+    "calibration_file",
+    "thresholds_file",
+    "abstention_policy_file",
+    "official_accuracy_claim"
+  ],
+  "properties": {
+    "crop_id": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+    "model_version": {"type": "string", "minLength": 1},
+    "model_format": {"enum": ["pytorch", "onnx"]},
+    "onnx_opset": {"const": 17},
+    "preprocessing_file": {"const": "preprocessing.json"},
+    "class_mapping_file": {"const": "class_to_index.json"},
+    "calibration_file": {"const": "temperature.json"},
+    "thresholds_file": {"const": "selected_thresholds.json"},
+    "abstention_policy_file": {"const": "abstention_policy.json"},
+    "official_accuracy_claim": {"const": false}
+  }
+}
