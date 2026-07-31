@@ -1,0 +1,117 @@
+{
+  "crop_id": "chilli",
+  "model_name": "chilli_mobilenetv3_small_v1",
+  "status": "ONE_TIME_PROVISIONAL_TEST_COMPLETE",
+  "evaluation_timestamp_utc": "20260730T132433Z",
+  "checkpoint_epoch": 5,
+  "checkpoint_sha256": "adab7c3eefa009b78e1c9d335fc088d74b5f2b456eb7196950da385ed761ec26",
+  "temperature": 1.0000321865081787,
+  "confidence_threshold": 0.99,
+  "margin_threshold": 0.99,
+  "sample_count": 89,
+  "raw_metrics": {
+    "accuracy": 0.9775280898876404,
+    "macro_f1": 0.9621175523349437,
+    "confusion_matrix": [
+      [
+        9,
+        1,
+        1,
+        0
+      ],
+      [
+        0,
+        13,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        34,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        31
+      ]
+    ],
+    "class_order": [
+      "chilli__bacterial_spot",
+      "chilli__cercospora_leaf_spot",
+      "chilli__healthy",
+      "chilli__leaf_curl_virus"
+    ],
+    "per_class": {
+      "chilli__bacterial_spot": {
+        "precision": 1.0,
+        "recall": 0.8181818181818182,
+        "f1": 0.9,
+        "support": 11
+      },
+      "chilli__cercospora_leaf_spot": {
+        "precision": 0.9285714285714286,
+        "recall": 1.0,
+        "f1": 0.9629629629629629,
+        "support": 13
+      },
+      "chilli__healthy": {
+        "precision": 0.9714285714285714,
+        "recall": 1.0,
+        "f1": 0.9855072463768116,
+        "support": 34
+      },
+      "chilli__leaf_curl_virus": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 31
+      }
+    }
+  },
+  "selective_metrics": {
+    "accepted_count": 87,
+    "abstained_count": 2,
+    "coverage": 0.9775280898876404,
+    "accepted_accuracy": 1.0,
+    "accepted_errors": 0,
+    "by_predicted_class": {
+      "chilli__bacterial_spot": {
+        "predicted_count": 9,
+        "accepted_count": 9,
+        "abstained_count": 0,
+        "accepted_errors": 0,
+        "accepted_accuracy": 1.0
+      },
+      "chilli__cercospora_leaf_spot": {
+        "predicted_count": 14,
+        "accepted_count": 13,
+        "abstained_count": 1,
+        "accepted_errors": 0,
+        "accepted_accuracy": 1.0
+      },
+      "chilli__healthy": {
+        "predicted_count": 35,
+        "accepted_count": 34,
+        "abstained_count": 1,
+        "accepted_errors": 0,
+        "accepted_accuracy": 1.0
+      },
+      "chilli__leaf_curl_virus": {
+        "predicted_count": 31,
+        "accepted_count": 31,
+        "abstained_count": 0,
+        "accepted_errors": 0,
+        "accepted_accuracy": 1.0
+      }
+    }
+  },
+  "used_for_training": false,
+  "used_for_calibration": false,
+  "used_for_threshold_selection": false,
+  "future_tuning_against_this_split_allowed": false,
+  "field_validated": false,
+  "official_accuracy": false
+}

@@ -1,0 +1,50 @@
+{
+  "seed": 41212,
+  "target_proportions": {
+    "training": 0.7,
+    "development_validation": 0.15,
+    "calibration": 0.075,
+    "provisional_test": 0.075
+  },
+  "splits": {
+    "training": {
+      "total": 843,
+      "per_class": {
+        "chilli__bacterial_spot": 103,
+        "chilli__cercospora_leaf_spot": 123,
+        "chilli__leaf_curl_virus": 296,
+        "chilli__healthy": 321
+      }
+    },
+    "development_validation": {
+      "total": 180,
+      "per_class": {
+        "chilli__bacterial_spot": 22,
+        "chilli__cercospora_leaf_spot": 26,
+        "chilli__leaf_curl_virus": 63,
+        "chilli__healthy": 69
+      }
+    },
+    "calibration": {
+      "total": 91,
+      "per_class": {
+        "chilli__bacterial_spot": 11,
+        "chilli__cercospora_leaf_spot": 13,
+        "chilli__leaf_curl_virus": 33,
+        "chilli__healthy": 34
+      }
+    },
+    "provisional_test": {
+      "total": 89,
+      "per_class": {
+        "chilli__bacterial_spot": 11,
+        "chilli__cercospora_leaf_spot": 13,
+        "chilli__leaf_curl_virus": 31,
+        "chilli__healthy": 34
+      }
+    }
+  },
+  "split_manifest_sha256": "a2235eb0fbbd8a96d67a48d06a5657967fa4dbc74df12c80276cec4e68ff576a",
+  "provisional_test_seal_sha256": "41ff1e60d9df0c2da29ae2a150e654f24d55b626a12b33dd29a6e69cc7632b6d",
+  "status": "SPLITS_CREATED_TRAINING_READY"
+}

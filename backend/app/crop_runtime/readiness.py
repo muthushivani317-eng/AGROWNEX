@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Final
 
 from app.banana_v3.artifact_integrity import verify_artifacts
 from app.banana_v3.config import ARTIFACT_ROOT as BANANA_ROOT
@@ -18,6 +19,14 @@ APP_INTEGRATED = {"banana", "paddy", "cotton", "groundnut", *RESTRICTED_CROPS}
 # validation still requires approved fixtures. Keep eligibility fail-closed.
 OOD_SAFETY_INTEGRATED: set[str] = set()
 LEGACY_CROPS = {"paddy", "cotton", "groundnut"}
+_RESTRICTED_FAILURE_REASONS: Final = {
+    "RUNTIME_PACKAGE_MISSING": "file_missing",
+    "SHA256_MANIFEST_MISSING": "manifest_missing",
+    "SHA256_MANIFEST_INVALID": "manifest_missing",
+    "MANIFEST_FILE_MISSING": "file_missing",
+    "PACKAGE_HASH_MISMATCH": "hash_mismatch",
+    "CHECKPOINT_HASH_MISMATCH": "hash_mismatch",
+}
 
 
 @dataclass(frozen=True)
@@ -27,6 +36,7 @@ class CropReadiness:
     artifact_present: bool
     integrity_verified: bool
     runtime_loadable: bool
+    readiness_reason: str
     api_integrated: bool
     mobile_integrated: bool
     technical_runtime_ready: bool
@@ -64,8 +74,13 @@ class ReadinessResolver:
 
     def resolve(self, crop_id: str) -> CropReadiness:
         entry = self.registry.get(crop_id)
-        artifact_present, integrity_verified = self._integrity(entry.crop_id)
+        artifact_present, integrity_verified, reason = self._integrity(entry.crop_id)
         runtime_loadable = self._loadable(entry.crop_id, integrity_verified)
+        if not entry.crop_enabled:
+            reason = "disabled"
+            runtime_loadable = False
+        elif integrity_verified and not runtime_loadable:
+            reason = "load_failed"
         api_integrated = entry.crop_id in APP_INTEGRATED
         mobile_integrated = entry.crop_id in APP_INTEGRATED
         technical = runtime_loadable and api_integrated
@@ -118,6 +133,7 @@ class ReadinessResolver:
             artifact_present=artifact_present,
             integrity_verified=integrity_verified,
             runtime_loadable=runtime_loadable,
+            readiness_reason=reason,
             api_integrated=api_integrated,
             mobile_integrated=mobile_integrated,
             technical_runtime_ready=technical,
@@ -129,18 +145,18 @@ class ReadinessResolver:
             blocking_reasons=blocking,
         )
 
-    def _integrity(self, crop_id: str) -> tuple[bool, bool]:
+    def _integrity(self, crop_id: str) -> tuple[bool, bool, str]:
         try:
             if crop_id == "banana":
                 present = BANANA_ROOT.is_dir()
                 if present:
                     verify_artifacts(BANANA_ROOT)
-                return present, present
+                return present, present, "ready" if present else "file_missing"
             if crop_id in LEGACY_CROPS:
                 present = LEGACY_ROOT.is_dir()
                 if present:
                     verify_legacy_bundle(LEGACY_ROOT)
-                return present, present
+                return present, present, "ready" if present else "file_missing"
             if crop_id in RESTRICTED_CROPS:
                 from app.restricted_crops.integrity import (
                     RestrictedRuntimeIntegrityError,
@@ -149,15 +165,19 @@ class ReadinessResolver:
 
                 try:
                     verify_restricted_package(crop_id)
-                    return True, True
-                except RestrictedRuntimeIntegrityError:
-                    return False, False
+                    return True, True, "ready"
+                except RestrictedRuntimeIntegrityError as exc:
+                    code = str(exc)
+                    present = code != "RUNTIME_PACKAGE_MISSING"
+                    return present, False, _RESTRICTED_FAILURE_REASONS.get(
+                        code, "load_failed"
+                    )
             present = self.runtime_resolver.bundle_presence(crop_id)
             if present:
                 self.runtime_resolver.verify_integrity(crop_id)
-            return present, present
+            return present, present, "ready" if present else "file_missing"
         except Exception:
-            return True, False
+            return True, False, "load_failed"
 
     @staticmethod
     def _loadable(crop_id: str, integrity_verified: bool) -> bool:

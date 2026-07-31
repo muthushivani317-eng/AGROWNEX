@@ -1,0 +1,46 @@
+{
+  "seed": 41212,
+  "target_proportions": {
+    "training": 0.7,
+    "development_validation": 0.15,
+    "calibration": 0.075,
+    "provisional_test": 0.075
+  },
+  "splits": {
+    "training": {
+      "total": 487,
+      "per_class": {
+        "redgram__healthy": 136,
+        "redgram__leaf_spot": 188,
+        "redgram__sterility_mosaic": 163
+      }
+    },
+    "development_validation": {
+      "total": 105,
+      "per_class": {
+        "redgram__healthy": 29,
+        "redgram__leaf_spot": 41,
+        "redgram__sterility_mosaic": 35
+      }
+    },
+    "calibration": {
+      "total": 53,
+      "per_class": {
+        "redgram__healthy": 15,
+        "redgram__leaf_spot": 20,
+        "redgram__sterility_mosaic": 18
+      }
+    },
+    "provisional_test": {
+      "total": 52,
+      "per_class": {
+        "redgram__healthy": 15,
+        "redgram__leaf_spot": 20,
+        "redgram__sterility_mosaic": 17
+      }
+    }
+  },
+  "split_manifest_sha256": "1b07276638f9b71fbb44731ccab6c31c28a77442a19ed5aba1d113d9cc2df118",
+  "provisional_test_seal_sha256": "df1e124a58db25b7b82994ede3875d32c945ba7240532a77c2975bcb29e4015f",
+  "status": "SPLITS_CREATED_TRAINING_READY"
+}

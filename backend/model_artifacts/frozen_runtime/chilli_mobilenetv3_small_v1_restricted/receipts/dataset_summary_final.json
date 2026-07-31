@@ -1,0 +1,17 @@
+{
+  "crop_id": "chilli",
+  "source_dataset": "chilli_india_ymt8k9bjkn_v3",
+  "original_readable_images": 1856,
+  "excluded_images": 653,
+  "cleaned_images": 1203,
+  "per_class": {
+    "chilli__bacterial_spot": 147,
+    "chilli__cercospora_leaf_spot": 175,
+    "chilli__leaf_curl_virus": 423,
+    "chilli__healthy": 458
+  },
+  "duplicate_families_retained": 1171,
+  "duplicate_families_excluded": 624,
+  "cleaned_manifest_sha256": "c61d55a5c78b8cfa665d14d04b52864b388dc77e9bd2b251833c32c3404972a4",
+  "integrity_status": "CLEAN_DATASET_VALID"
+}

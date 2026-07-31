@@ -1,0 +1,57 @@
+{
+  "crop_id": "redgram",
+  "model_name": "redgram_mobilenetv3_small_v1",
+  "checkpoint_epoch": 11,
+  "checkpoint_sha256": "5b95e1658f6bb0d83a3cef8b455533599482d102b86a326f184477f214269e72",
+  "split": "development_validation",
+  "sample_count": 105,
+  "top1_accuracy": 0.9047619047619048,
+  "top3_accuracy": 1.0,
+  "macro_f1": 0.9096075211693874,
+  "per_class": {
+    "redgram__healthy": {
+      "precision": 0.9655172413793104,
+      "recall": 0.9655172413793104,
+      "f1": 0.9655172413793104,
+      "support": 29
+    },
+    "redgram__leaf_spot": {
+      "precision": 0.8604651162790697,
+      "recall": 0.9024390243902439,
+      "f1": 0.8809523809523809,
+      "support": 41
+    },
+    "redgram__sterility_mosaic": {
+      "precision": 0.9090909090909091,
+      "recall": 0.8571428571428571,
+      "f1": 0.8823529411764706,
+      "support": 35
+    }
+  },
+  "confusion_matrix": [
+    [
+      28,
+      1,
+      0
+    ],
+    [
+      1,
+      37,
+      3
+    ],
+    [
+      0,
+      5,
+      30
+    ]
+  ],
+  "class_order": [
+    "redgram__healthy",
+    "redgram__leaf_spot",
+    "redgram__sterility_mosaic"
+  ],
+  "false_confident_threshold": 0.9,
+  "false_confident_error_count": 4,
+  "calibration_accessed": false,
+  "provisional_test_accessed": false
+}

@@ -23,6 +23,5 @@ deployment/
 model_artifacts/incoming/
 model_artifacts/frozen_runtime/crop_identity_v1/
 model_artifacts/frozen_runtime/redgram_v2/
-model_artifacts/frozen_runtime/*/receipts/
 banana_v3_build_receipt.json
 openapi.json

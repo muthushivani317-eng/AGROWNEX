@@ -1,0 +1,74 @@
+{
+  "crop_id": "chilli",
+  "model_name": "chilli_mobilenetv3_small_v1",
+  "checkpoint_epoch": 5,
+  "checkpoint_sha256": "adab7c3eefa009b78e1c9d335fc088d74b5f2b456eb7196950da385ed761ec26",
+  "split": "development_validation",
+  "sample_count": 180,
+  "top1_accuracy": 1.0,
+  "top3_accuracy": 1.0,
+  "macro_f1": 1.0,
+  "per_class": {
+    "chilli__bacterial_spot": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 22
+    },
+    "chilli__cercospora_leaf_spot": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 26
+    },
+    "chilli__healthy": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 69
+    },
+    "chilli__leaf_curl_virus": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 63
+    }
+  },
+  "confusion_matrix": [
+    [
+      22,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      26,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      69,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      63
+    ]
+  ],
+  "class_order": [
+    "chilli__bacterial_spot",
+    "chilli__cercospora_leaf_spot",
+    "chilli__healthy",
+    "chilli__leaf_curl_virus"
+  ],
+  "incorrect_prediction_count": 0,
+  "false_confident_threshold": 0.9,
+  "false_confident_error_count": 0,
+  "calibration_accessed": false,
+  "provisional_test_accessed": false
+}

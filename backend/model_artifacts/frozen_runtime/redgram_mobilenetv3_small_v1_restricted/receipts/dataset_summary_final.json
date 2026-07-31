@@ -1,0 +1,16 @@
+{
+  "crop_id": "redgram",
+  "source_dataset": "pigeonpea_rajput_bd553pdtny_v1",
+  "original_readable_images": 973,
+  "excluded_images": 276,
+  "cleaned_images": 697,
+  "per_class": {
+    "redgram__healthy": 195,
+    "redgram__leaf_spot": 269,
+    "redgram__sterility_mosaic": 233
+  },
+  "duplicate_families_retained": 691,
+  "duplicate_families_excluded": 203,
+  "cleaned_manifest_sha256": "554fc93d11cfdf73c72ba9ed99bfbb9bc78643b17b83620bfd16d00ee12bc0c9",
+  "integrity_status": "CLEAN_DATASET_VALID"
+}

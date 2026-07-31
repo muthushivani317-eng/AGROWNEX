@@ -1,0 +1,30 @@
+{
+  "runtime_id": "chilli_mobilenetv3_small_v1_restricted",
+  "runtime_status": "RESTRICTED_FAIL_CLOSED_RUNTIME",
+  "crop_id": "chilli",
+  "model_name": "chilli_mobilenetv3_small_v1",
+  "package_name": "chilli_mobilenetv3_small_v1_restricted_20260730T132857Z",
+  "frozen_at_utc": "20260730T132857Z",
+  "checkpoint_epoch": 5,
+  "checkpoint_sha256": "adab7c3eefa009b78e1c9d335fc088d74b5f2b456eb7196950da385ed761ec26",
+  "temperature": 1.0000321865081787,
+  "class_to_index": {
+    "chilli__bacterial_spot": 0,
+    "chilli__cercospora_leaf_spot": 1,
+    "chilli__healthy": 2,
+    "chilli__leaf_curl_virus": 3
+  },
+  "minimum_calibrated_confidence": 0.99,
+  "minimum_calibrated_margin": 0.99,
+  "calibration_policy_status": "FROZEN_CALIBRATION_POLICY",
+  "one_time_provisional_test_complete": true,
+  "provisional_test_rerun_authorized": false,
+  "provisional_test_used_for_packaging_inference": false,
+  "structural_checkpoint_load_test": "PASS",
+  "package_verification_required": true,
+  "restricted_controlled_beta_candidate": true,
+  "backend_integration_complete": false,
+  "mobile_integration_complete": false,
+  "field_validation_complete": false,
+  "official_accuracy": false
+}

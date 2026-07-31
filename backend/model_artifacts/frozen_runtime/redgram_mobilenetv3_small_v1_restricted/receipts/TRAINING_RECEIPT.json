@@ -1,0 +1,18 @@
+{
+  "crop_id": "redgram",
+  "model_name": "redgram_mobilenetv3_small_v1",
+  "architecture": "mobilenet_v3_small",
+  "status": "TRAINING_COMPLETE_BEST_CHECKPOINT_FROZEN",
+  "best_epoch": 11,
+  "best_development_loss": 0.20097752185094897,
+  "epochs_completed": 17,
+  "training_rows": 487,
+  "development_validation_rows": 105,
+  "calibration_rows_accessed": 0,
+  "provisional_test_rows_accessed": 0,
+  "manifest_sha256": "2c0f864cd084a6b1448d223dbd74ae1558084c9586a3c9f94c1ceb6492028986",
+  "stored_manifest_hash_mismatch_documented": true,
+  "best_checkpoint": "/content/drive/MyDrive/AgrowAI/AgrowAI/vision/crop_expansion_v2/dataset_unblocking/redgram/training/runs/20260730T110606Z/best_checkpoint.pt",
+  "last_checkpoint": "/content/drive/MyDrive/AgrowAI/AgrowAI/vision/crop_expansion_v2/dataset_unblocking/redgram/training/runs/20260730T110606Z/last_checkpoint.pt",
+  "created_at_utc": "20260730T110606Z"
+}

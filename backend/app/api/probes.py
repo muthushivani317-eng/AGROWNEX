@@ -103,17 +103,36 @@ async def controlled_pilot_readiness():
     registry = load_registry()
     resolver = ReadinessResolver(registry, _REPOSITORY_ROOT)
     runtime_status = {}
+    runtime_diagnostics = {}
     for crop_id in crops:
         try:
-            runtime_status[crop_id] = resolver.resolve(crop_id).runtime_loadable
+            result = resolver.resolve(crop_id)
+            runtime_status[crop_id] = result.runtime_loadable
+            if crop_id in {"redgram", "chilli"}:
+                runtime_diagnostics[crop_id] = result.readiness_reason
+                if result.readiness_reason != "ready":
+                    logger.warning(
+                        "restricted runtime readiness failed",
+                        extra={
+                            "crop_id": crop_id,
+                            "category": result.readiness_reason,
+                        },
+                    )
         except Exception:  # noqa: BLE001 - readiness must fail closed
             runtime_status[crop_id] = False
+            if crop_id in {"redgram", "chilli"}:
+                runtime_diagnostics[crop_id] = "load_failed"
+                logger.warning(
+                    "restricted runtime readiness failed",
+                    extra={"crop_id": crop_id, "category": "load_failed"},
+                )
     components = {
         "database": await _check_db(),
         "redis": await _check_redis(),
         "firebase": ensure_firebase_app() is not None,
         "gemini_configured": bool(GEMINI_API_KEY and GEMINI_VISION_MODEL),
         "six_runtimes": runtime_status,
+        "runtime_diagnostics": runtime_diagnostics,
         "recommendation_pipeline_blocked": True,
     }
     ready = (

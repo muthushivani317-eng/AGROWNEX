@@ -1,0 +1,94 @@
+{
+  "crop_id": "redgram",
+  "model_name": "redgram_mobilenetv3_small_v1",
+  "status": "ONE_TIME_PROVISIONAL_TEST_COMPLETE",
+  "evaluation_timestamp_utc": "20260730T112549Z",
+  "checkpoint_epoch": 11,
+  "checkpoint_sha256": "5b95e1658f6bb0d83a3cef8b455533599482d102b86a326f184477f214269e72",
+  "temperature": 3.1163787841796875,
+  "sample_count": 52,
+  "raw_metrics": {
+    "accuracy": 0.8653846153846154,
+    "macro_f1": 0.8674317856269433,
+    "confusion_matrix": [
+      [
+        14,
+        1,
+        0
+      ],
+      [
+        0,
+        20,
+        0
+      ],
+      [
+        0,
+        6,
+        11
+      ]
+    ],
+    "class_order": [
+      "redgram__healthy",
+      "redgram__leaf_spot",
+      "redgram__sterility_mosaic"
+    ],
+    "per_class": {
+      "redgram__healthy": {
+        "precision": 1.0,
+        "recall": 0.9333333333333333,
+        "f1": 0.9655172413793104,
+        "support": 15
+      },
+      "redgram__leaf_spot": {
+        "precision": 0.7407407407407407,
+        "recall": 1.0,
+        "f1": 0.851063829787234,
+        "support": 20
+      },
+      "redgram__sterility_mosaic": {
+        "precision": 1.0,
+        "recall": 0.6470588235294118,
+        "f1": 0.7857142857142857,
+        "support": 17
+      }
+    }
+  },
+  "selective_metrics": {
+    "accepted_count": 25,
+    "abstained_count": 27,
+    "coverage": 0.4807692307692308,
+    "accepted_accuracy": 1.0,
+    "accepted_errors": 0,
+    "by_predicted_class": {
+      "redgram__healthy": {
+        "predicted_count": 14,
+        "accepted_count": 14,
+        "accepted_errors": 0,
+        "accepted_accuracy": 1.0
+      },
+      "redgram__leaf_spot": {
+        "predicted_count": 27,
+        "accepted_count": 0,
+        "accepted_errors": 0,
+        "accepted_accuracy": null
+      },
+      "redgram__sterility_mosaic": {
+        "predicted_count": 11,
+        "accepted_count": 11,
+        "accepted_errors": 0,
+        "accepted_accuracy": 1.0
+      }
+    }
+  },
+  "policy": {
+    "healthy": "accept_if_frozen_rule_passes",
+    "leaf_spot": "always_abstain",
+    "sterility_mosaic": "accept_if_frozen_rule_passes"
+  },
+  "used_for_training": false,
+  "used_for_calibration": false,
+  "used_for_threshold_selection": false,
+  "future_tuning_against_this_split_allowed": false,
+  "field_validated": false,
+  "official_accuracy": false
+}

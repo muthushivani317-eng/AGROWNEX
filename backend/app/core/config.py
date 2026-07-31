@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # The insecure default secret shipped for local dev. Production must override it;
@@ -41,7 +41,10 @@ class Settings(BaseSettings):
 
     # --- App ---
     app_name: str = "AgrowAI API"
-    environment: str = Field(default="development")
+    environment: str = Field(
+        default="development",
+        validation_alias=AliasChoices("environment", "APP_ENV"),
+    )
     debug: bool = Field(default=True)
     api_v1_prefix: str = "/api/v1"
     public_api_url: str = Field(default="")

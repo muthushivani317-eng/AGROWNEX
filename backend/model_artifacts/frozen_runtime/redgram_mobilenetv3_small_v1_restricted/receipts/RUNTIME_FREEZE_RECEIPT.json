@@ -1,0 +1,22 @@
+{
+  "runtime_id": "redgram_mobilenetv3_small_v1_restricted",
+  "crop_id": "redgram",
+  "model_name": "redgram_mobilenetv3_small_v1",
+  "status": "FROZEN_RESTRICTED_RUNTIME_PACKAGE",
+  "frozen_at_utc": "20260730T112949Z",
+  "checkpoint_epoch": 11,
+  "checkpoint_sha256": "5b95e1658f6bb0d83a3cef8b455533599482d102b86a326f184477f214269e72",
+  "temperature": 3.1163787841796875,
+  "leaf_spot_acceptance_enabled": false,
+  "healthy_acceptance_enabled": true,
+  "sterility_mosaic_acceptance_enabled": true,
+  "provisional_test_evaluation_count_authorized": 1,
+  "provisional_test_rerun_authorized": false,
+  "provisional_test_used_for_new_tuning": false,
+  "structural_checkpoint_load_test": "PASS",
+  "provisional_inference_repeated_during_packaging": false,
+  "three_class_automatic_diagnosis_ready": false,
+  "restricted_controlled_beta_candidate": true,
+  "field_validated": false,
+  "official_accuracy": false
+}

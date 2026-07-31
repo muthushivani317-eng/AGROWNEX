@@ -1,0 +1,30 @@
+{
+  "crop_id": "chilli",
+  "model_name": "chilli_mobilenetv3_small_v1",
+  "training_status": "COMPLETE",
+  "output_directory": "/content/drive/MyDrive/AgrowAI/AgrowAI/vision/crop_expansion_v2/dataset_unblocking/chilli/training/runs/20260730T130432Z",
+  "best_epoch": 5,
+  "best_development_loss": 0.006829773404986857,
+  "best_checkpoint_path": "/content/drive/MyDrive/AgrowAI/AgrowAI/vision/crop_expansion_v2/dataset_unblocking/chilli/training/runs/20260730T130432Z/best_checkpoint.pt",
+  "best_checkpoint_sha256": "adab7c3eefa009b78e1c9d335fc088d74b5f2b456eb7196950da385ed761ec26",
+  "manifest_path": "/content/drive/MyDrive/AgrowAI/AgrowAI/vision/crop_expansion_v2/colab_ready/chilli/splits/split_manifest.csv",
+  "manifest_sha256": "caa10fda2ac2d5d7db38ec8e1013ff9a516ede68d99fa8ea39b9b45314c12f1d",
+  "class_to_index": {
+    "chilli__bacterial_spot": 0,
+    "chilli__cercospora_leaf_spot": 1,
+    "chilli__healthy": 2,
+    "chilli__leaf_curl_virus": 3
+  },
+  "training_rows": 843,
+  "development_rows": 180,
+  "calibration_rows_loaded": 0,
+  "provisional_test_rows_loaded": 0,
+  "checkpoint_selection_rule": "minimum development-validation loss",
+  "maximum_epochs": 30,
+  "early_stopping_patience": 6,
+  "seed": 41212,
+  "device": "cpu",
+  "calibration_accessed": false,
+  "provisional_test_accessed": false,
+  "completed_at_utc": "2026-07-30T13:14:43.425177+00:00"
+}
