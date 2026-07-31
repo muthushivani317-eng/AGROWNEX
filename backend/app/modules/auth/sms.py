@@ -103,7 +103,11 @@ def get_default_sms_provider() -> SMSProvider:
     In production, an ``msg91`` selection without an auth key falls back to the
     mock and logs — a missing credential must never silently look like a send.
     """
-    if settings.otp_provider.lower() == "msg91":
+    if settings.otp_provider == "firebase":
+        # Firebase Phone Auth owns SMS dispatch on the trusted native client.
+        # Fail closed if server-side code accidentally tries to send that OTP.
+        raise RuntimeError("FIREBASE_PHONE_AUTH_SMS_IS_CLIENT_DISPATCHED")
+    if settings.otp_provider == "msg91":
         if settings.msg91_auth_key:
             logger.info("SMS OTP provider: msg91")
             return MSG91Provider()

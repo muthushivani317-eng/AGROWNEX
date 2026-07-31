@@ -6,6 +6,7 @@ hardcoded and never committed.
 from __future__ import annotations
 
 from functools import lru_cache
+from typing import Literal
 
 from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -104,9 +105,10 @@ class Settings(BaseSettings):
     # Production refuses to boot with a mock provider active unless allow-listed here.
     allow_mock_providers: bool = Field(default=False)
 
-    # --- SMS / OTP delivery (MSG91) ---
-    # "mock" (default; Firebase dispatches on-device) or "msg91" (server-side SMS).
-    otp_provider: str = Field(default="mock")
+    # --- SMS / OTP delivery ---
+    # Firebase dispatches phone-auth SMS on the Android client; the backend only
+    # verifies the resulting ID token. MSG91 remains the existing server seam.
+    otp_provider: Literal["mock", "firebase", "msg91"] = Field(default="mock")
     msg91_auth_key: str = Field(default="")
     msg91_sender_id: str = Field(default="AGROAI")
     msg91_template_id: str = Field(default="")
