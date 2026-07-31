@@ -15,6 +15,21 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 DEV_SESSION_SECRET = "dev-only-insecure-secret-change-me"
 
 
+def normalize_async_database_url(url: str) -> str:
+    """Return an asyncpg URL for plain PostgreSQL schemes.
+
+    Railway supplies a standard PostgreSQL URL. The application and Alembic
+    both use SQLAlchemy's async engine, so only that URL's scheme needs to be
+    adapted. Everything after the scheme, including credentials and query
+    parameters, is preserved verbatim.
+    """
+    if url.startswith("postgresql://"):
+        return "postgresql+asyncpg://" + url[len("postgresql://") :]
+    if url.startswith("postgres://"):
+        return "postgresql+asyncpg://" + url[len("postgres://") :]
+    return url
+
+
 class ProductionConfigError(RuntimeError):
     """Raised when production is booted with an unsafe configuration."""
 
@@ -108,6 +123,11 @@ class Settings(BaseSettings):
     @property
     def use_json_logs(self) -> bool:
         return self.is_production if self.log_json is None else self.log_json
+
+    @property
+    def async_database_url(self) -> str:
+        """Database URL adapted for SQLAlchemy's async engine."""
+        return normalize_async_database_url(self.database_url)
 
     def validate_production(self) -> None:
         """Fail fast at boot on an unsafe production configuration (docs/SECURITY.md).

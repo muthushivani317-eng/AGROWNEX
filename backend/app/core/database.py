@@ -20,14 +20,14 @@ _engine_options: dict[str, object] = {
     "pool_pre_ping": True,
     "future": True,
 }
-if not settings.database_url.startswith("sqlite"):
+if not settings.async_database_url.startswith("sqlite"):
     _engine_options.update(
         pool_size=settings.db_pool_size,
         max_overflow=settings.db_max_overflow,
         pool_timeout=settings.db_pool_timeout,
     )
 
-engine = create_async_engine(settings.database_url, **_engine_options)
+engine = create_async_engine(settings.async_database_url, **_engine_options)
 
 SessionLocal = async_sessionmaker(
     bind=engine,
