@@ -1,0 +1,29 @@
+{
+  "crop_id": "redgram",
+  "model_name": "redgram_mobilenetv3_small_v1",
+  "checkpoint_sha256": "5b95e1658f6bb0d83a3cef8b455533599482d102b86a326f184477f214269e72",
+  "checkpoint_epoch": 11,
+  "method": "temperature_scaling",
+  "temperature": 3.1163787841796875,
+  "calibration_sample_count": 53,
+  "class_order": [
+    "redgram__healthy",
+    "redgram__leaf_spot",
+    "redgram__sterility_mosaic"
+  ],
+  "metrics_before": {
+    "accuracy": 0.9245283018867925,
+    "negative_log_likelihood": 0.5050756021776911,
+    "expected_calibration_error_15_bins": 0.07917298573367998,
+    "multiclass_brier_score": 0.15009366646747677
+  },
+  "metrics_after": {
+    "accuracy": 0.9245283018867925,
+    "negative_log_likelihood": 0.25510837453020363,
+    "expected_calibration_error_15_bins": 0.0377901871249361,
+    "multiclass_brier_score": 0.14202755080297094
+  },
+  "calibration_split_accessed": true,
+  "provisional_test_accessed": false,
+  "temperature_selection_used_provisional_test": false
+}

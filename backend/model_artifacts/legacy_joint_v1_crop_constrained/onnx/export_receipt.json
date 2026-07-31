@@ -1,0 +1,18 @@
+{
+  "checkpoint_sha256": "f9719d48d3a8d274d039f0bd36d78cc5fa1282a8f15b2f471ab27d5c043e8117",
+  "onnx_sha256": "71539e500482d26e987994a08d6b85919a5e7bee03d7fc7cdbdf2dde74a37dfa",
+  "requested_opset": 17,
+  "actual_opset": 17,
+  "exporter": "torch.onnx.export",
+  "dynamo": false,
+  "previous_export_inspection": {
+    "exists": true,
+    "path": "/content/drive/MyDrive/AgrowAI_V1/exports/mobilenetv3_small_v1/agrowai_v1_classifier.onnx",
+    "sha256": "a1f99ad3b6f429ed364c223da13f2bdf4556479512d01ea0f0460e990f7b8282",
+    "opset_imports": {
+      "ai.onnx": 18
+    },
+    "actual_opset": 18
+  },
+  "timestamp_utc": "2026-07-27T15:28:42.527762+00:00"
+}

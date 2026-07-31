@@ -1,0 +1,61 @@
+services:
+  - type: web
+    name: agrowai-kvk-pilot-api
+    runtime: docker
+    plan: free
+    rootDir: backend
+    dockerfilePath: ./Dockerfile.production
+    dockerCommand: >-
+      sh -c 'exec uvicorn app.main:app --host 0.0.0.0
+      --port "${PORT:-10000}" --proxy-headers --forwarded-allow-ips="*"'
+    preDeployCommand: alembic upgrade head
+    healthCheckPath: /healthz
+    autoDeployTrigger: commit
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: CACHE_BACKEND
+        value: redis
+      - key: DATABASE_URL
+        fromDatabase:
+          name: agrowai-kvk-pilot-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: agrowai-kvk-pilot-cache
+          property: connectionString
+      - key: FIREBASE_CREDENTIALS_JSON
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DATA_GOV_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        sync: false
+      - key: GEMINI_VISION_MODEL
+        sync: false
+      - key: TRUSTED_HOSTS
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: PUBLIC_BASE_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+
+  - type: keyvalue
+    name: agrowai-kvk-pilot-cache
+    plan: free
+    ipAllowList: []
+
+databases:
+  - name: agrowai-kvk-pilot-db
+    plan: free
+    databaseName: agrowai
+    user: agrowai
+    ipAllowList: []

@@ -25,6 +25,9 @@ class RoleName(StrEnum):
     BUYER = "buyer"
     ADMIN = "admin"
     SUPER_ADMIN = "super_admin"
+    INTERNAL_TESTER = "internal_tester"
+    PILOT_TESTER = "pilot_tester"
+    KVK_REVIEWER = "kvk_reviewer"
 
 
 # OTP policy (docs/SECURITY.md → rate limiting, docs/DATABASE_SCHEMA.md → otp_requests).

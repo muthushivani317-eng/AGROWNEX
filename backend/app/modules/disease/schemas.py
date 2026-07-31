@@ -1,4 +1,5 @@
 """Disease request/response schemas (docs/API_CONTRACT.md → DISEASE)."""
+
 from __future__ import annotations
 
 import uuid
@@ -20,6 +21,68 @@ class AnalyzeRequest(BaseModel):
     capture_method: str | None = Field(default=None, pattern="^(camera|gallery)$")
     latitude: float | None = Field(default=None, ge=-90, le=90)
     longitude: float | None = Field(default=None, ge=-180, le=180)
+
+
+class AnalyzeV2Request(BaseModel):
+    request_id: str = Field(min_length=1, max_length=128)
+    image_base64: str = Field(min_length=16, max_length=24_000_000)
+    mime_type: str = Field(pattern=_MIME_PATTERN)
+    selected_crop: str = Field(min_length=1, max_length=80)
+    symptoms: list[str] = Field(default_factory=list, max_length=20)
+    growth_stage: str | None = Field(default=None, max_length=120)
+    knowledge_evidence: list[dict] = Field(default_factory=list, max_length=50)
+    follow_up_answers: list[dict[str, str]] = Field(default_factory=list, max_length=2)
+    image_reference: str | None = Field(default=None, max_length=2048)
+    image_storage_consent: bool = False
+    language: str = Field(default="ta", pattern="^(ta|en)$")
+
+
+class DiagnosisV2Out(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    request_id: str
+    decision_type: str
+    selected_crop: str
+    predicted_class: str | None
+    calibrated_confidence: float | None
+    accepted: bool
+    abstained: bool
+    likely_result_tamil: str
+    likely_result_english: str
+    explanation_tamil: str
+    explanation_english: str
+    expert_review_required: bool
+    official_accuracy_claim: bool
+    image_storage_allowed: bool
+    audit_record_id: str
+    audit_record: dict
+
+
+class DiagnosisV2Envelope(BaseModel):
+    response: DiagnosisV2Out
+    audit: dict
+
+
+class ModelMetadataOut(BaseModel):
+    model_family: str
+    model_version: str
+    supported_crops: list[str]
+    supported_classes: list[str]
+    threshold: float
+    temperature: float
+    runtime_status: str
+    artifact_verification_status: str
+    official_accuracy_claim: bool
+
+
+class CropCapabilityOut(BaseModel):
+    crop: str
+    visible_in_app: bool
+    dataset_verification_status: str
+    disease_model_status: str
+    disease_model_available: bool
+    nutrient_model_available: bool
+    satellite_support_available: bool
+    production_approved: bool
 
 
 class DiseaseReportOut(BaseModel):

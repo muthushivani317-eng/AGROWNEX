@@ -1,0 +1,22 @@
+{
+  "temperature": 1.185621730465097,
+  "nll_before": 0.3067891002455891,
+  "nll_after": 0.3012893557022243,
+  "ece_before": 0.03742589972388991,
+  "ece_after": 0.028447575825039446,
+  "improved_nll": true,
+  "sample_count": 548,
+  "per_class_counts": {
+    "paddy_healthy": 118,
+    "rice_blast": 99,
+    "rice_brown_leaf_spot": 163,
+    "rice_tungro": 168
+  },
+  "crop": "paddy",
+  "source_split": "calibration",
+  "optimizer": "torch.optim.LBFGS on log_temperature",
+  "seed": 0,
+  "checkpoint_sha256": "f9719d48d3a8d274d039f0bd36d78cc5fa1282a8f15b2f471ab27d5c043e8117",
+  "calibration_logits_sha256": "d9981a2235a843be375d65e2b713225df6aad4e22870153f0a0ed4df8be77e9f",
+  "provisional_test_used": false
+}

@@ -3,12 +3,14 @@
 Wires configuration, logging, CORS, the versioned API router, and the global
 error handlers into a single app (docs/BACKEND_ARCHITECTURE.md).
 """
+
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.api.errors import register_exception_handlers
 from app.api.probes import router as probes_router
@@ -24,6 +26,7 @@ from app.core.middleware import (
     SecurityHeadersMiddleware,
     build_rate_limiter,
 )
+from app.legacy_joint import get_legacy_joint_runtime
 
 configure_logging()
 init_sentry()
@@ -32,7 +35,10 @@ logger = get_logger("main")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: nothing eager (providers lazily create the shared HTTP client).
+    # The required crop-constrained legacy classifier is verified and loaded
+    # exactly once. Failure aborts startup; there is no silent fallback.
+    if settings.disease_model_required:
+        get_legacy_joint_runtime().load()
     yield
     # Shutdown: release the shared pooled HTTP client.
     await close_http_client()
@@ -66,9 +72,7 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    app.add_middleware(
-        BodySizeLimitMiddleware, max_bytes=settings.max_request_body_bytes
-    )
+    app.add_middleware(BodySizeLimitMiddleware, max_bytes=settings.max_request_body_bytes)
     app.add_middleware(
         RateLimitMiddleware,
         limiter=build_rate_limiter(),
@@ -79,6 +83,7 @@ def create_app() -> FastAPI:
     )
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(MetricsMiddleware)
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.trusted_hosts)
     app.add_middleware(RequestIDMiddleware)
 
     register_exception_handlers(app)

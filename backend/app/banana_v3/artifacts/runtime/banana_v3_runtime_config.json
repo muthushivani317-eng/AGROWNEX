@@ -1,0 +1,29 @@
+{
+  "model_version": "banana-v3.0.0",
+  "bundle_version": "banana-v3-production-bundle-1",
+  "crop": "banana",
+  "runtime_preference": "onnx_then_pytorch",
+  "input": {"layout": "NCHW", "dtype": "float32", "shape": [null, 3, 224, 224]},
+  "preprocessing": {
+    "exif_orientation_correction": true,
+    "colour_mode": "RGB",
+    "resize_shorter_side": 256,
+    "center_crop": [224, 224],
+    "mean": [0.485, 0.456, 0.406],
+    "std": [0.229, 0.224, 0.225],
+    "test_time_augmentation": false
+  },
+  "healthy_gate": {
+    "model": "banana_v3_healthy_gate_mobilenetv3_small_v1",
+    "temperature": 2.090103190616,
+    "threshold_file": "../thresholds/healthy_gate_selected_thresholds.json"
+  },
+  "disease_classifier": {
+    "model": "banana_v3_disease_classifier_mobilenetv3_small_v1",
+    "temperature": 0.823204678118,
+    "threshold_file": "../thresholds/disease_classifier_selected_thresholds.json"
+  },
+  "field_validation_status": "IN_PROGRESS",
+  "deployment_status": "PRODUCTION_INTEGRATED_FIELD_VALIDATION_IN_PROGRESS",
+  "official_tamil_nadu_field_accuracy_claim": false
+}

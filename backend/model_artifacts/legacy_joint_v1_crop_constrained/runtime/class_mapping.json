@@ -1,0 +1,24 @@
+{
+  "ordered_classes": [
+    "cotton_fusarium_wilt",
+    "cotton_healthy",
+    "cotton_verticillium_wilt",
+    "groundnut_healthy",
+    "groundnut_rust",
+    "paddy_healthy",
+    "rice_blast",
+    "rice_brown_leaf_spot",
+    "rice_tungro"
+  ],
+  "class_to_index": {
+    "cotton_fusarium_wilt": 0,
+    "cotton_healthy": 1,
+    "cotton_verticillium_wilt": 2,
+    "groundnut_healthy": 3,
+    "groundnut_rust": 4,
+    "paddy_healthy": 5,
+    "rice_blast": 6,
+    "rice_brown_leaf_spot": 7,
+    "rice_tungro": 8
+  }
+}

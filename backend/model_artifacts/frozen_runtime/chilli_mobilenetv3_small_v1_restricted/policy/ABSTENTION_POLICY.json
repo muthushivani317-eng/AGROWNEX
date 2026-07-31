@@ -1,0 +1,62 @@
+{
+  "crop_id": "chilli",
+  "model_name": "chilli_mobilenetv3_small_v1",
+  "policy_version": 1,
+  "status": "FROZEN_CALIBRATION_POLICY",
+  "selection_split": "calibration",
+  "selection_sample_count": 91,
+  "method": "global_calibrated_confidence_and_margin",
+  "rule": {
+    "minimum_calibrated_confidence": 0.99,
+    "minimum_calibrated_margin": 0.99,
+    "failure_action": "ABSTAIN"
+  },
+  "calibration_summary": {
+    "total": 91,
+    "accepted": 90,
+    "abstained": 1,
+    "coverage": 0.989010989010989,
+    "accepted_accuracy": 1.0,
+    "accepted_errors": 0
+  },
+  "by_predicted_class": {
+    "chilli__bacterial_spot": {
+      "predicted_count": 11,
+      "accepted_count": 11,
+      "abstained_count": 0,
+      "accepted_errors": 0,
+      "accepted_accuracy": 1.0
+    },
+    "chilli__cercospora_leaf_spot": {
+      "predicted_count": 12,
+      "accepted_count": 12,
+      "abstained_count": 0,
+      "accepted_errors": 0,
+      "accepted_accuracy": 1.0
+    },
+    "chilli__healthy": {
+      "predicted_count": 34,
+      "accepted_count": 34,
+      "abstained_count": 0,
+      "accepted_errors": 0,
+      "accepted_accuracy": 1.0
+    },
+    "chilli__leaf_curl_virus": {
+      "predicted_count": 34,
+      "accepted_count": 33,
+      "abstained_count": 1,
+      "accepted_errors": 0,
+      "accepted_accuracy": 1.0
+    }
+  },
+  "policy_rationale": {
+    "single_calibration_error_confidence": 0.5504684448242188,
+    "single_calibration_error_margin": 0.1648862063884735,
+    "lowest_correct_confidence": 0.9973711967468262,
+    "lowest_correct_margin": 0.9947447166778148
+  },
+  "provisional_test_accessed": false,
+  "provisional_test_used_for_threshold_selection": false,
+  "field_validated": false,
+  "official_accuracy": false
+}

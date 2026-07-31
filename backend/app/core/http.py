@@ -12,7 +12,8 @@ from __future__ import annotations
 
 import httpx
 
-_DEFAULT_TIMEOUT = httpx.Timeout(30.0)
+from app.core.config import settings
+
 _LIMITS = httpx.Limits(max_connections=50, max_keepalive_connections=10)
 
 _client: httpx.AsyncClient | None = None
@@ -22,7 +23,10 @@ def get_http_client() -> httpx.AsyncClient:
     """Return the shared pooled client, lazily creating it once."""
     global _client
     if _client is None or _client.is_closed:
-        _client = httpx.AsyncClient(timeout=_DEFAULT_TIMEOUT, limits=_LIMITS)
+        _client = httpx.AsyncClient(
+            timeout=httpx.Timeout(settings.request_timeout_seconds),
+            limits=_LIMITS,
+        )
     return _client
 
 

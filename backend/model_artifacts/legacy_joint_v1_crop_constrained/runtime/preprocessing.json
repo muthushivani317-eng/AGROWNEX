@@ -1,0 +1,84 @@
+{
+  "decision": "PREPROCESSING_PROVEN",
+  "inference": {
+    "image_size": 224,
+    "color_mode": "RGB",
+    "exif_transpose": true,
+    "resize": {
+      "operation": "torchvision.transforms.Resize",
+      "size": [
+        224,
+        224
+      ],
+      "crop": null,
+      "interpolation_explicitly_specified": false,
+      "effective_interpolation": "InterpolationMode.BILINEAR"
+    },
+    "tensor_conversion": "torchvision.transforms.ToTensor",
+    "normalization": {
+      "mean": [
+        0.485,
+        0.456,
+        0.406
+      ],
+      "std": [
+        0.229,
+        0.224,
+        0.225
+      ]
+    }
+  },
+  "training_augmentation": {
+    "runtime_inference": false,
+    "operations": [
+      "RandomResizedCrop(size, scale=(0.85, 1.0))",
+      "RandomHorizontalFlip(0.5)",
+      "RandomRotation(10)",
+      "ColorJitter(0.15, 0.15, 0.10, 0.03)",
+      "GaussianBlur(3, sigma=(0.1, 0.6))"
+    ]
+  },
+  "evidence": [
+    {
+      "path": "D:/AgrowAI/knowledge_base/vision/src/data_pipeline.py",
+      "sha256": "9af2fe7d0fe3ce358a22e19b071463000f078d4e960f464196509c1f4ceaa6cb",
+      "lines": "10-15,18-26"
+    },
+    {
+      "path": "D:/AgrowAI/knowledge_base/vision/colab/agrowai_v1_training_bundle.zip!vision/src/data_pipeline.py",
+      "container_sha256": "ac71d389df47cce71e611755037cb8bb52c362c062134ed984f430aa467fabd4",
+      "entry_sha256": "9af2fe7d0fe3ce358a22e19b071463000f078d4e960f464196509c1f4ceaa6cb"
+    },
+    {
+      "path": "D:/AgrowAI/knowledge_base/vision/colab/AGROWAI_V1_TRAINING.ipynb",
+      "sha256": "dbf0381babf835e0a36913950329914bb5ac8e3e803fceef431e6641b57164da",
+      "cells": [
+        8,
+        26,
+        28,
+        30,
+        36
+      ]
+    },
+    {
+      "path": "D:/AgrowAI/model_exports/mobilenetv3_baseline_v1/freeze_inputs/runtime_training_config_snapshot.json",
+      "sha256": "018769fba169cbe3421d8d6adb9b4fb0af89f1029f2e37460c08cf2cec08ee46",
+      "fields": [
+        "model.image_size",
+        "runtime_cfg.image_size",
+        "environment.torchvision_version"
+      ]
+    }
+  ],
+  "image_size": 224,
+  "mean": [
+    0.485,
+    0.456,
+    0.406
+  ],
+  "std": [
+    0.229,
+    0.224,
+    0.225
+  ]
+}

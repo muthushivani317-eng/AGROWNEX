@@ -12,11 +12,13 @@ Business logic lives here; routes stay thin and no SQL runs outside the repo.
 """
 from __future__ import annotations
 
+import asyncio
 import uuid
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.database import SessionLocal
 from app.core.logging import get_logger
 from app.modules.auth.models import User
 from app.modules.market.cache import MarketCache, market_cache
@@ -65,6 +67,10 @@ class MarketService:
         self.repo = MarketRepository(session)
         self.provider = provider or get_default_provider()
         self.cache = cache or market_cache
+        # Strong references to detached background refresh tasks. Without this
+        # the event loop only weakly references a bare ``create_task`` result,
+        # so the refresh could be garbage-collected mid-flight (see asyncio docs).
+        self._refresh_tasks: set[asyncio.Task[None]] = set()
 
     # ----------------------------------------------------------------- #
     # Current prices
@@ -118,24 +124,51 @@ class MarketService:
         return len(records)
 
     async def _ensure_fresh(self, query: PriceQuery) -> None:
-        """Populate the DB from the provider unless a fresh cache entry exists.
+        """Schedule a provider refresh without blocking the response on it.
 
-        A provider failure is non-fatal: reads fall back to stored prices. The
-        freshness marker is set on *both* outcomes (fetched or gracefully
-        unavailable) so a timing-out upstream (e.g. Agmarknet) is not re-hit on
-        every request — otherwise each read would block on the full retry budget
-        and exceed the client's request timeout, leaving the screen stuck on the
-        error state. Stored prices are served until the cache TTL expires.
-        Unexpected errors still propagate uncached.
+        The request never waits on the external provider. If the query is
+        already marked fresh in the cache, nothing happens. Otherwise the cache
+        key is marked fresh *before* the background task starts, so concurrent
+        requests for the same query don't pile into the provider, and the
+        provider refresh is fired off with :func:`asyncio.create_task` and left
+        to run detached — the caller returns immediately and reads are served
+        from whatever is already stored in the DB.
+
+        Blocking here would expose the caller to the provider's full retry
+        budget (e.g. a timing-out Agmarknet), exceeding the client's request
+        timeout and leaving the screen stuck on the error state. The existing
+        2-hour cron job (:mod:`app.modules.market.jobs`) keeps favourited
+        targets broadly fresh; this background refresh catches ad-hoc queries
+        the cron hasn't seen yet.
         """
         key = self.cache.key(query)
         if self.cache.get(key) is not None:
             return
-        try:
-            await self._fetch_and_store(query)
-        except MarketDataUnavailableError:
-            logger.info("market provider unavailable; serving stored prices")
         self.cache.set(key, True)
+        task = asyncio.create_task(self._background_refresh(query))
+        self._refresh_tasks.add(task)
+        task.add_done_callback(self._refresh_tasks.discard)
+
+    async def _background_refresh(self, query: PriceQuery) -> None:
+        """Fetch + store prices for ``query`` on a detached background task.
+
+        Runs its own DB session because this task may still be running after the
+        original request's session (``self.session``) is closed — the same
+        session-per-job idiom as :func:`app.worker._run`. All exceptions are
+        handled internally: an unhandled one would only surface later as a
+        "Task exception was never retrieved" warning, since the task runs
+        detached via :func:`asyncio.create_task`.
+        """
+        async with SessionLocal() as session:
+            try:
+                service = MarketService(session, provider=self.provider)
+                await service._fetch_and_store(query)
+                await session.commit()
+            except MarketDataUnavailableError:
+                logger.info("market background refresh unavailable for query")
+            except Exception:
+                await session.rollback()
+                logger.exception("market background refresh failed")
 
     async def _fetch_and_store(self, query: PriceQuery) -> list[ProviderPrice]:
         records = await self.provider.fetch_prices(query)

@@ -1,0 +1,64 @@
+{
+  "runtime_id": "redgram_mobilenetv3_small_v1_restricted",
+  "crop_id": "redgram",
+  "model_name": "redgram_mobilenetv3_small_v1",
+  "status": "RESTRICTED_FAIL_CLOSED_RUNTIME",
+  "policy_version": 1,
+  "temperature": 3.1163787841796875,
+  "class_order": [
+    "redgram__healthy",
+    "redgram__leaf_spot",
+    "redgram__sterility_mosaic"
+  ],
+  "rules": {
+    "redgram__healthy": {
+      "action": "ACCEPT_WHEN_THRESHOLD_PASSES",
+      "minimum_calibrated_confidence": 0.4,
+      "minimum_calibrated_margin": 0.0,
+      "result_wording": "LIKELY_HEALTHY"
+    },
+    "redgram__leaf_spot": {
+      "action": "ALWAYS_ABSTAIN",
+      "minimum_calibrated_confidence": null,
+      "minimum_calibrated_margin": null,
+      "abstention_code": "REDGRAM_LEAF_SPOT_AUTOMATIC_ACCEPTANCE_DISABLED"
+    },
+    "redgram__sterility_mosaic": {
+      "action": "ACCEPT_WHEN_THRESHOLD_PASSES",
+      "minimum_calibrated_confidence": 0.4,
+      "minimum_calibrated_margin": 0.0,
+      "result_wording": "POSSIBLE_STERILITY_MOSAIC"
+    }
+  },
+  "global_fail_closed_rules": {
+    "unknown_predicted_class": "ABSTAIN",
+    "missing_temperature": "ABSTAIN",
+    "missing_policy": "ABSTAIN",
+    "class_map_mismatch": "RUNTIME_LOAD_FAILURE",
+    "checkpoint_hash_mismatch": "RUNTIME_LOAD_FAILURE",
+    "non_finite_probability": "ABSTAIN"
+  },
+  "evidence": {
+    "development_top1_accuracy": 0.9047619047619048,
+    "development_macro_f1": 0.9096075211693874,
+    "calibration_sample_count": 53,
+    "calibration_coverage": 0.5471698113207547,
+    "calibration_accepted_errors": 0,
+    "provisional_sample_count": 52,
+    "provisional_raw_accuracy": 0.8653846153846154,
+    "provisional_raw_macro_f1": 0.8674317856269433,
+    "provisional_selective_coverage": 0.4807692307692308,
+    "provisional_accepted_count": 25,
+    "provisional_accepted_errors": 0
+  },
+  "restrictions": {
+    "three_class_automatic_diagnosis_ready": false,
+    "leaf_spot_automatic_acceptance_enabled": false,
+    "provisional_test_rerun_allowed": false,
+    "provisional_test_tuning_allowed": false,
+    "field_validated": false,
+    "tamil_nadu_accuracy_claim_allowed": false,
+    "farmer_accuracy_claim_allowed": false,
+    "official_accuracy_claim_allowed": false
+  }
+}

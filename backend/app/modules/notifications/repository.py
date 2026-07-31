@@ -9,7 +9,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Select, func, or_, select
+from sqlalchemy import Select, exists, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.notifications.models import (
@@ -231,10 +231,25 @@ class NotificationRepository:
     ) -> list[Notification]:
         """Undelivered, non-dismissed, unexpired notifications that have a failed
         delivery attempt — the retry job's queue. Attempt-count is capped by the
-        caller using the eager-loaded ``deliveries`` (fewer than ``max_attempts``)."""
+        SQL query using total delivery-log rows (fewer than ``max_attempts``).
+
+        Correlated subqueries avoid joining delivery rows into the entity select.
+        This must not use ``DISTINCT`` over ``Notification`` because PostgreSQL
+        cannot compare its ``payload_json`` JSON column for equality."""
+        failed_attempt_exists = exists(
+            select(1).where(
+                NotificationDeliveryLog.notification_id == Notification.id,
+                NotificationDeliveryLog.status == "failed",
+            )
+        )
+        attempt_count = (
+            select(func.count(NotificationDeliveryLog.id))
+            .where(NotificationDeliveryLog.notification_id == Notification.id)
+            .correlate(Notification)
+            .scalar_subquery()
+        )
         stmt = (
             select(Notification)
-            .join(NotificationDeliveryLog)
             .where(
                 Notification.delivered_at.is_(None),
                 Notification.dismissed.is_(False),
@@ -242,14 +257,14 @@ class NotificationRepository:
                     Notification.expires_at.is_(None),
                     Notification.expires_at > now,
                 ),
-                NotificationDeliveryLog.status == "failed",
+                failed_attempt_exists,
+                attempt_count < max_attempts,
             )
-            .distinct()
+            .order_by(Notification.created_at.asc(), Notification.id.asc())
             .limit(limit)
         )
         result = await self.session.execute(stmt)
-        candidates = list(result.scalars().unique().all())
-        return [n for n in candidates if len(n.deliveries) < max_attempts]
+        return list(result.scalars().all())
 
     # ----------------------------------------------------------------- #
     # Templates (seeded rule table)

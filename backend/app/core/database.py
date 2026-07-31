@@ -15,15 +15,19 @@ from sqlalchemy.ext.asyncio import (
 
 from app.core.config import settings
 
-engine = create_async_engine(
-    settings.database_url,
-    echo=settings.db_echo,
-    pool_pre_ping=True,
-    pool_size=settings.db_pool_size,
-    max_overflow=settings.db_max_overflow,
-    pool_timeout=settings.db_pool_timeout,
-    future=True,
-)
+_engine_options: dict[str, object] = {
+    "echo": settings.db_echo,
+    "pool_pre_ping": True,
+    "future": True,
+}
+if not settings.database_url.startswith("sqlite"):
+    _engine_options.update(
+        pool_size=settings.db_pool_size,
+        max_overflow=settings.db_max_overflow,
+        pool_timeout=settings.db_pool_timeout,
+    )
+
+engine = create_async_engine(settings.database_url, **_engine_options)
 
 SessionLocal = async_sessionmaker(
     bind=engine,

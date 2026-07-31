@@ -1,0 +1,46 @@
+{
+  "crop_id": "redgram",
+  "model_name": "redgram_mobilenetv3_small_v1",
+  "method": "class_specific_calibrated_confidence_and_margin",
+  "selection_split": "calibration",
+  "selection_sample_count": 53,
+  "selection_objective": "zero accepted calibration errors, then maximize accepted count",
+  "class_rules": {
+    "redgram__healthy": {
+      "status": "SELECTED_ZERO_ERROR_CALIBRATION",
+      "confidence_threshold": 0.4,
+      "margin_threshold": 0.0,
+      "accepted_count": 15,
+      "accepted_accuracy": 1.0,
+      "coverage_within_predicted_class": 1.0
+    },
+    "redgram__leaf_spot": {
+      "status": "NO_ZERO_ERROR_THRESHOLD_FOUND",
+      "confidence_threshold": null,
+      "margin_threshold": null,
+      "accepted_count": 0,
+      "accepted_accuracy": null,
+      "coverage_within_predicted_class": 0.0
+    },
+    "redgram__sterility_mosaic": {
+      "status": "SELECTED_ZERO_ERROR_CALIBRATION",
+      "confidence_threshold": 0.4,
+      "margin_threshold": 0.0,
+      "accepted_count": 14,
+      "accepted_accuracy": 1.0,
+      "coverage_within_predicted_class": 1.0
+    }
+  },
+  "calibration_summary": {
+    "total": 53,
+    "accepted": 29,
+    "abstained": 24,
+    "coverage": 0.5471698113207547,
+    "accepted_accuracy": 1.0,
+    "accepted_errors": 0
+  },
+  "fallback_behavior": "ABSTAIN when no class-specific threshold is available or when confidence/margin fails",
+  "provisional_test_accessed": false,
+  "farmer_field_validated": false,
+  "official_accuracy": false
+}

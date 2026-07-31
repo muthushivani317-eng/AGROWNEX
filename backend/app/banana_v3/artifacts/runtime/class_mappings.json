@@ -1,0 +1,8 @@
+{
+  "healthy_gate": {"banana__healthy": 0, "banana__diseased": 1},
+  "disease_classifier": {
+    "banana__cordana_leaf_spot": 0,
+    "banana__pestalotiopsis_leaf_spot": 1,
+    "banana__sigatoka_leaf_spot": 2
+  }
+}

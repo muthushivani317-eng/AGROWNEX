@@ -1,0 +1,9 @@
+# Frozen runtime packages are hash-bound. Preserve every byte exactly.
+backend/app/banana_v3/artifacts/** -text
+backend/model_artifacts/legacy_joint_v1_crop_constrained/** -text
+backend/model_artifacts/frozen_runtime/redgram_mobilenetv3_small_v1_restricted/** -text
+backend/model_artifacts/frozen_runtime/chilli_mobilenetv3_small_v1_restricted/** -text
+
+# Model containers are always binary.
+*.pt binary
+*.onnx binary

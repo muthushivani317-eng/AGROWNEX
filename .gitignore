@@ -24,14 +24,45 @@ expo-env.d.ts
 .env
 .env.*
 !.env.example
+!.env.*.example
+*.pem
+*.key
 *.jks
+*.keystore
 *.p8
 *.p12
-*.key
 *.mobileprovision
 serviceAccount*.json
+service-account*.json
+firebase-admin*.json
+secrets/
+AgrowAI_secrets/
 
 # --- OS / editor ---
 .DS_Store
 Thumbs.db
 *.orig.*
+
+# --- Generated, local, and non-runtime material ---
+venv/
+.venv_*/
+build/
+*.log
+*.tmp
+*.part
+datasets/
+training_data/
+training_runs/
+downloads/
+archives/
+docs/model_audits/
+test_outputs/
+screenshots/
+local_backups/
+crop_identity_dataset_v1/
+internal_challenge_sets/
+graphify-out/
+backend/logs/
+backend/model_artifacts/incoming/
+backend/agrowai_local_test.db
+backend/banana_v3_production_bundle.zip

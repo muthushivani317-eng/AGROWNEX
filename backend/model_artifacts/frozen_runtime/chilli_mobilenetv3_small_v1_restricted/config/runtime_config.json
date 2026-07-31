@@ -1,0 +1,40 @@
+{
+  "runtime_id": "chilli_mobilenetv3_small_v1_restricted",
+  "runtime_status": "RESTRICTED_FAIL_CLOSED_RUNTIME",
+  "crop_id": "chilli",
+  "model_name": "chilli_mobilenetv3_small_v1",
+  "architecture": "mobilenet_v3_small",
+  "checkpoint_file": "model/best_checkpoint.pt",
+  "checkpoint_sha256": "adab7c3eefa009b78e1c9d335fc088d74b5f2b456eb7196950da385ed761ec26",
+  "class_map_file": "config/class_to_index.json",
+  "index_map_file": "config/index_to_class.json",
+  "calibration_file": "policy/CALIBRATION_ARTIFACT.json",
+  "abstention_policy_file": "policy/ABSTENTION_POLICY.json",
+  "restricted_runtime_policy_file": "policy/RESTRICTED_RUNTIME_POLICY.json",
+  "image_preprocessing": {
+    "resize_size": 256,
+    "crop_size": 224,
+    "color_mode": "RGB",
+    "normalization": {
+      "mean": [
+        0.485,
+        0.456,
+        0.406
+      ],
+      "std": [
+        0.229,
+        0.224,
+        0.225
+      ]
+    }
+  },
+  "temperature": 1.0000321865081787,
+  "minimum_calibrated_confidence": 0.99,
+  "minimum_calibrated_margin": 0.99,
+  "output_contract": {
+    "accepted_status": "ACCEPTED_RESTRICTED_RESULT",
+    "abstained_status": "ABSTAINED",
+    "runtime_error_status": "RUNTIME_ERROR"
+  },
+  "frozen_at_utc": "20260730T132857Z"
+}

@@ -1,0 +1,16 @@
+{
+  "model_version": "banana-v3.0.0",
+  "hierarchy": ["image_validation", "healthy_gate", "disease_classifier", "class_specific_policy"],
+  "healthy_checkpoint_sha256": "838d40714ba6c43ec2e6c5eb4af1c895a7f739ab46e7ee38d58d50cd55e01e98",
+  "disease_checkpoint_sha256": "056b97c4faca32356ad6e1ac8b3d7f6166952a9a149ab518d41fdadd798e467e",
+  "healthy_temperature": 2.090103190616,
+  "disease_temperature": 0.823204678118,
+  "healthy_threshold_artifact_sha256": "99554e61b74dceb084317684265350bec59f63ae9e2290fd72dfc2ae98abf041",
+  "disease_threshold_artifact_sha256": "9a63e5f7c3ee417ea78d2cf36fee45113ecb230824c82f6f28ca2f3896e44ecb",
+  "preprocessing_version": "banana-v3-preprocessing-1",
+  "class_mappings_file": "class_mappings.json",
+  "internal_replay_status": "NOT_RECORDED_IN_THIS_PACKAGE",
+  "field_validation_status": "IN_PROGRESS",
+  "deployment_status": "PRODUCTION_INTEGRATED_FIELD_VALIDATION_IN_PROGRESS",
+  "official_tamil_nadu_field_accuracy_claim": false
+}

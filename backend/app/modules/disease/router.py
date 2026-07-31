@@ -5,32 +5,44 @@
 
 Thin routes — the full pipeline lives in ``DiseaseService``.
 """
+
 from __future__ import annotations
 
+import json
 import math
+import time
 import uuid
 
 from fastapi import APIRouter, HTTPException, Query
 
+from app.core.logging import get_logger
 from app.crop_runtime.registry import load_registry
 from app.crop_runtime.schemas import ModelAvailabilityStatus, ModelUnavailableResponse
+from app.modules.disease.capabilities import (
+    disease_model_available,
+    normalize_crop_id,
+    public_capabilities,
+)
 from app.modules.disease.dependencies import CurrentUser, DiseaseServiceDep
+from app.modules.disease.ml_runtime import get_model_runtime
+from app.modules.disease.ml_runtime.orchestrator import decide
 from app.modules.disease.schemas import (
     AnalyzeRequest,
+    AnalyzeV2Request,
+    CropCapabilityOut,
+    DiagnosisV2Envelope,
     DiseaseReportOut,
     DiseaseReportSummaryOut,
+    ModelMetadataOut,
 )
 from app.schemas.response import PaginatedData, SuccessResponse, success
 
 router = APIRouter(prefix="/disease", tags=["disease"])
+logger = get_logger("disease.inference")
 
 
-@router.post(
-    "/analyze", response_model=SuccessResponse[DiseaseReportOut], status_code=201
-)
-async def analyze(
-    payload: AnalyzeRequest, current_user: CurrentUser, service: DiseaseServiceDep
-):
+@router.post("/analyze", response_model=SuccessResponse[DiseaseReportOut], status_code=201)
+async def analyze(payload: AnalyzeRequest, current_user: CurrentUser, service: DiseaseServiceDep):
     """Validate a photo, run Gemini vision analysis, store and return the report."""
     if payload.crop:
         try:
@@ -53,6 +65,89 @@ async def analyze(
             )
     report = await service.analyze(current_user, payload)
     return success(DiseaseReportOut.from_report(report), message="Analysis complete")
+
+
+@router.post("/analyze-v2", response_model=SuccessResponse[DiagnosisV2Envelope])
+async def analyze_v2(payload: AnalyzeV2Request, current_user: CurrentUser):
+    """Deprecated global-calibration route; crop-specific routes are mandatory."""
+    del current_user  # authentication is required; identity is intentionally not logged.
+    canonical_crop = normalize_crop_id(payload.selected_crop)
+    if not disease_model_available(canonical_crop) or canonical_crop in {
+        "rice",
+        "cotton",
+        "groundnut",
+        "banana",
+    }:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "code": "UNSUPPORTED_CROP",
+                "message_tamil": "இந்தப் பயிருக்கான நோய் கண்டறிதல் மாதிரி இன்னும் பயன்பாட்டிற்கு தயாராகவில்லை.",
+                "message_english": (
+                    "Use the verified crop-specific diagnosis endpoint. "
+                    "Global calibration is disabled."
+                ),
+            },
+        )
+    started = time.perf_counter()
+    runtime = get_model_runtime()
+    try:
+        prediction = runtime.predict(payload.image_base64, payload.mime_type)
+    except Exception as exc:
+        logger.warning(
+            "disease_inference %s",
+            json.dumps(
+                {
+                    "request_id": payload.request_id,
+                    "model_version": "mobilenetv3_small_v1",
+                    "selected_crop": canonical_crop,
+                    "accepted": False,
+                    "error_category": type(exc).__name__,
+                    "total_ms": round((time.perf_counter() - started) * 1000, 3),
+                },
+                separators=(",", ":"),
+            ),
+        )
+        raise
+    response = decide(
+        request_id=payload.request_id,
+        selected_crop=canonical_crop,
+        language=payload.language,
+        prediction=prediction,
+        symptoms=payload.symptoms,
+        growth_stage=payload.growth_stage,
+        knowledge_evidence=payload.knowledge_evidence,
+        image_reference=payload.image_reference,
+        image_storage_consent=payload.image_storage_consent,
+    )
+    log_record = {
+        "request_id": payload.request_id,
+        "model_version": response["model_version"],
+        "selected_crop": canonical_crop,
+        "predicted_class": prediction.predicted_class,
+        "calibrated_confidence": prediction.confidence,
+        "top3": prediction.top3,
+        "accepted": response["accepted"],
+        "decision_type": response["decision_type"],
+        "inference_ms": round(prediction.inference_ms, 3),
+        "preprocessing_ms": round(prediction.preprocessing_ms, 3),
+        "total_ms": round((time.perf_counter() - started) * 1000, 3),
+        "error_category": None,
+    }
+    logger.info("disease_inference %s", json.dumps(log_record, separators=(",", ":")))
+    return success(DiagnosisV2Envelope(response=response, audit=response["audit_record"]))
+
+
+@router.get("/model-metadata", response_model=SuccessResponse[ModelMetadataOut])
+async def model_metadata(current_user: CurrentUser):
+    del current_user
+    return success(ModelMetadataOut.model_validate(get_model_runtime().metadata()))
+
+
+@router.get("/capabilities", response_model=SuccessResponse[list[CropCapabilityOut]])
+async def crop_capabilities(current_user: CurrentUser):
+    del current_user
+    return success([CropCapabilityOut.model_validate(item) for item in public_capabilities()])
 
 
 @router.get(
@@ -82,9 +177,7 @@ async def list_history(
 
 
 @router.get("/{report_id}", response_model=SuccessResponse[DiseaseReportOut])
-async def get_report(
-    report_id: uuid.UUID, current_user: CurrentUser, service: DiseaseServiceDep
-):
+async def get_report(report_id: uuid.UUID, current_user: CurrentUser, service: DiseaseServiceDep):
     """Fetch a full disease report."""
     report = await service.get_report(current_user, report_id)
     return success(DiseaseReportOut.from_report(report))

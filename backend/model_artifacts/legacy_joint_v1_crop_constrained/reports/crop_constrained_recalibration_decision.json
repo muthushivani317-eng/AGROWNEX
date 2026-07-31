@@ -1,0 +1,13 @@
+{
+  "decision": "READY_FOR_BACKEND_INTEGRATION",
+  "crop_policies_ready": {
+    "paddy": true,
+    "cotton": true,
+    "groundnut": true
+  },
+  "actual_onnx_opset": 17,
+  "parity_passed": true,
+  "app_enablement_allowed": false,
+  "backend_integration_performed": false,
+  "provisional_test_opened": false
+}

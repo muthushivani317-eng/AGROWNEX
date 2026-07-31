@@ -1,0 +1,65 @@
+{
+  "paddy": {
+    "temperature": 1.185621730465097,
+    "nll_before": 0.3067891002455891,
+    "nll_after": 0.3012893557022243,
+    "ece_before": 0.03742589972388991,
+    "ece_after": 0.028447575825039446,
+    "improved_nll": true,
+    "sample_count": 548,
+    "per_class_counts": {
+      "paddy_healthy": 118,
+      "rice_blast": 99,
+      "rice_brown_leaf_spot": 163,
+      "rice_tungro": 168
+    },
+    "crop": "paddy",
+    "source_split": "calibration",
+    "optimizer": "torch.optim.LBFGS on log_temperature",
+    "seed": 0,
+    "checkpoint_sha256": "f9719d48d3a8d274d039f0bd36d78cc5fa1282a8f15b2f471ab27d5c043e8117",
+    "calibration_logits_sha256": "d9981a2235a843be375d65e2b713225df6aad4e22870153f0a0ed4df8be77e9f",
+    "provisional_test_used": false
+  },
+  "cotton": {
+    "temperature": 0.11945409775578275,
+    "nll_before": 0.0012066243414073185,
+    "nll_after": 1.5183936970276853e-12,
+    "ece_before": 0.001172995130897747,
+    "ece_after": 1.518341008477364e-12,
+    "improved_nll": true,
+    "sample_count": 59,
+    "per_class_counts": {
+      "cotton_fusarium_wilt": 24,
+      "cotton_healthy": 13,
+      "cotton_verticillium_wilt": 22
+    },
+    "crop": "cotton",
+    "source_split": "calibration",
+    "optimizer": "torch.optim.LBFGS on log_temperature",
+    "seed": 0,
+    "checkpoint_sha256": "f9719d48d3a8d274d039f0bd36d78cc5fa1282a8f15b2f471ab27d5c043e8117",
+    "calibration_logits_sha256": "d9981a2235a843be375d65e2b713225df6aad4e22870153f0a0ed4df8be77e9f",
+    "provisional_test_used": false
+  },
+  "groundnut": {
+    "temperature": 0.5215946352798655,
+    "nll_before": 2.4963364554522275e-07,
+    "nll_after": 1.865442810704512e-12,
+    "ece_before": 2.4963331335392525e-07,
+    "ece_after": 1.8655077482776505e-12,
+    "improved_nll": true,
+    "sample_count": 53,
+    "per_class_counts": {
+      "groundnut_healthy": 45,
+      "groundnut_rust": 8
+    },
+    "crop": "groundnut",
+    "source_split": "calibration",
+    "optimizer": "torch.optim.LBFGS on log_temperature",
+    "seed": 0,
+    "checkpoint_sha256": "f9719d48d3a8d274d039f0bd36d78cc5fa1282a8f15b2f471ab27d5c043e8117",
+    "calibration_logits_sha256": "d9981a2235a843be375d65e2b713225df6aad4e22870153f0a0ed4df8be77e9f",
+    "provisional_test_used": false
+  }
+}

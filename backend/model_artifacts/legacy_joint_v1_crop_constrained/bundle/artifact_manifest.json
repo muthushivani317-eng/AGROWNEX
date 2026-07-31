@@ -1,0 +1,90 @@
+{
+  "bundle_version": "legacy_joint_v1_crop_constrained",
+  "artifacts": [
+    {
+      "path": "calibration/cotton_temperature.json",
+      "sha256": "c4bfe54dbfd1de0d7e6989ffaa16026a9037d868255859b3282cb063a19095d6",
+      "size_bytes": 708
+    },
+    {
+      "path": "calibration/crop_calibration_metrics.json",
+      "sha256": "238af146d1d1c4ced246fc778fb70b43df4e6e4aeeb7b26d21dd6d5e156900e3",
+      "size_bytes": 2253
+    },
+    {
+      "path": "calibration/groundnut_temperature.json",
+      "sha256": "d78e220975c1f284d979aa588498335ebae92e0195fc728e4312887167a69e95",
+      "size_bytes": 673
+    },
+    {
+      "path": "calibration/paddy_temperature.json",
+      "sha256": "6100d683b67d502621c5fe35b1ecc98181deef20c71252fc96e9570a854116eb",
+      "size_bytes": 708
+    },
+    {
+      "path": "lineage/model_lineage.json",
+      "sha256": "36fe27b5e7137b40ccae0ce73b699e6f82a834b7739c50730c6ad4aa4e5bcc8b",
+      "size_bytes": 2627
+    },
+    {
+      "path": "onnx/export_receipt.json",
+      "sha256": "577997d8bc9d1146b3cabf2f843dac1c37885580d94602910fdcc30479473be9",
+      "size_bytes": 654
+    },
+    {
+      "path": "onnx/model_opset17.onnx",
+      "sha256": "71539e500482d26e987994a08d6b85919a5e7bee03d7fc7cdbdf2dde74a37dfa",
+      "size_bytes": 6117947
+    },
+    {
+      "path": "onnx/parity_receipt.json",
+      "sha256": "ec8c96a05a1ebef9f4e9ef07ba8798adcc328b10431cf42a22e1ac55a542df16",
+      "size_bytes": 406
+    },
+    {
+      "path": "reports/crop_constrained_recalibration_decision.json",
+      "sha256": "07f3b7f2a927dec19ed55bbbd186b1a25be2948420b2768246534b10a253c010",
+      "size_bytes": 308
+    },
+    {
+      "path": "reports/crop_constrained_recalibration_report.md",
+      "sha256": "1a7752779d3d0d355c3934d62aa8f93d9f57f79eb08db1dc9a353e6b4750d07b",
+      "size_bytes": 6435
+    },
+    {
+      "path": "runtime/class_mapping.json",
+      "sha256": "cd86cf4a8197c4bb4646df65015b73bcf1b9023c2f76f215497cb69da76349a6",
+      "size_bytes": 513
+    },
+    {
+      "path": "runtime/crop_routing_policy.json",
+      "sha256": "a00994f6263d24f5771affb4ae7922b1f0f58f88d7a367d12cbe406ac2449e47",
+      "size_bytes": 1435
+    },
+    {
+      "path": "runtime/preprocessing.json",
+      "sha256": "7a5325a9a451775b1d531f2a4bf01665e4ec9969598696e64bf5799cfc2b8f0b",
+      "size_bytes": 2169
+    },
+    {
+      "path": "thresholds/cotton_abstention_policy.json",
+      "sha256": "54afe58dfdeeb95a946f0fba0cc977351a1f7fe14b4467c58255fc4b2e0e5048",
+      "size_bytes": 489
+    },
+    {
+      "path": "thresholds/crop_threshold_search_results.csv",
+      "sha256": "aafcdf09418104b0b41c069f98058d7f9bf255c79b1d2d9e09d1f23ed5f94081",
+      "size_bytes": 18388
+    },
+    {
+      "path": "thresholds/groundnut_abstention_policy.json",
+      "sha256": "073890fab56572dbbe9184d54b29558c185bbc127072c5a8e5eb78451746367c",
+      "size_bytes": 491
+    },
+    {
+      "path": "thresholds/paddy_abstention_policy.json",
+      "sha256": "3099065e22ba83cf3026a006dc749090bdf5b0967e633f42951bdbda003c2a37",
+      "size_bytes": 550
+    }
+  ]
+}

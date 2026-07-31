@@ -1,0 +1,89 @@
+{
+  "runtime_id": "chilli_mobilenetv3_small_v1_restricted",
+  "runtime_status": "RESTRICTED_FAIL_CLOSED_RUNTIME",
+  "policy_version": 1,
+  "crop_id": "chilli",
+  "model_name": "chilli_mobilenetv3_small_v1",
+  "architecture": "mobilenet_v3_small",
+  "checkpoint_epoch": 5,
+  "checkpoint_sha256": "adab7c3eefa009b78e1c9d335fc088d74b5f2b456eb7196950da385ed761ec26",
+  "temperature": 1.0000321865081787,
+  "class_to_index": {
+    "chilli__bacterial_spot": 0,
+    "chilli__cercospora_leaf_spot": 1,
+    "chilli__healthy": 2,
+    "chilli__leaf_curl_virus": 3
+  },
+  "acceptance_rule": {
+    "minimum_calibrated_confidence": 0.99,
+    "minimum_calibrated_margin": 0.99,
+    "operator": "AND",
+    "failure_action": "ABSTAIN"
+  },
+  "accepted_classes": [
+    "chilli__bacterial_spot",
+    "chilli__cercospora_leaf_spot",
+    "chilli__healthy",
+    "chilli__leaf_curl_virus"
+  ],
+  "class_rules": {
+    "chilli__bacterial_spot": {
+      "action": "ACCEPT_WHEN_GLOBAL_THRESHOLD_PASSES",
+      "minimum_calibrated_confidence": 0.99,
+      "minimum_calibrated_margin": 0.99
+    },
+    "chilli__cercospora_leaf_spot": {
+      "action": "ACCEPT_WHEN_GLOBAL_THRESHOLD_PASSES",
+      "minimum_calibrated_confidence": 0.99,
+      "minimum_calibrated_margin": 0.99
+    },
+    "chilli__healthy": {
+      "action": "ACCEPT_WHEN_GLOBAL_THRESHOLD_PASSES",
+      "minimum_calibrated_confidence": 0.99,
+      "minimum_calibrated_margin": 0.99
+    },
+    "chilli__leaf_curl_virus": {
+      "action": "ACCEPT_WHEN_GLOBAL_THRESHOLD_PASSES",
+      "minimum_calibrated_confidence": 0.99,
+      "minimum_calibrated_margin": 0.99
+    }
+  },
+  "global_fail_closed_rules": {
+    "confidence_below_threshold": "ABSTAIN",
+    "margin_below_threshold": "ABSTAIN",
+    "unknown_class": "ABSTAIN",
+    "non_finite_probability": "ABSTAIN",
+    "missing_policy": "RUNTIME_LOAD_FAILURE",
+    "invalid_temperature": "RUNTIME_LOAD_FAILURE",
+    "class_registry_mismatch": "RUNTIME_LOAD_FAILURE",
+    "checkpoint_hash_mismatch": "RUNTIME_LOAD_FAILURE"
+  },
+  "evidence_summary": {
+    "development_sample_count": 180,
+    "development_top1_accuracy": 1.0,
+    "development_macro_f1": 1.0,
+    "development_errors": 0,
+    "calibration_sample_count": 91,
+    "calibration_raw_accuracy": 0.989010989010989,
+    "calibration_selective_coverage": 0.989010989010989,
+    "calibration_accepted_count": 90,
+    "calibration_accepted_errors": 0,
+    "provisional_sample_count": 89,
+    "provisional_raw_accuracy": 0.9775280898876404,
+    "provisional_raw_macro_f1": 0.9621175523349437,
+    "provisional_selective_coverage": 0.9775280898876404,
+    "provisional_accepted_count": 87,
+    "provisional_abstained_count": 2,
+    "provisional_accepted_errors": 0
+  },
+  "restrictions": {
+    "public_dataset_provisional_result": true,
+    "provisional_test_rerun_allowed": false,
+    "provisional_test_tuning_allowed": false,
+    "field_validation_completed": false,
+    "tamil_nadu_accuracy_claim_allowed": false,
+    "farmer_accuracy_claim_allowed": false,
+    "official_accuracy_claim_allowed": false,
+    "expert_verified_claim_allowed": false
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "temperature": 0.5215946352798655,
+  "nll_before": 2.4963364554522275e-07,
+  "nll_after": 1.865442810704512e-12,
+  "ece_before": 2.4963331335392525e-07,
+  "ece_after": 1.8655077482776505e-12,
+  "improved_nll": true,
+  "sample_count": 53,
+  "per_class_counts": {
+    "groundnut_healthy": 45,
+    "groundnut_rust": 8
+  },
+  "crop": "groundnut",
+  "source_split": "calibration",
+  "optimizer": "torch.optim.LBFGS on log_temperature",
+  "seed": 0,
+  "checkpoint_sha256": "f9719d48d3a8d274d039f0bd36d78cc5fa1282a8f15b2f471ab27d5c043e8117",
+  "calibration_logits_sha256": "d9981a2235a843be375d65e2b713225df6aad4e22870153f0a0ed4df8be77e9f",
+  "provisional_test_used": false
+}

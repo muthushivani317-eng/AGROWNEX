@@ -3,8 +3,15 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.crop_runtime.router import router as crop_runtime_router
 from app.api.v1.health import router as health_router
+from app.banana_v3.api_router import router as banana_v3_router
+from app.crop_identity.router import router as crop_identity_router
+from app.crop_runtime.router import router as crop_runtime_router
+from app.gemini_crop_identification.router import (
+    router as gemini_crop_identification_router,
+)
+from app.legacy_joint.api_router import router as legacy_joint_router
+from app.model_boundaries.router import router as model_boundaries_router
 from app.modules.admin.router import router as admin_router
 from app.modules.ai.router import router as ai_router
 from app.modules.auth.router import router as auth_router
@@ -27,6 +34,8 @@ from app.modules.satellite.router import router as satellite_router
 from app.modules.schemes.router import router as schemes_router
 from app.modules.soil.router import router as soil_router
 from app.modules.weather.router import router as weather_router
+from app.plant_identifier.router import router as plant_identifier_router
+from app.restricted_crops.api_router import router as restricted_crops_router
 
 api_router = APIRouter()
 api_router.include_router(health_router)
@@ -36,7 +45,14 @@ api_router.include_router(farms_router)
 api_router.include_router(weather_router)
 api_router.include_router(ai_router)
 api_router.include_router(disease_router)
+api_router.include_router(banana_v3_router)
+api_router.include_router(legacy_joint_router)
+api_router.include_router(restricted_crops_router)
+api_router.include_router(model_boundaries_router)
+api_router.include_router(crop_identity_router)
 api_router.include_router(crop_runtime_router)
+api_router.include_router(gemini_crop_identification_router)
+api_router.include_router(plant_identifier_router)
 api_router.include_router(calendar_router)
 api_router.include_router(market_router)
 api_router.include_router(growth_router)

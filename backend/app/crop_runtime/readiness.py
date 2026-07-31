@@ -1,0 +1,182 @@
+"""Single fail-closed readiness resolver for crop disease runtimes."""
+from __future__ import annotations
+
+from dataclasses import asdict, dataclass
+from pathlib import Path
+
+from app.banana_v3.artifact_integrity import verify_artifacts
+from app.banana_v3.config import ARTIFACT_ROOT as BANANA_ROOT
+from app.legacy_joint.artifacts import verify_bundle as verify_legacy_bundle
+from app.legacy_joint.runtime import ARTIFACT_ROOT as LEGACY_ROOT
+
+from .registry import CropRegistry
+from .resolver import RuntimeResolver
+
+RESTRICTED_CROPS = {"redgram", "chilli"}
+APP_INTEGRATED = {"banana", "paddy", "cotton", "groundnut", *RESTRICTED_CROPS}
+# Programmatic invalid-image checks are integrated, but crop-domain/wrong-crop
+# validation still requires approved fixtures. Keep eligibility fail-closed.
+OOD_SAFETY_INTEGRATED: set[str] = set()
+LEGACY_CROPS = {"paddy", "cotton", "groundnut"}
+
+
+@dataclass(frozen=True)
+class CropReadiness:
+    crop_id: str
+    classification: str
+    artifact_present: bool
+    integrity_verified: bool
+    runtime_loadable: bool
+    api_integrated: bool
+    mobile_integrated: bool
+    technical_runtime_ready: bool
+    internal_testing_eligible: bool
+    pilot_testing_eligible: bool
+    general_farmer_inference_authorized: bool
+    field_validation_complete: bool
+    official_accuracy_claim_allowed: bool
+    blocking_reasons: list[str]
+
+    def public_dict(self) -> dict[str, object]:
+        value = asdict(self)
+        value.update(
+            {
+                "local_runtime_bundle_present": self.artifact_present,
+                "local_integrity_verified": self.integrity_verified,
+                "local_runtime_ready": self.runtime_loadable,
+                "integrity_status": (
+                    "VERIFIED"
+                    if self.integrity_verified
+                    else "LOCAL_RUNTIME_BUNDLE_MISSING"
+                    if not self.artifact_present
+                    else "FAILED_CLOSED"
+                ),
+                "inference_authorized": self.internal_testing_eligible,
+            }
+        )
+        return value
+
+
+class ReadinessResolver:
+    def __init__(self, registry: CropRegistry, project_root: Path) -> None:
+        self.registry = registry
+        self.runtime_resolver = RuntimeResolver(registry, project_root)
+
+    def resolve(self, crop_id: str) -> CropReadiness:
+        entry = self.registry.get(crop_id)
+        artifact_present, integrity_verified = self._integrity(entry.crop_id)
+        runtime_loadable = self._loadable(entry.crop_id, integrity_verified)
+        api_integrated = entry.crop_id in APP_INTEGRATED
+        mobile_integrated = entry.crop_id in APP_INTEGRATED
+        technical = runtime_loadable and api_integrated
+        blocking: list[str] = []
+        if not artifact_present:
+            blocking.append("ARTIFACT_MISSING")
+        elif not integrity_verified:
+            blocking.append("INTEGRITY_NOT_VERIFIED")
+        if not runtime_loadable:
+            blocking.append("RUNTIME_NOT_LOADABLE")
+        if not api_integrated:
+            blocking.append("API_ADAPTER_MISSING")
+        if not mobile_integrated:
+            blocking.append("MOBILE_ADAPTER_MISSING")
+        if entry.crop_id not in OOD_SAFETY_INTEGRATED:
+            blocking.append("OOD_SAFETY_NOT_PROVEN")
+        if not entry.tamil_nadu_field_validated:
+            blocking.append("FIELD_VALIDATION_PENDING")
+        blocking.append("GENERAL_FARMER_INFERENCE_NOT_AUTHORIZED")
+
+        internal = (
+            technical
+            and mobile_integrated
+            and (
+                entry.crop_id in OOD_SAFETY_INTEGRATED
+                or entry.crop_id in RESTRICTED_CROPS
+            )
+            and entry.crop_enabled
+            and (
+                entry.disease_detection_enabled
+                or entry.crop_id in LEGACY_CROPS
+                or entry.crop_id in RESTRICTED_CROPS
+            )
+        )
+        pilot = internal and entry.pilot_inference_eligible
+        classification = (
+            "INTERNAL_TEST_READY"
+            if internal
+            else "APP_INTEGRATED_TESTING_BLOCKED"
+            if technical and mobile_integrated
+            else "BACKEND_RUNTIME_READY"
+            if runtime_loadable
+            else "BACKEND_REGISTERED_NOT_LOADABLE"
+            if entry.crop_enabled
+            else "NOT_FOUND"
+        )
+        return CropReadiness(
+            crop_id=entry.crop_id,
+            classification=classification,
+            artifact_present=artifact_present,
+            integrity_verified=integrity_verified,
+            runtime_loadable=runtime_loadable,
+            api_integrated=api_integrated,
+            mobile_integrated=mobile_integrated,
+            technical_runtime_ready=technical,
+            internal_testing_eligible=internal,
+            pilot_testing_eligible=pilot,
+            general_farmer_inference_authorized=False,
+            field_validation_complete=entry.tamil_nadu_field_validated,
+            official_accuracy_claim_allowed=False,
+            blocking_reasons=blocking,
+        )
+
+    def _integrity(self, crop_id: str) -> tuple[bool, bool]:
+        try:
+            if crop_id == "banana":
+                present = BANANA_ROOT.is_dir()
+                if present:
+                    verify_artifacts(BANANA_ROOT)
+                return present, present
+            if crop_id in LEGACY_CROPS:
+                present = LEGACY_ROOT.is_dir()
+                if present:
+                    verify_legacy_bundle(LEGACY_ROOT)
+                return present, present
+            if crop_id in RESTRICTED_CROPS:
+                from app.restricted_crops.integrity import (
+                    RestrictedRuntimeIntegrityError,
+                    verify_restricted_package,
+                )
+
+                try:
+                    verify_restricted_package(crop_id)
+                    return True, True
+                except RestrictedRuntimeIntegrityError:
+                    return False, False
+            present = self.runtime_resolver.bundle_presence(crop_id)
+            if present:
+                self.runtime_resolver.verify_integrity(crop_id)
+            return present, present
+        except Exception:
+            return True, False
+
+    @staticmethod
+    def _loadable(crop_id: str, integrity_verified: bool) -> bool:
+        if not integrity_verified:
+            return False
+        if crop_id == "redgram":
+            try:
+                from app.restricted_crops.runtime import get_restricted_runtime
+
+                get_restricted_runtime(crop_id).load()
+                return True
+            except Exception:
+                return False
+        if crop_id == "chilli":
+            try:
+                from app.restricted_crops.runtime import get_restricted_runtime
+
+                get_restricted_runtime(crop_id).load()
+                return True
+            except Exception:
+                return False
+        return crop_id in APP_INTEGRATED

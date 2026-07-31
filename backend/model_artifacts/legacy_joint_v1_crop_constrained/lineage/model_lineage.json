@@ -1,0 +1,80 @@
+{
+  "verified_inputs": {
+    "checkpoint": {
+      "path": "/content/drive/MyDrive/AgrowAI_V1/outputs/mobilenetv3_small_v1/best.pt",
+      "sha256": "f9719d48d3a8d274d039f0bd36d78cc5fa1282a8f15b2f471ab27d5c043e8117",
+      "size_bytes": 18550999
+    },
+    "dev_logits": {
+      "path": "/content/drive/MyDrive/AgrowAI_V1/checkpoints/mobilenetv3_small_v1/baseline_exports/dev_logits.npz",
+      "sha256": "3a4943304816686b6721bc69f5c202d5705b3898e11cb648b3b2ad4471e6ce46",
+      "size_bytes": 28218
+    },
+    "calibration_logits": {
+      "path": "/content/drive/MyDrive/AgrowAI_V1/checkpoints/mobilenetv3_small_v1/baseline_exports/calibration_logits.npz",
+      "sha256": "d9981a2235a843be375d65e2b713225df6aad4e22870153f0a0ed4df8be77e9f",
+      "size_bytes": 14729
+    },
+    "class_mapping": {
+      "path": "/content/drive/MyDrive/AgrowAI_V1/checkpoints/mobilenetv3_small_v1/baseline_exports/class_to_index.json",
+      "sha256": "639d3615eb166f860221a2290ba87dabcca814ba74723315422e5a567388cc29",
+      "size_bytes": 227
+    },
+    "split_manifest": {
+      "path": "/content/drive/MyDrive/AgrowAI_V1/outputs/v1_split_manifest.json",
+      "sha256": "482cf5f9144cc0563e4e85d2bb3a9cb0e901896edf6bcae2d949dadfa65c232f",
+      "size_bytes": 8442498
+    },
+    "runtime_snapshot": {
+      "path": "/content/drive/MyDrive/AgrowAI_V1/checkpoints/mobilenetv3_small_v1/runtime_training_config_snapshot.json",
+      "sha256": "018769fba169cbe3421d8d6adb9b4fb0af89f1029f2e37460c08cf2cec08ee46",
+      "size_bytes": 4130
+    },
+    "ordered_classes": [
+      "cotton_fusarium_wilt",
+      "cotton_healthy",
+      "cotton_verticillium_wilt",
+      "groundnut_healthy",
+      "groundnut_rust",
+      "paddy_healthy",
+      "rice_blast",
+      "rice_brown_leaf_spot",
+      "rice_tungro"
+    ]
+  },
+  "checkpoint_identity": {
+    "epoch": 6,
+    "architecture": "mobilenetv3_small",
+    "ordered_mapping": [
+      "cotton_fusarium_wilt",
+      "cotton_healthy",
+      "cotton_verticillium_wilt",
+      "groundnut_healthy",
+      "groundnut_rust",
+      "paddy_healthy",
+      "rice_blast",
+      "rice_brown_leaf_spot",
+      "rice_tungro"
+    ],
+    "nine_class_output_tensors": [
+      {
+        "key": "classifier.3.weight",
+        "shape": [
+          9,
+          1024
+        ]
+      },
+      {
+        "key": "classifier.3.bias",
+        "shape": [
+          9
+        ]
+      }
+    ]
+  },
+  "preprocessing_decision": "PREPROCESSING_PROVEN",
+  "development_used_for_reporting_only": true,
+  "calibration_used_for_temperature_and_threshold_selection": true,
+  "provisional_test_used": false,
+  "model_weights_modified": false
+}

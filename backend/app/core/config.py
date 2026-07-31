@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     environment: str = Field(default="development")
     debug: bool = Field(default=True)
     api_v1_prefix: str = "/api/v1"
+    public_api_url: str = Field(default="")
+    trusted_hosts: list[str] = Field(default_factory=lambda: ["localhost", "testserver"])
+    request_timeout_seconds: float = Field(default=20.0, gt=0, le=120)
 
     # --- Database (PostgreSQL + PostGIS) ---
     database_url: str = Field(
@@ -49,6 +52,7 @@ class Settings(BaseSettings):
     # --- Auth (Firebase) ---
     firebase_project_id: str = Field(default="")
     firebase_credentials_json: str = Field(default="")
+    firebase_auth_emulator_host: str = Field(default="")
 
     # Server-side pepper for hashing refresh tokens / OTP fingerprints. MUST be
     # overridden in production via env; never commit a real secret.
@@ -67,6 +71,12 @@ class Settings(BaseSettings):
     rate_limit_window_seconds: int = 60
     # Reject request bodies larger than this before reading them into memory (8MB).
     max_request_body_bytes: int = 8 * 1024 * 1024
+
+    # --- Frozen disease classifier (Phase 3 Part 3) ---
+    disease_model_required: bool = True
+    disease_model_artifact_dir: str = "/models/mobilenetv3_small_v1"
+    disease_max_image_bytes: int = 8 * 1024 * 1024
+    disease_max_image_pixels: int = 25_000_000
 
     # --- Per-farmer daily AI quota (protects the Gemini budget from abuse) ---
     ai_daily_disease_quota: int = 30
@@ -114,6 +124,23 @@ class Settings(BaseSettings):
             problems.append("CORS_ORIGINS must be an explicit list (no '*').")
         if self.debug:
             problems.append("DEBUG must be false in production.")
+        if not self.public_api_url.startswith("https://"):
+            problems.append("PUBLIC_API_URL must be an HTTPS URL.")
+        if any(
+            marker in self.public_api_url.lower()
+            for marker in ("localhost", "127.0.0.1", "10.0.2.2")
+        ):
+            problems.append("PUBLIC_API_URL must not target a local or emulator host.")
+        if not self.trusted_hosts or "*" in self.trusted_hosts:
+            problems.append("TRUSTED_HOSTS must be an explicit list (no '*').")
+        if "localhost" in self.database_url or "localhost" in self.redis_url:
+            problems.append("Production DATABASE_URL and REDIS_URL must not use localhost.")
+        if not self.firebase_project_id or not self.firebase_credentials_json:
+            problems.append("Firebase Admin credentials are required in production.")
+        if self.firebase_auth_emulator_host:
+            problems.append("Firebase Auth Emulator is forbidden in production.")
+        if self.otp_provider == "mock":
+            problems.append("OTP_PROVIDER=mock is forbidden in production.")
         if problems:
             raise ProductionConfigError(
                 "Refusing to boot production: " + " ".join(problems)

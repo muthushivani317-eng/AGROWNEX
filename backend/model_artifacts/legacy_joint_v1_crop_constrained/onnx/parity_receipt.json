@@ -1,0 +1,22 @@
+{
+  "actual_opset": 17,
+  "input_name": "image",
+  "input_shape": [
+    "batch",
+    3,
+    224,
+    224
+  ],
+  "output_name": "logits",
+  "output_shape": [
+    "batch",
+    9
+  ],
+  "max_abs_difference": 4.887580871582031e-06,
+  "mean_abs_difference": 1.6709996089048218e-06,
+  "rtol": 0.0001,
+  "atol": 1e-05,
+  "passed": true,
+  "synthetic_inputs_only": true,
+  "parity_before_crop_restriction": true
+}

@@ -1,0 +1,19 @@
+{
+  "flow": "crop_constrained",
+  "crop": "groundnut",
+  "confidence_threshold": 0.5,
+  "margin_threshold": 0.0,
+  "support": 53,
+  "accepted": 53,
+  "coverage": 1.0,
+  "accepted_accuracy": 1.0,
+  "accepted_errors": 0,
+  "zero_accepted_classes": 0,
+  "worst_class_coverage": 1.0,
+  "worst_class_accepted_accuracy": 1.0,
+  "passes_gate": true,
+  "source_split": "calibration",
+  "temperature": 0.5215946352798655,
+  "user_crop_confirmation_required": true,
+  "provisional_test_used": false
+}

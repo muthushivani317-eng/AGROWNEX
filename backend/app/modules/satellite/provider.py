@@ -124,7 +124,7 @@ def get_default_provider() -> SatelliteProvider:
     """Select the configured provider. Defaults to the honest Sentinel seam; set
     SATELLITE_PROVIDER=mock to use deterministic sample data in development."""
     if SATELLITE_PROVIDER == SatelliteProviderName.MOCK.value:
-        logger.info("satellite provider: mock (sample data)")
+        logger.info("provider_configured provider=mock configured=true sample_data=true")
         return MockSatelliteProvider()
-    logger.info("satellite provider: sentinel (free Sentinel-2 seam)")
+    logger.info("provider_configured provider=sentinel configured=false sample_data=false")
     return SentinelProvider()

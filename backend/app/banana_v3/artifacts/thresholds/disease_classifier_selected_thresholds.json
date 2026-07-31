@@ -1,0 +1,5 @@
+{
+  "banana__cordana_leaf_spot": {"confidence": 0.34, "margin": 0.86},
+  "banana__pestalotiopsis_leaf_spot": {"confidence": 0.34, "margin": 0.88},
+  "banana__sigatoka_leaf_spot": {"confidence": 0.34, "margin": 0.00}
+}

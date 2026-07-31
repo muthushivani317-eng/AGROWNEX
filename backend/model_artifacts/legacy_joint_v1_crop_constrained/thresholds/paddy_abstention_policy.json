@@ -1,0 +1,19 @@
+{
+  "flow": "crop_constrained",
+  "crop": "paddy",
+  "confidence_threshold": 0.75,
+  "margin_threshold": 0.0,
+  "support": 548,
+  "accepted": 455,
+  "coverage": 0.8302919708029197,
+  "accepted_accuracy": 0.9494505494505494,
+  "accepted_errors": 23,
+  "zero_accepted_classes": 0,
+  "worst_class_coverage": 0.7676767676767676,
+  "worst_class_accepted_accuracy": 0.9078947368421053,
+  "passes_gate": true,
+  "source_split": "calibration",
+  "temperature": 1.185621730465097,
+  "user_crop_confirmation_required": true,
+  "provisional_test_used": false
+}

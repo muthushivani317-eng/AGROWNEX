@@ -15,6 +15,13 @@ class ModelAvailabilityStatus(StrEnum):
     DISABLED = "DISABLED"
 
 
+class ClassSpecificGate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    confidence_threshold: float = Field(ge=0, le=1)
+    margin_threshold: float = Field(ge=0, le=1)
+
+
 class CropRegistryEntry(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -27,13 +34,28 @@ class CropRegistryEntry(BaseModel):
     architecture: str | None = None
     runtime_path: str | None
     checkpoint_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    deployment_zip_sha256: str | None = Field(
+        default=None, pattern=r"^[0-9a-f]{64}$"
+    )
+    deployment_status: str | None = None
     supported_classes: list[str]
+    expected_temperature: float | None = Field(default=None, gt=0)
+    expected_class_gates: dict[str, ClassSpecificGate] | None = None
+    thresholds_filename: str = Field(
+        default="selected_thresholds.json",
+        pattern=r"^[A-Za-z0-9_.-]+\.json$",
+    )
+    frozen_fallback: Literal["ABSTAIN"] | None = None
     crop_enabled: bool
     disease_detection_enabled: bool
     advisory_enabled: bool
+    pilot_inference_eligible: bool = False
+    general_farmer_inference_authorized: bool | None = None
     limitation_message_en: str
     limitation_message_ta: str
     official_accuracy_claim: Literal[False]
+    expert_verified: Literal[False] = False
+    tamil_nadu_field_validated: Literal[False] = False
     field_validation_status: str
     last_verified_at: str | None
     registry_schema_version: Literal["1.0.0"]
@@ -47,6 +69,12 @@ class CropRegistryEntry(BaseModel):
                 raise ValueError("unready crop cannot declare a runtime path")
         if not self.crop_enabled and self.disease_detection_enabled:
             raise ValueError("disabled crop cannot enable disease detection")
+        if self.general_farmer_inference_authorized is True:
+            raise ValueError("registry cannot pre-authorize farmer inference")
+        if self.expected_class_gates is not None and list(
+            self.expected_class_gates
+        ) != self.supported_classes:
+            raise ValueError("class-specific gate order must match supported classes")
         return self
 
 

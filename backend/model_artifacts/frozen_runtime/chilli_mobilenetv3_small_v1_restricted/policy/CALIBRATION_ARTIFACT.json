@@ -1,0 +1,31 @@
+{
+  "crop_id": "chilli",
+  "model_name": "chilli_mobilenetv3_small_v1",
+  "checkpoint_sha256": "adab7c3eefa009b78e1c9d335fc088d74b5f2b456eb7196950da385ed761ec26",
+  "checkpoint_epoch": 5,
+  "method": "temperature_scaling",
+  "temperature": 1.0000321865081787,
+  "calibration_sample_count": 91,
+  "class_order": [
+    "chilli__bacterial_spot",
+    "chilli__cercospora_leaf_spot",
+    "chilli__healthy",
+    "chilli__leaf_curl_virus"
+  ],
+  "metrics_before": {
+    "accuracy": 0.989010989010989,
+    "negative_log_likelihood": 0.010529522262500205,
+    "expected_calibration_error_15_bins": 0.006105986270275745,
+    "multiclass_brier_score": 0.007521154866448731
+  },
+  "metrics_after": {
+    "accuracy": 0.989010989010989,
+    "negative_log_likelihood": 0.010529509445049115,
+    "expected_calibration_error_15_bins": 0.006105931250603645,
+    "multiclass_brier_score": 0.007521087914845194
+  },
+  "incorrect_prediction_count": 1,
+  "calibration_split_accessed": true,
+  "provisional_test_accessed": false,
+  "temperature_selection_used_provisional_test": false
+}

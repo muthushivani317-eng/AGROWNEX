@@ -1,0 +1,68 @@
+{
+  "routing_input": "explicit_user_crop_confirmation",
+  "ai_crop_verification": false,
+  "user_crop_confirmation_required": true,
+  "restrict_logits_before_calibration_and_softmax": true,
+  "groups": {
+    "cotton": {
+      "global_indices": [
+        0,
+        1,
+        2
+      ],
+      "class_ids": [
+        "cotton_fusarium_wilt",
+        "cotton_healthy",
+        "cotton_verticillium_wilt"
+      ],
+      "forbidden_class_ids": [
+        "groundnut_healthy",
+        "groundnut_rust",
+        "paddy_healthy",
+        "rice_blast",
+        "rice_brown_leaf_spot",
+        "rice_tungro"
+      ]
+    },
+    "groundnut": {
+      "global_indices": [
+        3,
+        4
+      ],
+      "class_ids": [
+        "groundnut_healthy",
+        "groundnut_rust"
+      ],
+      "forbidden_class_ids": [
+        "cotton_fusarium_wilt",
+        "cotton_healthy",
+        "cotton_verticillium_wilt",
+        "paddy_healthy",
+        "rice_blast",
+        "rice_brown_leaf_spot",
+        "rice_tungro"
+      ]
+    },
+    "paddy": {
+      "global_indices": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "class_ids": [
+        "paddy_healthy",
+        "rice_blast",
+        "rice_brown_leaf_spot",
+        "rice_tungro"
+      ],
+      "forbidden_class_ids": [
+        "cotton_fusarium_wilt",
+        "cotton_healthy",
+        "cotton_verticillium_wilt",
+        "groundnut_healthy",
+        "groundnut_rust"
+      ]
+    }
+  }
+}
