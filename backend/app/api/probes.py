@@ -1,6 +1,6 @@
 """Kubernetes-style liveness/readiness probes (Phase 3 — reliability).
 
-``/healthz`` is a dependency-free liveness check (is the process up?).
+``/health`` and ``/healthz`` are dependency-free liveness checks (is the process up?).
 ``/readyz`` verifies the app can actually serve traffic: the database responds
 and, when Redis is the configured cache/rate-limit backend, Redis responds too.
 Returns 503 when not ready so orchestrators stop routing to a broken pod.
@@ -24,6 +24,7 @@ from app.core.metrics import metrics
 
 logger = get_logger("probes")
 router = APIRouter(tags=["probes"])
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 
 
 def build_readiness(*, db_ok: bool, redis_ok: bool, model_ok: bool = True) -> tuple[int, dict]:
@@ -66,6 +67,7 @@ async def _check_redis() -> bool:
         return False
 
 
+@router.get("/health")
 @router.get("/healthz")
 async def healthz():
     """Liveness — always fast, no dependencies."""
@@ -99,7 +101,7 @@ async def controlled_pilot_readiness():
 
     crops = ("banana", "paddy", "cotton", "groundnut", "redgram", "chilli")
     registry = load_registry()
-    resolver = ReadinessResolver(registry, Path(__file__).resolve().parents[2])
+    resolver = ReadinessResolver(registry, _REPOSITORY_ROOT)
     runtime_status = {}
     for crop_id in crops:
         try:
