@@ -97,7 +97,7 @@ class AuthService:
                 verified=False,
             )
         )
-        logger.info("OTP dispatch recorded for %s", phone_number)
+        logger.info("OTP dispatch recorded")
         return OTP_TTL_SECONDS
 
     # ----- Session establishment -----
@@ -137,31 +137,49 @@ class AuthService:
         device_name: str | None,
         device_type: str | None,
     ) -> SessionResult:
-        claims = verify_id_token(id_token)
-        user = await self._get_or_create_from_claims(claims)
-        await self.users.touch_last_login(user)
+        stage = "firebase_token_verification"
+        try:
+            claims = verify_id_token(id_token)
+            stage = "user_lookup_or_create"
+            user = await self._get_or_create_from_claims(claims)
+            stage = "last_login_update"
+            await self.users.touch_last_login(user)
 
-        await self.logins.add(
-            LoginHistory(user_id=user.id, login_method=method.value, success=True)
-        )
-        session = await self.sessions.add(
-            UserSession(
-                user_id=user.id,
-                device_name=device_name,
-                device_type=device_type,
-                last_active=datetime.now(UTC),
+            stage = "login_history_creation"
+            await self.logins.add(
+                LoginHistory(user_id=user.id, login_method=method.value, success=True)
             )
-        )
-        refresh_plain = await self._issue_refresh_token(user.id)
-        roles = await self.roles.get_user_role_names(user.id)
-        profile = await self.profiles.get_by_user_id(user.id)
-        return SessionResult(
-            user=user,
-            profile=profile,
-            roles=roles,
-            refresh_token=refresh_plain,
-            session_id=session.id,
-        )
+            stage = "session_creation"
+            session = await self.sessions.add(
+                UserSession(
+                    user_id=user.id,
+                    device_name=device_name,
+                    device_type=device_type,
+                    last_active=datetime.now(UTC),
+                )
+            )
+            stage = "refresh_token_persistence"
+            refresh_plain = await self._issue_refresh_token(user.id)
+            stage = "role_lookup"
+            roles = await self.roles.get_user_role_names(user.id)
+            stage = "profile_lookup"
+            profile = await self.profiles.get_by_user_id(user.id)
+            return SessionResult(
+                user=user,
+                profile=profile,
+                roles=roles,
+                refresh_token=refresh_plain,
+                session_id=session.id,
+            )
+        except Exception as exc:
+            # The outer DB dependency owns rollback. Log only the stable stage and
+            # exception class; never tokens, decoded claims, phone numbers or IDs.
+            logger.exception(
+                "Authentication session establishment failed stage=%s exception=%s",
+                stage,
+                type(exc).__name__,
+            )
+            raise
 
     async def _get_or_create_from_claims(self, claims: dict[str, Any]) -> User:
         firebase_uid = claims["uid"]
@@ -179,7 +197,7 @@ class AuthService:
         )
         created = await self.users.add(user)
         await self._assign_default_role(created.id)
-        logger.info("Created user for firebase_uid=%s", firebase_uid)
+        logger.info("Created Firebase-authenticated user")
         return created
 
     async def _assign_default_role(self, user_id: uuid.UUID) -> None:
