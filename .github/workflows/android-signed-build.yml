@@ -1,0 +1,109 @@
+name: Android signed build
+
+on:
+  workflow_dispatch:
+    inputs:
+      variant:
+        description: Release-derived Android variant
+        required: true
+        type: choice
+        options:
+          - internalTesting
+          - localStandalone
+          - release
+
+permissions:
+  contents: read
+
+jobs:
+  signed-build:
+    runs-on: ubuntu-latest
+    environment: production-signing
+    defaults:
+      run:
+        working-directory: agrow-ai
+    env:
+      AGROWAI_RELEASE_STORE_FILE: ${{ github.workspace }}/agrow-ai/android/app/agrowai-release.jks
+      AGROWAI_RELEASE_STORE_PASSWORD: ${{ secrets.AGROWAI_RELEASE_STORE_PASSWORD }}
+      AGROWAI_RELEASE_KEY_ALIAS: ${{ secrets.AGROWAI_RELEASE_KEY_ALIAS }}
+      AGROWAI_RELEASE_KEY_PASSWORD: ${{ secrets.AGROWAI_RELEASE_KEY_PASSWORD }}
+      EXPO_PUBLIC_API_BASE_URL: ${{ secrets.EXPO_PUBLIC_API_BASE_URL }}
+      EXPO_PUBLIC_DIAGNOSIS_API_BASE_URL: ${{ secrets.EXPO_PUBLIC_DIAGNOSIS_API_BASE_URL }}
+      EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.EXPO_PUBLIC_FIREBASE_API_KEY }}
+      EXPO_PUBLIC_FIREBASE_PROJECT_ID: agrow-ai-8ba58
+      EXPO_PUBLIC_FIREBASE_APP_ID: ${{ secrets.EXPO_PUBLIC_FIREBASE_APP_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: agrow-ai/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Decode protected signing keystore
+        shell: bash
+        env:
+          AGROWAI_RELEASE_KEYSTORE_BASE64: ${{ secrets.AGROWAI_RELEASE_KEYSTORE_BASE64 }}
+        run: |
+          test -n "$AGROWAI_RELEASE_KEYSTORE_BASE64"
+          printf '%s' "$AGROWAI_RELEASE_KEYSTORE_BASE64" | base64 --decode > "$AGROWAI_RELEASE_STORE_FILE"
+          chmod 600 "$AGROWAI_RELEASE_STORE_FILE"
+      # Required manual setup: add GOOGLE_SERVICES_JSON_BASE64 to the
+      # production-signing GitHub Environment alongside the signing secrets.
+      - name: Decode Firebase Android configuration
+        shell: bash
+        env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          test -n "$GOOGLE_SERVICES_JSON_BASE64"
+          printf '%s' "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > android/app/google-services.json
+      - name: Select release environment
+        shell: bash
+        run: |
+          case "${{ inputs.variant }}" in
+            internalTesting)
+              echo 'GRADLE_TASK=assembleInternalTesting' >> "$GITHUB_ENV"
+              echo 'AGROWAI_BUILD_PROFILE=internal_testing' >> "$GITHUB_ENV"
+              echo 'EXPO_PUBLIC_APP_ENV=internal_testing' >> "$GITHUB_ENV"
+              echo 'EXPO_PUBLIC_AGROWAI_INTERNAL_FEATURE_TESTING=true' >> "$GITHUB_ENV"
+              echo 'EXPO_PUBLIC_AGROWAI_FOUNDER_FULL_ACCESS=true' >> "$GITHUB_ENV"
+              echo 'EXPO_PUBLIC_AGROWAI_ENABLE_ALL_TEST_ROUTES=true' >> "$GITHUB_ENV"
+              ;;
+            localStandalone)
+              echo 'GRADLE_TASK=assembleLocalStandalone' >> "$GITHUB_ENV"
+              echo 'AGROWAI_BUILD_PROFILE=localStandalone' >> "$GITHUB_ENV"
+              echo 'EXPO_PUBLIC_APP_ENV=localStandalone' >> "$GITHUB_ENV"
+              echo 'EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:8000/api/v1' >> "$GITHUB_ENV"
+              echo 'EXPO_PUBLIC_DIAGNOSIS_API_BASE_URL=http://127.0.0.1:8000' >> "$GITHUB_ENV"
+              ;;
+            release)
+              echo 'GRADLE_TASK=assembleRelease' >> "$GITHUB_ENV"
+              echo 'AGROWAI_BUILD_PROFILE=production' >> "$GITHUB_ENV"
+              echo 'EXPO_PUBLIC_APP_ENV=production' >> "$GITHUB_ENV"
+              ;;
+          esac
+          echo 'NODE_ENV=production' >> "$GITHUB_ENV"
+      - name: Validate signing credential
+        run: ./android/gradlew -p android :app:validateProductionSigning --no-daemon
+      - name: Build selected signed variant
+        run: ./android/gradlew -p android :app:${GRADLE_TASK} --no-daemon --console=plain
+      - name: Remove decoded keystore
+        if: always()
+        shell: bash
+        run: rm -f -- "$AGROWAI_RELEASE_STORE_FILE"
+      - name: Remove decoded Firebase Android configuration
+        if: always()
+        shell: bash
+        run: rm -f -- android/app/google-services.json
+      - name: Upload signed artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: agrowai-${{ inputs.variant }}-${{ github.run_id }}
+          path: agrow-ai/android/app/build/outputs/apk/
+          if-no-files-found: error
+          retention-days: 7
