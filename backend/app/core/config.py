@@ -3,6 +3,7 @@
 All settings come from environment variables / `.env`. Secrets are never
 hardcoded and never committed.
 """
+
 from __future__ import annotations
 
 from functools import lru_cache
@@ -36,9 +37,7 @@ class ProductionConfigError(RuntimeError):
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     # --- App ---
     app_name: str = "AgrowAI API"
@@ -100,10 +99,28 @@ class Settings(BaseSettings):
     # --- Per-farmer daily AI quota (protects the Gemini budget from abuse) ---
     ai_daily_disease_quota: int = 30
     ai_daily_chat_quota: int = 100
+    ai_daily_plant_identifier_quota: int = 15
+    ai_daily_growth_quota: int = 10
+    ai_daily_nutrient_quota: int = 10
+
+    # --- Controlled OpenAI disease shadow evaluation ---
+    # Disabled by default. This never changes or appears in the farmer response.
+    openai_disease_comparison_enabled: bool = False
+    openai_disease_comparison_api_key: str = ""
+    openai_disease_comparison_model: str = ""
+    openai_disease_comparison_timeout_seconds: float = Field(default=30.0, gt=0, le=120)
 
     # --- Mock-provider safety (product rule 5) ---
     # Production refuses to boot with a mock provider active unless allow-listed here.
     allow_mock_providers: bool = Field(default=False)
+
+    # --- Legacy-joint supervised field testing ---
+    # Permission alone never activates inference. A ControlledTester must also
+    # activate a process-local session, which intentionally resets on restart.
+    legacy_joint_field_test_override_permitted: bool = Field(default=False)
+    legacy_joint_field_test_audit_path: str = Field(
+        default="logs/field_testing/legacy_joint_override.jsonl"
+    )
 
     # --- SMS / OTP delivery ---
     # Firebase dispatches phone-auth SMS on the Android client; the backend only
@@ -167,9 +184,7 @@ class Settings(BaseSettings):
         if self.otp_provider == "mock":
             problems.append("OTP_PROVIDER=mock is forbidden in production.")
         if problems:
-            raise ProductionConfigError(
-                "Refusing to boot production: " + " ".join(problems)
-            )
+            raise ProductionConfigError("Refusing to boot production: " + " ".join(problems))
 
 
 @lru_cache
