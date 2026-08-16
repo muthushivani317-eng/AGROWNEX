@@ -89,11 +89,16 @@ class NotificationService:
     # Seeding
     # ----------------------------------------------------------------- #
     async def ensure_templates_seeded(self) -> None:
-        """Materialize the rule table into ``notification_templates`` (idempotent)."""
-        for (module, event_type), rule in RULES.items():
-            if await self.repo.template_exists(module, event_type):
-                continue
-            await self.repo.add_template(
+        """Materialize the rule table into ``notification_templates`` (idempotent).
+
+        Uses a single atomic upsert rather than a per-row check-then-insert --
+        this runs on essentially every authenticated read, so two concurrent
+        requests hitting an unseeded row at the same time must not be able to
+        race each other into an IntegrityError (see
+        ``NotificationRepository.upsert_templates``).
+        """
+        await self.repo.upsert_templates(
+            [
                 NotificationTemplate(
                     module=module,
                     event_type=event_type,
@@ -104,7 +109,9 @@ class NotificationService:
                     expires_after_hours=rule.expires_after_hours,
                     action_route=rule.action_route,
                 )
-            )
+                for (module, event_type), rule in RULES.items()
+            ]
+        )
 
     async def _get_or_create_preferences(self, user: User) -> NotificationPreferences:
         prefs = await self.repo.get_preferences(user.id)

@@ -10,6 +10,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import Select, exists, func, or_, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.notifications.models import (
@@ -286,6 +287,45 @@ class NotificationRepository:
         self.session.add(template)
         await self.session.flush()
         return template
+
+    async def upsert_templates(self, templates: list[NotificationTemplate]) -> None:
+        """Idempotently insert any rule rows not already present, in one statement.
+
+        ``ensure_templates_seeded`` runs on effectively every authenticated read
+        (``sync()`` is called from both ``list_notifications`` and
+        ``unread_count``), so a plain ``template_exists()`` check followed by a
+        separate ``add_template()`` insert races: two concurrent requests can
+        both observe "not seeded yet" for the same (module, event_type) and both
+        attempt to insert it, and the loser raises ``IntegrityError`` on
+        ``uq_notification_templates_event`` instead of the row simply already
+        being there -- surfaced as a live 500 on ``GET
+        /api/v1/notifications/unread`` during the 2026-08 pre-release smoke
+        test. A single ``INSERT ... ON CONFLICT DO NOTHING`` is atomic at the
+        database level, so concurrent callers can never collide on it.
+        """
+        if not templates:
+            return
+        stmt = (
+            pg_insert(NotificationTemplate)
+            .values(
+                [
+                    {
+                        "module": template.module,
+                        "event_type": template.event_type,
+                        "title_key": template.title_key,
+                        "message_key": template.message_key,
+                        "severity": template.severity,
+                        "priority": template.priority,
+                        "expires_after_hours": template.expires_after_hours,
+                        "action_route": template.action_route,
+                    }
+                    for template in templates
+                ]
+            )
+            .on_conflict_do_nothing(index_elements=["module", "event_type"])
+        )
+        await self.session.execute(stmt)
+        await self.session.flush()
 
     # ----------------------------------------------------------------- #
     # Future queue
