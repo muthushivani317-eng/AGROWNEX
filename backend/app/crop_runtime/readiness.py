@@ -7,7 +7,9 @@ from typing import Final
 
 from app.banana_v3.artifact_integrity import verify_artifacts
 from app.banana_v3.config import ARTIFACT_ROOT as BANANA_ROOT
-from app.legacy_joint.artifacts import verify_bundle as verify_legacy_bundle
+from app.legacy_joint.artifacts import (
+    verify_bundle_for_controlled_field_test as verify_legacy_bundle,
+)
 from app.legacy_joint.runtime import ARTIFACT_ROOT as LEGACY_ROOT
 
 from .registry import CropRegistry
@@ -61,7 +63,7 @@ class CropReadiness:
                     if not self.artifact_present
                     else "FAILED_CLOSED"
                 ),
-                "inference_authorized": self.internal_testing_eligible,
+                "technical_testing_eligible": self.internal_testing_eligible,
             }
         )
         return value
@@ -183,6 +185,24 @@ class ReadinessResolver:
     def _loadable(crop_id: str, integrity_verified: bool) -> bool:
         if not integrity_verified:
             return False
+        if crop_id == "banana":
+            try:
+                from app.banana_v3.inference_service import InferenceService
+
+                InferenceService().load()
+                return True
+            except Exception:
+                return False
+        if crop_id in LEGACY_CROPS:
+            try:
+                from app.legacy_joint.runtime import (
+                    get_legacy_joint_controlled_field_test_runtime,
+                )
+
+                get_legacy_joint_controlled_field_test_runtime().load()
+                return True
+            except Exception:
+                return False
         if crop_id == "redgram":
             try:
                 from app.restricted_crops.runtime import get_restricted_runtime

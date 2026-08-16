@@ -1,7 +1,23 @@
 .venv/
+.venv_*/
 __pycache__/
 *.pyc
 .env
+.env.*
+!.env.example
 .pytest_cache/
 .ruff_cache/
 *.egg-info/
+*.db
+*.zip
+.tmp_*/
+logs/
+model_artifacts/incoming/
+
+# --- Scratch/generated (2026-08 pre-release audit follow-up) ---
+.codex_full_*.txt
+AgrowAIAgrowAi_app.codex_tmprepair_full_backend/
+openapi.json
+banana_v3_build_receipt.json
+activate_body.json
+test_vision_diagnosis.py

@@ -14,12 +14,13 @@ from __future__ import annotations
 
 import asyncio
 import uuid
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import SessionLocal
 from app.core.logging import get_logger
+from app.core.timezone import today_ist
 from app.modules.auth.models import User
 from app.modules.market.cache import MarketCache, market_cache
 from app.modules.market.constants import (
@@ -71,6 +72,7 @@ class MarketService:
         # the event loop only weakly references a bare ``create_task`` result,
         # so the refresh could be garbage-collected mid-flight (see asyncio docs).
         self._refresh_tasks: set[asyncio.Task[None]] = set()
+        self._refresh_tasks_by_key: dict[str, asyncio.Task[None]] = {}
 
     # ----------------------------------------------------------------- #
     # Current prices
@@ -84,9 +86,11 @@ class MarketService:
             district=filters.district,
             state=filters.state,
         )
-        await self._ensure_fresh(query)
+        refresh_started = await self._ensure_fresh(query)
 
-        on_date = datetime.now(UTC).date() if today_only else None
+        # India Standard Time, not UTC (docs: app.core.timezone) -- this is a
+        # "what day is it for the farmer" boundary, not an event timestamp.
+        on_date = today_ist() if today_only else None
         offset = (filters.page - 1) * filters.page_size
         rows, total = await self.repo.list_prices(
             crop=filters.crop,
@@ -97,6 +101,39 @@ class MarketService:
             limit=filters.page_size,
             offset=offset,
         )
+        if not rows and refresh_started:
+            refresh_task = self._refresh_tasks_by_key.get(self.cache.key(query))
+            if refresh_task is not None:
+                await refresh_task
+                rows, total = await self.repo.list_prices(
+                    crop=filters.crop,
+                    market=filters.market,
+                    district=filters.district,
+                    state=filters.state,
+                    on_date=on_date,
+                    limit=filters.page_size,
+                    offset=offset,
+                )
+        # Mandi publications can arrive after midnight. The "Today" view should
+        # remain useful on those days by showing the most recent reported market
+        # date instead of incorrectly presenting an empty result.
+        if today_only and not rows:
+            latest_date = await self.repo.latest_price_date(
+                crop=filters.crop,
+                market=filters.market,
+                district=filters.district,
+                state=filters.state,
+            )
+            if latest_date is not None:
+                rows, total = await self.repo.list_prices(
+                    crop=filters.crop,
+                    market=filters.market,
+                    district=filters.district,
+                    state=filters.state,
+                    on_date=latest_date,
+                    limit=filters.page_size,
+                    offset=offset,
+                )
         items = [
             MarketPriceOut.from_row(
                 price, market=loc.market_name, district=loc.district, state=loc.state
@@ -123,7 +160,7 @@ class MarketService:
         records = await self._fetch_and_store(query)
         return len(records)
 
-    async def _ensure_fresh(self, query: PriceQuery) -> None:
+    async def _ensure_fresh(self, query: PriceQuery) -> bool:
         """Schedule a provider refresh without blocking the response on it.
 
         The request never waits on the external provider. If the query is
@@ -143,11 +180,20 @@ class MarketService:
         """
         key = self.cache.key(query)
         if self.cache.get(key) is not None:
-            return
+            return False
         self.cache.set(key, True)
         task = asyncio.create_task(self._background_refresh(query))
         self._refresh_tasks.add(task)
-        task.add_done_callback(self._refresh_tasks.discard)
+        self._refresh_tasks_by_key[key] = task
+        task.add_done_callback(
+            lambda completed: (
+                self._refresh_tasks.discard(completed),
+                self._refresh_tasks_by_key.pop(key, None)
+                if self._refresh_tasks_by_key.get(key) is completed
+                else None,
+            )
+        )
+        return True
 
     async def _background_refresh(self, query: PriceQuery) -> None:
         """Fetch + store prices for ``query`` on a detached background task.
@@ -191,7 +237,8 @@ class MarketService:
         except MarketDataUnavailableError:
             pass
 
-        date_from = datetime.now(UTC).date() - timedelta(days=days)
+        # India Standard Time, not UTC (docs: app.core.timezone).
+        date_from = today_ist() - timedelta(days=days)
         location, points = await self.repo.history(
             commodity=crop, market=market, district=district, date_from=date_from
         )

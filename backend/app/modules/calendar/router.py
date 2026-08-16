@@ -9,6 +9,7 @@
 Thin routes — deterministic generation and weather advisories live in
 ``CalendarService``.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -113,17 +114,22 @@ async def calendar_timeline(
     farm_id: uuid.UUID | None = Query(None),
     crop: str | None = Query(None),
     status: str | None = Query(None, pattern="^(pending|done|skipped)$"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(100, ge=1, le=200),
 ):
-    """Full activity timeline (filterable by farm, crop and status)."""
+    """Full activity timeline (filterable by farm, crop and status), paginated."""
     events = await service.timeline(
-        current_user, farm_id=farm_id, crop=crop, status=status
+        current_user,
+        farm_id=farm_id,
+        crop=crop,
+        status=status,
+        page=page,
+        page_size=page_size,
     )
     return success(_out(events))
 
 
-@router.put(
-    "/events/{event_id}", response_model=SuccessResponse[CalendarEventOut]
-)
+@router.put("/events/{event_id}", response_model=SuccessResponse[CalendarEventOut])
 async def update_event(
     event_id: uuid.UUID,
     payload: UpdateCalendarEventRequest,
@@ -143,7 +149,9 @@ async def calendar_for_farm(
     farm_id: uuid.UUID,
     current_user: CurrentUser,
     service: CalendarServiceDep,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(100, ge=1, le=200),
 ):
-    """Full calendar for a single farm (docs: GET /calendar/{farmId})."""
-    events = await service.for_farm(current_user, farm_id)
+    """Full calendar for a single farm (docs: GET /calendar/{farmId}), paginated."""
+    events = await service.for_farm(current_user, farm_id, page=page, page_size=page_size)
     return success(_out(events))

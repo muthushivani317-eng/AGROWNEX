@@ -1,0 +1,39 @@
+{
+  "package_version": "1.0.0",
+  "model_name": "redgram_mobilenetv3_small_v3",
+  "architecture": "mobilenet_v3_small",
+  "split_manifest": "frozen_split_manifest.csv",
+  "split_manifest_sha256": "2c0f864cd084a6b1448d223dbd74ae1558084c9586a3c9f94c1ceb6492028986",
+  "expected_total": 697,
+  "expected_splits": {
+    "calibration": 53,
+    "development_validation": 105,
+    "provisional_test": 52,
+    "training": 487
+  },
+  "classes": [
+    "redgram__healthy",
+    "redgram__leaf_spot",
+    "redgram__sterility_mosaic"
+  ],
+  "image_size": 224,
+  "normalization_mean": [
+    0.485,
+    0.456,
+    0.406
+  ],
+  "normalization_std": [
+    0.229,
+    0.224,
+    0.225
+  ],
+  "batch_size": 32,
+  "num_workers": 2,
+  "epochs": 30,
+  "early_stopping_patience": 6,
+  "learning_rate": 0.0003,
+  "weight_decay": 0.0001,
+  "seed": 41212,
+  "farmer_inference_enabled": false,
+  "official_accuracy_claim": false
+}

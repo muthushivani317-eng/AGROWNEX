@@ -1,115 +1,49 @@
-"""Fail-closed capability registry for the legacy joint disease endpoint.
+"""Compatibility accessors backed exclusively by the crop runtime registry.
 
-Banana V3 has a separate verified endpoint. The legacy joint classifier is not
-enabled until its checkpoint lineage, calibration, thresholds and bundle are
-recovered and verified.
+New API code should use :mod:`app.modules.disease.capability_service`, which
+also combines authenticated roles with executable runtime readiness.
 """
-
 from __future__ import annotations
 
-from enum import StrEnum
+from app.crop_runtime.registry import load_registry
 
 
-class DatasetVerificationStatus(StrEnum):
-    UNREVIEWED = "UNREVIEWED"
-    EXPERT_REVIEW_PENDING = "EXPERT_REVIEW_PENDING"
-    EXPERT_VERIFIED = "EXPERT_VERIFIED"
-    REJECTED = "REJECTED"
-
-
-class ModelDeploymentStatus(StrEnum):
-    NOT_TRAINED = "NOT_TRAINED"
-    TRAINING = "TRAINING"
-    PROVISIONAL_EVALUATION = "PROVISIONAL_EVALUATION"
-    DEPLOYED_RESEARCH_ONLY = "DEPLOYED_RESEARCH_ONLY"
-    PRODUCTION_APPROVED = "PRODUCTION_APPROVED"
-
-
-def _capability(
-    crop: str,
-    dataset: DatasetVerificationStatus,
-    model: ModelDeploymentStatus,
-    disease_available: bool,
-) -> dict:
+def _legacy_view() -> dict[str, dict[str, object]]:
+    registry = load_registry()
     return {
-        "crop": crop,
-        "visible_in_app": True,
-        "dataset_verification_status": dataset.value,
-        "disease_model_status": model.value,
-        "disease_model_available": disease_available,
-        "nutrient_model_available": True,
-        "satellite_support_available": True,
-        "production_approved": False,
+        entry.crop_id: {
+            "crop": entry.crop_id,
+            "visible_in_app": entry.crop_enabled,
+            "dataset_verification_status": entry.field_validation_status,
+            "disease_model_status": entry.model_status.value,
+            "disease_model_available": entry.disease_detection_enabled,
+            "nutrient_model_available": True,
+            "satellite_support_available": True,
+            "production_approved": False,
+        }
+        for entry in registry.document.crops
     }
 
 
-CROP_CAPABILITIES = {
-    crop: _capability(
-        crop,
-        DatasetVerificationStatus.EXPERT_VERIFIED,
-        ModelDeploymentStatus.DEPLOYED_RESEARCH_ONLY,
-        True,
-    )
-    for crop in ("rice", "cotton", "groundnut")
-}
-CROP_CAPABILITIES.update(
-    {
-        crop: _capability(
-            crop,
-            DatasetVerificationStatus.EXPERT_VERIFIED,
-            ModelDeploymentStatus.NOT_TRAINED,
-            False,
-        )
-        for crop in ("banana", "chilli", "blackgram", "redgram")
-    }
-)
-# Banana V3 remains independently verified and operational.
-CROP_CAPABILITIES["banana"] = _capability(
-    "banana",
-    DatasetVerificationStatus.EXPERT_VERIFIED,
-    ModelDeploymentStatus.DEPLOYED_RESEARCH_ONLY,
-    True,
-)
-CROP_CAPABILITIES.update(
-    {
-        crop: _capability(
-            crop,
-            DatasetVerificationStatus.EXPERT_REVIEW_PENDING,
-            ModelDeploymentStatus.NOT_TRAINED,
-            False,
-        )
-        for crop in ("maize", "coconut", "greengram", "pearl_millet")
-    }
-)
-
-_CROP_ALIASES = {
-    "rice": "rice",
-    "paddy": "rice",
-    "paddy_rice": "rice",
-    "paddy (rice)": "rice",
-    "நெல்": "rice",
-    "cotton": "cotton",
-    "groundnut": "groundnut",
-    "banana": "banana",
-    "chilli": "chilli",
-    "blackgram": "blackgram",
-    "redgram": "redgram",
-}
+CROP_CAPABILITIES = _legacy_view()
 
 
 def normalize_crop_id(crop: str | None) -> str:
-    """Return a stable model-facing crop ID without using display labels."""
+    """Return the registry's stable crop ID, retaining unknown IDs for rejection."""
     normalized = (crop or "").strip().casefold()
-    return _CROP_ALIASES.get(normalized, normalized)
+    try:
+        return load_registry().normalize(normalized)
+    except KeyError:
+        return normalized
 
 
 def disease_model_available(crop: str) -> bool:
-    return bool(
-        CROP_CAPABILITIES.get(normalize_crop_id(crop), {}).get(
-            "disease_model_available"
-        )
-    )
+    try:
+        return load_registry().get(crop).disease_detection_enabled
+    except KeyError:
+        return False
 
 
-def public_capabilities() -> list[dict]:
+def public_capabilities() -> list[dict[str, object]]:
+    """Deprecated generic view; authenticated APIs use the capability service."""
     return list(CROP_CAPABILITIES.values())

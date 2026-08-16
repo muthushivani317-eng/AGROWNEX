@@ -10,6 +10,7 @@ The existing ``/api/v1/health`` endpoints are kept as backward-compatible aliase
 
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 
 from fastapi import APIRouter, Header
@@ -95,52 +96,39 @@ async def controlled_pilot_readiness():
     paths, hashes, provider hostnames, or model configuration values.
     """
     from app.core.security import ensure_firebase_app
-    from app.crop_runtime.readiness import ReadinessResolver
-    from app.crop_runtime.registry import load_registry
+    from app.crop_runtime.inventory import get_model_inventory, inventory_ready
     from app.modules.ai.constants import GEMINI_API_KEY, GEMINI_VISION_MODEL
 
-    crops = ("banana", "paddy", "cotton", "groundnut", "redgram", "chilli")
-    registry = load_registry()
-    resolver = ReadinessResolver(registry, _REPOSITORY_ROOT)
-    runtime_status = {}
-    runtime_diagnostics = {}
-    for crop_id in crops:
-        try:
-            result = resolver.resolve(crop_id)
-            runtime_status[crop_id] = result.runtime_loadable
-            if crop_id in {"redgram", "chilli"}:
-                runtime_diagnostics[crop_id] = result.readiness_reason
-                if result.readiness_reason != "ready":
-                    logger.warning(
-                        "restricted runtime readiness failed",
-                        extra={
-                            "crop_id": crop_id,
-                            "category": result.readiness_reason,
-                        },
-                    )
-        except Exception:  # noqa: BLE001 - readiness must fail closed
-            runtime_status[crop_id] = False
-            if crop_id in {"redgram", "chilli"}:
-                runtime_diagnostics[crop_id] = "load_failed"
-                logger.warning(
-                    "restricted runtime readiness failed",
-                    extra={"crop_id": crop_id, "category": "load_failed"},
-                )
+    inventory = await asyncio.to_thread(get_model_inventory)
+    runtime_status = inventory.disease_runtimes
+    runtime_diagnostics = {
+        crop_id: reason
+        for crop_id, reason in inventory.runtime_diagnostics.items()
+        if crop_id in {"redgram", "chilli"} and reason != "ready"
+    }
+    for crop_id, reason in runtime_diagnostics.items():
+        logger.warning(
+            "controlled pilot runtime readiness failed",
+            extra={"crop_id": crop_id, "category": reason},
+        )
     components = {
         "database": await _check_db(),
         "redis": await _check_redis(),
         "firebase": ensure_firebase_app() is not None,
+        # Informational only: local controlled inference does not require Gemini.
         "gemini_configured": bool(GEMINI_API_KEY and GEMINI_VISION_MODEL),
         "six_runtimes": runtime_status,
         "runtime_diagnostics": runtime_diagnostics,
+        "inference_dependencies": inventory.dependencies,
+        "crop_identity_runtime": inventory.crop_identity_ready,
+        "crop_identity_safety_gate": inventory.safety_gate_ready,
         "recommendation_pipeline_blocked": True,
     }
     ready = (
         components["database"]
         and components["redis"]
         and components["firebase"]
-        and components["gemini_configured"]
-        and all(runtime_status.values())
+        and inventory_ready(inventory)
         and components["recommendation_pipeline_blocked"]
     )
     return JSONResponse(

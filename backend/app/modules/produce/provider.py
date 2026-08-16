@@ -15,6 +15,7 @@ from typing import Protocol
 from uuid import uuid4
 
 from app.core.logging import get_logger
+from app.core.provider_policy import test_mocks_enabled
 from app.modules.produce.constants import ProcurementChannel
 
 logger = get_logger("produce.provider")
@@ -59,7 +60,7 @@ class ProduceProvider(Protocol):
 
     channel: str
 
-    async def submit(self, offer: OfferRef) -> ProcurementAck: ...
+    async def submit(self, offer: OfferRef) -> ProcurementAck | None: ...
 
     async def buyer_interest(self, offer: OfferRef) -> list[BuyerInterestRecord]: ...
 
@@ -87,7 +88,22 @@ class MockProduceProvider:
         return []
 
 
+class UnavailableProduceProvider:
+    """Keeps local listings usable without claiming external procurement."""
+
+    channel = "not_connected"
+
+    async def submit(self, offer: OfferRef) -> ProcurementAck | None:
+        return None
+
+    async def buyer_interest(self, offer: OfferRef) -> list[BuyerInterestRecord]:
+        return []
+
+
 def get_default_provider() -> ProduceProvider:
     """Select the configured provider (mock until a real channel is wired in)."""
-    logger.info("produce provider: mock (no external procurement channel)")
-    return MockProduceProvider()
+    if test_mocks_enabled():
+        logger.info("produce provider: explicit development/test mock")
+        return MockProduceProvider()
+    logger.warning("produce provider unavailable: no external procurement channel")
+    return UnavailableProduceProvider()

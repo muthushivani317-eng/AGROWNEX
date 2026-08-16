@@ -1,0 +1,32 @@
+﻿{
+  "decision": "CROP_IDENTIFICATION_DATA_INCOMPLETE",
+  "generated_at_utc": "2026-07-27T19:01:11Z",
+  "training_authorized": false,
+  "candidate_images": 11606,
+  "training_eligible_images": 0,
+  "represented_target_crops": ["banana", "paddy", "cotton", "groundnut", "chilli", "redgram"],
+  "missing_target_crops": ["coconut"],
+  "missing_open_set_classes": ["unknown_unsupported_plant", "invalid_non_plant"],
+  "blocking_reasons": [
+    "No verified local Coconut dataset.",
+    "No verified unknown/unsupported-plant dataset.",
+    "No verified invalid/non-plant dataset.",
+    "Each represented crop is tied to one source dataset, leaving dataset-source shortcut risk unresolved.",
+    "Crop imbalance is severe: Paddy contributes 7310 of 11606 candidate rows."
+  ],
+  "integrity": {
+    "manifest_rows": 11606,
+    "all_local_paths_resolved": true,
+    "duplicate_sha256_rows": 0,
+    "sha256_cross_split_families": 0,
+    "duplicate_family_cross_split": 0,
+    "provisional_test_images_opened": false,
+    "provisional_test_rows_metadata_only": 873
+  },
+  "drive_upload": {
+    "performed": false,
+    "manual_upload_required": true,
+    "target_directory": "/content/drive/MyDrive/AgrowAI_V1/crop_identification/"
+  }
+}
+

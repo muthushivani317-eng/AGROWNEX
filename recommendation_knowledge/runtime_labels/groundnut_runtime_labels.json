@@ -1,0 +1,28 @@
+{
+  "crop_id": "groundnut",
+  "model_artifact_path": "backend\\model_artifacts\\legacy_joint_v1_crop_constrained\\onnx\\model_opset17.onnx",
+  "model_artifact_sha256": "71539e500482d26e987994a08d6b85919a5e7bee03d7fc7cdbdf2dde74a37dfa",
+  "runtime_loader_path": "backend\\app\\modules\\disease\\ml_runtime\\constants.py",
+  "runtime_label_source_path": "backend\\model_artifacts\\legacy_joint_v1_crop_constrained\\runtime\\class_mapping.json",
+  "runtime_label_source_sha256": "cd86cf4a8197c4bb4646df65015b73bcf1b9023c2f76f215497cb69da76349a6",
+  "label_count": 2,
+  "labels": [
+    {
+      "class_index": 0,
+      "runtime_label_exact": "groundnut_healthy",
+      "normalized_lookup_key": "groundnut_healthy",
+      "is_healthy": true,
+      "is_unknown_or_background": false
+    },
+    {
+      "class_index": 1,
+      "runtime_label_exact": "groundnut_rust",
+      "normalized_lookup_key": "groundnut_rust",
+      "is_healthy": false,
+      "is_unknown_or_background": false
+    }
+  ],
+  "registry_status": "FROZEN",
+  "blocking_reason": null,
+  "generated_at_utc": "2026-07-30T11:02:01.618078+00:00"
+}

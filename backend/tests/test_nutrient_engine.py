@@ -183,13 +183,19 @@ class TestRecommendations:
         # Every recommendation is a generic localization code — never a brand.
         assert all(r.code.startswith("nutrient.rec.") for r in build_recommendations(a))
 
-    def test_secondary_deficiency_is_included(self) -> None:
+    def test_uncorroborated_secondary_deficiency_is_not_recommended(self) -> None:
         soil = SoilReference(has_data=True, macro_ratings={"nitrogen": "low"})
         a = corroborate(
             _obs(primary="nitrogen", secondary="magnesium", confidence=68), soil=soil
         )
         codes = [r.code for r in build_recommendations(a)]
-        assert "nutrient.rec.magnesium.deficiency" in codes
+        assert "nutrient.rec.magnesium.deficiency" not in codes
+
+    def test_visual_only_possible_finding_does_not_expose_nutrient_action(self) -> None:
+        a = corroborate(_obs(primary="nitrogen", confidence=68))
+        codes = [r.code for r in build_recommendations(a)]
+        assert "nutrient.rec.nitrogen.deficiency" not in codes
+        assert "nutrient.rec.test.soil_test" in codes
 
     def test_not_confirmed_advises_a_soil_test(self) -> None:
         a = corroborate(_obs(primary=None, confidence=20))

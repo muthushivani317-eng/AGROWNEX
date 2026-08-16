@@ -17,7 +17,9 @@ from app.modules.auth import models as _auth_models  # noqa: F401
 from app.modules.auth import profile_models as _profile_models  # noqa: F401
 from app.modules.auth import rbac_models as _rbac_models  # noqa: F401
 from app.modules.calendar import models as _calendar_models  # noqa: F401
+from app.modules.community import models as _community_models  # noqa: F401
 from app.modules.disease import models as _disease_models  # noqa: F401
+from app.modules.equipment import models as _equipment_models  # noqa: F401
 from app.modules.farms import models as _farm_models  # noqa: F401
 from app.modules.intelligence import models as _intelligence_models  # noqa: F401
 from app.modules.memory import models as _memory_models  # noqa: F401

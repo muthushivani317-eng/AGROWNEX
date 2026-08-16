@@ -9,11 +9,12 @@ here; routes stay thin.
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, date, datetime
+from datetime import date
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
+from app.core.timezone import today_ist
 from app.modules.auth.models import User
 from app.modules.farms.repositories import FarmRepository
 from app.modules.market.repository import MarketRepository
@@ -68,7 +69,9 @@ class ProduceService:
         self._today = today
 
     def _now_date(self) -> date:
-        return self._today or datetime.now(UTC).date()
+        # India Standard Time, not UTC (docs: app.core.timezone) -- this is a
+        # "what day is it for the farmer" boundary, not an event timestamp.
+        return self._today or today_ist()
 
     # ----------------------------------------------------------------- #
     # Validation
@@ -246,6 +249,10 @@ class ProduceService:
                 district=offer.district,
             )
         )
+        if ack is None:
+            offer.procurement_channel = None
+            offer.procurement_reference = None
+            return
         offer.procurement_channel = ack.channel
         offer.procurement_reference = ack.reference
 

@@ -3,6 +3,7 @@
 The only layer that queries ``crop_calendar_events``. Always scoped by
 ``user_id`` and excludes soft-deleted rows.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -97,9 +98,7 @@ class CalendarEventRepository(BaseRepository[CalendarEvent]):
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
-    async def get_for_user(
-        self, event_id: uuid.UUID, user_id: uuid.UUID
-    ) -> CalendarEvent | None:
+    async def get_for_user(self, event_id: uuid.UUID, user_id: uuid.UUID) -> CalendarEvent | None:
         result = await self.session.execute(
             select(CalendarEvent).where(
                 CalendarEvent.id == event_id,
@@ -114,16 +113,12 @@ class CalendarEventRepository(BaseRepository[CalendarEvent]):
         await self.session.flush()
         return events
 
-    async def soft_delete_for_farm(
-        self, user_id: uuid.UUID, farm_id: uuid.UUID
-    ) -> int:
+    async def soft_delete_for_farm(self, user_id: uuid.UUID, farm_id: uuid.UUID) -> int:
         """Soft-delete a farm's existing pending calendar before regenerating.
 
         Completed/skipped history is preserved so progress is not lost.
         """
-        events = await self.list_events(
-            user_id, farm_id=farm_id, status=EventStatus.PENDING.value
-        )
+        events = await self.list_events(user_id, farm_id=farm_id, status=EventStatus.PENDING.value)
         for event in events:
             event.is_deleted = True
         await self.session.flush()

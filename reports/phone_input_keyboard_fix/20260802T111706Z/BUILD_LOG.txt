@@ -1,0 +1,7 @@
+Command: gradlew.bat :app:assembleRelease --no-daemon --console=plain
+Profile: production
+Result: PASS (exit code 0)
+APK: D:\AgrowAI\AgrowAi_app\agrow-ai\android\app\build\outputs\apk\release\app-release.apk
+SHA-256: 30c97d690ea459482ae58eae8b1bedb6e0590c7cb348c7ec1ae52324f757eb63
+Bytes: 137067158
+Metro: stopped/not required

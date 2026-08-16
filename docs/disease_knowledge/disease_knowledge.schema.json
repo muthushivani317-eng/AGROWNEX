@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agrowai.local/schemas/disease-knowledge/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["crop_id", "entries", "production_policy"],
+  "properties": {
+    "crop_id": {"type": "string", "minLength": 1},
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "crop_id", "disease_class_id", "typical_symptoms", "possible_look_alikes",
+          "safe_immediate_actions", "prevention", "expert_escalation_criteria",
+          "source_document", "source_page", "verification_status",
+          "production_visible", "verification_notice"
+        ],
+        "properties": {
+          "crop_id": {"type": "string", "minLength": 1},
+          "disease_class_id": {"type": "string", "minLength": 1},
+          "typical_symptoms": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "possible_look_alikes": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "safe_immediate_actions": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "prevention": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "expert_escalation_criteria": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "source_document": {"type": "string", "minLength": 1},
+          "source_page": {"type": "string", "minLength": 1},
+          "verification_status": {"enum": ["UNVERIFIED", "SOURCE_VERIFIED", "EXPERT_VERIFIED"]},
+          "production_visible": {"type": "boolean"},
+          "verification_notice": {
+            "const": "Verify against official source or qualified plant-pathology expert."
+          }
+        }
+      }
+    },
+    "production_policy": {
+      "const": "Only SOURCE_VERIFIED or EXPERT_VERIFIED entries may be considered for production display; deployment still requires explicit content approval."
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "model_id": "crop_id_six_class_internal_v1",
+  "model_version": "1.0.0-internal",
+  "architecture": "mobilenet_v3_small",
+  "class_order": [
+    "banana",
+    "paddy",
+    "cotton",
+    "groundnut",
+    "chilli",
+    "redgram"
+  ],
+  "preprocessing": {
+    "resize": 184,
+    "center_crop": 160,
+    "mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "std": [
+      0.229,
+      0.224,
+      0.225
+    ]
+  },
+  "temperature": 0.25,
+  "confidence_threshold": 0.5,
+  "margin_threshold": 0.0,
+  "farmer_confirmation_required": true,
+  "general_farmer_release": "BLOCKED",
+  "official_accuracy_claim": false,
+  "acceptance": "PARTIAL_RESTRICTED_INTERNAL_ONLY",
+  "banana_data_quality": "LIMITED",
+  "licence_and_identity": "PROVISIONAL_INTERNAL_USE_ONLY"
+}

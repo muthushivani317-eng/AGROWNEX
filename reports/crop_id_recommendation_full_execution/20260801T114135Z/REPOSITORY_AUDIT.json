@@ -1,0 +1,22 @@
+{
+  "audit_timestamp_utc": "2026-08-01T11:41:35Z",
+  "backend_root": "backend",
+  "mobile_root": "agrow-ai",
+  "crop_identity_runtime": {
+    "status": "PRESENT_BUT_RESTRICTED",
+    "version": "crop_identity_v1",
+    "classes": ["banana", "paddy", "cotton", "groundnut"],
+    "missing_required_classes": ["chilli", "redgram", "unknown_crop", "non_plant"],
+    "shortcut_risk": "HIGH",
+    "provisional_test_consumed": true,
+    "farmer_authorized": false
+  },
+  "recommendations": {
+    "indexed_sources": 52,
+    "source_records_marked_eligible_pending_human_confirmation": 22,
+    "approved_runtime_records": 0,
+    "review_packets": {"banana": 5, "paddy": 4, "cotton": 3, "groundnut": 2, "chilli": 0, "redgram": 0}
+  },
+  "railway_access": "MANUAL_ACCESS_REQUIRED",
+  "final_status": "BLOCKED_INSUFFICIENT_DATA_AND_HUMAN_REVIEW"
+}

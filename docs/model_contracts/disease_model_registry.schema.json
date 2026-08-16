@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agrowai.local/contracts/disease_model_registry.schema.json",
+  "title": "Crop-scoped disease model rollback registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "crops", "audit"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "crops": {"type": "object", "additionalProperties": {"$ref": "#/$defs/cropEntry"}},
+    "audit": {"type": "array", "items": {"$ref": "#/$defs/auditEvent"}}
+  },
+  "$defs": {
+      "artifact": {
+        "type": "object",
+        "additionalProperties": false,
+      "required": ["model_version", "artifact_sha256", "policy_sha256"],
+      "properties": {
+        "model_version": {"type": "string", "minLength": 1},
+        "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "policy_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "cropEntry": {
+        "type": "object",
+        "additionalProperties": false,
+      "required": ["current", "previous", "candidate", "enabled"],
+      "properties": {
+        "current": {"$ref": "#/$defs/artifact"},
+        "previous": {"anyOf": [{"$ref": "#/$defs/artifact"}, {"type": "null"}]},
+        "candidate": {"anyOf": [{"$ref": "#/$defs/artifact"}, {"type": "null"}]},
+        "enabled": {"type": "boolean"}
+      }
+    },
+    "auditEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["timestamp_utc", "crop", "action", "detail", "previous_event_sha256", "event_sha256"],
+      "properties": {
+        "timestamp_utc": {"type": "string", "format": "date-time"},
+        "crop": {"type": "string", "minLength": 1},
+        "action": {"type": "string", "minLength": 1},
+        "detail": {"type": "string"},
+        "previous_event_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+        "event_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    }
+  }
+}

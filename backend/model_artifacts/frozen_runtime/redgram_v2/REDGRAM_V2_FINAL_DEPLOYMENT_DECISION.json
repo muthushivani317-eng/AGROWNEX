@@ -1,0 +1,93 @@
+{
+  "crop_id": "redgram",
+  "model_name": "redgram_mobilenetv3_small_v2",
+  "model_status": "FROZEN_RUNTIME_READY",
+  "deployment_status": "PROVISIONAL_RUNTIME_CANDIDATE",
+  "field_validation_status": "PUBLIC_DATASET_PROVISIONAL_PASSED_TN_FIELD_VALIDATION_PENDING",
+  "crop_enabled": true,
+  "disease_detection_enabled": false,
+  "pilot_inference_eligible": true,
+  "general_farmer_inference_authorized": false,
+  "advisory_enabled": false,
+  "official_accuracy_claim": false,
+  "expert_verified": false,
+  "tamil_nadu_field_validated": false,
+  "abstention_required": true,
+  "class_specific_thresholds_required": true,
+  "fallback_behavior": "ABSTAIN",
+  "supported_classes": [
+    "redgram__healthy",
+    "redgram__leaf_spot",
+    "redgram__sterility_mosaic"
+  ],
+  "checkpoint_sha256": "2f766c519cbf016c7c3600c4ceb75419c49ce752f4b293119bdc54f93fb8129e",
+  "temperature": 2.193619697974462,
+  "class_thresholds": {
+    "redgram__healthy": {
+      "confidence_threshold": 0.81,
+      "margin_threshold": 0.0,
+      "accepted_count": 41,
+      "accepted_accuracy": 1.0,
+      "false_confident_errors": 0,
+      "class_prediction_coverage": 0.9761904761904762,
+      "predicted_count": 42,
+      "selection_rule": "ZERO_ACCEPTED_ERRORS_MAXIMUM_COVERAGE"
+    },
+    "redgram__leaf_spot": {
+      "confidence_threshold": 0.97,
+      "margin_threshold": 0.0,
+      "accepted_count": 9,
+      "accepted_accuracy": 1.0,
+      "false_confident_errors": 0,
+      "class_prediction_coverage": 0.1875,
+      "predicted_count": 48,
+      "selection_rule": "ZERO_ACCEPTED_ERRORS_MAXIMUM_COVERAGE"
+    },
+    "redgram__sterility_mosaic": {
+      "confidence_threshold": 0.67,
+      "margin_threshold": 0.0,
+      "accepted_count": 37,
+      "accepted_accuracy": 1.0,
+      "false_confident_errors": 0,
+      "class_prediction_coverage": 0.8809523809523809,
+      "predicted_count": 42,
+      "selection_rule": "ZERO_ACCEPTED_ERRORS_MAXIMUM_COVERAGE"
+    }
+  },
+  "provisional_untouched_test": {
+    "rows": 43,
+    "top1": 0.9302325581395349,
+    "top3": 1.0,
+    "macro_f1": 0.9332591768631814,
+    "macro_recall": 0.9333333333333332,
+    "coverage": 0.6744186046511628,
+    "accepted_accuracy": 1.0,
+    "accepted_errors": 0,
+    "test_consumed": true,
+    "rerun_allowed": false
+  },
+  "limitations": [
+    "Public-dataset provisional evaluation only; not Tamil Nadu field accuracy.",
+    "Internal evidence review was not agricultural-expert verification.",
+    "Leaf Spot recall on the one-time untouched test was below the other classes.",
+    "Leaf Spot predictions have a strict frozen confidence threshold and may abstain frequently.",
+    "No treatment, prevention, pesticide, dosage, scheme, or price claim is authorized from the model output alone.",
+    "Any disease-management recommendation must be verify against official source."
+  ],
+  "allowed_app_behavior": [
+    "Allow internal or controlled pilot inference only after the exact runtime bundle is installed and locally hash-verified.",
+    "Apply frozen temperature and class-specific confidence/margin gates exactly.",
+    "Abstain whenever the predicted class gate is not met.",
+    "Show that the result is provisional and not a confirmed diagnosis.",
+    "Require farmer crop confirmation before Redgram disease inference."
+  ],
+  "prohibited_app_behavior": [
+    "Do not claim 93.02% Tamil Nadu accuracy.",
+    "Do not claim expert verification.",
+    "Do not disable or weaken abstention.",
+    "Do not tune thresholds using the consumed test.",
+    "Do not reuse the 43-image test for model selection.",
+    "Do not automatically provide unverified treatment advice.",
+    "Do not promote pesticide brands."
+  ]
+}

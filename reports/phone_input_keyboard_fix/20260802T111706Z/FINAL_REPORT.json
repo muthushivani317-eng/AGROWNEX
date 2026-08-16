@@ -1,0 +1,20 @@
+{
+  "root_cause": "FOCUS_TRIGGERED_REACT_RERENDER_INVALIDATED_ANDROID_INPUT_CONNECTION",
+  "phone_input_real_textinput": true,
+  "phone_input_editable": true,
+  "phone_input_tap_focus": "PASS",
+  "phone_input_keyboard_visible": true,
+  "phone_digit_entry": "PASS",
+  "phone_text_visibility": "PASS",
+  "backspace": "PASS",
+  "paste_support": "PASS_BY_TEST",
+  "send_otp_enablement": "PASS",
+  "keyboard_layout": "PASS",
+  "focus_after_error": "PASS_BY_TEST",
+  "release_build": "PASS",
+  "device_validation": "PASS",
+  "otp_flow_readiness": "PASS",
+  "farmer_release_readiness": "NO",
+  "device": "RZCY80YM62A",
+  "apk_sha256": "30c97d690ea459482ae58eae8b1bedb6e0590c7cb348c7ec1ae52324f757eb63"
+}

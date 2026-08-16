@@ -11,6 +11,7 @@ task's weather dependency:
 The stored scheduled date is never mutated — the advisory is an annotation the
 frontend renders (Tamil-first) and future AI can act on.
 """
+
 from __future__ import annotations
 
 from app.modules.calendar.constants import WeatherAdvisory, WeatherDependency
@@ -31,9 +32,7 @@ def _has_prefix(codes: set[str], prefix: str) -> bool:
     return any(code.startswith(prefix) for code in codes)
 
 
-def advisory_for(
-    dependency: WeatherDependency, codes: set[str]
-) -> WeatherAdvisory:
+def advisory_for(dependency: WeatherDependency, codes: set[str]) -> WeatherAdvisory:
     """Map reused weather insight codes to an advisory for one task."""
     if dependency == WeatherDependency.IRRIGATION:
         if _has_prefix(codes, "heavy_rain."):

@@ -7,6 +7,7 @@ previous session. It never invents a missing value: if a required band is absent
 the index is ``None`` and the classification is ``unknown`` (docs/PRODUCT_RULES.md).
 No I/O, no side effects.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -179,8 +180,10 @@ def classify_stress(ndvi: float | None, trend: str, delta: float | None) -> str:
     # A rapid decline raises the stress by one level.
     if delta is not None and delta <= NDVI_DELTA_RAPID_DROP:
         order = [
-            StressLevel.NONE.value, StressLevel.MILD.value,
-            StressLevel.MODERATE.value, StressLevel.SEVERE.value,
+            StressLevel.NONE.value,
+            StressLevel.MILD.value,
+            StressLevel.MODERATE.value,
+            StressLevel.SEVERE.value,
         ]
         base = order[min(order.index(base) + 1, len(order) - 1)]
     elif trend == HealthTrend.DECLINING.value and base == StressLevel.NONE.value:
@@ -191,9 +194,7 @@ def classify_stress(ndvi: float | None, trend: str, delta: float | None) -> str:
 def assess(indices: IndexValues, previous_ndvi: float | None = None) -> SatelliteAssessment:
     """Classify a scene's indices (pure). ``unknown`` where a value is missing."""
     trend, delta = classify_trend(indices.ndvi, previous_ndvi)
-    has_values = any(
-        v is not None for v in (indices.ndvi, indices.ndre, indices.evi, indices.ndmi)
-    )
+    has_values = any(v is not None for v in (indices.ndvi, indices.ndre, indices.evi, indices.ndmi))
     return SatelliteAssessment(
         ndvi=indices.ndvi,
         ndre=indices.ndre,

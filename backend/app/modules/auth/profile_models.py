@@ -36,6 +36,7 @@ class FarmerProfile(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     village: Mapped[str | None] = mapped_column(String(80), index=True)
     profile_photo: Mapped[str | None] = mapped_column(String(512))
     experience_years: Mapped[int | None] = mapped_column(Integer)
+    annual_income: Mapped[int | None] = mapped_column(Integer)
     education: Mapped[str | None] = mapped_column(String(80))
     primary_crop: Mapped[str | None] = mapped_column(String(80), index=True)
     secondary_crop: Mapped[str | None] = mapped_column(String(80))

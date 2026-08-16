@@ -9,6 +9,7 @@ from app.modules.growth.analyzer import (
     GrowthAnalysisParseError,
     GrowthAnalysisRequest,
     MockGrowthProvider,
+    UnavailableGrowthProvider,
     get_default_provider,
     parse_growth_analysis,
 )
@@ -106,8 +107,24 @@ async def test_mock_provider_notes_changes_when_previous_context() -> None:
     assert result.changes_from_previous  # comparison populated
 
 
-def test_default_provider_is_mock_without_key() -> None:
-    assert get_default_provider().model == "mock-gemini-growth"
+def test_default_provider_fails_closed_without_key(monkeypatch) -> None:
+    monkeypatch.delenv("AGROWAI_ENABLE_TEST_MOCKS", raising=False)
+    assert isinstance(get_default_provider(), UnavailableGrowthProvider)
+
+
+def test_default_provider_allows_explicit_mock_only_in_development(monkeypatch) -> None:
+    # Uses the shared app.core.provider_policy.test_mocks_enabled() guard now
+    # (APP_ENV, falling back to ENVIRONMENT, plus an explicit opt-in flag) --
+    # the same one every other module's mock provider uses -- instead of a
+    # growth-specific GROWTH_PROVIDER env var that only checked ENVIRONMENT
+    # and would silently mis-gate if ops only set the documented APP_ENV
+    # (2026-08 pre-release audit).
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("AGROWAI_ENABLE_TEST_MOCKS", "true")
+    assert isinstance(get_default_provider(), MockGrowthProvider)
+
+    monkeypatch.setenv("APP_ENV", "production")
+    assert isinstance(get_default_provider(), UnavailableGrowthProvider)
 
 
 class RetryGrowth(GeminiGrowthProvider):

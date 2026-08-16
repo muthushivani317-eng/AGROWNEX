@@ -7,9 +7,11 @@ hybrid ensemble — can replace Gemini with **no frontend change**. V1 ships a G
 API key is set. The provider only *observes*; the Nutrient Engine decides the
 verdict, so a new model never changes the confirm/not-confirmed logic.
 """
+
 from __future__ import annotations
 
 import asyncio
+import os
 from dataclasses import dataclass
 from typing import Any, Protocol
 
@@ -27,7 +29,7 @@ from app.modules.nutrient.constants import (
     NutrientProviderName,
     Severity,
 )
-from app.modules.nutrient.exceptions import NutrientAnalysisError
+from app.modules.nutrient.exceptions import NutrientAnalysisError, NutrientProviderUnavailableError
 from app.modules.nutrient.parser import (
     NutrientObservation,
     ObservationParseError,
@@ -76,9 +78,7 @@ class GeminiNutrientProvider:
         self.timeout = timeout
 
     def _body(self, request: AnalysisInput) -> dict[str, Any]:
-        prompt = build_nutrient_prompt(
-            request.crop, request.language, request.farm_context
-        )
+        prompt = build_nutrient_prompt(request.crop, request.language, request.farm_context)
         return {
             "systemInstruction": {"parts": [{"text": NUTRIENT_SYSTEM_PROMPT}]},
             "contents": [
@@ -99,9 +99,7 @@ class GeminiNutrientProvider:
                 "temperature": 0.2,
                 "responseMimeType": "application/json",
                 "maxOutputTokens": 1000,
-                "thinkingConfig": {
-                    "thinkingBudget": 0
-                },
+                "thinkingConfig": {"thinkingBudget": 0},
             },
         }
 
@@ -125,9 +123,7 @@ class GeminiNutrientProvider:
         for attempt in range(1, 3):
             try:
                 async with httpx.AsyncClient(timeout=self.timeout) as client:
-                    response = await client.post(
-                        url, params={"key": self.api_key}, json=body
-                    )
+                    response = await client.post(url, params={"key": self.api_key}, json=body)
                     response.raise_for_status()
                     return self._text(response.json())
             except (httpx.TransportError, httpx.TimeoutException) as exc:
@@ -178,9 +174,22 @@ class MockNutrientProvider:
         )
 
 
+class UnavailableNutrientProvider:
+    name = "unavailable"
+    model = "unavailable"
+
+    async def analyze(self, request: AnalysisInput) -> NutrientObservation:
+        raise NutrientProviderUnavailableError()
+
+
 def get_default_provider() -> NutrientProvider:
     if GEMINI_API_KEY:
         logger.info("nutrient provider: Gemini (%s)", GEMINI_MODEL)
         return GeminiNutrientProvider()
-    logger.info("nutrient provider: mock (no GEMINI_API_KEY)")
-    return MockNutrientProvider()
+    environment = os.getenv("ENVIRONMENT", "development").lower()
+    provider = os.getenv("NUTRIENT_PROVIDER", "").lower()
+    if provider == "mock" and environment in {"development", "test"}:
+        logger.info("nutrient provider: explicit development mock")
+        return MockNutrientProvider()
+    logger.warning("nutrient provider unavailable: credentials not configured")
+    return UnavailableNutrientProvider()

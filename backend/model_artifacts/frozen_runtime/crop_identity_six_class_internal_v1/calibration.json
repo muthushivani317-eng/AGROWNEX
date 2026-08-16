@@ -1,0 +1,46 @@
+{
+  "split": "calibration",
+  "rows": 959,
+  "temperature": 0.25,
+  "nll_before": 0.053813643753528595,
+  "nll_after": 0.002303415909409523,
+  "nll_improved": true,
+  "ece_before": 0.048537557071540505,
+  "ece_after": 0.0017082175763789564,
+  "multiclass_brier_after": 0.0014071156037971377,
+  "confidence_threshold": 0.5,
+  "margin_threshold": 0.0,
+  "threshold_gate": "CALIBRATION_GATE_SATISFIED",
+  "per_class_gate": {
+    "banana": {
+      "coverage": 1.0,
+      "accepted_accuracy": 0.9846153855323792,
+      "accepted": 65
+    },
+    "paddy": {
+      "coverage": 1.0,
+      "accepted_accuracy": 1.0,
+      "accepted": 384
+    },
+    "cotton": {
+      "coverage": 1.0,
+      "accepted_accuracy": 1.0,
+      "accepted": 66
+    },
+    "groundnut": {
+      "coverage": 1.0,
+      "accepted_accuracy": 1.0,
+      "accepted": 86
+    },
+    "chilli": {
+      "coverage": 1.0,
+      "accepted_accuracy": 0.9968253970146179,
+      "accepted": 315
+    },
+    "redgram": {
+      "coverage": 1.0,
+      "accepted_accuracy": 1.0,
+      "accepted": 43
+    }
+  }
+}

@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 from typing import Protocol
 
 from app.core.logging import get_logger
+from app.core.provider_policy import test_mocks_enabled
 from app.modules.experts.constants import (
     EXPERT_PROVIDER,
     ConsultationCategory,
@@ -207,10 +208,28 @@ class MockExpertProvider:
         return []
 
 
+class UnavailableExpertProvider:
+    """Provides no desk or acknowledgement when no real network is connected."""
+
+    name = "unavailable"
+
+    async def fetch_experts(self) -> list[SeedExpert]:
+        return []
+
+    async def acknowledge(self, ref: AssignmentRef) -> AcknowledgementResult:
+        raise RuntimeError("Expert network is not configured")
+
+    async def poll_replies(self, ref: AssignmentRef) -> list[ExpertReply]:
+        return []
+
+
 def get_default_provider() -> ExpertProvider:
     """Select the configured provider (mock desk network until one is wired in)."""
+    if test_mocks_enabled():
+        logger.info("expert provider: explicit development/test mock")
+        return MockExpertProvider()
     if EXPERT_PROVIDER:
-        logger.info(
-            "expert provider '%s' requested but not wired; using mock", EXPERT_PROVIDER
-        )
-    return MockExpertProvider()
+        logger.warning("expert provider '%s' is not wired", EXPERT_PROVIDER)
+    else:
+        logger.warning("expert provider unavailable: no real network configured")
+    return UnavailableExpertProvider()

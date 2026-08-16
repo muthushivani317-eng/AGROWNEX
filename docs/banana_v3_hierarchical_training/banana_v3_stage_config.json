@@ -1,0 +1,163 @@
+{
+  "schema_version": "1.0",
+  "model_family": "MobileNetV3 Small",
+  "crop": "banana",
+  "input_size": 224,
+  "preprocessing": {
+    "colour_mode": "RGB",
+    "exif_transpose": true,
+    "resize_shorter_side": 256,
+    "evaluation_crop": "center_crop_224",
+    "normalization_mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "normalization_std": [
+      0.229,
+      0.224,
+      0.225
+    ],
+    "tensor_dtype": "float32",
+    "tensor_layout": "NCHW",
+    "test_time_augmentation": false
+  },
+  "stage_order": [
+    "crop_confirmation",
+    "image_quality_gate",
+    "healthy_gate",
+    "disease_classifier",
+    "calibration",
+    "symptom_verification",
+    "decision_policy"
+  ],
+  "stages": {
+    "crop_confirmation": {
+      "stage_name": "banana_v3_crop_confirmation_v1",
+      "baseline_implementation": "user_selection"
+    },
+    "image_quality_gate": {
+      "stage_name": "banana_v3_quality_gate_v1",
+      "baseline_implementation": "deterministic_checks"
+    },
+    "healthy_gate": {
+      "stage_name": "banana_v3_healthy_gate_v1",
+      "model_identifier": "banana_v3_healthy_gate_mobilenetv3_small_v1",
+      "architecture": "MobileNetV3 Small",
+      "class_mapping": {
+        "banana__healthy": 0,
+        "banana__diseased": 1
+      }
+    },
+    "disease_classifier": {
+      "stage_name": "banana_v3_disease_classifier_v1",
+      "model_identifier": "banana_v3_disease_classifier_mobilenetv3_small_v1",
+      "architecture": "MobileNetV3 Small",
+      "class_mapping": {
+        "banana__cordana_leaf_spot": 0,
+        "banana__pestalotiopsis_leaf_spot": 1,
+        "banana__sigatoka_leaf_spot": 2
+      }
+    },
+    "symptom_verification": {
+      "stage_name": "banana_v3_symptom_verification_v1",
+      "schema": "banana_v3_symptom_schema.json"
+    },
+    "decision_policy": {
+      "stage_name": "banana_v3_hierarchical_decision_policy_v1"
+    }
+  },
+  "calibration": {
+    "healthy_gate_temperature": "TO_BE_FITTED_IN_COLAB",
+    "disease_classifier_temperature": "TO_BE_FITTED_IN_COLAB"
+  },
+  "thresholds": {
+    "healthy_gate": {
+      "healthy_confidence_threshold": "TO_BE_FITTED_IN_COLAB",
+      "healthy_margin_threshold": "TO_BE_FITTED_IN_COLAB",
+      "diseased_confidence_threshold": "TO_BE_FITTED_IN_COLAB",
+      "diseased_margin_threshold": "TO_BE_FITTED_IN_COLAB"
+    },
+    "disease_classifier": {
+      "banana__cordana_leaf_spot": {
+        "confidence_threshold": "TO_BE_FITTED_IN_COLAB",
+        "margin_threshold": "TO_BE_FITTED_IN_COLAB",
+        "symptom_agreement_threshold": "TO_BE_FITTED_IN_COLAB"
+      },
+      "banana__pestalotiopsis_leaf_spot": {
+        "confidence_threshold": "TO_BE_FITTED_IN_COLAB",
+        "margin_threshold": "TO_BE_FITTED_IN_COLAB",
+        "symptom_agreement_threshold": "TO_BE_FITTED_IN_COLAB"
+      },
+      "banana__sigatoka_leaf_spot": {
+        "confidence_threshold": "TO_BE_FITTED_IN_COLAB",
+        "margin_threshold": "TO_BE_FITTED_IN_COLAB",
+        "symptom_agreement_threshold": "TO_BE_FITTED_IN_COLAB"
+      }
+    }
+  },
+  "output_states": [
+    "banana__healthy",
+    "banana__cordana_leaf_spot",
+    "banana__pestalotiopsis_leaf_spot",
+    "banana__sigatoka_leaf_spot",
+    "banana__uncertain_disease",
+    "banana__mixed_or_non_diagnostic_symptoms",
+    "banana__image_unusable",
+    "banana__crop_mismatch",
+    "banana__requires_more_information"
+  ],
+  "reason_codes": {
+    "quality_gate": [
+      "QG_PASS",
+      "QG_WARNING",
+      "QG_BLUR",
+      "QG_EXPOSURE",
+      "QG_OCCLUSION",
+      "QG_SYMPTOM_TOO_SMALL",
+      "QG_MULTIPLE_LEAVES",
+      "QG_NON_LEAF",
+      "QG_SCREENSHOT",
+      "QG_COMPRESSION",
+      "QG_CORRUPT",
+      "QG_OTHER"
+    ],
+    "healthy_gate": [
+      "HG_HEALTHY_ACCEPTED",
+      "HG_DISEASED_ACCEPTED",
+      "HG_UNCERTAIN",
+      "HG_THRESHOLD_FAIL",
+      "HG_MARGIN_FAIL"
+    ],
+    "abstention": [
+      "ABSTAIN_IMAGE_QUALITY",
+      "ABSTAIN_CROP_MISMATCH",
+      "ABSTAIN_HEALTHY_GATE_UNCERTAIN",
+      "ABSTAIN_DISEASE_LOW_CONFIDENCE",
+      "ABSTAIN_DISEASE_LOW_MARGIN",
+      "ABSTAIN_SYMPTOM_CONFLICT",
+      "ABSTAIN_MIXED_SYMPTOMS",
+      "ABSTAIN_NON_DIAGNOSTIC",
+      "ABSTAIN_MODEL_DISAGREEMENT",
+      "ABSTAIN_RUNTIME_ERROR"
+    ]
+  },
+  "external_benchmark_restriction": {
+    "benchmark_size": 424,
+    "diagnostic_use_after_freeze_only": true,
+    "blocked_uses": [
+      "training",
+      "model_selection",
+      "calibration",
+      "threshold_selection",
+      "debugging",
+      "preprocessing_tuning",
+      "architecture_selection"
+    ]
+  },
+  "banana_v2_protection_rule": "Banana V2 and every frozen checkpoint, temperature, threshold, split, benchmark result, runtime bundle, and report must remain unchanged.",
+  "official_claim_restriction": "No Tamil Nadu field-accuracy claim is permitted without a new sealed expert-reviewed field test.",
+  "farmer_payment_rule": "Farmer never pays.",
+  "pesticide_brand_rule": "Do not promote or recommend pesticide brands.",
+  "verification_notice": "Verify against official source or qualified plant-pathology expert."
+}

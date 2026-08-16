@@ -1,0 +1,12 @@
+Sanitized device evidence:
+- Native node: android.widget.EditText / ReactEditText
+- enabled=true; focusable=true; editable=true
+- tap result: SHOW_SOFT_INPUT
+- mInputShown=true
+- active RemoteInputConnectionImpl
+- digit count accepted: 10 (value omitted)
+- Indian mobile rule: true (value omitted)
+- Send OTP enabled: true
+- backspace reduced count to 9
+- Firebase transition reached otp-entry-screen
+No full phone number or OTP is recorded here.

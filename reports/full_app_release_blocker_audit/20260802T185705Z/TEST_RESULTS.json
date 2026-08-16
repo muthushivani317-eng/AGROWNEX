@@ -1,0 +1,11 @@
+{
+  "timestamp_utc": "2026-08-02T18:57:05Z",
+  "focused_tests": { "status": "PASS", "suites": 4, "tests": 24 },
+  "full_jest": { "status": "PASS", "suites": 117, "tests": 746 },
+  "typescript": { "status": "PASS" },
+  "expo_doctor": { "status": "PASS", "checks": 20 },
+  "android_js_export": { "status": "PASS", "modules": 4701, "files": 58 },
+  "android_release_build": { "status": "PASS", "architecture": "arm64-v8a", "debuggable": false },
+  "physical_device": { "status": "NOT_RUN", "reason": "ADB device RZCY80YM62A not found" },
+  "production_authenticated_api": { "status": "NOT_RUN", "reason": "No authenticated device session available" }
+}

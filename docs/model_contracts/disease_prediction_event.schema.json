@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agrowai.local/contracts/disease_prediction_event.schema.json",
+  "title": "Privacy-minimized disease prediction event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "prediction_request_id", "timestamp_utc", "crop_id",
+    "model_version", "artifact_sha256", "policy_sha256", "decision_code",
+    "outcome", "confidence", "margin", "latency_ms"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "prediction_request_id": {"type": "string", "minLength": 1},
+    "timestamp_utc": {"type": "string", "format": "date-time"},
+    "crop_id": {"type": "string", "minLength": 1},
+    "model_version": {"type": "string", "minLength": 1},
+    "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "policy_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "decision_code": {"type": "string", "minLength": 1},
+    "outcome": {"enum": ["accepted", "abstained", "ood_rejected", "quality_rejected", "error"]},
+    "predicted_class": {"type": ["string", "null"], "minLength": 1},
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "margin": {"type": "number", "minimum": 0, "maximum": 1},
+    "latency_ms": {"type": "number", "minimum": 0},
+    "image_retention_consent": {"type": "boolean"},
+    "image_reference": {"type": ["string", "null"], "minLength": 1},
+    "review_id": {"type": ["string", "null"], "minLength": 1}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"image_reference": {"type": "string"}}, "required": ["image_reference"]},
+      "then": {"properties": {"image_retention_consent": {"const": true}}, "required": ["image_retention_consent"]}
+    }
+  ]
+}

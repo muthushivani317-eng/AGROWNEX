@@ -7,8 +7,11 @@ genuinely unavailable (no polygon, cloud, delay, provider issue) it stores an ho
 *unavailable* session — never fabricated values. Reuses the farm repository (+ its
 polygon) and, optionally, weather context to avoid false moisture alerts.
 """
+
 from __future__ import annotations
 
+import hashlib
+import json
 import uuid
 from collections import defaultdict
 from datetime import UTC, date, datetime
@@ -20,6 +23,7 @@ from app.modules.auth.models import User
 from app.modules.farms.models import Farm
 from app.modules.farms.repositories import FarmRepository
 from app.modules.satellite.alerts import AlertContext, build_alerts
+from app.modules.satellite.aoi import AoiValidationError, normalize_aoi
 from app.modules.satellite.constants import (
     CLOUD_USABLE_MAX,
     TIMELINE_MONTHLY,
@@ -43,6 +47,7 @@ from app.modules.satellite.models import (
     SatelliteImage,
     SatelliteIndex,
     SatelliteSession,
+    WaterloggingAssessmentRecord,
 )
 from app.modules.satellite.provider import (
     ProviderScene,
@@ -50,6 +55,7 @@ from app.modules.satellite.provider import (
     get_default_provider,
 )
 from app.modules.satellite.repository import SatelliteRepository
+from app.modules.satellite.waterlogging import assess_waterlogging
 from app.schemas.response import PaginatedData
 
 logger = get_logger("satellite.service")
@@ -103,32 +109,192 @@ class SatelliteService:
                 user, farm_id, UnavailableReason.NO_POLYGON.value, cloud_cover=None
             )
 
-        outcome = await self.provider.fetch_scene(polygon, capture_before=self._today())
+        try:
+            polygon = normalize_aoi(polygon)
+        except AoiValidationError:
+            return await self._store_unavailable(
+                user, farm_id, UnavailableReason.PROCESSING_ERROR.value, cloud_cover=None
+            )
+        try:
+            outcome = await self.provider.fetch_scene(polygon, capture_before=self._today())
+        except Exception:
+            logger.exception("satellite provider failed")
+            return await self._store_unavailable(
+                user, farm_id, UnavailableReason.PROVIDER_ERROR.value, cloud_cover=None
+            )
         if outcome.scene is None:
             return await self._store_unavailable(user, farm_id, outcome.reason, cloud_cover=None)
 
         scene = outcome.scene
+        scene_id = scene.metadata.get("scene_id") if scene.metadata else None
+        if isinstance(scene_id, str) and scene_id:
+            latest = await self.repo.latest_session(user.id, farm_id, available_only=True)
+            if (
+                latest is not None
+                and latest.session_metadata
+                and latest.session_metadata.get("scene_id") == scene_id
+            ):
+                return latest
         if scene.cloud_cover is not None and scene.cloud_cover > CLOUD_USABLE_MAX:
             return await self._store_unavailable(
-                user, farm_id, UnavailableReason.CLOUD_COVER.value,
+                user,
+                farm_id,
+                UnavailableReason.CLOUD_COVER.value,
                 cloud_cover=scene.cloud_cover,
             )
 
-        if scene.indices is not None:
-            indices = scene.indices
-        elif scene.bands is not None:
-            indices = compute_indices(scene.bands)
-        else:
-            indices = IndexValues()
-        if not any(
-            v is not None for v in (indices.ndvi, indices.ndre, indices.evi, indices.ndmi)
-        ):
+        try:
+            if scene.indices is not None:
+                indices = scene.indices
+            elif scene.bands is not None:
+                indices = compute_indices(scene.bands)
+            else:
+                indices = IndexValues()
+        except Exception:
+            logger.exception("satellite processing failed")
             return await self._store_unavailable(
-                user, farm_id, UnavailableReason.NO_IMAGERY.value,
+                user,
+                farm_id,
+                UnavailableReason.PROCESSING_ERROR.value,
+                cloud_cover=scene.cloud_cover,
+            )
+        if not any(v is not None for v in (indices.ndvi, indices.ndre, indices.evi, indices.ndmi)):
+            return await self._store_unavailable(
+                user,
+                farm_id,
+                UnavailableReason.NO_IMAGERY.value,
                 cloud_cover=scene.cloud_cover,
             )
 
         return await self._store_available(user, farm_id, scene, indices)
+
+    async def refresh_waterlogging(
+        self, user: User, farm_id: uuid.UUID
+    ) -> WaterloggingAssessmentRecord:
+        farm = await self._require_farm(user, farm_id)
+        polygon = self._polygon(farm)
+        evidence = None
+        reason: str | None = None
+        normalized: dict | None = None
+        if polygon is None:
+            reason = UnavailableReason.NO_POLYGON.value
+        else:
+            try:
+                normalized = normalize_aoi(polygon)
+            except AoiValidationError:
+                reason = UnavailableReason.PROCESSING_ERROR.value
+        if reason is None:
+            fetch = getattr(self.provider, "fetch_water_evidence", None)
+            if fetch is None:
+                reason = UnavailableReason.PROVIDER_ERROR.value
+            else:
+                try:
+                    outcome = await fetch(normalized, capture_before=self._today())
+                    evidence = outcome.evidence
+                    reason = None if evidence is not None else outcome.reason
+                except Exception:
+                    logger.exception("waterlogging provider failed")
+                    reason = UnavailableReason.PROVIDER_ERROR.value
+        weather_context = (
+            await self._waterlogging_weather_context(user, farm_id)
+            if normalized is not None
+            else {"status": "unavailable", "reason": "invalid_or_missing_aoi"}
+        )
+        assessment = assess_waterlogging(
+            evidence,
+            missing=[reason] if reason else None,
+            weather_context=weather_context,
+        )
+        evidence_type = (
+            "combined"
+            if evidence is not None and weather_context.get("status") != "unavailable"
+            else "satellite"
+            if evidence is not None
+            else "weather_only"
+            if assessment.decision.value == "rainfall_risk_only"
+            else "insufficient"
+        )
+        provenance = {
+            "provider": self.provider.name,
+            "scene_id": evidence.scene_id if evidence else None,
+            "baseline_scene_id": evidence.baseline_scene_id if evidence else None,
+            "aoi_hash": (
+                hashlib.sha256(json.dumps(normalized, sort_keys=True).encode()).hexdigest()
+                if normalized
+                else None
+            ),
+            "processing_version": "waterlogging-assessment-v1",
+            "policy_verification": (
+                "verified" if evidence and evidence.policy_verified else "unverified"
+            ),
+            "verification_requirement": "verify_against_official_source",
+            "evidence_type": evidence_type,
+            "weather_context": weather_context,
+            "evidence_present": assessment.evidence_present,
+            "evidence_missing": assessment.evidence_missing,
+            "surface_water_change": assessment.surface_water_change,
+            "is_sample": evidence.source == "mock" if evidence else False,
+        }
+        row = WaterloggingAssessmentRecord(
+            user_id=user.id,
+            farm_id=farm_id,
+            decision=assessment.decision.value,
+            observed_at=assessment.observed_at,
+            processed_at=self._now_dt(),
+            source=assessment.source,
+            coverage_pct=assessment.coverage_pct,
+            freshness=assessment.freshness,
+            explanation=assessment.explanation,
+            provenance=provenance,
+        )
+        await self.repo.add_waterlogging_assessment(row)
+        await self.session.refresh(row)
+        return row
+
+    async def latest_waterlogging(
+        self, user: User, farm_id: uuid.UUID
+    ) -> WaterloggingAssessmentRecord | None:
+        await self._require_farm(user, farm_id)
+        return await self.repo.latest_waterlogging_assessment(user.id, farm_id)
+
+    async def waterlogging_history(
+        self, user: User, farm_id: uuid.UUID, *, page: int, page_size: int
+    ) -> PaginatedData[WaterloggingAssessmentRecord]:
+        await self._require_farm(user, farm_id)
+        rows, total = await self.repo.list_waterlogging_assessments(
+            user.id,
+            farm_id,
+            limit=page_size,
+            offset=(page - 1) * page_size,
+        )
+        return PaginatedData(
+            items=rows,
+            page=page,
+            page_size=page_size,
+            total=total,
+            total_pages=(total + page_size - 1) // page_size if total else 0,
+        )
+
+    async def _waterlogging_weather_context(
+        self, user: User, farm_id: uuid.UUID
+    ) -> dict[str, object]:
+        if not self._enable_weather:
+            return {"status": "unavailable", "reason": "weather_disabled"}
+        try:
+            from app.modules.weather.service import WeatherService
+
+            bundle = await WeatherService(self.session).get_by_farm(user, farm_id)
+            heavy_rain = any(i.category == "heavy_rain" for i in bundle.insights)
+            return {
+                "status": bundle.data_state,
+                "source": bundle.source,
+                "weather_timestamp": bundle.fetched_at,
+                "heavy_rain_signal": heavy_rain,
+                "policy_verification": "unverified",
+            }
+        except Exception:  # noqa: BLE001 - missing weather must fail safely
+            logger.info("weather context unavailable for waterlogging (farm %s)", farm_id)
+            return {"status": "unavailable", "reason": "weather_unavailable"}
 
     async def _store_unavailable(
         self, user: User, farm_id: uuid.UUID, reason: str, *, cloud_cover: float | None
@@ -233,7 +399,10 @@ class SatelliteService:
         return session
 
     async def _persist_indices(
-        self, farm_id: uuid.UUID, session: SatelliteSession, scene: ProviderScene,
+        self,
+        farm_id: uuid.UUID,
+        session: SatelliteSession,
+        scene: ProviderScene,
         indices: IndexValues,
     ) -> float | None:
         ndvi_std: float | None = None
@@ -317,17 +486,23 @@ class SatelliteService:
 
         if latest is None:
             message = (
-                "satellite.status.no_polygon" if not has_polygon
+                "satellite.status.no_polygon"
+                if not has_polygon
                 else "satellite.status.never_refreshed"
             )
             return {
-                "farm_id": farm_id, "has_polygon": has_polygon, "has_data": False,
+                "farm_id": farm_id,
+                "has_polygon": has_polygon,
+                "has_data": False,
                 "status": SessionStatus.PENDING.value,
                 "unavailable_reason": (
-                    UnavailableReason.NO_POLYGON.value if not has_polygon
+                    UnavailableReason.NO_POLYGON.value
+                    if not has_polygon
                     else UnavailableReason.NONE.value
                 ),
-                "message_code": message, "session": None, "alerts": [],
+                "message_code": message,
+                "session": None,
+                "alerts": [],
             }
 
         available = latest.status == SessionStatus.AVAILABLE.value
@@ -338,9 +513,14 @@ class SatelliteService:
         else:
             message = f"satellite.status.{latest.unavailable_reason}"
         return {
-            "farm_id": farm_id, "has_polygon": has_polygon, "has_data": available,
-            "status": latest.status, "unavailable_reason": latest.unavailable_reason,
-            "message_code": message, "session": latest, "alerts": latest.alerts or [],
+            "farm_id": farm_id,
+            "has_polygon": has_polygon,
+            "has_data": available,
+            "status": latest.status,
+            "unavailable_reason": latest.unavailable_reason,
+            "message_code": message,
+            "session": latest,
+            "alerts": latest.alerts or [],
         }
 
     async def latest(self, user: User, farm_id: uuid.UUID) -> SatelliteSession:
@@ -355,18 +535,17 @@ class SatelliteService:
     ) -> PaginatedData[SatelliteHistory]:
         await self._require_farm(user, farm_id)
         offset = (page - 1) * page_size
-        rows, total = await self.repo.list_history(
-            user.id, farm_id, limit=page_size, offset=offset
-        )
+        rows, total = await self.repo.list_history(user.id, farm_id, limit=page_size, offset=offset)
         total_pages = (total + page_size - 1) // page_size if total else 0
         return PaginatedData(
-            items=rows, page=page, page_size=page_size, total=total,
+            items=rows,
+            page=page,
+            page_size=page_size,
+            total=total,
             total_pages=total_pages,
         )
 
-    async def timeline(
-        self, user: User, farm_id: uuid.UUID, *, range_: str
-    ) -> list[dict]:
+    async def timeline(self, user: User, farm_id: uuid.UUID, *, range_: str) -> list[dict]:
         await self._require_farm(user, farm_id)
         rows = await self.repo.history_for_timeline(user.id, farm_id)
         buckets: dict[str, list[SatelliteHistory]] = defaultdict(list)

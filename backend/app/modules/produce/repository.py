@@ -32,6 +32,13 @@ _HISTORY_STATUSES = (
     ProduceStatus.WITHDRAWN.value,
     ProduceStatus.EXPIRED.value,
 )
+# Still-open statuses that can go stale and need to age into EXPIRED
+# (docs: app.modules.produce.jobs.expire_stale_offers).
+_EXPIRABLE_STATUSES = (
+    ProduceStatus.DRAFT.value,
+    ProduceStatus.SUBMITTED.value,
+    ProduceStatus.PLANNED.value,
+)
 
 
 class ProduceRepository:
@@ -141,6 +148,21 @@ class ProduceRepository:
     async def soft_delete(self, offer: ProduceOffer) -> None:
         offer.is_deleted = True
         await self.session.flush()
+
+    async def list_stale_open_offers(self, *, cutoff: date) -> list[ProduceOffer]:
+        """Still-open offers whose expected harvest date is before ``cutoff``.
+
+        Used by the expiry job to find offers a farmer never acted on (never
+        marked harvested/withdrawn) well past their own stated harvest date.
+        """
+        result = await self.session.execute(
+            select(ProduceOffer).where(
+                ProduceOffer.is_deleted.is_(False),
+                ProduceOffer.status.in_(_EXPIRABLE_STATUSES),
+                ProduceOffer.expected_harvest_date < cutoff,
+            )
+        )
+        return list(result.scalars().all())
 
     # ----------------------------------------------------------------- #
     # Images

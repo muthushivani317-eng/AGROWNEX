@@ -1,4 +1,5 @@
 """Satellite Intelligence exceptions (docs/CODING_STANDARDS.md → Error Handling)."""
+
 from __future__ import annotations
 
 from app.core.exceptions import NotFoundError

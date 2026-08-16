@@ -13,6 +13,7 @@ It never fabricates a deficiency and never overrides another module's diagnosis
 without evidence (a recent high-confidence disease lowers confidence and asks for an
 expert). All recommendations are *generic* localization codes — no brands, no AI.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -129,8 +130,18 @@ def _clamp(value: int) -> int:
     return max(CONFIDENCE_MIN, min(CONFIDENCE_MAX, value))
 
 
-def _soil_signal(primary: str, soil: SoilReference) -> tuple[int, bool | None]:
-    """(confidence delta, soil_supports) from the soil assessment for ``primary``."""
+def soil_signal(primary: str, soil: SoilReference) -> tuple[int, bool | None]:
+    """(confidence delta, soil_supports) from the soil assessment for ``primary``.
+
+    Public (not ``_``-prefixed) so ``app.modules.nutrient.schemas`` can reuse
+    this exact logic when rebuilding a *stored* report's safe result for the
+    API, instead of re-deriving it -- a second, incomplete reimplementation
+    here (checking only ``macro_ratings``, never ``deficient_micronutrients``)
+    is what previously caused soil-confirmed micronutrient deficiencies to
+    come back over the API as "abstained" / "not confirmed" even though the
+    engine had genuinely corroborated them at analysis time (found in the
+    2026-08 pre-release audit).
+    """
     if not soil.has_data:
         return 0, None
     if primary in SOIL_MACRO_PARAM:
@@ -185,7 +196,7 @@ def corroborate(
 
     confidence = observation.visual_confidence
 
-    soil_delta, soil_supports = _soil_signal(primary, soil)
+    soil_delta, soil_supports = soil_signal(primary, soil)
     confidence += soil_delta
 
     # Satellite: a macro-nutrient shortfall depresses canopy greenness.
@@ -215,9 +226,7 @@ def corroborate(
     else:
         status = DeficiencyStatus.NOT_CONFIRMED.value
 
-    micronutrient_without_soil = (
-        primary in SOIL_MICRO_ELEMENTS and not soil.has_data
-    )
+    micronutrient_without_soil = primary in SOIL_MICRO_ELEMENTS and not soil.has_data
     needs_test = status != DeficiencyStatus.CONFIRMED.value or micronutrient_without_soil
     needs_expert = disease_conflict or severity == Severity.SEVERE.value
 
@@ -259,14 +268,16 @@ def build_recommendations(assessment: NutrientAssessment) -> list[Recommendation
     status = assessment.status
     primary = assessment.primary_deficiency
 
-    if primary and status in (
-        DeficiencyStatus.CONFIRMED.value,
-        DeficiencyStatus.POSSIBLE.value,
+    # A visual suggestion is not enough to expose a nutrient-specific action.
+    # The safe public result contract only supports a finding when compatible
+    # measured soil/tissue evidence corroborates the primary observation.
+    if (
+        primary
+        and status == DeficiencyStatus.CONFIRMED.value
+        and assessment.soil_supports is True
+        and not assessment.disease_conflict
     ):
         rec_sev = _SEVERITY_TO_REC.get(assessment.severity, _REC_WARNING)
-        # A merely "possible" finding is softened by one step (uncertainty).
-        if status == DeficiencyStatus.POSSIBLE.value and rec_sev == _REC_CRITICAL:
-            rec_sev = _REC_WARNING
         recs.append(
             _rec(
                 RecommendationCategory.NUTRIENT,
@@ -275,15 +286,6 @@ def build_recommendations(assessment: NutrientAssessment) -> list[Recommendation
                 nutrient=primary,
             )
         )
-        if assessment.secondary_deficiency:
-            recs.append(
-                _rec(
-                    RecommendationCategory.NUTRIENT,
-                    f"nutrient.rec.{assessment.secondary_deficiency}.deficiency",
-                    _REC_ADVICE,
-                    nutrient=assessment.secondary_deficiency,
-                )
-            )
 
     if status == DeficiencyStatus.NOT_CONFIRMED.value:
         recs.append(
@@ -295,9 +297,7 @@ def build_recommendations(assessment: NutrientAssessment) -> list[Recommendation
         )
 
     if assessment.needs_test:
-        recs.append(
-            _rec(RecommendationCategory.TEST, "nutrient.rec.test.soil_test", _REC_WARNING)
-        )
+        recs.append(_rec(RecommendationCategory.TEST, "nutrient.rec.test.soil_test", _REC_WARNING))
 
     if assessment.needs_expert:
         recs.append(
@@ -308,9 +308,7 @@ def build_recommendations(assessment: NutrientAssessment) -> list[Recommendation
         Severity.NONE.value,
         Severity.MILD.value,
     ):
-        recs.append(
-            _rec(RecommendationCategory.MONITOR, "nutrient.rec.monitor.observe", _REC_INFO)
-        )
+        recs.append(_rec(RecommendationCategory.MONITOR, "nutrient.rec.monitor.observe", _REC_INFO))
 
     return recs
 

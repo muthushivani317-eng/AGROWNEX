@@ -5,6 +5,7 @@ can actually see, state uncertainty, and never fabricate. When the leaf is
 inconclusive it returns ``primary_deficiency: null`` — the engine then reports an
 honest "not confirmed" and recommends a soil/tissue test.
 """
+
 from __future__ import annotations
 
 NUTRIENT_SYSTEM_PROMPT = (

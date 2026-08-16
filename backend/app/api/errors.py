@@ -5,7 +5,7 @@ a request id, and unexpected errors are logged (never swallowed).
 """
 from __future__ import annotations
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
@@ -29,6 +29,7 @@ def _envelope(
     message: str,
     error_code: str,
     errors: list[FieldError] | None = None,
+    headers: dict[str, str] | None = None,
 ) -> JSONResponse:
     body = ErrorResponse(
         message=message,
@@ -36,10 +37,31 @@ def _envelope(
         errors=errors or [],
         request_id=_request_id(request),
     )
-    return JSONResponse(status_code=status_code, content=body.model_dump())
+    return JSONResponse(
+        status_code=status_code,
+        content=body.model_dump(),
+        headers=headers,
+    )
 
 
 def register_exception_handlers(app: FastAPI) -> None:
+    @app.exception_handler(HTTPException)
+    async def _http_error(request: Request, exc: HTTPException) -> JSONResponse:
+        detail = exc.detail if isinstance(exc.detail, dict) else {}
+        code = detail.get("code")
+        message = detail.get("message")
+        if not isinstance(code, str) or not code:
+            code = "http_error"
+        if not isinstance(message, str) or not message:
+            message = "The request could not be completed."
+        return _envelope(
+            request,
+            status_code=exc.status_code,
+            message=message,
+            error_code=code,
+            headers=exc.headers,
+        )
+
     @app.exception_handler(AppError)
     async def _app_error(request: Request, exc: AppError) -> JSONResponse:
         return _envelope(

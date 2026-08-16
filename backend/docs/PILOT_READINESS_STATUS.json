@@ -1,0 +1,31 @@
+{
+  "status": "NOT_READY",
+  "generated_for": "controlled farmer pilot in Thoothukudi",
+  "verified_local_capabilities": {
+    "production_config_fail_closed": true,
+    "https_release_guard": true,
+    "firebase_token_verification_implemented": true,
+    "backend_rbac_implemented": true,
+    "produce_listing_implemented": true,
+    "notification_storage_and_fcm_provider_implemented": true,
+    "supported_crop_guard_implemented": true,
+    "nutrient_separate_assessment_routing_implemented": true,
+    "satellite_placeholder_reported_unavailable": true
+  },
+  "unverified_or_blocked": [
+    "public HTTPS deployment and domain",
+    "cloud database and Redis",
+    "backup and restore drill",
+    "release OTP on two physical devices",
+    "Firebase SMS region policy and Phone Auth console state",
+    "release signing fingerprints registered in Firebase",
+    "end-to-end admin offer lifecycle matching requested statuses",
+    "farmer account deletion, export and retention workflows",
+    "Android crash reporting delivery",
+    "real satellite provider acquisition",
+    "legal review",
+    "physical pilot sign-off"
+  ],
+  "official_accuracy_claim": false,
+  "production_ready": false
+}

@@ -3,6 +3,7 @@
 The only layer that queries the satellite tables — sessions, images, indices,
 alerts and history. No SQL lives in routes or the service.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -17,6 +18,7 @@ from app.modules.satellite.models import (
     SatelliteImage,
     SatelliteIndex,
     SatelliteSession,
+    WaterloggingAssessmentRecord,
 )
 
 
@@ -38,6 +40,57 @@ class SatelliteRepository:
         await self.session.flush()
         return session
 
+    async def add_waterlogging_assessment(
+        self, row: WaterloggingAssessmentRecord
+    ) -> WaterloggingAssessmentRecord:
+        self.session.add(row)
+        await self.session.flush()
+        return row
+
+    async def latest_waterlogging_assessment(
+        self, user_id: uuid.UUID, farm_id: uuid.UUID
+    ) -> WaterloggingAssessmentRecord | None:
+        stmt = (
+            select(WaterloggingAssessmentRecord)
+            .where(
+                WaterloggingAssessmentRecord.user_id == user_id,
+                WaterloggingAssessmentRecord.farm_id == farm_id,
+            )
+            .order_by(WaterloggingAssessmentRecord.created_at.desc())
+            .limit(1)
+        )
+        return (await self.session.execute(stmt)).scalar_one_or_none()
+
+    async def list_waterlogging_assessments(
+        self,
+        user_id: uuid.UUID,
+        farm_id: uuid.UUID,
+        *,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> tuple[list[WaterloggingAssessmentRecord], int]:
+        base = select(WaterloggingAssessmentRecord).where(
+            WaterloggingAssessmentRecord.user_id == user_id,
+            WaterloggingAssessmentRecord.farm_id == farm_id,
+        )
+        total = int(
+            (
+                await self.session.execute(select(func.count()).select_from(base.subquery()))
+            ).scalar_one()
+        )
+        rows = (
+            (
+                await self.session.execute(
+                    base.order_by(WaterloggingAssessmentRecord.created_at.desc())
+                    .limit(limit)
+                    .offset(offset)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        return list(rows), total
+
     async def get_session(
         self, session_id: uuid.UUID, user_id: uuid.UUID
     ) -> SatelliteSession | None:
@@ -55,9 +108,7 @@ class SatelliteRepository:
         stmt = stmt.order_by(SatelliteSession.created_at.desc()).limit(1)
         return (await self.session.execute(stmt)).scalar_one_or_none()
 
-    async def previous_available_ndvi(
-        self, user_id: uuid.UUID, farm_id: uuid.UUID
-    ) -> float | None:
+    async def previous_available_ndvi(self, user_id: uuid.UUID, farm_id: uuid.UUID) -> float | None:
         """The most recent available NDVI (for trend comparison on the next scene)."""
         stmt = (
             self._owned(user_id)
@@ -83,17 +134,13 @@ class SatelliteRepository:
         base = self._owned(user_id).where(SatelliteSession.farm_id == farm_id)
         total = int(
             (
-                await self.session.execute(
-                    select(func.count()).select_from(base.subquery())
-                )
+                await self.session.execute(select(func.count()).select_from(base.subquery()))
             ).scalar_one()
         )
         rows = (
             (
                 await self.session.execute(
-                    base.order_by(SatelliteSession.created_at.desc())
-                    .limit(limit)
-                    .offset(offset)
+                    base.order_by(SatelliteSession.created_at.desc()).limit(limit).offset(offset)
                 )
             )
             .scalars()
@@ -117,10 +164,14 @@ class SatelliteRepository:
 
     async def list_indices(self, session_id: uuid.UUID) -> list[SatelliteIndex]:
         rows = (
-            await self.session.execute(
-                select(SatelliteIndex).where(SatelliteIndex.session_id == session_id)
+            (
+                await self.session.execute(
+                    select(SatelliteIndex).where(SatelliteIndex.session_id == session_id)
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         return list(rows)
 
     async def add_alert(self, alert: SatelliteAlert) -> SatelliteAlert:
@@ -130,26 +181,31 @@ class SatelliteRepository:
 
     async def list_alerts(self, session_id: uuid.UUID) -> list[SatelliteAlert]:
         rows = (
-            await self.session.execute(
-                select(SatelliteAlert)
-                .where(SatelliteAlert.session_id == session_id)
-                .order_by(SatelliteAlert.created_at.asc())
+            (
+                await self.session.execute(
+                    select(SatelliteAlert)
+                    .where(SatelliteAlert.session_id == session_id)
+                    .order_by(SatelliteAlert.created_at.asc())
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         return list(rows)
 
-    async def sessions_with_alerts(
-        self, user_id: uuid.UUID
-    ) -> list[SatelliteSession]:
+    async def sessions_with_alerts(self, user_id: uuid.UUID) -> list[SatelliteSession]:
         """Recent sessions (with their alerts eager-loaded) for the notification
         source to surface satellite alerts."""
         rows = (
-            await self.session.execute(
-                self._owned(user_id)
-                .order_by(SatelliteSession.created_at.desc())
-                .limit(50)
+            (
+                await self.session.execute(
+                    self._owned(user_id).order_by(SatelliteSession.created_at.desc()).limit(50)
+                )
             )
-        ).scalars().unique().all()
+            .scalars()
+            .unique()
+            .all()
+        )
         return list(rows)
 
     # ----------------------------------------------------------------- #
@@ -174,17 +230,13 @@ class SatelliteRepository:
         )
         total = int(
             (
-                await self.session.execute(
-                    select(func.count()).select_from(base.subquery())
-                )
+                await self.session.execute(select(func.count()).select_from(base.subquery()))
             ).scalar_one()
         )
         rows = (
             (
                 await self.session.execute(
-                    base.order_by(SatelliteHistory.recorded_at.desc())
-                    .limit(limit)
-                    .offset(offset)
+                    base.order_by(SatelliteHistory.recorded_at.desc()).limit(limit).offset(offset)
                 )
             )
             .scalars()
@@ -196,14 +248,18 @@ class SatelliteRepository:
         self, user_id: uuid.UUID, farm_id: uuid.UUID, *, limit: int = 365
     ) -> list[SatelliteHistory]:
         rows = (
-            await self.session.execute(
-                select(SatelliteHistory)
-                .where(
-                    SatelliteHistory.user_id == user_id,
-                    SatelliteHistory.farm_id == farm_id,
+            (
+                await self.session.execute(
+                    select(SatelliteHistory)
+                    .where(
+                        SatelliteHistory.user_id == user_id,
+                        SatelliteHistory.farm_id == farm_id,
+                    )
+                    .order_by(SatelliteHistory.recorded_at.asc())
+                    .limit(limit)
                 )
-                .order_by(SatelliteHistory.recorded_at.asc())
-                .limit(limit)
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         return list(rows)

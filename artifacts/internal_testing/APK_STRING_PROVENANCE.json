@@ -1,0 +1,374 @@
+{
+  "audit_completed": true,
+  "apk_path": "D:\\AgrowAI\\AgrowAi_app\\agrow-ai\\android\\app\\build\\outputs\\apk\\internalTesting\\app-internalTesting.apk",
+  "apk_file": "assets/index.android.bundle",
+  "bundle_size_bytes": 7620428,
+  "application_endpoint": {
+    "resolved_url": "https://agrowai-app-production.up.railway.app/api/v1",
+    "source": "agrow-ai/config/env.ts -> agrow-ai/services/apiClient.ts",
+    "runtime_reachable": true,
+    "loopback_fallback": false
+  },
+  "exact_matches": [
+    {
+      "value": "http://localhost",
+      "offsets": [
+        869193
+      ]
+    },
+    {
+      "value": "localhost",
+      "offsets": [
+        869200,
+        1064469,
+        1656948
+      ]
+    },
+    {
+      "value": "127.0.0.1",
+      "offsets": [
+        875135,
+        1291249
+      ]
+    },
+    {
+      "value": "10.0.2.2",
+      "offsets": [
+        952495,
+        1064484,
+        1291264
+      ]
+    },
+    {
+      "value": "development_mock",
+      "offsets": [
+        1032735
+      ]
+    },
+    {
+      "value": "mockAuthProvider",
+      "offsets": [
+        1681498
+      ]
+    }
+  ],
+  "six_digit_candidates": [
+    {
+      "value": "000000",
+      "offsets": [
+        834701,
+        1488924,
+        1489666,
+        1490089
+      ],
+      "otp_relevant": true,
+      "conclusion": "Known negative-test/example value; no internal-testing comparison or authentication consumer."
+    },
+    {
+      "value": "202425",
+      "offsets": [
+        835418
+      ],
+      "otp_relevant": false,
+      "conclusion": "Numeric bundle data/literal; no OTP-context consumer found in the runtime authentication graph."
+    },
+    {
+      "value": "126787",
+      "offsets": [
+        835437
+      ],
+      "otp_relevant": false,
+      "conclusion": "Numeric bundle data/literal; no OTP-context consumer found in the runtime authentication graph."
+    },
+    {
+      "value": "252525",
+      "offsets": [
+        835507
+      ],
+      "otp_relevant": false,
+      "conclusion": "Numeric bundle data/literal; no OTP-context consumer found in the runtime authentication graph."
+    },
+    {
+      "value": "313538",
+      "offsets": [
+        835738
+      ],
+      "otp_relevant": false,
+      "conclusion": "Numeric bundle data/literal; no OTP-context consumer found in the runtime authentication graph."
+    },
+    {
+      "value": "323232",
+      "offsets": [
+        835749
+      ],
+      "otp_relevant": false,
+      "conclusion": "Numeric bundle data/literal; no OTP-context consumer found in the runtime authentication graph."
+    },
+    {
+      "value": "418337",
+      "offsets": [
+        878330
+      ],
+      "otp_relevant": false,
+      "conclusion": "Numeric bundle data/literal; no OTP-context consumer found in the runtime authentication graph."
+    },
+    {
+      "value": "168006",
+      "offsets": [
+        881599
+      ],
+      "otp_relevant": false,
+      "conclusion": "Numeric bundle data/literal; no OTP-context consumer found in the runtime authentication graph."
+    },
+    {
+      "value": "328118",
+      "offsets": [
+        884364
+      ],
+      "otp_relevant": false,
+      "conclusion": "Numeric bundle data/literal; no OTP-context consumer found in the runtime authentication graph."
+    },
+    {
+      "value": "120000",
+      "offsets": [
+        888445
+      ],
+      "otp_relevant": false,
+      "conclusion": "Numeric bundle data/literal; no OTP-context consumer found in the runtime authentication graph."
+    },
+    {
+      "value": "171310",
+      "offsets": [
+        893639
+      ],
+      "otp_relevant": false,
+      "conclusion": "Numeric bundle data/literal; no OTP-context consumer found in the runtime authentication graph."
+    },
+    {
+      "value": "155406",
+      "offsets": [
+        902965
+      ],
+      "otp_relevant": false,
+      "conclusion": "Numeric bundle data/literal; no OTP-context consumer found in the runtime authentication graph."
+    },
+    {
+      "value": "104728",
+      "offsets": [
+        902981
+      ],
+      "otp_relevant": false,
+      "conclusion": "Numeric bundle data/literal; no OTP-context consumer found in the runtime authentication graph."
+    },
+    {
+      "value": "625386",
+      "offsets": [
+        937683
+      ],
+      "otp_relevant": false,
+      "conclusion": "Numeric bundle data/literal; no OTP-context consumer found in the runtime authentication graph."
+    },
+    {
+      "value": "746521",
+      "offsets": [
+        966847
+      ],
+      "otp_relevant": false,
+      "conclusion": "Numeric bundle data/literal; no OTP-context consumer found in the runtime authentication graph."
+    },
+    {
+      "value": "854931",
+      "offsets": [
+        973724
+      ],
+      "otp_relevant": false,
+      "conclusion": "Numeric bundle data/literal; no OTP-context consumer found in the runtime authentication graph."
+    },
+    {
+      "value": "455961",
+      "offsets": [
+        986721
+      ],
+      "otp_relevant": false,
+      "conclusion": "Numeric bundle data/literal; no OTP-context consumer found in the runtime authentication graph."
+    },
+    {
+      "value": "262735",
+      "offsets": [
+        995661
+      ],
+      "otp_relevant": false,
+      "conclusion": "Numeric bundle data/literal; no OTP-context consumer found in the runtime authentication graph."
+    },
+    {
+      "value": "605716",
+      "offsets": [
+        997625
+      ],
+      "otp_relevant": false,
+      "conclusion": "Numeric bundle data/literal; no OTP-context consumer found in the runtime authentication graph."
+    },
+    {
+      "value": "984375",
+      "offsets": [
+        1025157
+      ],
+      "otp_relevant": false,
+      "conclusion": "Numeric bundle data/literal; no OTP-context consumer found in the runtime authentication graph."
+    },
+    {
+      "value": "198340",
+      "offsets": [
+        1693265
+      ],
+      "otp_relevant": false,
+      "conclusion": "Numeric bundle data/literal; no OTP-context consumer found in the runtime authentication graph."
+    },
+    {
+      "value": "333333",
+      "offsets": [
+        1939670,
+        1939678,
+        3714473,
+        3767156,
+        3767422,
+        3770078,
+        3875154,
+        3875238,
+        3875256,
+        3875274,
+        4134520,
+        4189553,
+        4286378,
+        4461473,
+        4462339,
+        4467231,
+        4467293,
+        4467355,
+        4474154,
+        4474255,
+        4474546,
+        4482955,
+        4988445,
+        5211373,
+        5239082,
+        5239843,
+        5308192,
+        5504580,
+        5504747,
+        5504886,
+        5505016,
+        5527897,
+        5527962,
+        5528066,
+        5528131,
+        6026482,
+        6026496,
+        6432854,
+        6432878,
+        6433163,
+        6433447,
+        6433734,
+        6434024,
+        6434273,
+        6434353,
+        6434562,
+        6434849,
+        6435136,
+        6435423,
+        6439736,
+        6440117
+      ],
+      "otp_relevant": false,
+      "conclusion": "Numeric bundle data/literal; no OTP-context consumer found in the runtime authentication graph."
+    },
+    {
+      "value": "123170",
+      "offsets": [
+        6466817,
+        6466869,
+        6467076
+      ],
+      "otp_relevant": false,
+      "conclusion": "Numeric bundle data/literal; no OTP-context consumer found in the runtime authentication graph."
+    },
+    {
+      "value": "123109",
+      "offsets": [
+        6467413
+      ],
+      "otp_relevant": false,
+      "conclusion": "Numeric bundle data/literal; no OTP-context consumer found in the runtime authentication graph."
+    }
+  ],
+  "provenance": [
+    {
+      "values": [
+        "http://localhost",
+        "localhost"
+      ],
+      "origins": [
+        "react-native/Libraries/Core/Devtools/getDevServer.js",
+        "@expo/metro-runtime error/source URL support",
+        "axios/lib/platform/common/utils.js",
+        "@react-native-firebase/auth/lib/namespaced.ts emulator helper"
+      ],
+      "import_chain": "Expo/React Native bootstrap and apiClient -> axios; authProvider -> @react-native-firebase/auth",
+      "build_condition": "Framework modules retained in production bytecode; dev-server behavior guarded by __DEV__; Firebase emulator helper requires an explicit useEmulator call absent from AgrowAI.",
+      "runtime_reachability": "Text/module present; not an AgrowAI API-base candidate. Axios origin fallback is not the Axios request baseURL.",
+      "network_or_auth_consumer": false,
+      "conclusion": "UNREACHABLE_DEPENDENCY_TEXT",
+      "remediation": "Retain dependency text; enforce application configuration and APK behavior with security-build-gates.js."
+    },
+    {
+      "values": [
+        "127.0.0.1",
+        "10.0.2.2"
+      ],
+      "origins": [
+        "@react-native-firebase/auth/lib/namespaced.ts useEmulator Android remapping",
+        "axios/lib/helpers/shouldBypassProxy.js loopback detection"
+      ],
+      "import_chain": "authProvider -> @react-native-firebase/auth; apiClient -> axios",
+      "build_condition": "Dependency code bundled; useEmulator is never called by AgrowAI and Axios proxy helper does not configure baseURL.",
+      "runtime_reachability": "Dependency helper present but no application call/configuration can select it as an endpoint.",
+      "network_or_auth_consumer": false,
+      "conclusion": "UNREACHABLE_DEPENDENCY_TEXT",
+      "remediation": "No binary modification; preserve upstream package and fail builds on application-owned loopback URLs."
+    },
+    {
+      "values": [
+        "0.0.0.0",
+        "::1"
+      ],
+      "origins": [
+        "axios/lib/helpers/shouldBypassProxy.js loopback classification and framework networking utilities"
+      ],
+      "import_chain": "apiClient -> axios",
+      "build_condition": "Generic dependency validation code.",
+      "runtime_reachability": "May classify a URL but cannot assign or override AgrowAI baseURL.",
+      "network_or_auth_consumer": false,
+      "conclusion": "UNREACHABLE_DEPENDENCY_TEXT",
+      "remediation": "Retain and document."
+    },
+    {
+      "values": [
+        "development_mock",
+        "123456",
+        "000000"
+      ],
+      "origins": [
+        "agrow-ai/features/auth/services/authProvider.ts diagnostic category",
+        "@react-native-firebase/auth API examples",
+        "dependency numeric data",
+        "Jest tests excluded from runtime graph"
+      ],
+      "import_chain": "app auth store -> authProvider; authProvider selects Firebase for configured internal_testing",
+      "build_condition": "Mock provider object is bundled by static import, but internal_testing selection returns Firebase or fail-closed unavailable provider; EXPO_PUBLIC_DEV_OTP is forbidden by build gate.",
+      "runtime_reachability": "Diagnostic/example text present; fixed values cannot create a credential or session.",
+      "network_or_auth_consumer": false,
+      "conclusion": "NO_RUNTIME_OTP_BYPASS",
+      "remediation": "Negative tests cover 000000 and 123456; retain dependency examples and fail builds if a development OTP environment is configured."
+    }
+  ]
+}

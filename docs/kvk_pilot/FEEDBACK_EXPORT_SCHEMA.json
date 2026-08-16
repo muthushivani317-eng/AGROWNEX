@@ -1,0 +1,49 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pilot_session_id",
+    "anonymous_image_id",
+    "feedback",
+    "timestamp_utc"
+  ],
+  "properties": {
+    "pilot_session_id": {
+      "type": "string"
+    },
+    "anonymous_image_id": {
+      "type": "string"
+    },
+    "feedback": {
+      "enum": [
+        "looks_correct",
+        "looks_incorrect",
+        "not_sure",
+        "photo_difficult",
+        "language_clear",
+        "language_unclear",
+        "request_expert_review"
+      ]
+    },
+    "text_feedback": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 500
+    },
+    "audio_reference": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "timestamp_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ground_truth": {
+      "const": false
+    }
+  }
+}

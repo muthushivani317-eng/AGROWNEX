@@ -6,6 +6,7 @@ thresholds so results are reproducible. When imagery is genuinely unavailable
 (cloud cover, acquisition delay, provider issue, or no farm polygon) the session is
 marked *unavailable* with an honest reason — never invented values.
 """
+
 from __future__ import annotations
 
 import os
@@ -23,29 +24,34 @@ SATELLITE_PROVIDER = os.getenv("SATELLITE_PROVIDER", "")
 
 
 class SatelliteProviderName(StrEnum):
-    SENTINEL = "sentinel"          # Sentinel-2 via Copernicus Data Space (free)
-    MOCK = "mock"                  # deterministic dev/sample provider (flagged)
+    SENTINEL = "sentinel"  # Sentinel-2 via Copernicus Data Space (free)
+    MOCK = "mock"  # deterministic dev/sample provider (flagged)
     SENTINEL_HUB = "sentinel_hub"  # future
-    COPERNICUS = "copernicus"      # future
-    PLANET = "planet"              # future
-    MAXAR = "maxar"                # future
+    COPERNICUS = "copernicus"  # future
+    PLANET = "planet"  # future
+    MAXAR = "maxar"  # future
     EARTH_ENGINE = "earth_engine"  # future
     PLANETARY_COMPUTER = "planetary_computer"  # future
 
 
 class SessionStatus(StrEnum):
-    AVAILABLE = "available"        # a usable scene was analysed
-    UNAVAILABLE = "unavailable"    # honest "Not Available"
-    PENDING = "pending"            # acquisition requested, not yet returned
+    AVAILABLE = "available"  # a usable scene was analysed
+    UNAVAILABLE = "unavailable"  # honest "Not Available"
+    PENDING = "pending"  # acquisition requested, not yet returned
+    PROCESSING = "processing"
 
 
 class UnavailableReason(StrEnum):
     NONE = "none"
-    NO_POLYGON = "no_polygon"           # farm has no boundary polygon
-    CLOUD_COVER = "cloud_cover"         # scene too cloudy to use
+    NO_POLYGON = "no_polygon"  # farm has no boundary polygon
+    CLOUD_COVER = "cloud_cover"  # scene too cloudy to use
     ACQUISITION_DELAY = "acquisition_delay"  # no recent pass yet
-    PROVIDER_ERROR = "provider_error"   # provider failed / not configured
-    NO_IMAGERY = "no_imagery"           # no scene for the range
+    PROVIDER_ERROR = "provider_error"  # provider failed / not configured
+    NO_IMAGERY = "no_imagery"  # no scene for the range
+    PROVIDER_NOT_CONFIGURED = "provider_not_configured"
+    PROVIDER_TIMEOUT = "provider_timeout"
+    PROVIDER_RATE_LIMITED = "provider_rate_limited"
+    PROCESSING_ERROR = "processing_error"
 
 
 class VegetationHealth(StrEnum):
@@ -161,7 +167,7 @@ NDMI_MOISTURE_STRESS = 0.0
 NDVI_VARIATION_STD = 0.15
 
 # Cloud cover (%)
-CLOUD_ADVISORY = 25.0   # partial obstruction → advisory
+CLOUD_ADVISORY = 25.0  # partial obstruction → advisory
 CLOUD_USABLE_MAX = 40.0  # above this the scene is unusable → unavailable
 
 # How far back the provider looks for a recent pass (days).

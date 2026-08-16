@@ -1,0 +1,22 @@
+{
+  "focused_jest": {"status": "PASS", "suites": 5, "tests": 25},
+  "complete_jest": {"status": "PASS", "suites": 108, "tests": 696},
+  "typescript": {"status": "PASS"},
+  "expo_doctor": {"status": "PASS", "checks": "20/20"},
+  "release_javascript_bundle": {"status": "PASS", "evidence": "assembleRelease bundled release assets"},
+  "release_apk": {
+    "status": "PASS",
+    "path": "D:/AgrowAI/AgrowAi_app/agrow-ai/android/app/build/outputs/apk/release/app-release.apk",
+    "sha256": "48b0c06e909b0c484526faf5ce00b0130c02f79c3facaee4f48da7135aa3d7d4",
+    "package": "com.agrowai.app",
+    "version": "1.0.0"
+  },
+  "device_install": {"status": "PASS", "fresh_uninstall": true},
+  "device_launch": {"status": "PASS", "react_native_main_started": true, "fatal_exception": false},
+  "device_restart_reopen": {
+    "status": "PASS_PROCESS_AND_ROUTE",
+    "startup_phases_completed": true,
+    "resolved_route": "/(auth)/language"
+  },
+  "visible_route_validation": {"status": "BLOCKED_DEVICE_LOCKED"}
+}

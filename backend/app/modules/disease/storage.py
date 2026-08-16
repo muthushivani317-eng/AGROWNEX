@@ -1,8 +1,8 @@
 """Object storage — Cloudflare R2 only, never AWS S3 (docs: Storage).
 
 `ObjectStorage` is a small interface; the R2 client speaks the S3-compatible API
-with a dependency-free SigV4 signer. A deterministic mock is used when R2 is not
-configured (dev/tests), so the pipeline never requires cloud credentials.
+with a dependency-free SigV4 signer. Missing credentials fail closed. The mock
+remains available only through explicit test/development opt-in.
 """
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ import httpx
 
 from app.core.exceptions import AppError
 from app.core.logging import get_logger
+from app.core.provider_policy import test_mocks_enabled
 from app.modules.disease.constants import (
     R2_ACCESS_KEY_ID,
     R2_ACCOUNT_ID,
@@ -34,18 +35,31 @@ class StorageError(AppError):
     message = "Could not store the image. Please try again."
 
 
+class StorageUnavailableError(AppError):
+    status_code = 503
+    error_code = "storage_provider_unavailable"
+    message = "Image storage is unavailable. Please try again later."
+
+
 class ObjectStorage(Protocol):
     async def put(self, *, key: str, data: bytes, content_type: str) -> str: ...
 
 
 class MockStorage:
-    """Returns a deterministic URL; used until R2 credentials are configured."""
+    """Deterministic storage fixture for explicit development/tests only."""
 
     base = "https://r2.mock.local"
 
     async def put(self, *, key: str, data: bytes, content_type: str) -> str:
         logger.info("mock storage put key=%s (%d bytes)", key, len(data))
         return f"{self.base}/{key}"
+
+
+class UnavailableStorage:
+    """Production-safe null provider that never fabricates an object URL."""
+
+    async def put(self, *, key: str, data: bytes, content_type: str) -> str:
+        raise StorageUnavailableError()
 
 
 def _sign(key: bytes, message: str) -> bytes:
@@ -141,5 +155,8 @@ def get_default_storage() -> ObjectStorage:
     if R2_ACCOUNT_ID and R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY:
         logger.info("object storage: Cloudflare R2")
         return R2Client()
-    logger.info("object storage: mock (R2 not configured)")
-    return MockStorage()
+    if test_mocks_enabled():
+        logger.info("object storage: explicit development/test mock")
+        return MockStorage()
+    logger.warning("object storage unavailable: R2 credentials are not configured")
+    return UnavailableStorage()

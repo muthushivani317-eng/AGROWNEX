@@ -9,6 +9,7 @@
 Thin routes — assessment, the engine and validation live in ``SoilService``.
 Static routes precede any dynamic segment. All endpoints are authenticated.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -17,17 +18,97 @@ from fastapi import APIRouter, Query, status
 
 from app.modules.soil.dependencies import CurrentUser, SoilServiceDep
 from app.modules.soil.schemas import (
+    RemoteSoilOutcomeOut,
     SoilAssessmentOut,
     SoilDashboardOut,
     SoilHistoryOut,
+    SoilIndicatorEvidenceOut,
     SoilProfileOut,
     SoilRecommendationOut,
     SoilReportCreate,
     SoilReportOut,
+    SoilScanIndicatorOut,
+    SoilScanOut,
 )
 from app.schemas.response import PaginatedData, SuccessResponse, success
 
 router = APIRouter(prefix="/soil", tags=["soil"])
+
+
+def _scan_out(row) -> SoilScanOut:
+    return SoilScanOut(
+        id=row.id,
+        farm_id=row.farm_id,
+        aoi_verified=bool(row.aoi_geojson),
+        aoi_geojson=row.aoi_geojson,
+        generated_at=row.generated_at,
+        indicators=[SoilScanIndicatorOut(**item) for item in row.indicators],
+        provider_states=row.provider_states,
+        provenance=row.provenance,
+        sampling_plan=row.sampling_plan,
+    )
+
+
+@router.get("/scan", response_model=SuccessResponse[SoilScanOut])
+async def get_soil_scan(
+    current_user: CurrentUser,
+    service: SoilServiceDep,
+    farm_id: uuid.UUID = Query(...),
+):
+    return success(_scan_out(await service.soil_scan(current_user, farm_id)))
+
+
+@router.post(
+    "/scan", response_model=SuccessResponse[SoilScanOut], status_code=status.HTTP_201_CREATED
+)
+async def run_soil_scan(
+    current_user: CurrentUser,
+    service: SoilServiceDep,
+    farm_id: uuid.UUID = Query(...),
+):
+    return success(
+        _scan_out(await service.run_soil_scan(current_user, farm_id)),
+        message="Soil Scan saved",
+    )
+
+
+@router.get("/scan/latest", response_model=SuccessResponse[SoilScanOut])
+async def latest_soil_scan(
+    current_user: CurrentUser,
+    service: SoilServiceDep,
+    farm_id: uuid.UUID = Query(...),
+):
+    return success(_scan_out(await service.latest_soil_scan(current_user, farm_id)))
+
+
+@router.get("/scan/history", response_model=SuccessResponse[PaginatedData[SoilScanOut]])
+async def soil_scan_history(
+    current_user: CurrentUser,
+    service: SoilServiceDep,
+    farm_id: uuid.UUID = Query(...),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+):
+    data = await service.scan_history(current_user, farm_id, page=page, page_size=page_size)
+    return success(
+        PaginatedData(
+            items=[_scan_out(row) for row in data.items],
+            page=data.page,
+            page_size=data.page_size,
+            total=data.total,
+            total_pages=data.total_pages,
+        )
+    )
+
+
+@router.get("/scan/{scan_id}", response_model=SuccessResponse[SoilScanOut])
+async def soil_scan_detail(
+    scan_id: uuid.UUID,
+    current_user: CurrentUser,
+    service: SoilServiceDep,
+    farm_id: uuid.UUID = Query(...),
+):
+    return success(_scan_out(await service.get_soil_scan(current_user, farm_id, scan_id)))
 
 
 def _dashboard_out(data: dict) -> SoilDashboardOut:
@@ -37,18 +118,17 @@ def _dashboard_out(data: dict) -> SoilDashboardOut:
         message_code=data["message_code"],
         profile=SoilProfileOut.from_profile(data["profile"]) if data["profile"] else None,
         assessment=(
-            SoilAssessmentOut.from_assessment(data["assessment"])
-            if data["assessment"]
-            else None
+            SoilAssessmentOut.from_assessment(data["assessment"]) if data["assessment"] else None
         ),
-        recommendations=[
-            SoilRecommendationOut.from_draft(d) for d in data["recommendations"]
-        ],
+        recommendations=[SoilRecommendationOut.from_draft(d) for d in data["recommendations"]],
         latest_report=(
-            SoilReportOut.from_report(data["latest_report"])
-            if data["latest_report"]
-            else None
+            SoilReportOut.from_report(data["latest_report"]) if data["latest_report"] else None
         ),
+        indicator_evidence=[
+            SoilIndicatorEvidenceOut(**item) for item in data["indicator_evidence"]
+        ],
+        overall_status=data["overall_status"],
+        laboratory_equivalent=False,
     )
 
 
@@ -75,9 +155,23 @@ async def get_latest(
     return success(SoilReportOut.from_report(report))
 
 
-@router.get(
-    "/history", response_model=SuccessResponse[PaginatedData[SoilHistoryOut]]
-)
+@router.get("/remote", response_model=SuccessResponse[RemoteSoilOutcomeOut])
+async def get_remote_estimation(
+    current_user: CurrentUser,
+    service: SoilServiceDep,
+    farm_id: uuid.UUID = Query(...),
+):
+    outcome = await service.remote_estimation(current_user, farm_id)
+    return success(
+        RemoteSoilOutcomeOut(
+            status=outcome.status,
+            reason=outcome.reason,
+            estimates=[estimate.__dict__ for estimate in outcome.estimates],
+        )
+    )
+
+
+@router.get("/history", response_model=SuccessResponse[PaginatedData[SoilHistoryOut]])
 async def get_history(
     current_user: CurrentUser,
     service: SoilServiceDep,
@@ -86,9 +180,7 @@ async def get_history(
     page_size: int = Query(20, ge=1, le=100),
 ):
     """The farm's soil value trend over time."""
-    page_data = await service.history(
-        current_user, farm_id, page=page, page_size=page_size
-    )
+    page_data = await service.history(current_user, farm_id, page=page, page_size=page_size)
     return success(
         PaginatedData(
             items=[SoilHistoryOut.model_validate(h) for h in page_data.items],
@@ -100,9 +192,7 @@ async def get_history(
     )
 
 
-@router.get(
-    "/recommendation", response_model=SuccessResponse[list[SoilRecommendationOut]]
-)
+@router.get("/recommendation", response_model=SuccessResponse[list[SoilRecommendationOut]])
 async def get_recommendations(
     current_user: CurrentUser,
     service: SoilServiceDep,

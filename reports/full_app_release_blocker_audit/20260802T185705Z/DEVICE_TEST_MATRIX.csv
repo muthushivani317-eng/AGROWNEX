@@ -1,0 +1,36 @@
+step,feature,pathname,interaction_result,api_status,status,evidence
+1,Login,/login,not run,not run,NOT_RUN,ADB device unavailable
+2,Home,/(tabs),not run,not run,NOT_RUN,ADB device unavailable
+3,Home scroll,/(tabs),not run,not run,NOT_RUN,ADB device unavailable
+4,AI Assistant,/ai,not run,not run,NOT_RUN,ADB device unavailable
+5,AI message,/ai,not run,not run,NOT_RUN,ADB device unavailable
+6,Back Home,/(tabs),not run,not run,NOT_RUN,ADB device unavailable
+7,Disease Detection,/disease,not run,not run,NOT_RUN,ADB device unavailable
+8,Disease image,/disease,not run,not run,NOT_RUN,ADB device unavailable
+9,Crop identification,/disease,not run,not run,FAIL,Supplied evidence reports connection failure
+10,Disease retry,/disease,not run,not run,NOT_RUN,Code repaired; device unavailable
+11,Weather,/weather,not run,not run,NOT_RUN,ADB device unavailable
+12,Add Farm,/farm/new,not run,not run,NOT_RUN,ADB device unavailable
+13,GPS permission,/farm/new,not run,not run,NOT_RUN,ADB device unavailable
+14,Current location,/farm/new,not run,not run,NOT_RUN,ADB device unavailable
+15,Manual location,/farm/new,not run,not run,NOT_RUN,ADB device unavailable
+16,Map interaction,/farm/new,not run,not run,NOT_RUN,ADB device unavailable
+17,Farm validation,/farm/new,not run,not run,NOT_RUN,ADB device unavailable
+18,Crop Calendar,/calendar,not run,not run,NOT_RUN,ADB device unavailable
+19,Growth Monitor,/growth,not run,not run,NOT_RUN,ADB device unavailable
+20,Market Prices,/market,not run,not run,NOT_RUN,ADB device unavailable
+21,Government Schemes,/schemes,not run,not run,NOT_RUN,ADB device unavailable
+22,Scheme tabs,/schemes,not run,not run,NOT_RUN,ADB device unavailable
+23,Sell Produce,/produce,not run,not run,NOT_RUN,ADB device unavailable
+24,Notifications,/notifications,not run,not run,NOT_RUN,ADB device unavailable
+25,Plant Identifier,/plant-identifier,not run,not run,FAIL,Supplied evidence reports unavailable service
+26,Plant request,/plant-identifier,not run,not run,NOT_RUN,ADB device unavailable
+27,Soil Intelligence,/soil,not run,not run,NOT_RUN,ADB device unavailable
+28,Nutrient Deficiency,/nutrient,controlled unavailable,none,AUTOMATED_PASS,No diagnosis exposed
+29,Farm tab,/(tabs)/farm,not run,not run,NOT_RUN,ADB device unavailable
+30,Profile,/(tabs)/profile,not run,not run,NOT_RUN,ADB device unavailable
+31,Profile edit,/profile/edit,not run,not run,NOT_RUN,ADB device unavailable
+32,Logout/login persistence,auth flow,not run,not run,NOT_RUN,ADB device unavailable
+33,Background/reopen,current route,not run,not run,NOT_RUN,ADB device unavailable
+34,Force-stop/reopen,current route,not run,not run,NOT_RUN,ADB device unavailable
+35,No Metro,current route,not run,not run,NOT_RUN,Standalone bundle built; device unavailable

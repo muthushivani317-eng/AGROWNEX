@@ -11,6 +11,7 @@
 Thin routes — the engine, alerts and provider live in ``SatelliteService``.
 Static routes precede any dynamic segment. All endpoints are authenticated.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -27,10 +28,30 @@ from app.modules.satellite.schemas import (
     SatelliteSessionOut,
     SatelliteTimelineOut,
     TimelinePointOut,
+    WaterloggingAssessmentOut,
 )
 from app.schemas.response import PaginatedData, SuccessResponse, success
 
 router = APIRouter(prefix="/satellite", tags=["satellite"])
+
+
+def _waterlogging_out(row) -> WaterloggingAssessmentOut:
+    provenance = row.provenance or {}
+    return WaterloggingAssessmentOut(
+        id=row.id,
+        farm_id=row.farm_id,
+        decision=row.decision,
+        observed_at=row.observed_at,
+        processed_at=row.processed_at,
+        source=row.source,
+        aoi_coverage_pct=row.coverage_pct,
+        evidence_present=provenance.get("evidence_present", []),
+        evidence_missing=provenance.get("evidence_missing", []),
+        freshness=row.freshness,
+        explanation=row.explanation,
+        is_sample=bool(provenance.get("is_sample", False)),
+        provenance=provenance,
+    )
 
 
 def _dashboard_out(data: dict) -> SatelliteDashboardOut:
@@ -69,9 +90,7 @@ async def get_latest(
     return success(SatelliteSessionOut.from_session(session))
 
 
-@router.get(
-    "/history", response_model=SuccessResponse[PaginatedData[SatelliteHistoryOut]]
-)
+@router.get("/history", response_model=SuccessResponse[PaginatedData[SatelliteHistoryOut]])
 async def get_history(
     current_user: CurrentUser,
     service: SatelliteServiceDep,
@@ -80,9 +99,7 @@ async def get_history(
     page_size: int = Query(20, ge=1, le=100),
 ):
     """The farm's vegetation-index trend over time."""
-    page_data = await service.history(
-        current_user, farm_id, page=page, page_size=page_size
-    )
+    page_data = await service.history(current_user, farm_id, page=page, page_size=page_size)
     return success(
         PaginatedData(
             items=[SatelliteHistoryOut.model_validate(h) for h in page_data.items],
@@ -147,6 +164,53 @@ async def refresh(
 ):
     """Request a new acquisition pass (honest 'Not Available' if none / no polygon)."""
     session = await service.refresh(current_user, farm_id)
+    return success(SatelliteSessionOut.from_session(session), message="Satellite refresh complete")
+
+
+@router.get("/waterlogging", response_model=SuccessResponse[WaterloggingAssessmentOut | None])
+async def get_waterlogging(
+    current_user: CurrentUser,
+    service: SatelliteServiceDep,
+    farm_id: uuid.UUID = Query(...),
+):
+    row = await service.latest_waterlogging(current_user, farm_id)
+    return success(_waterlogging_out(row) if row else None)
+
+
+@router.post(
+    "/waterlogging/refresh",
+    response_model=SuccessResponse[WaterloggingAssessmentOut],
+    status_code=status.HTTP_201_CREATED,
+)
+async def refresh_waterlogging(
+    current_user: CurrentUser,
+    service: SatelliteServiceDep,
+    farm_id: uuid.UUID = Query(...),
+):
+    row = await service.refresh_waterlogging(current_user, farm_id)
+    return success(_waterlogging_out(row), message="Waterlogging assessment complete")
+
+
+@router.get(
+    "/waterlogging/history",
+    response_model=SuccessResponse[PaginatedData[WaterloggingAssessmentOut]],
+)
+async def get_waterlogging_history(
+    current_user: CurrentUser,
+    service: SatelliteServiceDep,
+    farm_id: uuid.UUID = Query(...),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+):
+    page_data = await service.waterlogging_history(
+        current_user, farm_id, page=page, page_size=page_size
+    )
     return success(
-        SatelliteSessionOut.from_session(session), message="Satellite refresh complete"
+        PaginatedData(
+            items=[_waterlogging_out(row) for row in page_data.items],
+            page=page_data.page,
+            page_size=page_data.page_size,
+            total=page_data.total,
+            total_pages=page_data.total_pages,
+        )
     )

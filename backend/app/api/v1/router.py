@@ -17,6 +17,7 @@ from app.gemini_crop_identification.router import (
 )
 from app.legacy_joint.api_router import router as legacy_joint_router
 from app.model_boundaries.router import router as model_boundaries_router
+from app.modules.action_verification.router import router as action_verification_router
 from app.modules.admin.router import router as admin_router
 from app.modules.ai.router import router as ai_router
 from app.modules.auth.router import router as auth_router
@@ -25,6 +26,7 @@ from app.modules.community.router import router as community_router
 from app.modules.crop_recommendation.router import router as crop_recommendation_router
 from app.modules.disease.router import router as disease_router
 from app.modules.disease_comparison.router import router as disease_comparison_router
+from app.modules.disease_risk.router import router as disease_risk_router
 from app.modules.equipment.router import router as equipment_router
 from app.modules.experts.router import (
     consultations_router,
@@ -39,6 +41,7 @@ from app.modules.market.router import router as market_router
 from app.modules.memory.router import router as memory_router
 from app.modules.notifications.router import router as notifications_router
 from app.modules.nutrient.router import router as nutrient_router
+from app.modules.produce.harvest_readiness_router import router as harvest_readiness_router
 from app.modules.produce.router import router as produce_router
 from app.modules.produce.traceability_router import router as traceability_router
 from app.modules.satellite.router import router as satellite_router
@@ -49,6 +52,7 @@ from app.plant_identifier.router import router as plant_identifier_router
 from app.restricted_crops.api_router import router as restricted_crops_router
 
 api_router = APIRouter()
+api_router.include_router(action_verification_router)
 api_router.include_router(health_router)
 api_router.include_router(auth_router)
 api_router.include_router(farmers_router)
@@ -57,6 +61,7 @@ api_router.include_router(farm_team_router)
 api_router.include_router(weather_router)
 api_router.include_router(ai_router)
 api_router.include_router(disease_router)
+api_router.include_router(disease_risk_router)
 api_router.include_router(disease_comparison_router)
 api_router.include_router(equipment_router)
 api_router.include_router(banana_v3_router)
@@ -76,6 +81,7 @@ api_router.include_router(market_router)
 api_router.include_router(growth_router)
 api_router.include_router(schemes_router)
 api_router.include_router(produce_router)
+api_router.include_router(harvest_readiness_router)
 api_router.include_router(traceability_router)
 api_router.include_router(notifications_router)
 api_router.include_router(experts_router)

@@ -107,9 +107,12 @@ async def test_sync_generates_produce_notification(db_session) -> None:
     await service.sync(user)
 
     page = await service.list_notifications(user, module="produce", sync=False)
-    assert page.total == 1
-    assert page.items[0].event_type == "harvest_approaching"
-    assert page.items[0].action_route.startswith("/produce/")
+    assert page.total == 2
+    assert {item.event_type for item in page.items} == {
+        "offer_submitted",
+        "harvest_approaching",
+    }
+    assert all(item.action_route.startswith("/produce/") for item in page.items)
 
 
 async def test_sync_is_deduplicated(db_session) -> None:
@@ -174,8 +177,11 @@ async def test_market_favourite_alert(db_session) -> None:
     service = _service(db_session)
     await service.sync(user)
     page = await service.list_notifications(user, module="market", sync=False)
-    assert page.total == 1
-    assert page.items[0].event_type == "favourite_crop_alert"
+    assert page.total == 2
+    assert {item.event_type for item in page.items} == {
+        "favourite_crop_alert",
+        "price_peak",
+    }
 
 
 # --------------------------------------------------------------------------- #
@@ -279,15 +285,15 @@ async def test_mark_read_and_unread_count(db_session) -> None:
     await service.update_preferences(
         user, NotificationPreferencesUpdate(scheme_enabled=False)
     )
-    assert await service.unread_count(user) == 2
+    assert await service.unread_count(user) == 3
 
     page = await service.list_notifications(user, sync=False)
     first = page.items[0]
     await service.mark_read(user, first.id)
-    assert await service.unread_count(user, sync=False) == 1
+    assert await service.unread_count(user, sync=False) == 2
 
     updated = await service.mark_all_read(user)
-    assert updated == 1
+    assert updated == 2
     assert await service.unread_count(user, sync=False) == 0
 
 
@@ -303,7 +309,7 @@ async def test_dismiss_hides_notification(db_session) -> None:
     await service.dismiss(user, target.id)
 
     after = await service.list_notifications(user, module="produce", sync=False)
-    assert after.total == 0
+    assert after.total == 1
 
 
 async def test_mark_read_requires_ownership(db_session) -> None:

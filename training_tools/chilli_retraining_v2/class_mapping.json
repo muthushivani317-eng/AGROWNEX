@@ -1,0 +1,14 @@
+{
+  "classes": [
+    "chilli__bacterial_spot",
+    "chilli__cercospora_leaf_spot",
+    "chilli__healthy",
+    "chilli__leaf_curl_virus"
+  ],
+  "class_to_index": {
+    "chilli__bacterial_spot": 0,
+    "chilli__cercospora_leaf_spot": 1,
+    "chilli__healthy": 2,
+    "chilli__leaf_curl_virus": 3
+  }
+}

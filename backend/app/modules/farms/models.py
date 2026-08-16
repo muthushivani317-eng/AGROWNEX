@@ -19,6 +19,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -135,3 +136,28 @@ class FarmMedia(UUIDMixin, TimestampMixin, Base):
     )
 
     farm: Mapped[Farm] = relationship(back_populates="media")
+
+
+class FarmTeamMember(UUIDMixin, TimestampMixin, Base):
+    """Controlled-test farm roster entry.
+
+    This records coordination roles only. It deliberately does not grant access to
+    the owner's farm data; shared-data permissions require a separate reviewed RBAC
+    design and explicit member consent.
+    """
+
+    __tablename__ = "farm_team_members"
+    __table_args__ = (
+        UniqueConstraint("farm_id", "user_id", name="uq_farm_team_member"),
+    )
+
+    farm_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("farms.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    role: Mapped[str] = mapped_column(String(30), nullable=False)
+    added_by: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("users.id"), nullable=False
+    )

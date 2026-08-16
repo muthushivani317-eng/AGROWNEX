@@ -14,6 +14,7 @@ Normalized tables:
 
 ``user_id`` is the farmer (FK ``users.id``), matching every module.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -59,7 +60,7 @@ class SatelliteSession(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
         String(12), default=SessionStatus.PENDING.value, nullable=False, index=True
     )
     unavailable_reason: Mapped[str] = mapped_column(
-        String(20), default=UnavailableReason.NONE.value, nullable=False
+        String(32), default=UnavailableReason.NONE.value, nullable=False
     )
     is_sample: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
@@ -180,6 +181,19 @@ class SatelliteHistory(UUIDMixin, TimestampMixin, Base):
     moisture_status: Mapped[str | None] = mapped_column(String(12))
     source: Mapped[str] = mapped_column(String(24), nullable=False)
     confidence: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    recorded_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
+    recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class WaterloggingAssessmentRecord(UUIDMixin, TimestampMixin, Base):
+    __tablename__ = "waterlogging_assessments"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(GUID(), ForeignKey("users.id"), index=True)
+    farm_id: Mapped[uuid.UUID] = mapped_column(GUID(), ForeignKey("farms.id"), index=True)
+    decision: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    observed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    processed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    source: Mapped[str | None] = mapped_column(String(40))
+    coverage_pct: Mapped[float | None] = mapped_column(Float)
+    freshness: Mapped[str] = mapped_column(String(12), nullable=False)
+    explanation: Mapped[str] = mapped_column(String(500), nullable=False)
+    provenance: Mapped[dict] = mapped_column(JSON, nullable=False)

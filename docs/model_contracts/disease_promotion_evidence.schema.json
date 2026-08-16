@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agrowai.local/contracts/disease_promotion_evidence.schema.json",
+  "title": "Provenance-bound disease model promotion evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "evidence_id", "checks", "approved_by", "approved_at_utc", "approval_reference", "evidence_sha256"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "evidence_id": {"type": "string", "minLength": 1},
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dataset_contract_valid": {"type": "boolean"},
+        "group_leakage_zero": {"type": "boolean"},
+        "sealed_test_policy_valid": {"type": "boolean"},
+        "artifact_integrity_valid": {"type": "boolean"},
+        "runtime_parity_valid": {"type": "boolean"},
+        "rollback_ready": {"type": "boolean"},
+        "independent_expert_field_labels": {"type": "boolean"},
+        "field_diversity_valid": {"type": "boolean"},
+        "reviewer_signoff": {"type": "boolean"},
+        "zero_p0_safety_events": {"type": "boolean"}
+      }
+    },
+    "approved_by": {"type": "string", "minLength": 1},
+    "approved_at_utc": {"type": "string", "format": "date-time"},
+    "approval_reference": {"type": "string", "minLength": 1},
+    "evidence_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

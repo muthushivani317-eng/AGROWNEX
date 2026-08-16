@@ -82,7 +82,7 @@ async def test_mock_provider_respects_limit() -> None:
     assert len(limited) == 2
 
 
-def test_default_provider_is_mock_without_key(monkeypatch: pytest.MonkeyPatch) -> None:
-    # No DATA_GOV_API_KEY configured in tests → mock provider.
+def test_default_provider_is_unavailable_without_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Missing credentials must never synthesize farmer-facing prices.
     provider = get_default_provider()
-    assert provider.source == "mock"
+    assert provider.source == "unavailable"

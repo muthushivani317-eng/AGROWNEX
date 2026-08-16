@@ -1,0 +1,3 @@
+2026-08-02T18:57:05Z ADB_DEVICE_CHECK target=RZCY80YM62A result=NOT_FOUND
+No authenticated production requests were attempted.
+No phone number, Firebase token, access token, refresh token, farm coordinate, or farmer detail was captured.

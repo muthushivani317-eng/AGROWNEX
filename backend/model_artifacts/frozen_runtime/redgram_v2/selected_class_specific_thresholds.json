@@ -1,0 +1,54 @@
+{
+  "policy_type": "CLASS_SPECIFIC_CONFIDENCE_AND_MARGIN",
+  "temperature": 2.193619697974462,
+  "class_thresholds": {
+    "redgram__healthy": {
+      "confidence_threshold": 0.81,
+      "margin_threshold": 0.0,
+      "accepted_count": 41,
+      "accepted_accuracy": 1.0,
+      "false_confident_errors": 0,
+      "class_prediction_coverage": 0.9761904761904762,
+      "predicted_count": 42,
+      "selection_rule": "ZERO_ACCEPTED_ERRORS_MAXIMUM_COVERAGE"
+    },
+    "redgram__leaf_spot": {
+      "confidence_threshold": 0.97,
+      "margin_threshold": 0.0,
+      "accepted_count": 9,
+      "accepted_accuracy": 1.0,
+      "false_confident_errors": 0,
+      "class_prediction_coverage": 0.1875,
+      "predicted_count": 48,
+      "selection_rule": "ZERO_ACCEPTED_ERRORS_MAXIMUM_COVERAGE"
+    },
+    "redgram__sterility_mosaic": {
+      "confidence_threshold": 0.67,
+      "margin_threshold": 0.0,
+      "accepted_count": 37,
+      "accepted_accuracy": 1.0,
+      "false_confident_errors": 0,
+      "class_prediction_coverage": 0.8809523809523809,
+      "predicted_count": 42,
+      "selection_rule": "ZERO_ACCEPTED_ERRORS_MAXIMUM_COVERAGE"
+    }
+  },
+  "overall_development_plus_calibration": {
+    "rows": 132,
+    "accepted_count": 87,
+    "coverage": 0.6590909090909091,
+    "abstention_rate": 0.34090909090909094,
+    "accepted_accuracy": 1.0,
+    "accepted_errors": 0,
+    "accepted_true_class_support": {
+      "redgram__healthy": 41,
+      "redgram__leaf_spot": 9,
+      "redgram__sterility_mosaic": 37
+    }
+  },
+  "selection_evidence": "development_validation_plus_calibration_only",
+  "sealed_new_untouched_test_accessed": false,
+  "consumed_v1_provisional_test_accessed": false,
+  "expert_verified": false,
+  "official_accuracy_claim": false
+}

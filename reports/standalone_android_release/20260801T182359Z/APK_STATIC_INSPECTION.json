@@ -1,0 +1,17 @@
+{
+  "result": "PASS_WITH_DOCUMENTED_FRAMEWORK_LOCALHOST_LITERALS",
+  "package": "com.agrowai.app",
+  "launcher": "com.agrowai.app.MainActivity",
+  "application_label": "AgrowAI",
+  "internet_permission": true,
+  "uses_cleartext_traffic": false,
+  "embedded_js_bundle": "assets/index.android.bundle",
+  "firebase_native_resources_present": true,
+  "dev_client_references": [],
+  "dev_launcher_references": [],
+  "dev_menu_references": [],
+  "production_api_url_embedded": true,
+  "production_diagnosis_url_embedded": true,
+  "generic_localhost_literals_present": true,
+  "generic_localhost_literal_context": "framework dependency and validation strings; not active API configuration"
+}

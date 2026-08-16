@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agrowai.local/contracts/disease_dataset_manifest.schema.json",
+  "title": "AgrowAI governed disease dataset manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "dataset_id", "snapshot_id", "taxonomy_version", "created_at_utc", "rows"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "dataset_id": {"type": "string", "minLength": 1},
+    "snapshot_id": {"type": "string", "minLength": 1},
+    "taxonomy_version": {"type": "string", "minLength": 1},
+    "created_at_utc": {"type": "string", "format": "date-time"},
+    "dataset_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "rows": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/row"}
+    }
+  },
+  "$defs": {
+    "nonempty": {"type": "string", "minLength": 1},
+    "row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "image_id", "sha256", "crop_id", "canonical_class", "dataset_role",
+        "source_id", "source_group_id", "licence_status", "consent_for_training", "consent_for_sealed_testing",
+        "expert_review_status", "quality_status", "privacy_status", "farm_id",
+        "visit_id", "plant_id", "leaf_id", "capture_group_id", "duplicate_family_id"
+      ],
+      "properties": {
+        "image_id": {"$ref": "#/$defs/nonempty"},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "crop_id": {"$ref": "#/$defs/nonempty"},
+        "canonical_class": {"$ref": "#/$defs/nonempty"},
+        "dataset_role": {"enum": ["training", "development_validation", "calibration", "sealed_field_test"]},
+        "source_id": {"$ref": "#/$defs/nonempty"},
+        "source_group_id": {"$ref": "#/$defs/nonempty"},
+        "licence_status": {"const": "APPROVED"},
+        "consent_for_training": {"type": "boolean"},
+        "consent_for_sealed_testing": {"type": "boolean"},
+        "expert_review_status": {"const": "EXPERT_CONFIRMED"},
+        "quality_status": {"enum": ["PASS", "PASS_WITH_WARNING"]},
+        "privacy_status": {"const": "APPROVED"},
+        "farm_id": {"$ref": "#/$defs/nonempty"},
+        "visit_id": {"$ref": "#/$defs/nonempty"},
+        "plant_id": {"$ref": "#/$defs/nonempty"},
+        "leaf_id": {"$ref": "#/$defs/nonempty"},
+        "capture_group_id": {"$ref": "#/$defs/nonempty"},
+        "duplicate_family_id": {"$ref": "#/$defs/nonempty"},
+        "district_code": {"type": ["string", "null"]},
+        "device_family": {"type": ["string", "null"]},
+        "view_type": {"type": ["string", "null"]},
+        "growth_stage": {"type": ["string", "null"]},
+        "symptom_stage": {"type": ["string", "null"]}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"dataset_role": {"const": "sealed_field_test"}}},
+          "then": {"properties": {"consent_for_sealed_testing": {"const": true}}},
+          "else": {"properties": {"consent_for_training": {"const": true}}}
+        }
+      ]
+    }
+  }
+}

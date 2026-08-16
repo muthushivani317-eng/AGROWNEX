@@ -4,62 +4,11 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 from app.modules.disease.models import DiseaseReport
-
-_MIME_PATTERN = "^image/(jpeg|png|webp)$"
-
-
-class AnalyzeRequest(BaseModel):
-    image_base64: str = Field(min_length=16, max_length=24_000_000)
-    mime_type: str = Field(pattern=_MIME_PATTERN)
-    farm_id: uuid.UUID | None = None
-    crop: str | None = Field(default=None, max_length=80)
-    language: str | None = Field(default=None, pattern="^(ta|en)$")
-    capture_method: str | None = Field(default=None, pattern="^(camera|gallery)$")
-    latitude: float | None = Field(default=None, ge=-90, le=90)
-    longitude: float | None = Field(default=None, ge=-180, le=180)
-
-
-class AnalyzeV2Request(BaseModel):
-    request_id: str = Field(min_length=1, max_length=128)
-    image_base64: str = Field(min_length=16, max_length=24_000_000)
-    mime_type: str = Field(pattern=_MIME_PATTERN)
-    selected_crop: str = Field(min_length=1, max_length=80)
-    symptoms: list[str] = Field(default_factory=list, max_length=20)
-    growth_stage: str | None = Field(default=None, max_length=120)
-    knowledge_evidence: list[dict] = Field(default_factory=list, max_length=50)
-    follow_up_answers: list[dict[str, str]] = Field(default_factory=list, max_length=2)
-    image_reference: str | None = Field(default=None, max_length=2048)
-    image_storage_consent: bool = False
-    language: str = Field(default="ta", pattern="^(ta|en)$")
-
-
-class DiagnosisV2Out(BaseModel):
-    model_config = ConfigDict(extra="allow")
-    request_id: str
-    decision_type: str
-    selected_crop: str
-    predicted_class: str | None
-    calibrated_confidence: float | None
-    accepted: bool
-    abstained: bool
-    likely_result_tamil: str
-    likely_result_english: str
-    explanation_tamil: str
-    explanation_english: str
-    expert_review_required: bool
-    official_accuracy_claim: bool
-    image_storage_allowed: bool
-    audit_record_id: str
-    audit_record: dict
-
-
-class DiagnosisV2Envelope(BaseModel):
-    response: DiagnosisV2Out
-    audit: dict
 
 
 class ModelMetadataOut(BaseModel):
@@ -101,9 +50,17 @@ class DiseaseReportOut(BaseModel):
     needs_expert_review: bool
     explanation_tamil: str | None
     explanation_english: str | None
-    image_url: str
+    image_url: str | None
     thumbnail_url: str | None
     model_used: str | None
+    review_status: str | None
+    reviewer_role: str | None
+    corrected_label: str | None
+    review_timestamp: datetime | None
+    review_consent: bool | None
+    kvk_session: bool
+    test_mode: dict | None
+    verification_level: str | None
     weather_snapshot: dict | None
     latitude: float | None
     longitude: float | None
@@ -131,6 +88,14 @@ class DiseaseReportOut(BaseModel):
             image_url=report.image_url,
             thumbnail_url=report.thumbnail_url,
             model_used=report.model_used,
+            review_status=report.review_status,
+            reviewer_role=report.reviewer_role,
+            corrected_label=report.corrected_label,
+            review_timestamp=report.review_timestamp,
+            review_consent=report.review_consent,
+            kvk_session=report.kvk_session,
+            test_mode=report.test_mode,
+            verification_level=report.verification_level,
             weather_snapshot=report.weather_snapshot,
             latitude=report.latitude,
             longitude=report.longitude,
@@ -147,6 +112,23 @@ class DiseaseReportSummaryOut(BaseModel):
     disease: str | None
     confidence: int | None
     severity: str | None
-    image_url: str
+    image_url: str | None
     needs_expert_review: bool
+    test_mode: dict | None
+    verification_level: str | None
     created_at: datetime
+
+
+class DiseaseReviewRequest(BaseModel):
+    correct: bool
+    corrected_label: Literal[
+        "redgram__healthy", "redgram__leaf_spot", "redgram__sterility_mosaic"
+    ] | None = None
+
+
+class DiseaseReviewOut(BaseModel):
+    report_id: uuid.UUID
+    review_status: Literal["confirmed", "corrected"]
+    corrected_label: str | None
+    reviewer_role: Literal["kvk_officer"]
+    review_timestamp: datetime

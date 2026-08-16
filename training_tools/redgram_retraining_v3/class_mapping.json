@@ -1,0 +1,12 @@
+{
+  "classes": [
+    "redgram__healthy",
+    "redgram__leaf_spot",
+    "redgram__sterility_mosaic"
+  ],
+  "class_to_index": {
+    "redgram__healthy": 0,
+    "redgram__leaf_spot": 1,
+    "redgram__sterility_mosaic": 2
+  }
+}

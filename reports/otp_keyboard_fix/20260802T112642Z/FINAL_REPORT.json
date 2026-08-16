@@ -1,0 +1,18 @@
+{
+  "root_cause": "ZERO_SIZED_FULLY_TRANSPARENT_IME_TARGET_AND_FOCUS_TIMING",
+  "otp_input_editable": true,
+  "otp_box_tap_focus": "PASS",
+  "numeric_keyboard_visible": true,
+  "auto_focus": "PASS",
+  "digit_entry": "PASS",
+  "backspace": "PASS",
+  "paste_support": "PASS_BY_TEST",
+  "verify_button_enablement": "PASS",
+  "keyboard_layout": "PASS",
+  "focus_after_error": "PASS_BY_TEST",
+  "release_build": "PASS",
+  "device_validation": "PASS",
+  "otp_verification_readiness": "READY_FOR_OPERATOR_VERIFY",
+  "farmer_release_readiness": "NO",
+  "verify_pressed": false
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agrowai.local/contracts/disease_promotion_policy.schema.json",
+  "title": "Explicit disease model promotion policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "policy_id", "stage", "thresholds", "min_class_recall", "approved_by", "approved_at_utc", "policy_sha256"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "policy_id": {"type": "string", "minLength": 1},
+    "stage": {"enum": ["OFFLINE_ONLY", "INTERNAL", "KVK_PILOT", "FARMER"]},
+    "approved_by": {"type": "string", "minLength": 1},
+    "approved_at_utc": {"type": "string", "format": "date-time"},
+    "policy_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "thresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min_accuracy", "min_macro_f1", "min_coverage", "min_accepted_accuracy", "max_accepted_errors", "max_ece_15", "max_ood_false_accept_rate", "max_p95_latency_ms"],
+      "properties": {
+        "min_accuracy": {"type": "number", "minimum": 0, "maximum": 1},
+        "min_macro_f1": {"type": "number", "minimum": 0, "maximum": 1},
+        "min_coverage": {"type": "number", "minimum": 0, "maximum": 1},
+        "min_accepted_accuracy": {"type": "number", "minimum": 0, "maximum": 1},
+        "max_accepted_errors": {"type": "integer", "minimum": 0},
+        "max_ece_15": {"type": "number", "minimum": 0, "maximum": 1},
+        "max_ood_false_accept_rate": {"type": "number", "minimum": 0, "maximum": 1},
+        "max_p95_latency_ms": {"type": "number", "exclusiveMinimum": 0}
+      }
+    },
+    "min_class_recall": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"type": "number", "minimum": 0, "maximum": 1}
+    }
+  }
+}

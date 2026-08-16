@@ -69,6 +69,22 @@ async def test_session_ownership_isolation(db_session) -> None:
     assert await repo.get_session(session.id, other.id) is None
 
 
+async def test_active_sessions_for_user_filters_status_and_owner(db_session) -> None:
+    repo = GrowthRepository(db_session)
+    owner = await _user(db_session, uid="active-owner")
+    other = await _user(db_session, uid="active-other")
+    active_one = await _session(db_session, owner, crop="paddy")
+    active_two = await _session(db_session, owner, crop="cotton")
+    completed = await _session(db_session, owner, crop="groundnut")
+    completed.status = "completed"
+    await _session(db_session, other, crop="banana")
+    await db_session.flush()
+
+    sessions = await repo.active_sessions_for_user(owner.id)
+
+    assert {session.id for session in sessions} == {active_one.id, active_two.id}
+
+
 async def test_image_add_latest_and_count(db_session) -> None:
     repo = GrowthRepository(db_session)
     user = await _user(db_session)
@@ -80,6 +96,41 @@ async def test_image_add_latest_and_count(db_session) -> None:
     latest = await repo.latest_image_for_session(session.id)
     assert latest.id == img2.id
     assert await repo.count_images_for_session(session.id) == 2
+
+
+async def test_latest_image_uses_deterministic_tie_breakers(db_session) -> None:
+    repo = GrowthRepository(db_session)
+    user = await _user(db_session)
+    session = await _session(db_session, user)
+    captured_at = datetime(2026, 1, 1, tzinfo=UTC)
+
+    first = await repo.add_image(
+        CropGrowthImage(
+            session_id=session.id,
+            user_id=user.id,
+            farm_id=session.farm_id,
+            image_url="https://r2.mock.local/growth/tie-week-1.jpg",
+            capture_method="camera",
+            captured_at=captured_at,
+            week_number=1,
+        )
+    )
+    second = await repo.add_image(
+        CropGrowthImage(
+            session_id=session.id,
+            user_id=user.id,
+            farm_id=session.farm_id,
+            image_url="https://r2.mock.local/growth/tie-week-2.jpg",
+            capture_method="camera",
+            captured_at=captured_at,
+            week_number=2,
+        )
+    )
+
+    latest = await repo.latest_image_for_session(session.id)
+    assert latest is not None
+    assert latest.id == second.id
+    assert latest.id != first.id
 
 
 async def test_list_images_with_analysis_and_pagination(db_session) -> None:

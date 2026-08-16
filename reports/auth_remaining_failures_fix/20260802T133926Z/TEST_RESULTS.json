@@ -1,0 +1,8 @@
+{
+  "focused_jest": {"suites": 5, "tests": 37, "status": "PASS"},
+  "full_jest": {"suites": 114, "tests": 732, "status": "PASS"},
+  "typescript": "PASS",
+  "expo_doctor": "20/20 PASS",
+  "production_export": "PASS",
+  "arm64_release_build": "PASS"
+}

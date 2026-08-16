@@ -16,6 +16,7 @@ import httpx
 
 from app.core.http import get_http_client
 from app.core.logging import get_logger
+from app.core.provider_policy import test_mocks_enabled
 from app.modules.ai.constants import (
     GEMINI_API_KEY,
     GEMINI_BASE_URL,
@@ -214,6 +215,18 @@ class MockAIProvider:
         )
 
 
+class UnavailableAIProvider:
+    """Fail-closed provider used when the server has no real AI credential."""
+
+    model = "unavailable"
+    provider = "unavailable"
+
+    async def generate(
+        self, *, system: str, history: list[ChatTurn], message: str
+    ) -> AIResult:
+        raise AIUnavailableError()
+
+
 def get_default_provider() -> AIProvider:
     if GEMINI_API_KEY:
         logger.info(
@@ -222,5 +235,8 @@ def get_default_provider() -> AIProvider:
             GEMINI_VISION_MODEL,
         )
         return RoutedChatProvider()
-    logger.info("AI provider: mock (no GEMINI_API_KEY configured)")
-    return MockAIProvider()
+    if test_mocks_enabled():
+        logger.info("AI provider: explicit development/test mock")
+        return MockAIProvider()
+    logger.warning("AI provider unavailable: GEMINI_API_KEY is not configured")
+    return UnavailableAIProvider()

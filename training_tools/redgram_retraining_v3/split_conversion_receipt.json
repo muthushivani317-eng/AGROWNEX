@@ -1,0 +1,23 @@
+{
+  "document_type": "portable_split_conversion_receipt",
+  "crop": "redgram",
+  "created_at_utc": "2026-07-29T12:15:16.496445+00:00",
+  "original_manifest_sha256": "1b07276638f9b71fbb44731ccab6c31c28a77442a19ed5aba1d113d9cc2df118",
+  "portable_manifest_sha256": "2c0f864cd084a6b1448d223dbd74ae1558084c9586a3c9f94c1ceb6492028986",
+  "conversion_tool_version": "agrowai-manifest-equivalence/1.0.0",
+  "equivalence_checks": {
+    "row_count": true,
+    "image_ids": true,
+    "sha256": true,
+    "labels": true,
+    "family_grouping": true,
+    "split_assignments": true,
+    "source_dataset": true,
+    "relative_path_mapping": true,
+    "cross_split_sha_leakage_zero": true,
+    "cross_split_family_leakage_zero": true
+  },
+  "path_only_changes": true,
+  "content_equivalent": true,
+  "reserved_or_sealed_images_opened": false
+}

@@ -1,0 +1,6 @@
+{
+  "non_plant": "REJECT",
+  "unsupported_crop": "REJECT",
+  "uncertain": "REJECT",
+  "supported": "REQUIRES_FROZEN_PROTOTYPES_AND_CONFIRMATION"
+}

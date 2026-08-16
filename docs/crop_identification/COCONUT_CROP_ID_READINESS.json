@@ -1,0 +1,36 @@
+{
+  "document_type": "coconut_crop_identification_subset_readiness",
+  "decision": "COCONUT_CROP_ID_SUBSET_REQUIRES_REVIEW",
+  "source_dataset": "Coconut Tree Disease Dataset",
+  "source_doi": "10.17632/gh56wbsnj5.1",
+  "licence": "CC BY 4.0",
+  "archive_sha256": "0a755b7c57c9255204d67e65207db14d310a7ed8bf83906a335e4807cd5ef487",
+  "input_readable_images": 5798,
+  "retained_candidates": 5735,
+  "training_eligible_images": 0,
+  "exclusions": {
+    "exact_cross_class_conflict_images": 58,
+    "redundant_same_class_exact_copies": 5,
+    "total": 63
+  },
+  "viewpoint_counts": {
+    "leaf": 2103,
+    "crown/bud": 470,
+    "trunk/stem": 1006,
+    "partial_tree": 0,
+    "whole_tree": 514,
+    "unknown_view": 1642
+  },
+  "viewpoint_verification": "CLASS_LEVEL_AUDIT_PROXY_REQUIRES_PER_IMAGE_REVIEW",
+  "perceptual_duplicates_auto_deleted": false,
+  "future_grouping_field": "perceptual_family",
+  "healthy_or_general_coverage_claimed": false,
+  "main_split_manifest_updated": false,
+  "blockers": [
+    "Per-image viewpoint verification is incomplete.",
+    "The source is disease-focused and does not prove healthy or general Coconut coverage.",
+    "Independent Coconut source diversity is insufficient.",
+    "unknown_unsupported_plant data is missing.",
+    "invalid_non_plant data is missing."
+  ]
+}

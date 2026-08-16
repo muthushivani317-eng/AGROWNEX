@@ -11,6 +11,7 @@ Four tables map the module's task spec:
 Stage/vigour store stable codes; the Tamil-first frontend localizes them and the
 English summary is kept as a fallback for logs and future AI.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -80,9 +81,7 @@ class CropGrowthImage(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         GUID(), ForeignKey("users.id"), index=True, nullable=False
     )
-    farm_id: Mapped[uuid.UUID | None] = mapped_column(
-        GUID(), ForeignKey("farms.id"), index=True
-    )
+    farm_id: Mapped[uuid.UUID | None] = mapped_column(GUID(), ForeignKey("farms.id"), index=True)
 
     image_url: Mapped[str] = mapped_column(String(512), nullable=False)
     thumbnail_url: Mapped[str | None] = mapped_column(String(512))
@@ -138,9 +137,7 @@ class CropGrowthAnalysis(UUIDMixin, TimestampMixin, Base):
 
     model_used: Mapped[str | None] = mapped_column(String(60))
     raw_response: Mapped[dict | None] = mapped_column(JSON)
-    language: Mapped[str] = mapped_column(
-        String(5), default=DEFAULT_LANGUAGE, nullable=False
-    )
+    language: Mapped[str] = mapped_column(String(5), default=DEFAULT_LANGUAGE, nullable=False)
 
 
 class CropGrowthTimeline(UUIDMixin, TimestampMixin, Base):
@@ -165,10 +162,44 @@ class CropGrowthTimeline(UUIDMixin, TimestampMixin, Base):
     health_score: Mapped[int | None] = mapped_column(Integer)
     # Health change vs the previous timeline entry (positive = improving).
     health_delta: Mapped[int | None] = mapped_column(Integer)
-    risk_level: Mapped[str] = mapped_column(
-        String(12), default=RiskLevel.LOW.value, nullable=False
-    )
+    risk_level: Mapped[str] = mapped_column(String(12), default=RiskLevel.LOW.value, nullable=False)
     summary: Mapped[str | None] = mapped_column(Text)
     recorded_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+
+
+class CropStageState(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
+    __tablename__ = "crop_stage_states"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(GUID(), ForeignKey("users.id"), index=True)
+    farm_id: Mapped[uuid.UUID] = mapped_column(GUID(), ForeignKey("farms.id"), index=True)
+    crop_cycle_id: Mapped[str] = mapped_column(String(80), index=True)
+    state: Mapped[str] = mapped_column(String(32), nullable=False)
+    suggested_stage: Mapped[str | None] = mapped_column(String(20))
+    confirmed_stage: Mapped[str | None] = mapped_column(String(20))
+    registry_version: Mapped[str | None] = mapped_column(String(80))
+    calculation_version: Mapped[str] = mapped_column(String(40), nullable=False)
+    version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    pending_sync: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    evidence_snapshot: Mapped[dict] = mapped_column(JSON, nullable=False)
+
+
+class CropStageTransition(UUIDMixin, TimestampMixin, Base):
+    __tablename__ = "crop_stage_transitions"
+
+    state_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("crop_stage_states.id"), index=True
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(GUID(), ForeignKey("users.id"), index=True)
+    event: Mapped[str] = mapped_column(String(20), nullable=False)
+    prior_state: Mapped[str | None] = mapped_column(String(32))
+    next_state: Mapped[str] = mapped_column(String(32), nullable=False)
+    prior_stage: Mapped[str | None] = mapped_column(String(20))
+    stage: Mapped[str | None] = mapped_column(String(20))
+    reason: Mapped[str | None] = mapped_column(String(500))
+    photo_reference: Mapped[str | None] = mapped_column(String(512))
+    idempotency_key: Mapped[str] = mapped_column(String(100), index=True)
+    registry_version: Mapped[str | None] = mapped_column(String(80))
+    evidence_snapshot: Mapped[dict] = mapped_column(JSON, nullable=False)
+    expert_reviewed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

@@ -1,0 +1,50 @@
+{
+  "crop_id": "groundnut",
+  "runtime_label_exact": "groundnut_rust",
+  "runtime_class_index": 1,
+  "candidate_canonical_disease_name": null,
+  "candidate_tamil_disease_name": null,
+  "mapping_status": "PENDING_HUMAN_REVIEW",
+  "authority_summary": {
+    "official_government": 0,
+    "official_university": 1,
+    "official_research_institute": 0,
+    "unknown_authority": 0
+  },
+  "candidate_fields": {
+    "symptoms": [],
+    "immediate_actions": [],
+    "prevention": [],
+    "cultural_practices": [],
+    "biological_options": [],
+    "chemical_options": [
+      {
+        "text_original": "Spray any one of the following: Spray 10% Calotropis leaf extract or\nSpray Carbendazim 250 g + Mancozeb 1000g/ha or Chlorothalonil\n3.Rust: Spray any one of the following:\n2500g /ha or Tridemorph 500 ml/ha or If necessary, repeat the spray 15\nSeed treatment with Trichoderma viride / T.harzianum @ 4 g/kg of seeds\n6.Groundnut Bud Necrosis:\nweeks after sowing and spray Monocrotophos 36 WSC 500 ml/ha, 30",
+        "text_normalized": "Spray any one of the following: Spray 10% Calotropis leaf extract or Spray Carbendazim 250 g + Mancozeb 1000g/ha or Chlorothalonil 3.Rust: Spray any one of the following: 2500g /ha or Tridemorph 500 ml/ha or If necessary, repeat the spray 15 Seed treatment with Trichoderma viride / T.harzianum @ 4 g/kg of seeds 6.Groundnut Bud Necrosis: weeks after sowing and spray Monocrotophos 36 WSC 500 ml/ha, 30",
+        "field_type": "chemical_option",
+        "source_id": "src_2df8781d45cf7e49",
+        "source_file_name": "Management of diseases of important Agriculture  .pdf",
+        "source_authority": "OFFICIAL_UNIVERSITY",
+        "page_number": 38,
+        "pdf_page_index": 37,
+        "section_heading": "Spray any one of the following: Spray 10% Calotropis leaf extract or",
+        "exact_excerpt": "Spray any one of the following: Spray 10% Calotropis leaf extract or\nSpray Carbendazim 250 g + Mancozeb 1000g/ha or Chlorothalonil\n3.Rust: Spray any one of the following:\n2500g /ha or Tridemorph 500 ml/ha or If necessary, repeat the spray 15\nSeed treatment with Trichoderma viride / T.harzianum @ 4 g/kg of seeds\n6.Groundnut Bud Necrosis:\nweeks after sowing and spray Monocrotophos 36 WSC 500 ml/ha, 30",
+        "candidate_disease_mapping": "groundnut_rust",
+        "mapping_confidence": "MEDIUM",
+        "final_authority_eligible": true,
+        "verification_status": "PENDING_HUMAN_REVIEW",
+        "verification_label": "VERIFY_AGAINST_OFFICIAL_SOURCE"
+      }
+    ],
+    "avoid_actions": []
+  },
+  "source_conflicts": [],
+  "missing_fields": [
+    "symptoms",
+    "immediate_actions",
+    "prevention"
+  ],
+  "tamil_translation_status": "NOT_TRANSLATED",
+  "human_approval_status": "PENDING",
+  "healthy_treatment_blocked": false
+}

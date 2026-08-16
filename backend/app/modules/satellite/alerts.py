@@ -4,6 +4,7 @@ Pure functions that turn a session's assessment into localized alerts. Codes are
 ``satellite.alert.<key>`` so the Tamil-first client renders the wording. Integrated
 with the Notification Engine via a collector (see the notifications module). No I/O.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -94,15 +95,18 @@ def build_alerts(ctx: AlertContext) -> list[AlertDraft]:
             UnavailableReason.NO_IMAGERY.value,
             UnavailableReason.ACQUISITION_DELAY.value,
             UnavailableReason.PROVIDER_ERROR.value,
+            UnavailableReason.PROVIDER_NOT_CONFIGURED.value,
+            UnavailableReason.PROVIDER_TIMEOUT.value,
+            UnavailableReason.PROVIDER_RATE_LIMITED.value,
         }:
             alerts.append(_alert(_C.IMAGERY, "missing_imagery", _S.WARNING))
+        elif ctx.unavailable_reason == UnavailableReason.PROCESSING_ERROR.value:
+            return alerts
         return alerts  # no vegetation analysis without a usable scene
 
     # Available scene with partial cloud → advisory
     if ctx.cloud_cover is not None and ctx.cloud_cover >= CLOUD_ADVISORY:
-        alerts.append(
-            _alert(_C.IMAGERY, "cloud_obstruction", _S.ADVICE, value=ctx.cloud_cover)
-        )
+        alerts.append(_alert(_C.IMAGERY, "cloud_obstruction", _S.ADVICE, value=ctx.cloud_cover))
 
     # Vegetation trend
     if ctx.ndvi_delta is not None:
@@ -119,7 +123,9 @@ def build_alerts(ctx: AlertContext) -> list[AlertDraft]:
             if ctx.ndvi is not None and ctx.ndvi >= NDVI_LOW:
                 alerts.append(
                     _alert(
-                        _C.VEGETATION, "early_vegetation_decline", _S.ADVICE,
+                        _C.VEGETATION,
+                        "early_vegetation_decline",
+                        _S.ADVICE,
                         value=ctx.ndvi_delta,
                     )
                 )
@@ -138,9 +144,7 @@ def build_alerts(ctx: AlertContext) -> list[AlertDraft]:
 
     # Large field variation
     if ctx.ndvi_std is not None and ctx.ndvi_std >= NDVI_VARIATION_STD:
-        alerts.append(
-            _alert(_C.VARIATION, "large_field_variation", _S.ADVICE, value=ctx.ndvi_std)
-        )
+        alerts.append(_alert(_C.VARIATION, "large_field_variation", _S.ADVICE, value=ctx.ndvi_std))
 
     return alerts
 

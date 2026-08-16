@@ -1,0 +1,10 @@
+{
+  "status": "REUSE_EXISTING_REGISTRIES_ONLY",
+  "authoritative_existing_evidence": [
+    "backend/model_artifacts/frozen_runtime/crop_identity_v1/TRAINING_RECEIPT.json",
+    "backend/model_artifacts/frozen_runtime/crop_identity_v1/runtime_config.json",
+    "backend/model_artifacts/frozen_runtime/crop_identity_v1/PROVISIONAL_TEST_RECEIPT.json"
+  ],
+  "new_downloads": [],
+  "licence_unverified_do_not_train": true
+}

@@ -1,0 +1,34 @@
+{
+  "crop": "redgram",
+  "exact_runtime_label": "redgram__leaf_spot",
+  "mapping_status": "PENDING_HUMAN_REVIEW",
+  "human_approval_status": "PENDING",
+  "candidate_canonical_disease": null,
+  "official_english_disease_name": null,
+  "candidate_tamil_disease_name": null,
+  "candidate_evidence": [
+    {
+      "source_id": "src_95bde7c9564efb26",
+      "source_filename": "farmerbook.pdf",
+      "printed_page": 94,
+      "pdf_page_index": 93,
+      "exact_relevant_passage": "potatoes and tomatoes is an effective control for the\ncyst nematode. But is less likely to control the root\nbiological organisms that compete with nematodes\nSymptoms\n• Understanding symptom and description of\nSome of the disease symptoms are:\nBlast infected leaf of paddy\nBacterial blight of paddy\nAltenaria leaf spot of redgram\nWilt affected redgram plant\nAnthracnose in cotton\nGray mould in cotton",
+      "verification": "VERIFY AGAINST OFFICIAL SOURCE"
+    }
+  ],
+  "symptom_candidate": [],
+  "immediate_action_candidate": [],
+  "prevention_candidate": [],
+  "cultural_control_candidate": [],
+  "biological_control_candidate": [],
+  "chemical_control_candidate": [],
+  "safety_note_candidate": [
+    "VERIFY AGAINST OFFICIAL SOURCE"
+  ],
+  "conflict_notes": [],
+  "english_draft": null,
+  "tamil_draft": null,
+  "tamil_status": "AGRICULTURAL_REVIEW_REQUIRED",
+  "reviewer_status": "PENDING_HUMAN_REVIEW",
+  "notice": "INTERNAL NON-EXPERT REVIEW ONLY\nOFFICIAL AGRICULTURAL EXPERT VERIFICATION NOT COMPLETED"
+}

@@ -1,0 +1,6 @@
+ADB device check:
+List of devices attached
+
+No devices/emulators found.
+
+Installation was not attempted because no authorized Android device was visible.

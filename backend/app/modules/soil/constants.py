@@ -6,6 +6,7 @@ soil values against transparent, standard agronomic thresholds — the Indian
 No commercial fertilizer brands are ever recommended. When a value is unavailable
 it stays ``None`` and is reported as "not available" — never invented.
 """
+
 from __future__ import annotations
 
 import os
@@ -24,13 +25,13 @@ SOIL_PROVIDER = os.getenv("SOIL_PROVIDER", "")
 class SoilSource(StrEnum):
     """Where a soil datum came from (drives confidence; never fabricated)."""
 
-    SELF = "self"                       # farmer typed values from a paper card
+    SELF = "self"  # farmer typed values from a paper card
     SOIL_HEALTH_CARD = "soil_health_card"  # government Soil Health Card
-    LAB = "lab"                         # accredited laboratory report
-    GOVERNMENT = "government"           # government soil dataset (future)
-    SATELLITE = "satellite"            # satellite soil layer (future)
+    LAB = "lab"  # accredited laboratory report
+    GOVERNMENT = "government"  # government soil dataset (future)
+    SATELLITE = "satellite"  # satellite soil layer (future)
     FARM_REGISTRATION = "farm_registration"  # soil_type the farmer registered
-    ESTIMATE = "estimate"              # derived, clearly-flagged estimate
+    ESTIMATE = "estimate"  # derived, clearly-flagged estimate
 
 
 # Confidence per source (0-100). Farmer-entered lab/SHC data ranks highest;
@@ -152,7 +153,7 @@ MICRONUTRIENT_FLOORS: dict[str, float] = {
 
 # Units used when reporting each parameter (client localizes labels).
 PARAMETER_UNITS: dict[str, str] = {
-    "ph": "",
+    "ph": "pH",
     "organic_carbon": "%",
     "nitrogen": "kg/ha",
     "phosphorus": "kg/ha",

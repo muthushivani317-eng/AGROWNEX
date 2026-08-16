@@ -7,17 +7,20 @@ transparent thresholds from ``constants`` so results are reproducible and unit
 -testable without a database. The engine then resolves each candidate against the
 rule table; the service persists and delivers.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 
+from app.modules.disease_risk.engine import RiskEvaluation, RiskOutcome
 from app.modules.notifications.constants import (
     AI_CONVERSATION_REMINDER_DAYS,
     AI_FOLLOW_UP_DAYS,
     DISEASE_HIGH_CONFIDENCE,
     GROWTH_HEALTH_DELTA,
     GROWTH_STALE_DAYS,
+    GROWTH_STALE_DAYS_BY_STAGE,
     HARVEST_APPROACHING_WINDOW_DAYS,
     MARKET_PRICE_MOVE_PERCENT,
     OFFER_EXPIRING_WINDOW_DAYS,
@@ -29,6 +32,34 @@ from app.modules.notifications.constants import (
 from app.modules.notifications.engine import CandidateEvent
 
 _M = NotificationModule
+
+
+def collect_disease_risk_conditions(
+    evaluation: RiskEvaluation, *, farm_id: str, crop_id: str, disease_id: str
+) -> list[CandidateEvent]:
+    """Emit only a newly met, verified-rule condition; never a diagnosis."""
+    if evaluation.outcome != RiskOutcome.RISK_CONDITIONS_PRESENT:
+        return []
+    if not evaluation.rule_pack_id or not evaluation.rule_pack_version:
+        return []
+    return [
+        CandidateEvent(
+            module=_M.DISEASE.value,
+            event_type="disease_risk_conditions",
+            dedup_key=(
+                f"disease:disease_risk_conditions:{farm_id}:{evaluation.rule_pack_id}:"
+                f"{evaluation.rule_pack_version}"
+            ),
+            farm_id=farm_id,
+            payload={
+                "crop_id": crop_id,
+                "disease_id": disease_id,
+                "rule_pack_id": evaluation.rule_pack_id,
+                "rule_pack_version": evaluation.rule_pack_version,
+                "matched_conditions": evaluation.matched_conditions,
+            },
+        )
+    ]
 
 
 def _key(module: str, event_type: str, *parts: object) -> str:
@@ -142,9 +173,7 @@ def collect_disease(report: DiseaseReportView) -> list[CandidateEvent]:
             CandidateEvent(
                 module=_M.DISEASE.value,
                 event_type="high_confidence_disease",
-                dedup_key=_key(
-                    _M.DISEASE.value, "high_confidence_disease", report.report_id
-                ),
+                dedup_key=_key(_M.DISEASE.value, "high_confidence_disease", report.report_id),
                 payload={
                     "report_id": report.report_id,
                     "disease": report.disease,
@@ -159,14 +188,39 @@ def collect_disease(report: DiseaseReportView) -> list[CandidateEvent]:
             CandidateEvent(
                 module=_M.DISEASE.value,
                 event_type="expert_review_needed",
-                dedup_key=_key(
-                    _M.DISEASE.value, "expert_review_needed", report.report_id
-                ),
+                dedup_key=_key(_M.DISEASE.value, "expert_review_needed", report.report_id),
                 payload={"report_id": report.report_id, "crop": report.crop},
                 farm_id=report.farm_id,
             )
         )
     return events
+
+
+@dataclass(frozen=True)
+class OutbreakView:
+    district: str
+    crop: str
+    disease: str
+
+
+def collect_outbreak(view: OutbreakView, *, week: date) -> list[CandidateEvent]:
+    """Emit a weekly, identity-free community disease warning."""
+    week_start = week - timedelta(days=week.weekday())
+    return [
+        CandidateEvent(
+            module=_M.DISEASE.value,
+            event_type="district_outbreak",
+            dedup_key=_key(
+                _M.DISEASE.value,
+                "district_outbreak",
+                view.district,
+                view.crop,
+                view.disease,
+                week_start,
+            ),
+            payload={"crop": view.crop, "disease": view.disease},
+        )
+    ]
 
 
 # --------------------------------------------------------------------------- #
@@ -178,21 +232,21 @@ class GrowthView:
     farm_id: str | None
     week_number: int
     last_image_days_ago: int | None
+    current_growth_stage: str = "unknown"
     latest_health_delta: int | None = None
     latest_timeline_id: str | None = None
 
 
 def collect_growth(view: GrowthView) -> list[CandidateEvent]:
     events: list[CandidateEvent] = []
-    if view.last_image_days_ago is not None and view.last_image_days_ago >= GROWTH_STALE_DAYS:
+    threshold = GROWTH_STALE_DAYS_BY_STAGE.get(view.current_growth_stage, GROWTH_STALE_DAYS)
+    if view.last_image_days_ago is not None and view.last_image_days_ago >= threshold:
         next_week = view.week_number + 1
         events.append(
             CandidateEvent(
                 module=_M.GROWTH.value,
                 event_type="weekly_reminder",
-                dedup_key=_key(
-                    _M.GROWTH.value, "weekly_reminder", view.session_id, next_week
-                ),
+                dedup_key=_key(_M.GROWTH.value, "weekly_reminder", view.session_id, next_week),
                 payload={"session_id": view.session_id, "week": next_week},
                 farm_id=view.farm_id,
             )
@@ -203,9 +257,7 @@ def collect_growth(view: GrowthView) -> list[CandidateEvent]:
                 CandidateEvent(
                     module=_M.GROWTH.value,
                     event_type="growth_decline",
-                    dedup_key=_key(
-                        _M.GROWTH.value, "growth_decline", view.latest_timeline_id
-                    ),
+                    dedup_key=_key(_M.GROWTH.value, "growth_decline", view.latest_timeline_id),
                     payload={
                         "session_id": view.session_id,
                         "delta": view.latest_health_delta,
@@ -218,9 +270,7 @@ def collect_growth(view: GrowthView) -> list[CandidateEvent]:
                 CandidateEvent(
                     module=_M.GROWTH.value,
                     event_type="growth_improvement",
-                    dedup_key=_key(
-                        _M.GROWTH.value, "growth_improvement", view.latest_timeline_id
-                    ),
+                    dedup_key=_key(_M.GROWTH.value, "growth_improvement", view.latest_timeline_id),
                     payload={
                         "session_id": view.session_id,
                         "delta": view.latest_health_delta,
@@ -242,17 +292,17 @@ class MarketMoveView:
     latest_price: float
     # None → brand-new price for a favourite (no history) → favourite_crop_alert.
     change_percent: float | None = None
+    is_period_high: bool = False
 
 
 def collect_market(view: MarketMoveView, *, day: date) -> list[CandidateEvent]:
+    events: list[CandidateEvent] = []
     if view.change_percent is None:
-        return [
+        events.append(
             CandidateEvent(
                 module=_M.MARKET.value,
                 event_type="favourite_crop_alert",
-                dedup_key=_key(
-                    _M.MARKET.value, "favourite_crop_alert", view.favourite_id, day
-                ),
+                dedup_key=_key(_M.MARKET.value, "favourite_crop_alert", view.favourite_id, day),
                 payload={
                     "crop": view.crop,
                     "market": view.market,
@@ -260,24 +310,38 @@ def collect_market(view: MarketMoveView, *, day: date) -> list[CandidateEvent]:
                 },
                 farm_id=None,
             )
-        ]
-    if abs(view.change_percent) < MARKET_PRICE_MOVE_PERCENT:
-        return []
-    event_type = "price_increase" if view.change_percent > 0 else "price_decrease"
-    return [
-        CandidateEvent(
-            module=_M.MARKET.value,
-            event_type=event_type,
-            dedup_key=_key(_M.MARKET.value, event_type, view.favourite_id, day),
-            payload={
-                "crop": view.crop,
-                "market": view.market,
-                "price": view.latest_price,
-                "change": round(view.change_percent, 1),
-            },
-            farm_id=None,
         )
-    ]
+    elif abs(view.change_percent) >= MARKET_PRICE_MOVE_PERCENT:
+        event_type = "price_increase" if view.change_percent > 0 else "price_decrease"
+        events.append(
+            CandidateEvent(
+                module=_M.MARKET.value,
+                event_type=event_type,
+                dedup_key=_key(_M.MARKET.value, event_type, view.favourite_id, day),
+                payload={
+                    "crop": view.crop,
+                    "market": view.market,
+                    "price": view.latest_price,
+                    "change": round(view.change_percent, 1),
+                },
+                farm_id=None,
+            )
+        )
+    if view.is_period_high:
+        events.append(
+            CandidateEvent(
+                module=_M.MARKET.value,
+                event_type="price_peak",
+                dedup_key=_key(_M.MARKET.value, "price_peak", view.favourite_id, day),
+                payload={
+                    "crop": view.crop,
+                    "market": view.market,
+                    "price": view.latest_price,
+                },
+                farm_id=None,
+            )
+        )
+    return events
 
 
 # --------------------------------------------------------------------------- #
@@ -320,9 +384,7 @@ def collect_schemes(view: SchemeView, *, now: datetime) -> list[CandidateEvent]:
             CandidateEvent(
                 module=_M.SCHEMES.value,
                 event_type="application_closing",
-                dedup_key=_key(
-                    _M.SCHEMES.value, "application_closing", view.scheme_id
-                ),
+                dedup_key=_key(_M.SCHEMES.value, "application_closing", view.scheme_id),
                 payload={
                     "scheme_id": view.scheme_id,
                     "title": view.title,
@@ -436,9 +498,7 @@ def collect_experts(view: ExpertConsultationView) -> list[CandidateEvent]:
             CandidateEvent(
                 module=_M.EXPERTS.value,
                 event_type="consultation_assigned",
-                dedup_key=_key(
-                    _M.EXPERTS.value, "consultation_assigned", view.consultation_id
-                ),
+                dedup_key=_key(_M.EXPERTS.value, "consultation_assigned", view.consultation_id),
                 payload={
                     "consultation_id": view.consultation_id,
                     "subject": view.subject,
@@ -467,9 +527,7 @@ def collect_experts(view: ExpertConsultationView) -> list[CandidateEvent]:
             CandidateEvent(
                 module=_M.EXPERTS.value,
                 event_type="consultation_resolved",
-                dedup_key=_key(
-                    _M.EXPERTS.value, "consultation_resolved", view.consultation_id
-                ),
+                dedup_key=_key(_M.EXPERTS.value, "consultation_resolved", view.consultation_id),
                 payload={
                     "consultation_id": view.consultation_id,
                     "subject": view.subject,
@@ -532,9 +590,7 @@ def collect_satellite(view: SatelliteSessionView) -> list[CandidateEvent]:
             CandidateEvent(
                 module=_M.SATELLITE.value,
                 event_type="vegetation_decline",
-                dedup_key=_key(
-                    _M.SATELLITE.value, "vegetation_decline", view.session_id
-                ),
+                dedup_key=_key(_M.SATELLITE.value, "vegetation_decline", view.session_id),
                 payload={"farm_id": view.farm_id},
                 farm_id=view.farm_id,
             )
@@ -544,9 +600,7 @@ def collect_satellite(view: SatelliteSessionView) -> list[CandidateEvent]:
             CandidateEvent(
                 module=_M.SATELLITE.value,
                 event_type="imagery_unavailable",
-                dedup_key=_key(
-                    _M.SATELLITE.value, "imagery_unavailable", view.session_id
-                ),
+                dedup_key=_key(_M.SATELLITE.value, "imagery_unavailable", view.session_id),
                 payload={"farm_id": view.farm_id},
                 farm_id=view.farm_id,
             )
@@ -575,9 +629,7 @@ def collect_nutrient(view: NutrientReportView) -> list[CandidateEvent]:
             CandidateEvent(
                 module=_M.NUTRIENT.value,
                 event_type="deficiency_detected",
-                dedup_key=_key(
-                    _M.NUTRIENT.value, "deficiency_detected", view.report_id
-                ),
+                dedup_key=_key(_M.NUTRIENT.value, "deficiency_detected", view.report_id),
                 payload={
                     "report_id": view.report_id,
                     "farm_id": view.farm_id,

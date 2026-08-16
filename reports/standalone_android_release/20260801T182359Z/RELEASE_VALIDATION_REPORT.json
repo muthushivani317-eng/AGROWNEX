@@ -1,0 +1,13 @@
+{
+  "validator_restored": true,
+  "implementation": "Expo config plugin",
+  "plugin": "agrow-ai/plugins/withReleaseEnvironmentValidation.js",
+  "direct_gradle_task": ":app:validateReleaseEnvironment",
+  "direct_gradle_result": "PASS",
+  "wired_to": ["preReleaseBuild", "bundleRelease"],
+  "profile": "production",
+  "api_base_url": "https://agrowai-app-production.up.railway.app/api/v1",
+  "diagnosis_api_base_url": "https://agrowai-app-production.up.railway.app",
+  "focused_tests": {"suites": 2, "tests": 21, "result": "PASS"},
+  "typescript": "PASS"
+}

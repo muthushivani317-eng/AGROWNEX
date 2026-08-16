@@ -42,7 +42,7 @@ def _json(path: Path) -> dict[str, Any]:
     return value
 
 
-def verify_bundle(root: Path) -> dict[str, Any]:
+def _verify_bundle(root: Path, *, require_app_enablement: bool) -> dict[str, Any]:
     required = [
         "runtime/class_mapping.json",
         "runtime/preprocessing.json",
@@ -82,15 +82,20 @@ def verify_bundle(root: Path) -> dict[str, Any]:
 
     if _json(root / "bundle/bundle_verification.json").get("verified") is not True:
         raise LegacyJointArtifactError("BUNDLE_VERIFICATION_NOT_PASSED")
-    decision = _json(root / "reports/crop_constrained_recalibration_decision.json")
-    if decision.get("decision") != "READY_FOR_BACKEND_INTEGRATION":
-        raise LegacyJointArtifactError("INTEGRATION_DECISION_NOT_READY")
-    if decision.get("crop_policies_ready") != {
-        "paddy": True,
-        "cotton": True,
-        "groundnut": True,
-    }:
-        raise LegacyJointArtifactError("CROP_POLICIES_NOT_READY")
+    if require_app_enablement:
+        decision = _json(
+            root / "reports/crop_constrained_recalibration_decision.json"
+        )
+        if decision.get("decision") != "READY_FOR_BACKEND_INTEGRATION":
+            raise LegacyJointArtifactError("INTEGRATION_DECISION_NOT_READY")
+        if decision.get("app_enablement_allowed") is not True:
+            raise LegacyJointArtifactError("APP_ENABLEMENT_NOT_AUTHORIZED")
+        if decision.get("crop_policies_ready") != {
+            "paddy": True,
+            "cotton": True,
+            "groundnut": True,
+        }:
+            raise LegacyJointArtifactError("CROP_POLICIES_NOT_READY")
 
     export = _json(root / "onnx/export_receipt.json")
     parity = _json(root / "onnx/parity_receipt.json")
@@ -148,5 +153,16 @@ def verify_bundle(root: Path) -> dict[str, Any]:
         "parity_passed": True,
         "classes": EXPECTED_CLASSES,
         "preprocessing": preprocessing,
-        "decision": decision["decision"],
+        "decision": decision["decision"] if require_app_enablement else None,
+        "release_decision_consulted": require_app_enablement,
     }
+
+
+def verify_bundle(root: Path) -> dict[str, Any]:
+    """Verify the generally servable bundle; release authorization is mandatory."""
+    return _verify_bundle(root, require_app_enablement=True)
+
+
+def verify_bundle_for_controlled_field_test(root: Path) -> dict[str, Any]:
+    """Verify frozen artifacts without reading or changing release-decision fields."""
+    return _verify_bundle(root, require_app_enablement=False)

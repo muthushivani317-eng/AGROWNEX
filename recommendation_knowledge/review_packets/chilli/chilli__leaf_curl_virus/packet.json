@@ -1,0 +1,42 @@
+{
+  "crop": "chilli",
+  "exact_runtime_label": "chilli__leaf_curl_virus",
+  "mapping_status": "PENDING_HUMAN_REVIEW",
+  "human_approval_status": "PENDING",
+  "candidate_canonical_disease": null,
+  "official_english_disease_name": null,
+  "candidate_tamil_disease_name": null,
+  "candidate_evidence": [
+    {
+      "source_id": "src_23dc239a0208eeac",
+      "source_filename": "PEST FORECAST.pdf",
+      "printed_page": 6,
+      "pdf_page_index": 5,
+      "exact_relevant_passage": "7.Vegetable CropsBrinjalShoot and fruit borer incidence was recorded in Krishnagiri, Theni and Dindigul districts. To manage shoot and fruit borer, remove and destroy the affected terminal shoots and fruits showing bore holes at the initial stage. Avoid using synthetic pyrethroids. Spraying of Neem Seed Kernel Extract 5% (10 kg of kernel/ac) (or) emamectinbenzoate 5 % SG 4g/10 lit. (or) flubendiamide20 WDG 7.5 g/10 lit.TomatoFruit borer incidence was recorded in Theni and Dindigul districts. For the management of fruit borer, setup pheromone traps @ 5/ac, Spraying of Emamectinbenzoate 5 SG 4 gram/ 10 or Acetamiprid 20% SP 10 gram/ 10 lit. is recommended.The incidences of spotted wilt, leaf curl and early blight diseases are observed in major tomato growing districts viz., Krishnagiri, Dindigul, Coimbatore and Dharmapuri. Spraying of dimethoate 30 EC @ 500 ml/ha or imidacloprid 17.8 SL @ 100 ml/ha is recommended to manage the insect vectors viz., thrips and whiteflies of spotted wilt and leaf curl, respectively and repeat the spray 15 days later, if necessary. To manage early blight, farmers are advised to spray mancozeb 75%WP @ 500g/ha or azoxystrobin + difenoconazole @ 500ml/ha twice at 15 days interval.ChilliesChilli thrips was noticed in Madurai, Dindigul and Theni district. To manage thrips, grow Sesbania (Agathi) as intercrop. Spray imidacloprid 17.8%SL 3ml/ 10 lit. or emamectin benzoate 5% SG @ 4 gram/ 10 lit or acetamipride 20 %SP 10 gram/ 10 lit. is recommended.The incidences of leaf curl and mosaic diseases are observed in different chillies growing areas of Dindigul and Coimbatore districts. The farmers are advised to spray dimethoate 30 EC @ 500 ml/ha or imidacloprid 17.8 SL @ 100 ml/ha to control insect vectors after destroying the infected plants immediately after noticing the initial symptoms. Repeat the spray 15 days later, if necessary. BhendiBhendi yellow vein mosaic disease is recorded in Coimbatore district. Foliar spraying of methyldematon 25 EC @ 800 ml /ha or thiamethoxam 25 WG @ 250 g /ha is recommended to manage the insect vector, whitefly and repeat the spray 15 days later, if necessary.",
+      "verification": "VERIFY AGAINST OFFICIAL SOURCE"
+    },
+    {
+      "source_id": "src_900285e7e54519d3",
+      "source_filename": "IPM-Schedule-for-vegetables.pdf",
+      "printed_page": 43,
+      "pdf_page_index": 42,
+      "exact_relevant_passage": "33DISEASE MANAGEMENT/CHILLI/CAPSICUM\nSymptoms\nin a row show these symptoms. Commonly the disease\nManagement\nPreventive sprays of Mancozeb@ 0.25% provide\ngood control in cloudy, cold and drizzling\nOne spray of Metalaxyl+ Mancozeb @ 0.2% is very\nbut repetitive sprays should not be given.\nRotation, water management and drainage are \nSymptoms\nChilli leaf curl complex is mainly due to CMV and\nplant are symptoms of viral infection. Conspicuous",
+      "verification": "VERIFY AGAINST OFFICIAL SOURCE"
+    }
+  ],
+  "symptom_candidate": [],
+  "immediate_action_candidate": [],
+  "prevention_candidate": [],
+  "cultural_control_candidate": [],
+  "biological_control_candidate": [],
+  "chemical_control_candidate": [],
+  "safety_note_candidate": [
+    "VERIFY AGAINST OFFICIAL SOURCE"
+  ],
+  "conflict_notes": [],
+  "english_draft": null,
+  "tamil_draft": null,
+  "tamil_status": "AGRICULTURAL_REVIEW_REQUIRED",
+  "reviewer_status": "PENDING_HUMAN_REVIEW",
+  "notice": "INTERNAL NON-EXPERT REVIEW ONLY\nOFFICIAL AGRICULTURAL EXPERT VERIFICATION NOT COMPLETED"
+}

@@ -5,6 +5,7 @@ localization ``code``s (Tamil-first frontend) plus English title/description as
 fallback for logs and future AI. Reminder columns are metadata only in V1 — no
 push is scheduled yet (docs: notifications prepared for future FCM).
 """
+
 from __future__ import annotations
 
 import uuid
@@ -60,9 +61,7 @@ class CalendarEvent(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     season: Mapped[str | None] = mapped_column(String(20))
     growth_stage: Mapped[str] = mapped_column(String(20), nullable=False)
 
-    priority: Mapped[str] = mapped_column(
-        String(10), default=Priority.MEDIUM.value, nullable=False
-    )
+    priority: Mapped[str] = mapped_column(String(10), default=Priority.MEDIUM.value, nullable=False)
     status: Mapped[str] = mapped_column(
         String(10), default=EventStatus.PENDING.value, nullable=False, index=True
     )
@@ -70,11 +69,13 @@ class CalendarEvent(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
         String(20), default=WeatherDependency.NONE.value, nullable=False
     )
 
-    reminder_enabled: Mapped[bool] = mapped_column(
-        Boolean, default=True, nullable=False
-    )
+    reminder_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     # Reminder metadata for future FCM scheduling (no push in V1).
     reminder_hour: Mapped[int | None] = mapped_column(Integer)
 
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     notes: Mapped[str | None] = mapped_column(Text)
+    registry_version: Mapped[str | None] = mapped_column(String(40))
+    registry_content_hash: Mapped[str | None] = mapped_column(String(64))
+    registry_verification_status: Mapped[str | None] = mapped_column(String(24))
+    registry_source_reference: Mapped[str | None] = mapped_column(String(240))

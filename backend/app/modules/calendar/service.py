@@ -3,6 +3,7 @@
 API → Service → Repository. Reuses the farm repository (ownership) and the
 weather service (insights) — it never re-implements weather or farm logic.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -11,6 +12,7 @@ from datetime import UTC, date, datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
+from app.core.timezone import today_ist
 from app.modules.auth.models import User
 from app.modules.calendar.constants import (
     DEFAULT_REMINDER_HOUR,
@@ -22,11 +24,14 @@ from app.modules.calendar.constants import (
 )
 from app.modules.calendar.exceptions import (
     CalendarEventNotFoundError,
+    FarmCalendarContextMismatchError,
     FarmNotFoundError,
     SowingDateRequiredError,
+    StageDataUnavailableError,
 )
-from app.modules.calendar.generator import derive_season, generate_events
+from app.modules.calendar.generator import derive_season, generate_verified_events
 from app.modules.calendar.models import CalendarEvent
+from app.modules.calendar.registry import ACTIVE_CROP_STAGE_REGISTRY, CropStageRegistry
 from app.modules.calendar.repositories import CalendarEventRepository
 from app.modules.calendar.schemas import (
     CalendarSummaryOut,
@@ -50,29 +55,38 @@ class CalendarService:
         session: AsyncSession,
         *,
         weather_service: WeatherService | None = None,
+        stage_registry: CropStageRegistry | None = None,
     ) -> None:
         self.session = session
         self.events = CalendarEventRepository(session)
         self.farms = FarmRepository(session)
         self.weather_service = weather_service
+        self.stage_registry = stage_registry or ACTIVE_CROP_STAGE_REGISTRY
 
     # ----- Generation -----
-    async def generate(
-        self, user: User, req: GenerateCalendarRequest
-    ) -> list[AnnotatedEvent]:
+    async def generate(self, user: User, req: GenerateCalendarRequest) -> list[AnnotatedEvent]:
         farm = await self._require_farm(user, req.farm_id)
-        crop = req.crop or farm.crop
-        sowing_date = req.sowing_date or farm.sowing_date
-        irrigation_type = req.irrigation_type or farm.irrigation_type
+        if req.crop is not None and req.crop != farm.crop:
+            raise FarmCalendarContextMismatchError()
+        if req.sowing_date is not None and req.sowing_date != farm.sowing_date:
+            raise FarmCalendarContextMismatchError()
+        if req.irrigation_type is not None and req.irrigation_type != farm.irrigation_type:
+            raise FarmCalendarContextMismatchError()
+        crop = farm.crop
+        sowing_date = farm.sowing_date
+        irrigation_type = farm.irrigation_type
         if sowing_date is None:
             raise SowingDateRequiredError()
+        schedule = self.stage_registry.resolve(crop)
+        if schedule is None:
+            raise StageDataUnavailableError()
 
         season = derive_season(sowing_date)
-        generated = generate_events(
-            crop,
+        generated = generate_verified_events(
+            schedule,
             sowing_date,
-            irrigation_type=irrigation_type,
             reminders_enabled=req.reminders_enabled,
+            irrigation_type=irrigation_type,
         )
 
         # Regenerate idempotently: drop the old pending plan, keep completed history.
@@ -96,6 +110,10 @@ class CalendarService:
                 weather_dependency=g.weather_dependency.value,
                 reminder_enabled=g.reminder_enabled,
                 reminder_hour=DEFAULT_REMINDER_HOUR if g.reminder_enabled else None,
+                registry_version=schedule.version,
+                registry_content_hash=schedule.content_hash,
+                registry_verification_status=schedule.status.value,
+                registry_source_reference=schedule.document_reference,
             )
             for g in generated
         ]
@@ -116,24 +134,31 @@ class CalendarService:
         farm_id: uuid.UUID | None = None,
         crop: str | None = None,
         status: str | None = None,
+        page: int = 1,
+        page_size: int = 100,
     ) -> list[AnnotatedEvent]:
         if farm_id is not None:
             await self._require_farm(user, farm_id)
         events = await self.events.list_events(
-            user.id, farm_id=farm_id, crop=crop, status=status
+            user.id,
+            farm_id=farm_id,
+            crop=crop,
+            status=status,
+            limit=page_size,
+            offset=(page - 1) * page_size,
         )
         return await self._annotate(user, events)
 
     async def for_farm(
-        self, user: User, farm_id: uuid.UUID
+        self, user: User, farm_id: uuid.UUID, *, page: int = 1, page_size: int = 100
     ) -> list[AnnotatedEvent]:
         await self._require_farm(user, farm_id)
-        events = await self.events.list_events(user.id, farm_id=farm_id)
+        events = await self.events.list_events(
+            user.id, farm_id=farm_id, limit=page_size, offset=(page - 1) * page_size
+        )
         return await self._annotate(user, events)
 
-    async def today(
-        self, user: User, *, farm_id: uuid.UUID | None = None
-    ) -> list[AnnotatedEvent]:
+    async def today(self, user: User, *, farm_id: uuid.UUID | None = None) -> list[AnnotatedEvent]:
         if farm_id is not None:
             await self._require_farm(user, farm_id)
         current = self._today()
@@ -171,25 +196,33 @@ class CalendarService:
         )
         return await self._annotate(user, events)
 
-    async def missed(
-        self, user: User, *, farm_id: uuid.UUID | None = None
-    ) -> list[AnnotatedEvent]:
+    async def missed(self, user: User, *, farm_id: uuid.UUID | None = None) -> list[AnnotatedEvent]:
         if farm_id is not None:
             await self._require_farm(user, farm_id)
-        events = await self.events.list_missed(
-            user.id, today=self._today(), farm_id=farm_id
-        )
+        events = await self.events.list_missed(user.id, today=self._today(), farm_id=farm_id)
         return await self._annotate(user, events)
 
     async def summary(self, user: User, farm_id: uuid.UUID) -> CalendarSummaryOut:
         farm = await self._require_farm(user, farm_id)
-        counts = await self.events.status_counts(user.id, farm_id=farm_id)
-        missed = await self.events.list_missed(
-            user.id, today=self._today(), farm_id=farm_id
-        )
+        rows = await self.events.list_events(user.id, farm_id=farm_id)
+        rows = [row for row in rows if self._is_current_verified(row)]
+        counts = {
+            status: sum(row.status == status for row in rows)
+            for status in (
+                EventStatus.DONE.value,
+                EventStatus.PENDING.value,
+                EventStatus.SKIPPED.value,
+            )
+        }
+        missed = [
+            row
+            for row in rows
+            if row.status == EventStatus.PENDING.value
+            and row.scheduled_date < self._today()
+        ]
         season = None
         crop = farm.crop
-        if farm.sowing_date is not None:
+        if farm.sowing_date is not None and rows:
             season = derive_season(farm.sowing_date).value
         return CalendarSummaryOut(
             farm_id=farm_id,
@@ -209,11 +242,11 @@ class CalendarService:
         event = await self.events.get_for_user(event_id, user.id)
         if event is None:
             raise CalendarEventNotFoundError()
+        if not self._is_current_verified(event):
+            raise StageDataUnavailableError()
         if req.status is not None:
             event.status = req.status
-            event.completed_at = (
-                datetime.now(UTC) if req.status == EventStatus.DONE.value else None
-            )
+            event.completed_at = datetime.now(UTC) if req.status == EventStatus.DONE.value else None
         if req.reminder_enabled is not None:
             event.reminder_enabled = req.reminder_enabled
         if req.notes is not None:
@@ -231,16 +264,17 @@ class CalendarService:
 
     @staticmethod
     def _today() -> date:
-        return datetime.now(UTC).date()
+        # India Standard Time, not UTC (docs: app.core.timezone) -- this is a
+        # "what day is it for the farmer" boundary, not an event timestamp.
+        return today_ist()
 
-    async def _annotate(
-        self, user: User, events: list[CalendarEvent]
-    ) -> list[AnnotatedEvent]:
+    async def _annotate(self, user: User, events: list[CalendarEvent]) -> list[AnnotatedEvent]:
         """Attach a read-time weather advisory to each event (reuses weather).
 
         Weather is fetched once per farm, best-effort. Only pending tasks that
         depend on weather and fall inside the forecast horizon are annotated.
         """
+        events = [event for event in events if self._is_current_verified(event)]
         if not events:
             return []
         horizon = self._today() + timedelta(days=WEATHER_ADVISORY_HORIZON_DAYS)
@@ -255,11 +289,18 @@ class CalendarService:
             )
             if relevant:
                 codes = await self._farm_insight_codes(user, event.farm_id, codes_by_farm)
-                advisory = advisory_for(
-                    WeatherDependency(event.weather_dependency), codes
-                ).value
+                advisory = advisory_for(WeatherDependency(event.weather_dependency), codes).value
             annotated.append((event, advisory))
         return annotated
+
+    def _is_current_verified(self, event: CalendarEvent) -> bool:
+        schedule = self.stage_registry.resolve(event.crop)
+        return bool(
+            schedule
+            and event.registry_verification_status == "VERIFIED"
+            and event.registry_version == schedule.version
+            and event.registry_content_hash == schedule.content_hash
+        )
 
     async def _farm_insight_codes(
         self,

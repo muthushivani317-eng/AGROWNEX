@@ -113,18 +113,7 @@ class CropIdentityRuntime:
                 "CROP_IDENTITY_PREPROCESSING_FAILURE"
             ) from exc
 
-    def predict(self, image: Image.Image, requested_crop: str) -> CropIdentityPrediction:
-        if requested_crop not in EXPECTED_CLASSES:
-            return self._decision(
-                predicted_crop=None,
-                probabilities={},
-                confidence=0.0,
-                margin=0.0,
-                entropy=0.0,
-                threshold=0.0,
-                accepted=False,
-                reason_code="UNSUPPORTED_REQUESTED_CROP",
-            )
+    def predict(self, image: Image.Image) -> CropIdentityPrediction:
         self.load()
         assert self._verified is not None and self._model is not None
         import torch
@@ -147,7 +136,7 @@ class CropIdentityRuntime:
             and margin >= self._verified["margin_threshold"]
             and entropy <= self._verified["entropy_threshold"]
         )
-        accepted = passes_policy and predicted == requested_crop
+        accepted = passes_policy
         return self._decision(
             predicted_crop=predicted,
             probabilities=dict(zip(EXPECTED_CLASSES, values, strict=True)),

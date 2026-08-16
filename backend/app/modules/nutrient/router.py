@@ -9,6 +9,7 @@
 Thin routes — the pipeline, engine and validation live in ``NutrientService``.
 Static routes precede any dynamic segment. All endpoints are authenticated.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -43,9 +44,7 @@ async def analyze(
     return success(NutrientReportOut.from_report(report), message="Analysis complete")
 
 
-@router.get(
-    "/history", response_model=SuccessResponse[PaginatedData[NutrientHistoryOut]]
-)
+@router.get("/history", response_model=SuccessResponse[PaginatedData[NutrientHistoryOut]])
 async def get_history(
     current_user: CurrentUser,
     service: NutrientServiceDep,
@@ -54,9 +53,7 @@ async def get_history(
     page_size: int = Query(20, ge=1, le=100),
 ):
     """The farm's nutrient-analysis history (most recent first)."""
-    page_data = await service.list_reports(
-        current_user, farm_id, page=page, page_size=page_size
-    )
+    page_data = await service.list_reports(current_user, farm_id, page=page, page_size=page_size)
     return success(
         PaginatedData(
             items=[NutrientReportOut.from_report(r) for r in page_data.items],

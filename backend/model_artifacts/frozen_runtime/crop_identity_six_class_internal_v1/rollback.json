@@ -1,0 +1,5 @@
+{
+  "disable_runtime": true,
+  "fallback": "RUNTIME_UNAVAILABLE",
+  "does_not_authorize_gemini": true
+}

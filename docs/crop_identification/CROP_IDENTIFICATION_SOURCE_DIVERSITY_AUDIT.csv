@@ -1,0 +1,8 @@
+crop_class,local_verified_source_count,documented_download_candidate_count,candidate_images,training_eligible_images,source_dataset_ids,source_diversity_status,background_shortcut_risk,resolution_shortcut_risk,watermark_border_risk,augmentation_artifact_risk,file_folder_naming_risk,required_action
+banana,1,2,897,0,banana_lsd_9tb7k297ff_v1,SINGLE_SOURCE_REVIEW_REQUIRED,HIGH,MEDIUM,UNREVIEWED,LOW_CLEANED_ORIGINALS,HIGH_IF_PATHS_LEAK,Acquire and audit an independent original-image source; strip path metadata from model inputs.
+paddy,1,0,7310,0,riceleafdiseasebd_v2,SINGLE_SOURCE_REVIEW_REQUIRED,HIGH,MEDIUM,UNREVIEWED,LOW_ORIGINALS_ONLY,HIGH_IF_PATHS_LEAK,Acquire and audit an independent field source; use crop-balanced group-aware sampling.
+cotton,1,0,779,0,cotton_leaf_ripon,SINGLE_SOURCE_REVIEW_REQUIRED,HIGH,MEDIUM,UNREVIEWED,LOW_AUGMENTED_ARCHIVE_EXCLUDED,HIGH_IF_PATHS_LEAK,Acquire and audit an independent original-image source.
+groundnut,1,0,720,0,groundnut_sasmal,SINGLE_SOURCE_REVIEW_REQUIRED,HIGH,MEDIUM,UNREVIEWED,LOW_ORIGINALS_ONLY,HIGH_IF_PATHS_LEAK,Acquire and audit an independent original-image source.
+chilli,1,2,1203,0,chilli_india_ymt8k9bjkn_v3,SINGLE_SOURCE_REVIEW_REQUIRED,HIGH,MEDIUM,UNREVIEWED,LOW_AUGMENTED_ARCHIVE_EXCLUDED,HIGH_IF_PATHS_LEAK,Acquire and audit an independent original-image source; do not use the documented licence-conflicted candidate.
+redgram,1,0,697,0,pigeonpea_rajput_bd553pdtny_v1,SINGLE_SOURCE_REVIEW_REQUIRED,HIGH,MEDIUM,UNREVIEWED,LOW_CLEANED_ORIGINALS,HIGH_IF_PATHS_LEAK,Acquire and audit an independent original-image source.
+coconut,0,1,0,0,,NO_LOCAL_SOURCE,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,Download and audit Coconut Tree Disease Dataset.zip from the primary Mendeley record.

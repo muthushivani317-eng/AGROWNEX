@@ -11,6 +11,7 @@ from typing import Annotated
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.database import get_session
 from app.modules.admin.service import AdminContext, AdminService
 from app.modules.auth.dependencies import CurrentUser
@@ -28,10 +29,14 @@ AdminServiceDep = Annotated[AdminService, Depends(get_admin_service)]
 
 
 def _client_ip(request: Request) -> str | None:
-    # Honour a proxy header if present, else the direct peer (docs/DEPLOYMENT.md).
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+    # Only honour the proxy header when a trusted edge proxy is known to
+    # sanitize it (settings.trust_proxy_headers) -- otherwise the audit trail
+    # could be forged by a client-supplied header. Falls back to the direct
+    # TCP peer (docs/DEPLOYMENT.md, docs/SECURITY.md).
+    if settings.trust_proxy_headers:
+        forwarded = request.headers.get("x-forwarded-for")
+        if forwarded:
+            return forwarded.split(",")[0].strip()
     return request.client.host if request.client else None
 
 

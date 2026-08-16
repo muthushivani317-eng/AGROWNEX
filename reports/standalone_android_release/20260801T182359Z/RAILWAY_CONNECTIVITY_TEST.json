@@ -1,0 +1,11 @@
+{
+  "tested_at_utc": "2026-08-01T19:12:00Z",
+  "transport": "HTTPS",
+  "health": 200,
+  "banana_health": 200,
+  "paddy_health": 200,
+  "cotton_health": 200,
+  "groundnut_health": 200,
+  "authenticated_mobile_token_exchange": "NOT_TESTED",
+  "note": "Server health does not prove authenticated app flow."
+}

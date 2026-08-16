@@ -1,0 +1,49 @@
+{
+  "audit_completed": true,
+  "package_manager": "npm",
+  "lockfile": "agrow-ai/package-lock.json",
+  "force_upgrade_used": false,
+  "advisories": [
+    {
+      "package": "brace-expansion",
+      "status": "PATCHED",
+      "previous_versions": ["1.1.16", "5.0.7"],
+      "installed_versions": ["1.1.18", "5.0.9"],
+      "patched_versions": ["1.1.18", "5.0.9"],
+      "vulnerable_ranges": ["<1.1.18", ">=4.0.0 <5.0.9"],
+      "advisory_ids": ["GHSA-mh99-v99m-4gvg", "GHSA-rgw5-rvv9-x895"],
+      "vulnerable_operation": "Unbounded brace expansion can exhaust memory.",
+      "dependency_type": "build_and_test_tooling",
+      "included_in_apk": false,
+      "agrowai_reachability": "Used by Jest glob matching and Expo fingerprint/build tooling; not imported by the mobile runtime graph.",
+      "dependency_chains": [
+        "jest -> @jest/core -> @jest/reporters|jest-config|jest-runtime -> glob@7.2.3 -> minimatch@3.1.5 -> brace-expansion@1.1.18",
+        "@react-native/jest-preset -> babel-jest -> babel-plugin-istanbul -> test-exclude -> minimatch@3.1.5 -> brace-expansion@1.1.18",
+        "expo -> @expo/fingerprint -> minimatch@10.2.5 -> brace-expansion@5.0.9"
+      ],
+      "remediation": "npm update brace-expansion postcss applied the compatible in-range versions; no force or major downgrade."
+    },
+    {
+      "package": "postcss",
+      "status": "PATCHED",
+      "previous_versions": ["8.5.16"],
+      "installed_versions": ["8.5.26"],
+      "patched_versions": ["8.5.23 or later"],
+      "vulnerable_ranges": ["<=8.5.22"],
+      "advisory_ids": ["GHSA-r28c-9q8g-f849", "GHSA-fxqj-rqcc-2cmp"],
+      "vulnerable_operation": "Attacker-controlled sourceMappingURL may load and disclose a local source-map file when PostCSS processes untrusted CSS without a safe from value.",
+      "dependency_type": "build_tooling",
+      "included_in_apk": false,
+      "agrowai_reachability": "Used by Tailwind/NativeWind and Expo Metro configuration while transforming trusted repository styles; not imported by application runtime code.",
+      "dependency_chains": [
+        "tailwindcss -> postcss@8.5.26",
+        "tailwindcss -> postcss-import|postcss-js|postcss-load-config|postcss-nested -> postcss@8.5.26",
+        "expo -> @expo/metro-config -> postcss@8.5.26"
+      ],
+      "remediation": "npm update brace-expansion postcss applied postcss@8.5.26 within compatible ranges."
+    }
+  ],
+  "remaining_high_or_critical": 0,
+  "remaining_moderate": 13,
+  "review_note": "The remaining npm advisories are moderate and outside the two requested high-severity gates; no force remediation was used."
+}

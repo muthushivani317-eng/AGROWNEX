@@ -1,0 +1,20 @@
+{
+  "focused_jest": {"status": "PASS", "suites": 6, "tests": 36},
+  "complete_jest": {"status": "PASS", "suites": 109, "tests": 700},
+  "typescript": "PASS",
+  "expo_doctor": {"status": "PASS", "checks": "20/20"},
+  "release_bundle": "PASS",
+  "release_apk": {
+    "status": "PASS",
+    "sha256": "017dc97e6533d36c6a2b787cdf84b3d33b0c39506c1aec28216f4ca932f4ff24"
+  },
+  "dependency_audit": {
+    "status": "EXISTING_ADVISORIES_REQUIRE_SEPARATE_REVIEW",
+    "high": 2,
+    "moderate": 13,
+    "automatic_breaking_fix_applied": false,
+    "notes": "High findings are PostCSS source-map handling and brace-expansion instances including Jest tooling; package files were not changed in this focused UI repair."
+  },
+  "device_install": "PASS",
+  "device_visual_validation": "BLOCKED_PHONE_LOCKED"
+}

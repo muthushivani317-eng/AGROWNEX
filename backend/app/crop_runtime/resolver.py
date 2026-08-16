@@ -132,7 +132,10 @@ class RuntimeResolver:
         required_files = required_runtime_files(entry.thresholds_filename)
         missing = [name for name in required_files if not (root / name).is_file()]
         if missing:
-            logger.error("integrity_failure", extra={"crop_id": entry.crop_id, "category": "missing_file"})
+            logger.error(
+                "integrity_failure",
+                extra={"crop_id": entry.crop_id, "category": "missing_file"},
+            )
             raise RuntimeIntegrityError(f"required runtime files missing: {', '.join(missing)}")
         expected: dict[str, str] = {}
         for line in (root / "SHA256SUMS.txt").read_text("utf-8").splitlines():
@@ -147,7 +150,10 @@ class RuntimeResolver:
             if name == "SHA256SUMS.txt":
                 continue
             if expected.get(name) != _sha256(root / name):
-                logger.error("integrity_failure", extra={"crop_id": entry.crop_id, "category": "hash_mismatch"})
+                logger.error(
+                    "integrity_failure",
+                    extra={"crop_id": entry.crop_id, "category": "hash_mismatch"},
+                )
                 raise RuntimeIntegrityError(f"runtime hash mismatch: {name}")
         class_map = json.loads((root / "class_to_index.json").read_text("utf-8"))
         if sorted(class_map.values()) != list(range(len(class_map))):
@@ -171,7 +177,7 @@ class RuntimeResolver:
             if runtime_config.get("model_name") != entry.model_version:
                 raise RuntimeIntegrityError("runtime model name does not match registry")
             actual_temperature = temperature.get("temperature")
-            if not isinstance(actual_temperature, (int, float)) or not math.isclose(
+            if not isinstance(actual_temperature, int | float) or not math.isclose(
                 float(actual_temperature),
                 entry.expected_temperature,
                 rel_tol=0,

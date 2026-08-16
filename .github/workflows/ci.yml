@@ -26,6 +26,8 @@ jobs:
         run: ruff check app
       - name: Type check (mypy, gradual)
         run: mypy app || true   # gradual typing: report, do not block yet
+      - name: Verify controlled-pilot model inventory
+        run: python -m scripts.verify_model_inventory
       - name: Tests + coverage gate
         run: pytest tests -q --cov=app --cov-report=term-missing --cov-fail-under=85
 

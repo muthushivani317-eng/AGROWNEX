@@ -1,0 +1,9 @@
+{
+  "status": "PUBLIC_DATASET_PROVISIONAL",
+  "completed_at_utc": "2026-07-29T18:58:38.964438+00:00",
+  "checkpoint_selection": "maximum development_validation macro F1",
+  "provisional_test_opened": true,
+  "official_accuracy_claim": false,
+  "provisional_test_opened_at_utc": "2026-07-29T19:13:03.225754+00:00",
+  "post_test_tuning_authorized": false
+}

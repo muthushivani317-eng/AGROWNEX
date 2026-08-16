@@ -1,6 +1,7 @@
 """Integration tests for the market service (in-memory DB, fake providers)."""
 from __future__ import annotations
 
+import asyncio
 import uuid
 from datetime import UTC, date, datetime, timedelta
 
@@ -25,6 +26,18 @@ def _today() -> date:
     return datetime.now(UTC).date()
 
 
+async def _drain_refreshes(service: MarketService) -> None:
+    """Wait for the service's detached background refresh tasks to finish.
+
+    ``_ensure_fresh`` fires the provider fetch on a background task
+    (``asyncio.create_task``) so the request never blocks on the provider. Tests
+    await those tasks explicitly — via the strong references the service keeps in
+    ``_refresh_tasks`` — so assertions run against the settled state instead of
+    relying on event-loop scheduling luck.
+    """
+    await asyncio.gather(*service._refresh_tasks)
+
+
 class FailingProvider:
     source = "failing"
 
@@ -47,8 +60,17 @@ def _service(db_session, *, provider=None) -> MarketService:
     )
 
 
-async def test_get_prices_fetches_persists_and_paginates(db_session) -> None:
+async def test_get_prices_fetches_persists_and_paginates(
+    db_session, session_factory, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        "app.modules.market.service.SessionLocal", session_factory
+    )
     service = _service(db_session)
+    # First read fires the background refresh and returns immediately (may be
+    # empty); drain it, then read again to observe the persisted prices.
+    await service.get_prices(MarketPriceFilters(page=1, page_size=5))
+    await _drain_refreshes(service)
     result = await service.get_prices(MarketPriceFilters(page=1, page_size=5))
     assert result.total > 0
     assert result.items
@@ -56,17 +78,31 @@ async def test_get_prices_fetches_persists_and_paginates(db_session) -> None:
     assert result.items[0].category  # classified
 
 
-async def test_get_prices_filters_by_crop(db_session) -> None:
+async def test_get_prices_filters_by_crop(
+    db_session, session_factory, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        "app.modules.market.service.SessionLocal", session_factory
+    )
     service = _service(db_session)
+    await service.get_prices(MarketPriceFilters(crop="paddy"))
+    await _drain_refreshes(service)
     result = await service.get_prices(MarketPriceFilters(crop="paddy"))
     assert result.total >= 1
     assert all(item.commodity == "Paddy" for item in result.items)
 
 
-async def test_today_only_excludes_older_prices(db_session) -> None:
+async def test_today_only_excludes_older_prices(
+    db_session, session_factory, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        "app.modules.market.service.SessionLocal", session_factory
+    )
     # Provider returns a single fresh row dated today.
     provider = MockMarketProvider(today=_today())
     service = _service(db_session, provider=provider)
+    await service.get_prices(MarketPriceFilters(crop="paddy"), today_only=True)
+    await _drain_refreshes(service)
     result = await service.get_prices(
         MarketPriceFilters(crop="paddy"), today_only=True
     )
@@ -74,23 +110,65 @@ async def test_today_only_excludes_older_prices(db_session) -> None:
     assert all(item.price_date == _today() for item in result.items)
 
 
-async def test_offline_fallback_serves_stored_prices(db_session) -> None:
-    # First, seed the DB with a working provider.
+async def test_offline_fallback_serves_stored_prices(
+    db_session, session_factory, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        "app.modules.market.service.SessionLocal", session_factory
+    )
+    # First, seed the DB with a working provider (background refresh).
     good = _service(db_session)
     await good.get_prices(MarketPriceFilters(crop="paddy"))
+    await _drain_refreshes(good)
 
-    # Now a failing provider + fresh cache must still return stored prices.
+    # Now a failing provider + fresh cache must still return stored prices. Its
+    # background refresh fails and is swallowed; the read falls back to the rows
+    # the good service already persisted.
     degraded = MarketService(
         db_session, provider=FailingProvider(), cache=MarketCache()
     )
+    await degraded.get_prices(MarketPriceFilters(crop="paddy"))
+    await _drain_refreshes(degraded)
     result = await degraded.get_prices(MarketPriceFilters(crop="paddy"))
     assert result.total >= 1  # graceful degradation, no exception
+    assert result.items[0].verified is True
+    assert result.items[0].is_stale is False
+    assert result.items[0].age_days == 0
 
 
-async def test_provider_failure_is_cached_to_avoid_retry_storm(db_session) -> None:
+async def test_offline_fallback_labels_older_verified_price_as_stale(
+    db_session, session_factory, monkeypatch
+) -> None:
+    monkeypatch.setattr("app.modules.market.service.SessionLocal", session_factory)
+    old_day = _today() - timedelta(days=3)
+    seed = _service(db_session, provider=MockMarketProvider(today=old_day))
+    await seed.get_prices(MarketPriceFilters(crop="paddy"))
+    await _drain_refreshes(seed)
+
+    degraded = MarketService(
+        db_session, provider=FailingProvider(), cache=MarketCache()
+    )
+    await degraded.get_prices(MarketPriceFilters(crop="paddy"))
+    await _drain_refreshes(degraded)
+    result = await degraded.get_prices(MarketPriceFilters(crop="paddy"))
+
+    assert result.items[0].verified is True
+    assert result.items[0].is_stale is True
+    assert result.items[0].age_days == 3
+
+
+async def test_provider_failure_is_cached_to_avoid_retry_storm(
+    db_session, session_factory, monkeypatch
+) -> None:
     # A timing-out / failing provider must be marked fresh after the first read
     # so it is not re-hit on every request (which would make each response block
-    # on the full retry budget and exceed the client timeout).
+    # on the full retry budget and exceed the client timeout). The refresh now
+    # runs in the background, so the marker is set before the task is fired and
+    # the second read never spawns a second refresh.
+    monkeypatch.setattr(
+        "app.modules.market.service.SessionLocal", session_factory
+    )
+
     class CountingFailingProvider:
         source = "counting-failing"
 
@@ -105,10 +183,17 @@ async def test_provider_failure_is_cached_to_avoid_retry_storm(db_session) -> No
     service = MarketService(db_session, provider=provider, cache=MarketCache())
     await service.get_prices(MarketPriceFilters())
     await service.get_prices(MarketPriceFilters())  # same key → served from cache
+    await _drain_refreshes(service)  # let the single background refresh settle
     assert provider.calls == 1
 
 
-async def test_cache_prevents_duplicate_provider_calls(db_session) -> None:
+async def test_cache_prevents_duplicate_provider_calls(
+    db_session, session_factory, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        "app.modules.market.service.SessionLocal", session_factory
+    )
+
     class CountingProvider:
         source = "counting"
 
@@ -124,6 +209,7 @@ async def test_cache_prevents_duplicate_provider_calls(db_session) -> None:
     service = MarketService(db_session, provider=provider, cache=MarketCache())
     await service.get_prices(MarketPriceFilters())
     await service.get_prices(MarketPriceFilters())  # same query key → cached
+    await _drain_refreshes(service)  # exactly one background refresh runs
     assert provider.calls == 1
 
 
@@ -166,8 +252,11 @@ async def test_history_unavailable_when_no_data(db_session) -> None:
         )
 
 
-async def test_search_returns_facets(db_session) -> None:
+async def test_search_returns_facets(db_session, session_factory, monkeypatch) -> None:
+    monkeypatch.setattr("app.modules.market.service.SessionLocal", session_factory)
     service = _service(db_session)
+    await service.search("tha")
+    await _drain_refreshes(service)
     results = await service.search("tha")
     types = {r.type for r in results}
     assert "market" in types or "district" in types
@@ -192,11 +281,15 @@ async def test_favourites_add_list_and_prevent_duplicates(db_session) -> None:
     assert len(favourites) == 1
 
 
-async def test_favourite_annotated_with_latest_price(db_session) -> None:
+async def test_favourite_annotated_with_latest_price(
+    db_session, session_factory, monkeypatch
+) -> None:
+    monkeypatch.setattr("app.modules.market.service.SessionLocal", session_factory)
     user = await _make_user(db_session)
     service = _service(db_session)
     # Seed prices so the favourite has a latest price to attach.
     await service.get_prices(MarketPriceFilters(crop="paddy"))
+    await _drain_refreshes(service)
     await service.add_favourite(
         user,
         AddFavouriteRequest(

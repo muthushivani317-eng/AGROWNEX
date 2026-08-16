@@ -1,46 +1,37 @@
-"""Satellite providers (docs: provider abstraction; FREE Sentinel-2 first).
-
-``SatelliteProvider`` is the seam that supplies scenes from an imagery source. V1
-targets **free Sentinel-2** (Copernicus Data Space). Without credentials the
-``SentinelProvider`` returns an honest *unavailable* outcome — it never invents a
-scene (docs/PRODUCT_RULES.md). A ``MockSatelliteProvider`` produces *deterministic
-sample* indices (clearly flagged ``is_sample`` / ``provider="mock"``, and with **no**
-fabricated imagery) for development and tests. Future providers (Sentinel Hub,
-Copernicus Data Space API, Planet, Maxar, Earth Engine, Azure Planetary Computer)
-implement the same Protocol and are selected in ``get_default_provider`` with no
-change to the service, API or frontend.
-"""
 from __future__ import annotations
 
 import hashlib
+import os
 from dataclasses import dataclass, field
-from datetime import date, timedelta
-from typing import Protocol
+from datetime import UTC, date, datetime, timedelta
+from typing import Any, Protocol
+
+import httpx
 
 from app.core.logging import get_logger
 from app.modules.satellite.constants import (
+    ACQUISITION_LOOKBACK_DAYS,
+    CLOUD_USABLE_MAX,
     SATELLITE_PROVIDER,
     SatelliteProviderName,
     UnavailableReason,
 )
 from app.modules.satellite.engine import BandReflectance, IndexValues
+from app.modules.satellite.waterlogging import WaterloggingEvidence
 
 logger = get_logger("satellite.provider")
 
 
 @dataclass(frozen=True)
 class ProviderScene:
-    """A scene returned by a provider. Bands (or precomputed indices) + metadata."""
-
     capture_date: date
     provider: str
     cloud_cover: float
     resolution_m: float
     bands: BandReflectance | None = None
     indices: IndexValues | None = None
-    # index_name → (mean, min, max, std) for field-variation detection.
     index_stats: dict[str, tuple[float, float, float, float]] = field(default_factory=dict)
-    images: dict[str, str] = field(default_factory=dict)  # band → image URL
+    images: dict[str, str] = field(default_factory=dict)
     thumbnail_url: str | None = None
     is_sample: bool = False
     metadata: dict = field(default_factory=dict)
@@ -48,9 +39,13 @@ class ProviderScene:
 
 @dataclass(frozen=True)
 class FetchOutcome:
-    """A scene, or an honest reason it is unavailable."""
-
     scene: ProviderScene | None
+    reason: str = UnavailableReason.NONE.value
+
+
+@dataclass(frozen=True)
+class WaterEvidenceOutcome:
+    evidence: WaterloggingEvidence | None
     reason: str = UnavailableReason.NONE.value
 
 
@@ -59,72 +54,294 @@ class SatelliteProvider(Protocol):
 
     async def fetch_scene(self, polygon: dict, *, capture_before: date) -> FetchOutcome: ...
 
-
-def _polygon_seed(polygon: dict) -> int:
-    """A stable integer seed from a polygon's coordinates (deterministic mock)."""
-    raw = str(polygon.get("coordinates", polygon)).encode("utf-8")
-    return int(hashlib.sha256(raw).hexdigest(), 16)
+    async def fetch_water_evidence(
+        self, polygon: dict, *, capture_before: date
+    ) -> WaterEvidenceOutcome: ...
 
 
-class SentinelProvider:
-    """Free Sentinel-2 (Copernicus Data Space). Honest "not available" until wired.
+class CopernicusProvider:
+    name = SatelliteProviderName.COPERNICUS.value
+    TOKEN_URL = (
+        "https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token"
+    )
+    STAC_URL = "https://stac.dataspace.copernicus.eu/v1/search"
+    STATISTICS_URL = "https://sh.dataspace.copernicus.eu/api/v1/statistics"
 
-    A real implementation queries the Copernicus STAC/OData API for the most recent
-    low-cloud scene over the polygon and reads band statistics. Without credentials
-    it never fabricates a scene — it reports the imagery as unavailable.
-    """
+    def __init__(
+        self,
+        *,
+        client_id: str | None = None,
+        client_secret: str | None = None,
+        timeout: float = 30.0,
+        client: Any | None = None,
+    ) -> None:
+        self.client_id = (
+            client_id if client_id is not None else os.getenv("COPERNICUS_CLIENT_ID", "")
+        )
+        self.client_secret = (
+            client_secret
+            if client_secret is not None
+            else os.getenv("COPERNICUS_CLIENT_SECRET", "")
+        )
+        self.timeout = timeout
+        self._client = client
 
-    name = SatelliteProviderName.SENTINEL.value
+    async def _post(self, url: str, **kwargs: Any) -> httpx.Response:
+        if self._client is not None:
+            return await self._client.post(url, **kwargs)
+        async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=False) as client:
+            return await client.post(url, **kwargs)
 
-    def __init__(self, *, configured: bool = False) -> None:
-        self._configured = configured
+    @staticmethod
+    def _failure(response: httpx.Response) -> str | None:
+        if response.status_code == 429:
+            return UnavailableReason.PROVIDER_RATE_LIMITED.value
+        if response.status_code >= 400:
+            return UnavailableReason.PROVIDER_ERROR.value
+        return None
 
     async def fetch_scene(self, polygon: dict, *, capture_before: date) -> FetchOutcome:
-        if not self._configured:
-            logger.info("sentinel provider not configured → imagery unavailable")
-            return FetchOutcome(scene=None, reason=UnavailableReason.PROVIDER_ERROR.value)
-        # Future: real Copernicus query. Until then, be honest.
-        return FetchOutcome(scene=None, reason=UnavailableReason.NO_IMAGERY.value)
+        if not self.client_id or not self.client_secret:
+            return FetchOutcome(None, UnavailableReason.PROVIDER_NOT_CONFIGURED.value)
+        try:
+            token_response = await self._post(
+                self.TOKEN_URL,
+                data={
+                    "grant_type": "client_credentials",
+                    "client_id": self.client_id,
+                    "client_secret": self.client_secret,
+                },
+                timeout=self.timeout,
+            )
+            if reason := self._failure(token_response):
+                return FetchOutcome(None, reason)
+            token = token_response.json().get("access_token")
+            if not isinstance(token, str) or not token:
+                return FetchOutcome(None, UnavailableReason.PROVIDER_ERROR.value)
+            start = capture_before - timedelta(days=ACQUISITION_LOOKBACK_DAYS)
+            search_response = await self._post(
+                self.STAC_URL,
+                json={
+                    "collections": ["sentinel-2-l2a"],
+                    "intersects": polygon,
+                    "datetime": (
+                        f"{start.isoformat()}T00:00:00Z/" f"{capture_before.isoformat()}T23:59:59Z"
+                    ),
+                    "query": {"eo:cloud_cover": {"lte": CLOUD_USABLE_MAX}},
+                    "sortby": [{"field": "properties.datetime", "direction": "desc"}],
+                    "limit": 1,
+                },
+                timeout=self.timeout,
+            )
+            if reason := self._failure(search_response):
+                return FetchOutcome(None, reason)
+            features = search_response.json().get("features")
+            if not isinstance(features, list):
+                return FetchOutcome(None, UnavailableReason.PROVIDER_ERROR.value)
+            if not features:
+                return FetchOutcome(None, UnavailableReason.ACQUISITION_DELAY.value)
+            item = features[0]
+            properties = item.get("properties", {})
+            scene_id, captured, cloud = (
+                item.get("id"),
+                properties.get("datetime"),
+                properties.get("eo:cloud_cover"),
+            )
+            if (
+                not isinstance(scene_id, str)
+                or not isinstance(captured, str)
+                or isinstance(cloud, bool)
+                or not isinstance(cloud, int | float)
+            ):
+                return FetchOutcome(None, UnavailableReason.PROVIDER_ERROR.value)
+            capture_date = (
+                datetime.fromisoformat(captured.replace("Z", "+00:00")).astimezone(UTC).date()
+            )
+            stats_response = await self._post(
+                self.STATISTICS_URL,
+                headers={"Authorization": f"Bearer {token}"},
+                json=self._statistics_request(polygon, capture_date),
+                timeout=self.timeout,
+            )
+            if reason := self._failure(stats_response):
+                return FetchOutcome(None, reason)
+            bands = self._parse_band_means(stats_response.json())
+            if bands is None:
+                return FetchOutcome(None, UnavailableReason.PROCESSING_ERROR.value)
+            return FetchOutcome(
+                ProviderScene(
+                    capture_date=capture_date,
+                    provider=self.name,
+                    cloud_cover=float(cloud),
+                    resolution_m=10.0,
+                    bands=bands,
+                    metadata={
+                        "scene_id": scene_id,
+                        "collection": "sentinel-2-l2a",
+                        "acquired_at": captured,
+                        "processing_version": "cdse-statistics-v1",
+                        "quality": "cloud_masked_l2a",
+                    },
+                )
+            )
+        except httpx.TimeoutException:
+            return FetchOutcome(None, UnavailableReason.PROVIDER_TIMEOUT.value)
+        except (httpx.HTTPError, ValueError, TypeError, KeyError):
+            logger.warning("copernicus request failed", exc_info=True)
+            return FetchOutcome(None, UnavailableReason.PROVIDER_ERROR.value)
+
+    @staticmethod
+    def _statistics_request(polygon: dict, capture_date: date) -> dict[str, Any]:
+        evalscript = (
+            "//VERSION=3\nfunction setup(){return {input:[{bands:"
+            '["B02","B04","B05","B08","B11","SCL","dataMask"]}],'
+            'output:[{id:"bands",bands:5,sampleType:"FLOAT32"}]};}\n'
+            "function evaluatePixel(s){let v=s.dataMask&&"
+            "![1,3,7,8,9,10].includes(s.SCL);return {bands:v?"
+            "[s.B02,s.B04,s.B05,s.B08,s.B11]:[NaN,NaN,NaN,NaN,NaN]};}"
+        )
+        period = {
+            "from": f"{capture_date.isoformat()}T00:00:00Z",
+            "to": f"{capture_date.isoformat()}T23:59:59Z",
+        }
+        return {
+            "input": {
+                "bounds": {"geometry": polygon},
+                "data": [{"type": "sentinel-2-l2a", "dataFilter": {"timeRange": period}}],
+            },
+            "aggregation": {
+                "timeRange": period,
+                "aggregationInterval": {"of": "P1D"},
+                "resx": 10,
+                "resy": 10,
+                "evalscript": evalscript,
+            },
+        }
+
+    @staticmethod
+    def _parse_band_means(payload: Any) -> BandReflectance | None:
+        try:
+            bands = payload["data"][0]["outputs"]["bands"]["bands"]
+            values: list[float] = []
+            for index in range(5):
+                entry = bands[str(index)] if isinstance(bands, dict) else bands[index]
+                value = entry["stats"]["mean"]
+                if isinstance(value, bool) or not isinstance(value, int | float):
+                    return None
+                values.append(float(value))
+            return BandReflectance(
+                blue=values[0], red=values[1], red_edge=values[2], nir=values[3], swir=values[4]
+            )
+        except (KeyError, IndexError, TypeError):
+            return None
+
+    async def fetch_water_evidence(
+        self, polygon: dict, *, capture_before: date
+    ) -> WaterEvidenceOutcome:
+        """Discover compatible Sentinel-1 scenes without inventing a water metric.
+
+        Surface-water derivation stays disabled until a versioned, expert-reviewed
+        policy is configured; discovery alone is evidence for review, not flooding.
+        """
+        if not self.client_id or not self.client_secret:
+            return WaterEvidenceOutcome(None, UnavailableReason.PROVIDER_NOT_CONFIGURED.value)
+        try:
+            start = capture_before - timedelta(days=ACQUISITION_LOOKBACK_DAYS * 2)
+            response = await self._post(
+                self.STAC_URL,
+                json={
+                    "collections": ["sentinel-1-grd"],
+                    "intersects": polygon,
+                    "datetime": (
+                        f"{start.isoformat()}T00:00:00Z/" f"{capture_before.isoformat()}T23:59:59Z"
+                    ),
+                    "sortby": [{"field": "properties.datetime", "direction": "desc"}],
+                    "limit": 2,
+                },
+                timeout=self.timeout,
+            )
+            if reason := self._failure(response):
+                return WaterEvidenceOutcome(None, reason)
+            features = response.json().get("features")
+            if not isinstance(features, list):
+                return WaterEvidenceOutcome(None, UnavailableReason.PROVIDER_ERROR.value)
+            if not features:
+                return WaterEvidenceOutcome(None, UnavailableReason.NO_IMAGERY.value)
+            current = features[0]
+            scene_id = current.get("id")
+            captured = current.get("properties", {}).get("datetime")
+            if not isinstance(scene_id, str) or not isinstance(captured, str):
+                return WaterEvidenceOutcome(None, UnavailableReason.PROVIDER_ERROR.value)
+            baseline = features[1].get("id") if len(features) > 1 else None
+            baseline_id = baseline if isinstance(baseline, str) else None
+            missing = ["verified_surface_water_change", "usable_coverage"]
+            if baseline_id is None:
+                missing.append("baseline_scene")
+            return WaterEvidenceOutcome(
+                WaterloggingEvidence(
+                    observed_at=datetime.fromisoformat(captured.replace("Z", "+00:00")).astimezone(
+                        UTC
+                    ),
+                    source="copernicus_sentinel_1",
+                    scene_id=scene_id,
+                    baseline_scene_id=baseline_id,
+                    coverage_pct=None,
+                    evidence_present=["current_sar_scene"]
+                    + (["baseline_sar_scene"] if baseline_id else []),
+                    evidence_missing=missing,
+                    quality_usable=False,
+                    policy_verified=False,
+                )
+            )
+        except httpx.TimeoutException:
+            return WaterEvidenceOutcome(None, UnavailableReason.PROVIDER_TIMEOUT.value)
+        except (httpx.HTTPError, ValueError, TypeError, KeyError):
+            logger.warning("copernicus water evidence request failed", exc_info=True)
+            return WaterEvidenceOutcome(None, UnavailableReason.PROVIDER_ERROR.value)
+
+
+SentinelProvider = CopernicusProvider
+
+
+def _polygon_seed(polygon: dict) -> int:
+    return int(hashlib.sha256(str(polygon.get("coordinates", polygon)).encode()).hexdigest(), 16)
 
 
 class MockSatelliteProvider:
-    """Deterministic *sample* provider (dev/tests). Flags every scene ``is_sample``
-    and supplies **no** fabricated imagery — only reproducible sample indices."""
-
     name = SatelliteProviderName.MOCK.value
 
     async def fetch_scene(self, polygon: dict, *, capture_before: date) -> FetchOutcome:
         seed = _polygon_seed(polygon)
-        # Deterministic, plausible band reflectances (0-1).
-        ndvi_target = 0.35 + (seed % 40) / 100.0          # 0.35 – 0.74
-        ndmi_target = 0.10 + (seed % 30) / 100.0          # 0.10 – 0.39
-        nir = 0.45
+        ndvi_target, ndmi_target, nir = 0.35 + (seed % 40) / 100, 0.10 + (seed % 30) / 100, 0.45
         red = round(nir * (1 - ndvi_target) / (1 + ndvi_target), 4)
-        red_edge = round(red + 0.6 * (nir - red), 4)
         swir = round(nir * (1 - ndmi_target) / (1 + ndmi_target), 4)
-        bands = BandReflectance(red=red, nir=nir, red_edge=red_edge, swir=swir, blue=0.06)
-        cloud_cover = float(seed % 20)  # 0 – 19 % (usable sample scene)
-        capture_date = capture_before - timedelta(days=1 + (seed % 5))
+        bands = BandReflectance(
+            red=red, nir=nir, red_edge=round(red + 0.6 * (nir - red), 4), swir=swir, blue=0.06
+        )
         return FetchOutcome(
-            scene=ProviderScene(
-                capture_date=capture_date,
+            ProviderScene(
+                capture_date=capture_before - timedelta(days=1 + seed % 5),
                 provider=self.name,
-                cloud_cover=cloud_cover,
+                cloud_cover=float(seed % 20),
                 resolution_m=10.0,
                 bands=bands,
                 index_stats={"ndvi": (ndvi_target, ndvi_target - 0.05, ndvi_target + 0.05, 0.05)},
-                images={},  # never fabricate imagery — sample mode is numeric only
                 is_sample=True,
                 metadata={"note": "sample data (development only)"},
             )
         )
 
+    async def fetch_water_evidence(
+        self, polygon: dict, *, capture_before: date
+    ) -> WaterEvidenceOutcome:
+        return WaterEvidenceOutcome(None, UnavailableReason.NO_IMAGERY.value)
+
 
 def get_default_provider() -> SatelliteProvider:
-    """Select the configured provider. Defaults to the honest Sentinel seam; set
-    SATELLITE_PROVIDER=mock to use deterministic sample data in development."""
-    if SATELLITE_PROVIDER == SatelliteProviderName.MOCK.value:
-        logger.info("provider_configured provider=mock configured=true sample_data=true")
+    environment = os.getenv("ENVIRONMENT", "development").lower()
+    if SATELLITE_PROVIDER == SatelliteProviderName.MOCK.value and environment in {
+        "development",
+        "test",
+    }:
         return MockSatelliteProvider()
-    logger.info("provider_configured provider=sentinel configured=false sample_data=false")
-    return SentinelProvider()
+    return CopernicusProvider()

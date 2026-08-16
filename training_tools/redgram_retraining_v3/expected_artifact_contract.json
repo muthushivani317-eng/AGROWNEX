@@ -1,0 +1,13 @@
+{
+  "required": [
+    "best.pt",
+    "class_mapping.json",
+    "preprocessing.json",
+    "calibration.json",
+    "thresholds.json",
+    "provisional_evaluation.json",
+    "model_metadata.json",
+    "integrity_manifest.json"
+  ],
+  "farmer_inference_enabled": false
+}

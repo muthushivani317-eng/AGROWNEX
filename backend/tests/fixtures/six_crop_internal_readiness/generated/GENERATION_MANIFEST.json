@@ -1,0 +1,158 @@
+{
+  "generator": "generate_programmatic_fixtures.py",
+  "seed": 20260728,
+  "agricultural_evidence": false,
+  "fixtures": [
+    {
+      "file": "all_black.png",
+      "sha256": "9b7d9d891fbb1a003cce6b745a1b48ffbeb148c783e760be1b94a669e3671251",
+      "seed": 20260728,
+      "dimensions": [
+        224,
+        224
+      ],
+      "purpose": "PROGRAMMATIC_INVALID"
+    },
+    {
+      "file": "all_white.png",
+      "sha256": "4583f219aac1df2ade6475c9733e173cf38c98134e2966446675a7595b39580a",
+      "seed": 20260728,
+      "dimensions": [
+        224,
+        224
+      ],
+      "purpose": "PROGRAMMATIC_INVALID"
+    },
+    {
+      "file": "checkerboard.png",
+      "sha256": "05e82cc4923e79c6a70c580ecece401e1b0fad0e15e258f7791edec66b10d568",
+      "seed": 20260728,
+      "dimensions": [
+        224,
+        224
+      ],
+      "purpose": "PROGRAMMATIC_INVALID"
+    },
+    {
+      "file": "corrupt.jpg",
+      "sha256": "a03e99665090975908cb0dd48754bd63e3168db06d10d2ffb02299c48fd4ef1c",
+      "seed": 20260728,
+      "dimensions": null,
+      "purpose": "PROGRAMMATIC_INVALID"
+    },
+    {
+      "file": "extreme_blur.png",
+      "sha256": "cc9d61bacaea313368c2df42d081250e0c408de99df53167498dfa9bc852025c",
+      "seed": 20260728,
+      "dimensions": [
+        224,
+        224
+      ],
+      "purpose": "PROGRAMMATIC_INVALID"
+    },
+    {
+      "file": "geometric_shapes.png",
+      "sha256": "c014733e9e2aae355d4d2b1abc9d45ea21219b1d3eeca24a25a5a14c0b405135",
+      "seed": 20260728,
+      "dimensions": [
+        224,
+        224
+      ],
+      "purpose": "PROGRAMMATIC_INVALID"
+    },
+    {
+      "file": "gradient.png",
+      "sha256": "b6c1602aefc7931e5c87ddb57d9d0bc37d44a1a98b68b82482c2b70940a98b9e",
+      "seed": 20260728,
+      "dimensions": [
+        224,
+        224
+      ],
+      "purpose": "PROGRAMMATIC_INVALID"
+    },
+    {
+      "file": "overexposed.png",
+      "sha256": "4498df4a95c355317e04ee5d61f1fc9fc7a47188336822df49102d15005d1fe8",
+      "seed": 20260728,
+      "dimensions": [
+        224,
+        224
+      ],
+      "purpose": "PROGRAMMATIC_INVALID"
+    },
+    {
+      "file": "random_noise.png",
+      "sha256": "55534ff99923cecbdfa0f52c789e1c1c7b15c3cabcc2b8847fa281a20357de19",
+      "seed": 20260728,
+      "dimensions": [
+        224,
+        224
+      ],
+      "purpose": "PROGRAMMATIC_INVALID"
+    },
+    {
+      "file": "solid_colour.png",
+      "sha256": "e544e5ae66275ab40089ec1b06aa51d7fc73a7371d429d01633bf9fe8f0bff5b",
+      "seed": 20260728,
+      "dimensions": [
+        224,
+        224
+      ],
+      "purpose": "PROGRAMMATIC_INVALID"
+    },
+    {
+      "file": "text_screenshot.png",
+      "sha256": "a4ef93459e5f666373e0bfcc764966222bfa61d03da6589605705a6f17f20e00",
+      "seed": 20260728,
+      "dimensions": [
+        224,
+        224
+      ],
+      "purpose": "PROGRAMMATIC_INVALID"
+    },
+    {
+      "file": "tiny.png",
+      "sha256": "fbeeb38935c6da15339f438c8d144420d535498d07781294fd0d2bfe92c58dd3",
+      "seed": 20260728,
+      "dimensions": [
+        16,
+        16
+      ],
+      "purpose": "PROGRAMMATIC_INVALID"
+    },
+    {
+      "file": "truncated.png",
+      "sha256": "9ef5577dcc9c1e5a86a5fc40485d12e8d88da793e12bdcb67597a02a5cb45abb",
+      "seed": 20260728,
+      "dimensions": null,
+      "purpose": "PROGRAMMATIC_INVALID"
+    },
+    {
+      "file": "ui_like_screenshot.png",
+      "sha256": "64302f5298c9ccdfee88e9babb5be8e026e2b0c4cb91dc074c2054ebd998d167",
+      "seed": 20260728,
+      "dimensions": [
+        224,
+        224
+      ],
+      "purpose": "PROGRAMMATIC_INVALID"
+    },
+    {
+      "file": "underexposed.png",
+      "sha256": "bbe5c5b0739f2bc1c6f26e7d510e81064c82772a0c4044981a644b92c10ee254",
+      "seed": 20260728,
+      "dimensions": [
+        224,
+        224
+      ],
+      "purpose": "PROGRAMMATIC_INVALID"
+    },
+    {
+      "file": "unsupported.txt",
+      "sha256": "74a6fac7cfe5f9b88ef606730cbefe1717b2b7e8fa16ecb386be6770c09a7c75",
+      "seed": 20260728,
+      "dimensions": null,
+      "purpose": "PROGRAMMATIC_INVALID"
+    }
+  ]
+}

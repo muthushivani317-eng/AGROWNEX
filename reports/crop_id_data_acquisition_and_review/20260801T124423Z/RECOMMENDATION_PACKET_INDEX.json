@@ -1,0 +1,51 @@
+[
+  {
+    "crop": "chilli",
+    "runtime_label": "chilli__bacterial_spot",
+    "candidate_passages": 1,
+    "path": "recommendation_knowledge\\review_packets\\chilli\\chilli__bacterial_spot\\packet.json",
+    "status": "PENDING_HUMAN_REVIEW"
+  },
+  {
+    "crop": "chilli",
+    "runtime_label": "chilli__cercospora_leaf_spot",
+    "candidate_passages": 0,
+    "path": "recommendation_knowledge\\review_packets\\chilli\\chilli__cercospora_leaf_spot\\packet.json",
+    "status": "PENDING_HUMAN_REVIEW"
+  },
+  {
+    "crop": "chilli",
+    "runtime_label": "chilli__healthy",
+    "candidate_passages": 0,
+    "path": "recommendation_knowledge\\review_packets\\chilli\\chilli__healthy\\packet.json",
+    "status": "PENDING_HUMAN_REVIEW"
+  },
+  {
+    "crop": "chilli",
+    "runtime_label": "chilli__leaf_curl_virus",
+    "candidate_passages": 2,
+    "path": "recommendation_knowledge\\review_packets\\chilli\\chilli__leaf_curl_virus\\packet.json",
+    "status": "PENDING_HUMAN_REVIEW"
+  },
+  {
+    "crop": "redgram",
+    "runtime_label": "redgram__healthy",
+    "candidate_passages": 0,
+    "path": "recommendation_knowledge\\review_packets\\redgram\\redgram__healthy\\packet.json",
+    "status": "PENDING_HUMAN_REVIEW"
+  },
+  {
+    "crop": "redgram",
+    "runtime_label": "redgram__leaf_spot",
+    "candidate_passages": 1,
+    "path": "recommendation_knowledge\\review_packets\\redgram\\redgram__leaf_spot\\packet.json",
+    "status": "PENDING_HUMAN_REVIEW"
+  },
+  {
+    "crop": "redgram",
+    "runtime_label": "redgram__sterility_mosaic",
+    "candidate_passages": 2,
+    "path": "recommendation_knowledge\\review_packets\\redgram\\redgram__sterility_mosaic\\packet.json",
+    "status": "PENDING_HUMAN_REVIEW"
+  }
+]

@@ -1,0 +1,34 @@
+{
+  "crop": "chilli",
+  "exact_runtime_label": "chilli__bacterial_spot",
+  "mapping_status": "PENDING_HUMAN_REVIEW",
+  "human_approval_status": "PENDING",
+  "candidate_canonical_disease": null,
+  "official_english_disease_name": null,
+  "candidate_tamil_disease_name": null,
+  "candidate_evidence": [
+    {
+      "source_id": "src_900285e7e54519d3",
+      "source_filename": "IPM-Schedule-for-vegetables.pdf",
+      "printed_page": 42,
+      "pdf_page_index": 41,
+      "exact_relevant_passage": "32 Integrated Pest Management Schedule for Vegetables\nand appear as spot bending symptoms on completely\nBacterial leaf spot in chilli\nManagement\nOne spray of Streptocycline @ 150 ppm alternated \nSymptoms\nSclerotinia rot of capsicum\nManagement\nFoliar spray of Carbendazim @ 0.1% at fl owering \nSymptoms\nManagement\nOne foliar spray of Chlorothalonil @ 0.2% alternated ",
+      "verification": "VERIFY AGAINST OFFICIAL SOURCE"
+    }
+  ],
+  "symptom_candidate": [],
+  "immediate_action_candidate": [],
+  "prevention_candidate": [],
+  "cultural_control_candidate": [],
+  "biological_control_candidate": [],
+  "chemical_control_candidate": [],
+  "safety_note_candidate": [
+    "VERIFY AGAINST OFFICIAL SOURCE"
+  ],
+  "conflict_notes": [],
+  "english_draft": null,
+  "tamil_draft": null,
+  "tamil_status": "AGRICULTURAL_REVIEW_REQUIRED",
+  "reviewer_status": "PENDING_HUMAN_REVIEW",
+  "notice": "INTERNAL NON-EXPERT REVIEW ONLY\nOFFICIAL AGRICULTURAL EXPERT VERIFICATION NOT COMPLETED"
+}

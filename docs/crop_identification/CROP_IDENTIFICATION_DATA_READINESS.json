@@ -1,0 +1,61 @@
+﻿{
+  "decision": "CROP_IDENTIFICATION_DOWNLOADS_REQUIRED",
+  "generated_at_utc": "2026-07-27T19:07:07Z",
+  "training_authorized": false,
+  "coconut_status": "COCONUT_DATA_FOUND_REQUIRES_DOWNLOAD",
+  "candidate_images_existing": 11606,
+  "training_eligible_images": 0,
+  "crop_source_counts": {
+    "banana": 1,
+    "paddy": 1,
+    "cotton": 1,
+    "groundnut": 1,
+    "chilli": 1,
+    "redgram": 1,
+    "coconut": 0
+  },
+  "negative_data": {
+    "unknown_unsupported_plant": {
+      "status": "PARTIAL_REQUIRES_REVIEW",
+      "approved_images": 0,
+      "local_candidate": "plantdoc_object_detection",
+      "local_candidate_readable_images": 2586,
+      "blocking_reason": "Internet-scraped asset provenance, supported-crop overlap, annotation-to-image mapping and derivative-family review are unresolved."
+    },
+    "invalid_non_plant": {
+      "status": "MISSING",
+      "approved_images": 0,
+      "blocking_reason": "No verified local semantic non-plant dataset was found."
+    }
+  },
+  "required_downloads": [
+    {
+      "dataset_id": "coconut_tree_disease_gh56wbsnj5_v1",
+      "filename": "Coconut Tree Disease Dataset.zip",
+      "primary_url": "https://data.mendeley.com/datasets/gh56wbsnj5/1",
+      "doi": "10.17632/gh56wbsnj5.1",
+      "licence": "CC BY 4.0",
+      "publisher_reported_size": "967 MB",
+      "local_sha256": null
+    }
+  ],
+  "blocking_gates": [
+    "Coconut archive has not been downloaded or locally audited.",
+    "No approved unknown_unsupported_plant rows exist.",
+    "No approved invalid_non_plant rows exist.",
+    "Every represented supported crop has only one local verified source.",
+    "Crop-balanced and source-held-out sampling cannot be frozen until acquisition and review finish."
+  ],
+  "split_manifest": {
+    "rows_before": 11606,
+    "rows_added": 0,
+    "rows_after": 11606,
+    "reason": "No newly discovered local file satisfied provenance and training approval requirements."
+  },
+  "google_drive": {
+    "upload_recommended_now": false,
+    "manual_upload_after_regeneration": true,
+    "target_directory": "/content/drive/MyDrive/AgrowAI_V1/crop_identification/"
+  }
+}
+

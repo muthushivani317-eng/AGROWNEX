@@ -1,0 +1,3720 @@
+{
+  "audit_completed": true,
+  "gate_count": 619,
+  "gates": [
+    {
+      "source_file": "agrow-ai/android.backup-before-standalone-20260801-185713/app/build.gradle",
+      "line": 102,
+      "snippet": "manifestPlaceholders = [",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/android.backup-before-standalone-20260801-185713/app/build.gradle",
+      "line": 126,
+      "snippet": "manifestPlaceholders = [",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/android.backup-before-standalone-20260801-185713/app/build.gradle",
+      "line": 140,
+      "snippet": "manifestPlaceholders = [",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/android.backup-before-standalone-20260801-185713/app/build.gradle",
+      "line": 153,
+      "snippet": "manifestPlaceholders = [",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/app/nutrient/index.tsx",
+      "line": 12,
+      "snippet": "<AgText variant=\"headingS\" weight=\"bold\" center>Testing in progress</AgText>",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/app/_layout.tsx",
+      "line": 100,
+      "snippet": "// are the normal state in local dev (mock providers), so only warn outside",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/app.config.js",
+      "line": 90,
+      "snippet": "developerMocks: false,",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/AgComingSoon.tsx",
+      "line": 16,
+      "snippet": "* Production placeholder for modules not yet built in this phase. Keeps the",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/ui/AgButton.tsx",
+      "line": 83,
+      "snippet": "disabled={isDisabled}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/ui/AgDatePicker.tsx",
+      "line": 18,
+      "snippet": "placeholder: string;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/ui/AgDatePicker.tsx",
+      "line": 35,
+      "snippet": "placeholder,",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/ui/AgDatePicker.tsx",
+      "line": 89,
+      "snippet": "accessibilityLabel={label ?? placeholder}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/ui/AgDatePicker.tsx",
+      "line": 96,
+      "snippet": "{value ? dayjs(value).format('DD MMM YYYY') : placeholder}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/ui/AgDatePicker.tsx",
+      "line": 116,
+      "snippet": "{title ?? placeholder}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/ui/AgDropdown.tsx",
+      "line": 21,
+      "snippet": "placeholder: string;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/ui/AgDropdown.tsx",
+      "line": 37,
+      "snippet": "placeholder,",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/ui/AgDropdown.tsx",
+      "line": 81,
+      "snippet": "{selected?.label ?? placeholder}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/ui/AgDropdown.tsx",
+      "line": 101,
+      "snippet": "{title ?? placeholder}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/ui/AgDropdown.tsx",
+      "line": 114,
+      "snippet": "placeholder=\"\"",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/ui/AgDropdown.tsx",
+      "line": 115,
+      "snippet": "placeholderTextColor={colors.textDisabled}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/ui/AgEmptyState.tsx",
+      "line": 17,
+      "snippet": "/** Friendly placeholder for lists/sections with no data yet. */",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/ui/AgInput.tsx",
+      "line": 75,
+      "snippet": "placeholderTextColor=\"#6B776F\"",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/ui/AgPressable.tsx",
+      "line": 32,
+      "snippet": "disabled={disabled}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/ui/AgSkeleton.tsx",
+      "line": 16,
+      "snippet": "/** Shimmering placeholder block for building skeleton loading screens. */",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/ui/__tests__/AgInput.test.tsx",
+      "line": 21,
+      "snippet": "expect(input.props.placeholderTextColor).not.toBe(style.color);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/ui/__tests__/AgOtpInput.test.tsx",
+      "line": 14,
+      "snippet": "let focus: jest.Mock;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/ui/__tests__/AgOtpInput.test.tsx",
+      "line": 15,
+      "snippet": "let isFocused: jest.Mock;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/ui/__tests__/AgOtpInput.test.tsx",
+      "line": 34,
+      "snippet": "createNodeMock: (node: { props?: { testID?: string } }) =>",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/ui/__tests__/AgOtpInput.test.tsx",
+      "line": 112,
+      "snippet": "const log = jest.spyOn(console, 'log').mockImplementation(() => {});",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/ui/__tests__/AgOtpInput.test.tsx",
+      "line": 113,
+      "snippet": "const error = jest.spyOn(console, 'error').mockImplementation(() => {});",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/ui/__tests__/AgOtpInput.test.tsx",
+      "line": 120,
+      "snippet": "log.mockRestore();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/components/ui/__tests__/AgOtpInput.test.tsx",
+      "line": 121,
+      "snippet": "error.mockRestore();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/config/cropCapabilities.ts",
+      "line": 19,
+      "snippet": "| 'RESTRICTED_INTERNAL_TESTING_ONLY'",
+      "classification": "SAFETY_GATE"
+    },
+    {
+      "source_file": "agrow-ai/config/cropCapabilities.ts",
+      "line": 104,
+      "snippet": "'RESTRICTED_INTERNAL_TESTING_ONLY', {",
+      "classification": "SAFETY_GATE"
+    },
+    {
+      "source_file": "agrow-ai/config/cropCapabilities.ts",
+      "line": 117,
+      "snippet": "'RESTRICTED_INTERNAL_TESTING_ONLY', {",
+      "classification": "SAFETY_GATE"
+    },
+    {
+      "source_file": "agrow-ai/config/env.ts",
+      "line": 6,
+      "snippet": "* local mock provider so the app remains runnable during development.",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/config/env.ts",
+      "line": 50,
+      "snippet": "apiBaseUrl: withDefault(rawApiBaseUrl, 'http://localhost:8000/api/v1'),",
+      "classification": "ENVIRONMENT_REFERENCE"
+    },
+    {
+      "source_file": "agrow-ai/config/env.ts",
+      "line": 54,
+      "snippet": "'http://localhost:8000',",
+      "classification": "ENVIRONMENT_REFERENCE"
+    },
+    {
+      "source_file": "agrow-ai/config/env.ts",
+      "line": 94,
+      "snippet": "// stored object's public URL; absent in local dev, where a mock is used.",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/config/env.ts",
+      "line": 112,
+      "snippet": "* together; when absent, feature data persists locally (mirrors the mock auth",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/config/env.ts",
+      "line": 117,
+      "snippet": "/** True when a real S3 upload endpoint is available (else avatar upload is mocked). */",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/config/env.ts",
+      "line": 157,
+      "snippet": "const LOCAL_API_HOSTS = new Set(['localhost', '127.0.0.1', '10.0.2.2', '::1']);",
+      "classification": "ENVIRONMENT_REFERENCE"
+    },
+    {
+      "source_file": "agrow-ai/config/env.ts",
+      "line": 224,
+      "snippet": "* APK must never depend on localhost, ADB reverse, an emulator alias, or a developer",
+      "classification": "ENVIRONMENT_REFERENCE"
+    },
+    {
+      "source_file": "agrow-ai/config/env.ts",
+      "line": 242,
+      "snippet": "* A blank value is legitimate in local dev (Firebase → mock provider, blank",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/config/internalTestFlags.ts",
+      "line": 15,
+      "snippet": "developerMocksEnabled: false,",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/config/__tests__/cropCapabilities.test.ts",
+      "line": 57,
+      "snippet": "diagnosisStatus: 'RESTRICTED_INTERNAL_TESTING_ONLY',",
+      "classification": "SAFETY_GATE"
+    },
+    {
+      "source_file": "agrow-ai/config/__tests__/env.test.ts",
+      "line": 130,
+      "snippet": "['localhost', 'https://localhost:8000/api/v1', 'api_url_local'],",
+      "classification": "ENVIRONMENT_REFERENCE"
+    },
+    {
+      "source_file": "agrow-ai/config/__tests__/env.test.ts",
+      "line": 144,
+      "snippet": "apiBaseUrl: 'http://localhost:8000/api/v1',",
+      "classification": "ENVIRONMENT_REFERENCE"
+    },
+    {
+      "source_file": "agrow-ai/config/__tests__/env.test.ts",
+      "line": 145,
+      "snippet": "diagnosisApiBaseUrl: 'http://localhost:8000',",
+      "classification": "ENVIRONMENT_REFERENCE"
+    },
+    {
+      "source_file": "agrow-ai/features/admin/screens/BroadcastScreen.tsx",
+      "line": 93,
+      "snippet": "placeholder={t('admin.broadcastTitlePlaceholder')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/admin/screens/BroadcastScreen.tsx",
+      "line": 100,
+      "snippet": "placeholder={t('admin.broadcastBodyPlaceholder')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/admin/screens/BroadcastScreen.tsx",
+      "line": 108,
+      "snippet": "placeholder={t('admin.broadcastTarget')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/admin/screens/BroadcastScreen.tsx",
+      "line": 117,
+      "snippet": "placeholder={t('admin.broadcastTargetValuePlaceholder')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/admin/screens/BroadcastScreen.tsx",
+      "line": 142,
+      "snippet": "disabled={!canSend}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/admin/screens/FarmerManagementScreen.tsx",
+      "line": 51,
+      "snippet": "placeholder={t('admin.searchFarmers')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/admin/screens/FarmerManagementScreen.tsx",
+      "line": 91,
+      "snippet": "disabled={page <= 1}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/admin/screens/FarmerManagementScreen.tsx",
+      "line": 102,
+      "snippet": "disabled={page >= totalPages}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/admin/screens/ProcurementScreen.tsx",
+      "line": 114,
+      "snippet": "disabled={update.isPending}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/ai/components/ChatComposer.tsx",
+      "line": 38,
+      "snippet": "placeholder={t('ai.placeholder')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/ai/components/ChatComposer.tsx",
+      "line": 39,
+      "snippet": "placeholderTextColor={colors.textDisabled}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/ai/components/ChatComposer.tsx",
+      "line": 48,
+      "snippet": "disabled={!canSend}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/ai/screens/ChatScreen.tsx",
+      "line": 87,
+      "snippet": "<ChatComposer onSend={send} disabled={isSending} />",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/ai/services/localAIProvider.ts",
+      "line": 12,
+      "snippet": "import { deriveTitle, generateMockReply } from './mockReply';",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/ai/services/localAIProvider.ts",
+      "line": 16,
+      "snippet": "* deterministic mock reply — so the assistant and history work in development",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/ai/services/localAIProvider.ts",
+      "line": 56,
+      "snippet": "text: generateMockReply(input.message, input.language),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/ai/services/mockReply.ts",
+      "line": 4,
+      "snippet": "* Deterministic offline reply generator, mirroring the backend mock provider.",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/ai/services/mockReply.ts",
+      "line": 15,
+      "snippet": "export function generateMockReply(message: string, language: SupportedLanguage): string {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/ai/__tests__/localAIProvider.test.ts",
+      "line": 1,
+      "snippet": "// Deterministic, unique ids (the global expo-crypto mock returns a fixed UUID).",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/ai/__tests__/localAIProvider.test.ts",
+      "line": 2,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/ai/__tests__/mockReply.test.ts",
+      "line": 1,
+      "snippet": "import { deriveTitle, generateMockReply } from '../services/mockReply';",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/ai/__tests__/mockReply.test.ts",
+      "line": 3,
+      "snippet": "describe('mockReply', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/ai/__tests__/mockReply.test.ts",
+      "line": 11,
+      "snippet": "const ta = generateMockReply('எப்படி?', 'ta');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/ai/__tests__/mockReply.test.ts",
+      "line": 15,
+      "snippet": "const en = generateMockReply('How?', 'en');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/components/SocialAuthButtons.tsx",
+      "line": 42,
+      "snippet": "disabled={!google.isReady}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/components/SocialAuthButtons.tsx",
+      "line": 51,
+      "snippet": "disabled={!apple.isAvailable}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/hooks/useAppleAuth.ts",
+      "line": 26,
+      "snippet": "* mock provider in development or on non-iOS platforms.",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/hooks/useAppleAuth.ts",
+      "line": 45,
+      "snippet": "identityToken: 'dev-mock',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/hooks/useAppleAuth.ts",
+      "line": 89,
+      "snippet": "// Shown only on iOS per Apple guidelines; dev/mock also renders for testing.",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/hooks/useGoogleAuth.ts",
+      "line": 21,
+      "snippet": "* credential; otherwise it falls back to the mock provider so the button works",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/hooks/useGoogleAuth.ts",
+      "line": 29,
+      "snippet": "// configured we pass a non-empty placeholder so the invariant passes; the",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/hooks/useGoogleAuth.ts",
+      "line": 42,
+      "snippet": "const credential = await authProvider.signInWithGoogle('dev-mock');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/screens/CompleteProfileScreen.tsx",
+      "line": 119,
+      "snippet": "placeholder={t('profile.namePlaceholder')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/screens/CompleteProfileScreen.tsx",
+      "line": 154,
+      "snippet": "placeholder={t('profile.district')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/screens/CompleteProfileScreen.tsx",
+      "line": 229,
+      "snippet": "disabled={!formState.isValid}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/screens/LoginScreen.tsx",
+      "line": 74,
+      "snippet": "placeholder={t('auth.phonePlaceholder')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/screens/LoginScreen.tsx",
+      "line": 110,
+      "snippet": "disabled={!formState.isValid || sendOtp.isPending}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/screens/VerifyOtpScreen.tsx",
+      "line": 97,
+      "snippet": "disabled={code.length !== 6}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/screens/VerifyOtpScreen.tsx",
+      "line": 109,
+      "snippet": "<AgPressable haptic={false} onPress={onResend} disabled={resend.isPending}>",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/services/authProvider.ts",
+      "line": 6,
+      "snippet": "import { mockAuthProvider } from './mockAuthProvider';",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/services/authProvider.ts",
+      "line": 10,
+      "snippet": "* mock so the app is fully runnable during development with no backend.",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/services/authProvider.ts",
+      "line": 27,
+      "snippet": "/** Production must never silently fall back to fixed-code mock authentication. */",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/services/authProvider.ts",
+      "line": 33,
+      "snippet": "return profile === 'production' ? unavailableAuthProvider : mockAuthProvider;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/services/authProvider.ts",
+      "line": 40,
+      "snippet": "`provider_category=${isFirebaseConfigured ? 'firebase' : buildProfile === 'production' ? 'unavailable' : 'development_mock'}`,",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/services/mockAuthProvider.ts",
+      "line": 12,
+      "snippet": "const uid = partial.uid ?? `mock_${Math.random().toString(36).slice(2, 10)}`;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/services/mockAuthProvider.ts",
+      "line": 19,
+      "snippet": "idToken: `mock-id-token.${uid}.${Date.now()}`,",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/services/mockAuthProvider.ts",
+      "line": 20,
+      "snippet": "refreshToken: `mock-refresh.${uid}`,",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/services/mockAuthProvider.ts",
+      "line": 32,
+      "snippet": "export const mockAuthProvider: AuthProvider = {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/services/mockAuthProvider.ts",
+      "line": 34,
+      "snippet": "logger.info('mockAuth', 'event=otp_requested provider=development_mock');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/services/mockAuthProvider.ts",
+      "line": 52,
+      "snippet": "uid: 'mock_google_demo',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/services/mockAuthProvider.ts",
+      "line": 62,
+      "snippet": "uid: 'mock_apple_demo',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/services/mockAuthProvider.ts",
+      "line": 67,
+      "snippet": "/** Issue a fresh mock token for the same session (unlimited renewals). */",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/services/mockAuthProvider.ts",
+      "line": 70,
+      "snippet": "const uid = refreshToken.replace('mock-refresh.', '') || 'mock_user';",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/services/mockAuthProvider.ts",
+      "line": 72,
+      "snippet": "idToken: `mock-id-token.${uid}.${Date.now()}`,",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/services/mockAuthProvider.ts",
+      "line": 79,
+      "snippet": "logger.info('mockAuth', 'signOut');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/store/authStore.ts",
+      "line": 146,
+      "snippet": "// (phone OTP / Google / Apple / mock) because they all finalise the session",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/types.ts",
+      "line": 67,
+      "snippet": "* a local mock, selected at runtime — screens/hooks depend only on this",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/allowlist.test.ts",
+      "line": 2,
+      "snippet": "jest.mock('@/localization', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/allowlist.test.ts",
+      "line": 10,
+      "snippet": "jest.mock('@/config/env', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/allowlist.test.ts",
+      "line": 23,
+      "snippet": "const mockEnv = configEnv as unknown as {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/allowlist.test.ts",
+      "line": 25,
+      "snippet": "isAllowlisted: jest.Mock<boolean, [string | null]>;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/allowlist.test.ts",
+      "line": 45,
+      "snippet": "mockEnv.isAllowlistConfigured = false;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/allowlist.test.ts",
+      "line": 46,
+      "snippet": "mockEnv.isAllowlisted.mockReset().mockReturnValue(false);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/allowlist.test.ts",
+      "line": 53,
+      "snippet": "mockEnv.isAllowlistConfigured = true;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/allowlist.test.ts",
+      "line": 54,
+      "snippet": "mockEnv.isAllowlisted.mockImplementation((id) => id === '+911111111111');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/allowlist.test.ts",
+      "line": 69,
+      "snippet": "mockEnv.isAllowlistConfigured = true;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/allowlist.test.ts",
+      "line": 70,
+      "snippet": "mockEnv.isAllowlisted.mockReturnValue(false);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/allowlist.test.ts",
+      "line": 78,
+      "snippet": "mockEnv.isAllowlistConfigured = true;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/allowlist.test.ts",
+      "line": 79,
+      "snippet": "mockEnv.isAllowlisted.mockImplementation((id) => id === 'me@example.com');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/allowlist.test.ts",
+      "line": 86,
+      "snippet": "expect(mockEnv.isAllowlisted).toHaveBeenCalledWith('me@example.com');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/allowlist.test.ts",
+      "line": 90,
+      "snippet": "mockEnv.isAllowlistConfigured = false;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/allowlist.test.ts",
+      "line": 96,
+      "snippet": "expect(mockEnv.isAllowlisted).not.toHaveBeenCalled();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/allowlist.test.ts",
+      "line": 99,
+      "snippet": "jest.mock('@/services/apiClient', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/authStore.test.ts",
+      "line": 2,
+      "snippet": "jest.mock('@/localization', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/authStore.test.ts",
+      "line": 6,
+      "snippet": "jest.mock('@/services/apiClient', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/authStore.test.ts",
+      "line": 65,
+      "snippet": "// Mock provider issues a fresh, different id token.",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 2,
+      "snippet": "// getFirebaseAuth so the provider is exercised against the (globally mocked)",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 4,
+      "snippet": "jest.mock('@/lib/firebase', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 5,
+      "snippet": "getFirebaseAuth: jest.fn(() => ({ __mockAuth: true })),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 9,
+      "snippet": "jest.mock('@/localization', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 16,
+      "snippet": "jest.mock('@/config/env', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 20,
+      "snippet": "// currentCredential()'s mock-mode short-circuit does not mask the real path.",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 41,
+      "snippet": "// @react-native-firebase/auth is mocked globally in jest.setup.js.",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 42,
+      "snippet": "const mockGetFirebaseAuth = getFirebaseAuth as unknown as jest.Mock;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 43,
+      "snippet": "const mockSignInWithPhone = signInWithPhoneNumber as unknown as jest.Mock;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 44,
+      "snippet": "const mockSignInWithCredential = signInWithCredential as unknown as jest.Mock;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 45,
+      "snippet": "const mockGoogleCredential = GoogleAuthProvider.credential as unknown as jest.Mock;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 46,
+      "snippet": "const mockAppleCredential = AppleAuthProvider.credential as unknown as jest.Mock;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 48,
+      "snippet": "const mockEnv = configEnv as unknown as {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 50,
+      "snippet": "isAllowlisted: jest.Mock<boolean, [string | null]>;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 74,
+      "snippet": "mockSignInWithPhone.mockResolvedValue({ confirm: jest.fn(async () => ({ user })) });",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 83,
+      "snippet": "mockGetFirebaseAuth.mockReset().mockReturnValue({ __mockAuth: true });",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 84,
+      "snippet": "mockSignInWithPhone.mockReset();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 85,
+      "snippet": "mockSignInWithCredential.mockReset();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 86,
+      "snippet": "mockGoogleCredential.mockClear();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 87,
+      "snippet": "mockAppleCredential.mockClear();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 88,
+      "snippet": "mockEnv.isAllowlistConfigured = false;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 89,
+      "snippet": "mockEnv.isAllowlisted.mockReset().mockReturnValue(false);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 102,
+      "snippet": "expect(mockSignInWithPhone).toHaveBeenCalledTimes(1);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 103,
+      "snippet": "expect(mockSignInWithPhone).toHaveBeenCalledWith(expect.anything(), PHONE);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 120,
+      "snippet": "mockSignInWithPhone.mockResolvedValue({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 135,
+      "snippet": "mockSignInWithPhone.mockResolvedValue({ confirm: jest.fn(async () => null) });",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 145,
+      "snippet": "mockSignInWithPhone.mockResolvedValue({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 170,
+      "snippet": "mockSignInWithPhone.mockRejectedValue({ code });",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 181,
+      "snippet": "mockSignInWithPhone.mockRejectedValue(new Error('network exploded'));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 192,
+      "snippet": "mockSignInWithCredential.mockResolvedValue({ user: fakeUser({ uid: 'g_1', email: 'f@x.com' }) });",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 196,
+      "snippet": "expect(mockGoogleCredential).toHaveBeenCalledWith('google-id-token');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 197,
+      "snippet": "expect(mockSignInWithCredential).toHaveBeenCalledTimes(1);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 203,
+      "snippet": "mockSignInWithCredential.mockResolvedValue({ user: fakeUser({ uid: 'a_1' }) });",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 212,
+      "snippet": "expect(mockAppleCredential).toHaveBeenCalledWith('apple-id-token', 'raw-nonce');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 220,
+      "snippet": "mockEnv.isAllowlistConfigured = true;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 221,
+      "snippet": "mockEnv.isAllowlisted.mockReturnValue(false); // number not permitted",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 239,
+      "snippet": "mockEnv.isAllowlistConfigured = true;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 240,
+      "snippet": "mockEnv.isAllowlisted.mockImplementation((id) => id === PHONE);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 248,
+      "snippet": "expect(mockEnv.isAllowlisted).toHaveBeenCalledWith(PHONE);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebaseAuthProvider.test.ts",
+      "line": 251,
+      "snippet": "jest.mock('@/services/apiClient', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebasePhoneProductionSafety.test.ts",
+      "line": 4,
+      "snippet": "import { mockAuthProvider } from '../services/mockAuthProvider';",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebasePhoneProductionSafety.test.ts",
+      "line": 6,
+      "snippet": "const mockConfirm = jest.fn();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebasePhoneProductionSafety.test.ts",
+      "line": 7,
+      "snippet": "const mockSignInWithPhoneNumber = jest.fn();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebasePhoneProductionSafety.test.ts",
+      "line": 8,
+      "snippet": "const mockGetIdTokenResult = jest.fn();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebasePhoneProductionSafety.test.ts",
+      "line": 10,
+      "snippet": "jest.mock('@/lib/firebase', () => ({ getFirebaseAuth: jest.fn(() => ({})) }));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebasePhoneProductionSafety.test.ts",
+      "line": 11,
+      "snippet": "jest.mock('@react-native-firebase/auth', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebasePhoneProductionSafety.test.ts",
+      "line": 14,
+      "snippet": "getIdTokenResult: (...args: unknown[]) => mockGetIdTokenResult(...args),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebasePhoneProductionSafety.test.ts",
+      "line": 16,
+      "snippet": "signInWithPhoneNumber: (...args: unknown[]) => mockSignInWithPhoneNumber(...args),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebasePhoneProductionSafety.test.ts",
+      "line": 22,
+      "snippet": "jest.clearAllMocks();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebasePhoneProductionSafety.test.ts",
+      "line": 23,
+      "snippet": "mockSignInWithPhoneNumber.mockResolvedValue({ confirm: mockConfirm });",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebasePhoneProductionSafety.test.ts",
+      "line": 48,
+      "snippet": "it('fails closed instead of selecting mock auth in production', async () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebasePhoneProductionSafety.test.ts",
+      "line": 50,
+      "snippet": "expect(provider).not.toBe(mockAuthProvider);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebasePhoneProductionSafety.test.ts",
+      "line": 56,
+      "snippet": "it('allows the mock only in an explicit non-production profile', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebasePhoneProductionSafety.test.ts",
+      "line": 57,
+      "snippet": "expect(selectAuthProvider(false, 'development')).toBe(mockAuthProvider);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebasePhoneProductionSafety.test.ts",
+      "line": 61,
+      "snippet": "mockConfirm.mockRejectedValue({ code: 'auth/session-expired' });",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebasePhoneProductionSafety.test.ts",
+      "line": 71,
+      "snippet": "mockConfirm.mockResolvedValue({ user });",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/firebasePhoneProductionSafety.test.ts",
+      "line": 72,
+      "snippet": "mockGetIdTokenResult.mockRejectedValue({ code: 'auth/user-token-expired' });",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/mockAuthProvider.test.ts",
+      "line": 1,
+      "snippet": "import { mockAuthProvider } from '../services/mockAuthProvider';",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/mockAuthProvider.test.ts",
+      "line": 4,
+      "snippet": "describe('mockAuthProvider', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/mockAuthProvider.test.ts",
+      "line": 6,
+      "snippet": "const confirmation = await mockAuthProvider.sendOtp('+919876543210');",
+      "classification": "SAFETY_GATE"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/mockAuthProvider.test.ts",
+      "line": 12,
+      "snippet": "expect(credential.idToken).toContain('mock-id-token');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/mockAuthProvider.test.ts",
+      "line": 17,
+      "snippet": "const confirmation = await mockAuthProvider.sendOtp('+919876543210');",
+      "classification": "SAFETY_GATE"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/mockAuthProvider.test.ts",
+      "line": 22,
+      "snippet": "const cred = await mockAuthProvider.signInWithGoogle('dev-mock');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/mockAuthProvider.test.ts",
+      "line": 28,
+      "snippet": "const cred = await mockAuthProvider.signInWithApple({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/mockAuthProvider.test.ts",
+      "line": 29,
+      "snippet": "identityToken: 'dev-mock',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/mockAuthProvider.test.ts",
+      "line": 38,
+      "snippet": "const cred = await mockAuthProvider.signInWithGoogle('dev-mock');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/mockAuthProvider.test.ts",
+      "line": 39,
+      "snippet": "const refreshed = await mockAuthProvider.refreshToken(cred.refreshToken);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/otpScreenContract.test.ts",
+      "line": 14,
+      "snippet": "expect(otpScreen).toContain('disabled={code.length !== 6}');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/auth/__tests__/phoneInputKeyboardContract.test.ts",
+      "line": 43,
+      "snippet": "expect(login).toContain('disabled={!formState.isValid || sendOtp.isPending}');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/bananaV3/components/BananaFeedbackSheet.tsx",
+      "line": 47,
+      "snippet": "placeholder={t('banana.ui.feedbackNotes')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/bananaV3/components/BananaFeedbackSheet.tsx",
+      "line": 54,
+      "snippet": "disabled={!choice}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/bananaV3/screens/BananaDiseaseDetectionScreen.tsx",
+      "line": 153,
+      "snippet": "<AgButton title={t('disease.analyze')} loading={submitting} disabled={submitting} onPress={() => void analyze()} className=\"mt-4\" />",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/bananaV3/__tests__/bananaV3Api.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/services/apiClient', () => ({ httpClient: { post: jest.fn() } }));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/bananaV3/__tests__/bananaV3Api.test.ts",
+      "line": 6,
+      "snippet": "const mockPost = httpClient.post as jest.Mock;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/bananaV3/__tests__/bananaV3Api.test.ts",
+      "line": 9,
+      "snippet": "mockPost.mockResolvedValueOnce({ data: {} });",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/bananaV3/__tests__/bananaV3Api.test.ts",
+      "line": 16,
+      "snippet": "expect(mockPost).toHaveBeenCalledWith(",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/calendar/components/TaskCard.tsx",
+      "line": 91,
+      "snippet": "disabled={busy}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/calendar/screens/CalendarScreen.tsx",
+      "line": 112,
+      "snippet": "disabled={generate.isPending || !canGenerate}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/calendar/__tests__/calendarGenerator.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/calendar/__tests__/localCalendarProvider.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/cropIdentification/__tests__/cropIdentificationApi.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/services/apiClient', () => ({ httpClient: { post: jest.fn() } }));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/cropIdentification/__tests__/cropIdentificationApi.test.ts",
+      "line": 16,
+      "snippet": "(httpClient.post as jest.Mock).mockResolvedValueOnce({ data: identified });",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/cropIdentification/__tests__/cropIdentificationApi.test.ts",
+      "line": 29,
+      "snippet": "(httpClient.post as jest.Mock).mockResolvedValueOnce({ data: {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/cropIdentification/__tests__/internalSixClassApi.test.ts",
+      "line": 4,
+      "snippet": "jest.mock('@/services/apiClient',()=>({httpClient:{post:jest.fn()}}));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/cropIdentification/__tests__/internalSixClassApi.test.ts",
+      "line": 6,
+      "snippet": "(httpClient.post as jest.Mock).mockResolvedValue({data:{status:'identified',identified_crop:'redgram',confidence:.8,farmer_confirmation_required:true,reason_code:'CROP_MATCH',scope:'INTERNAL_ONLY',official_accuracy_claim:false,general_farme",
+      "classification": "SAFETY_GATE"
+    },
+    {
+      "source_file": "agrow-ai/features/cropIdentification/__tests__/internalSixClassApi.test.ts",
+      "line": 12,
+      "snippet": "(httpClient.post as jest.Mock).mockResolvedValue({data:{scope:'INTERNAL_ONLY',general_farmer_release:'ALLOWED',official_accuracy_claim:false,farmer_confirmation_required:true}});",
+      "classification": "SAFETY_GATE"
+    },
+    {
+      "source_file": "agrow-ai/features/cropIdentification/__tests__/internalSixClassApi.test.ts",
+      "line": 17,
+      "snippet": "(httpClient.post as jest.Mock).mockResolvedValue({ data: {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/diagnosisTransport/__tests__/diagnosisClient.test.ts",
+      "line": 8,
+      "snippet": "function mockHttp(sequence: Array<unknown>) {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/diagnosisTransport/__tests__/diagnosisClient.test.ts",
+      "line": 10,
+      "snippet": "return { request: request as unknown as DiagnosisHttpClient['request'] } as DiagnosisHttpClient & { request: jest.Mock };",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/diagnosisTransport/__tests__/diagnosisClient.test.ts",
+      "line": 14,
+      "snippet": "const http = mockHttp([response]); const client = new DiagnosisTransportClient(http);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/diagnosisTransport/__tests__/diagnosisClient.test.ts",
+      "line": 21,
+      "snippet": "const http = mockHttp([metadata, metadata, metadata]);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/diagnosisTransport/__tests__/diagnosisClient.test.ts",
+      "line": 39,
+      "snippet": "const network = Object.assign(new Error('offline'), { code: 'ERR_NETWORK' }); const http = mockHttp([network, response]);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/diagnosisTransport/__tests__/diagnosisClient.test.ts",
+      "line": 46,
+      "snippet": "const network = Object.assign(new Error('offline'), { code: 'ERR_NETWORK' }); const http = mockHttp([network, response]);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/diagnosisTransport/__tests__/diagnosisClient.test.ts",
+      "line": 52,
+      "snippet": "const http = mockHttp([response]);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/diagnosisWorkflow/__tests__/workflow.test.ts",
+      "line": 34,
+      "snippet": "test('submits once and reaches result',async()=>{const diagnose=jest.fn().mockResolvedValue(apiResponse());const c=new DiagnosisWorkflowController({diagnose} as any,{idFactory:()=> 'id'});(c as any).state=ready();await c.submitDiagnosis();e",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/diagnosisWorkflow/__tests__/workflow.test.ts",
+      "line": 36,
+      "snippet": "test('offline is retryable only when transport says so',async()=>{const diagnose=jest.fn().mockRejectedValue({code:'OFFLINE',messageTamil:'இணையம் இல்லை',messageEnglish:'Offline',retryable:true});const c=new DiagnosisWorkflowController({diag",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/diagnosisWorkflow/__tests__/workflow.test.ts",
+      "line": 38,
+      "snippet": "test('each submission gets a request identifier',async()=>{const diagnose=jest.fn().mockResolvedValue(apiResponse());const seq=['one','two'];const c=new DiagnosisWorkflowController({diagnose} as any,{idFactory:()=>seq.shift()!});(c as any).",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/services/diseaseProvider.ts",
+      "line": 9,
+      "snippet": "* mock analysis (mirrors the app's other swappable providers). Designed so a",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/services/localDiseaseProvider.ts",
+      "line": 10,
+      "snippet": "import { mockDiseaseReport } from './mockAnalysis';",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/services/localDiseaseProvider.ts",
+      "line": 14,
+      "snippet": "* mock analysis, so the flow and history work in development without a backend.",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/services/localDiseaseProvider.ts",
+      "line": 31,
+      "snippet": "const report = mockDiseaseReport(input, uuid());",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/services/mockAnalysis.ts",
+      "line": 4,
+      "snippet": "* Deterministic offline analysis, mirroring the backend mock vision provider.",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/services/mockAnalysis.ts",
+      "line": 8,
+      "snippet": "export function mockDiseaseReport(input: AnalyzeInput, id: string): DiseaseReport {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/services/mockAnalysis.ts",
+      "line": 33,
+      "snippet": "modelUsed: 'mock-gemini-vision',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 1,
+      "snippet": "const mockReact = require('react');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 4,
+      "snippet": "let mockSelectedFarm: { crop?: string } | null = { crop: 'rice' };",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 5,
+      "snippet": "let mockHasToken = true;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 6,
+      "snippet": "const mockSubmit = jest.fn();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 7,
+      "snippet": "const mockIdentifyCrop = jest.fn();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 8,
+      "snippet": "const mockConfirmIdentifiedCrop = jest.fn();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 10,
+      "snippet": "jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 11,
+      "snippet": "jest.mock('expo-router', () => ({ useRouter: () => ({ back: jest.fn(), push: jest.fn() }) }));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 12,
+      "snippet": "jest.mock('expo-image', () => ({ Image: 'Image' }));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 13,
+      "snippet": "jest.mock('lucide-react-native', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 17,
+      "snippet": "jest.mock('@/hooks/useAppTheme', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 20,
+      "snippet": "jest.mock('@/hooks/useLanguage', () => ({ useLanguage: () => ({ language: 'en' }) }));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 21,
+      "snippet": "jest.mock('@/features/weather', () => ({ useSelectedFarm: () => ({ selected: mockSelectedFarm }) }));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 22,
+      "snippet": "jest.mock('@/features/auth/store/authStore', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 24,
+      "snippet": "selector({ tokens: mockHasToken ? { idToken: 'present' } : null }),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 26,
+      "snippet": "jest.mock('@/features/cropIdentification', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 27,
+      "snippet": "identifyCrop: (...args: unknown[]) => mockIdentifyCrop(...args),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 28,
+      "snippet": "confirmIdentifiedCrop: (...args: unknown[]) => mockConfirmIdentifiedCrop(...args),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 30,
+      "snippet": "jest.mock('@/features/diagnosisWorkflow', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 39,
+      "snippet": "setGrowthStage: jest.fn(), submitDiagnosis: mockSubmit,",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 43,
+      "snippet": "jest.mock('@/features/bananaV3/screens/BananaDiseaseDetectionScreen', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 47,
+      "snippet": "mockReact.createElement(View, null,",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 48,
+      "snippet": "mockReact.createElement(Text, null, 'banana-v3-screen'),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 49,
+      "snippet": "mockReact.createElement(Pressable, { accessibilityLabel: 'banana-change-crop', onPress: onChangeCrop }),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 53,
+      "snippet": "jest.mock('../utils/pickDiseaseImage', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 56,
+      "snippet": "jest.mock('@/components/ui', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 61,
+      "snippet": "mockReact.createElement(Pressable, { accessibilityLabel: title, onPress, disabled }),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 68,
+      "snippet": "jest.clearAllMocks();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 69,
+      "snippet": "mockSelectedFarm = { crop: 'rice' };",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 70,
+      "snippet": "mockHasToken = true;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 71,
+      "snippet": "mockIdentifyCrop.mockRejectedValue(new Error('MODEL_NOT_AVAILABLE'));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 72,
+      "snippet": "mockConfirmIdentifiedCrop.mockResolvedValue({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 82,
+      "snippet": "tree = TestRenderer.create(mockReact.createElement(DiseaseScreen));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 88,
+      "snippet": "const picker = require('../utils/pickDiseaseImage').pickFromGallery as jest.Mock;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 89,
+      "snippet": "picker.mockResolvedValueOnce({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 94,
+      "snippet": "tree = TestRenderer.create(mockReact.createElement(DiseaseScreen));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 99,
+      "snippet": "expect(mockIdentifyCrop).toHaveBeenCalledTimes(1);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 105,
+      "snippet": "mockIdentifyCrop.mockResolvedValueOnce({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 112,
+      "snippet": "const picker = require('../utils/pickDiseaseImage').pickFromGallery as jest.Mock;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 113,
+      "snippet": "picker.mockResolvedValueOnce({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 118,
+      "snippet": "tree = TestRenderer.create(mockReact.createElement(DiseaseScreen));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 135,
+      "snippet": "mockIdentifyCrop.mockResolvedValueOnce({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 142,
+      "snippet": "const picker = require('../utils/pickDiseaseImage').pickFromGallery as jest.Mock;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 143,
+      "snippet": "picker.mockResolvedValueOnce({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 148,
+      "snippet": "tree = TestRenderer.create(mockReact.createElement(DiseaseScreen));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 158,
+      "snippet": "expect(mockSubmit).not.toHaveBeenCalled();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 162,
+      "snippet": "mockIdentifyCrop.mockResolvedValueOnce({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 169,
+      "snippet": "const picker = require('../utils/pickDiseaseImage').pickFromGallery as jest.Mock;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 170,
+      "snippet": "picker.mockResolvedValueOnce({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 175,
+      "snippet": "tree = TestRenderer.create(mockReact.createElement(DiseaseScreen));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 223,
+      "snippet": "tree = TestRenderer.create(mockReact.createElement(DiseaseScreen));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/DiseaseScreen.test.tsx",
+      "line": 226,
+      "snippet": "expect(mockSubmit).not.toHaveBeenCalled();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/localDiseaseProvider.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/localDiseaseProvider.test.ts",
+      "line": 9,
+      "snippet": "import { mockDiseaseReport } from '../services/mockAnalysis';",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/localDiseaseProvider.test.ts",
+      "line": 22,
+      "snippet": "describe('mockDiseaseReport', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/localDiseaseProvider.test.ts",
+      "line": 24,
+      "snippet": "const ta = mockDiseaseReport(input({ language: 'ta' }), 'x1');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/localDiseaseProvider.test.ts",
+      "line": 29,
+      "snippet": "const en = mockDiseaseReport(input({ language: 'en' }), 'x2');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/pickDiseaseImage.test.ts",
+      "line": 1,
+      "snippet": "const mockLaunchImageLibraryAsync = jest.fn();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/pickDiseaseImage.test.ts",
+      "line": 2,
+      "snippet": "const mockReadAsStringAsync = jest.fn();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/pickDiseaseImage.test.ts",
+      "line": 4,
+      "snippet": "jest.mock('expo-image-picker', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/pickDiseaseImage.test.ts",
+      "line": 5,
+      "snippet": "requestMediaLibraryPermissionsAsync: jest.fn().mockResolvedValue({ granted: true }),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/pickDiseaseImage.test.ts",
+      "line": 6,
+      "snippet": "launchImageLibraryAsync: (...args: unknown[]) => mockLaunchImageLibraryAsync(...args),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/pickDiseaseImage.test.ts",
+      "line": 8,
+      "snippet": "jest.mock('expo-file-system/legacy', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/pickDiseaseImage.test.ts",
+      "line": 10,
+      "snippet": "readAsStringAsync: (...args: unknown[]) => mockReadAsStringAsync(...args),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/pickDiseaseImage.test.ts",
+      "line": 16,
+      "snippet": "mockLaunchImageLibraryAsync.mockResolvedValue({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/pickDiseaseImage.test.ts",
+      "line": 31,
+      "snippet": "expect(mockLaunchImageLibraryAsync).toHaveBeenCalledWith(expect.objectContaining({ base64: false }));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/pickDiseaseImage.test.ts",
+      "line": 32,
+      "snippet": "expect(mockReadAsStringAsync).not.toHaveBeenCalled();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/pickDiseaseImage.test.ts",
+      "line": 36,
+      "snippet": "mockReadAsStringAsync.mockResolvedValue('encoded');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/disease/__tests__/pickDiseaseImage.test.ts",
+      "line": 38,
+      "snippet": "expect(mockReadAsStringAsync).toHaveBeenCalledWith('file:///leaf.jpg', { encoding: 'base64' });",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/experts/components/ConsultationForm.tsx",
+      "line": 96,
+      "snippet": "placeholder={t('experts.noFarm')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/experts/components/ConsultationForm.tsx",
+      "line": 103,
+      "snippet": "placeholder={t('experts.category')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/experts/components/ConsultationForm.tsx",
+      "line": 110,
+      "snippet": "placeholder={t('experts.cropPlaceholder')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/experts/components/ConsultationForm.tsx",
+      "line": 116,
+      "snippet": "placeholder={t('experts.subjectPlaceholder')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/experts/components/ConsultationForm.tsx",
+      "line": 123,
+      "snippet": "placeholder={t('experts.descriptionPlaceholder')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/experts/components/ConsultationForm.tsx",
+      "line": 132,
+      "snippet": "placeholder={t('experts.priority')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/experts/components/ConsultationForm.tsx",
+      "line": 165,
+      "snippet": "disabled={uploading}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/experts/components/ConsultationForm.tsx",
+      "line": 195,
+      "snippet": "disabled={uploading}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/experts/screens/ConsultationDetailScreen.tsx",
+      "line": 203,
+      "snippet": "disabled={uploading}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/experts/screens/ConsultationDetailScreen.tsx",
+      "line": 218,
+      "snippet": "placeholder={t('experts.replyPlaceholder')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/experts/screens/ConsultationDetailScreen.tsx",
+      "line": 223,
+      "snippet": "disabled={!draft.trim() || reply.isPending}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/experts/screens/ConsultationDetailScreen.tsx",
+      "line": 249,
+      "snippet": "placeholder,",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/experts/screens/ConsultationDetailScreen.tsx",
+      "line": 253,
+      "snippet": "placeholder: string;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/experts/screens/ConsultationDetailScreen.tsx",
+      "line": 260,
+      "snippet": "placeholder={placeholder}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/experts/screens/ConsultationDetailScreen.tsx",
+      "line": 261,
+      "snippet": "placeholderTextColor={colors.textMuted}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/experts/screens/ConsultationDetailScreen.tsx",
+      "line": 264,
+      "snippet": "accessibilityLabel={placeholder}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/experts/__tests__/expertSync.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/experts/__tests__/expertSync.test.ts",
+      "line": 27,
+      "snippet": "reply: jest.fn().mockResolvedValue(undefined),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/experts/__tests__/expertSync.test.ts",
+      "line": 28,
+      "snippet": "addAttachment: jest.fn().mockResolvedValue(undefined),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/experts/__tests__/expertSync.test.ts",
+      "line": 29,
+      "snippet": "updateStatus: jest.fn().mockResolvedValue(undefined),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/experts/__tests__/expertSync.test.ts",
+      "line": 65,
+      "snippet": "reply: jest.fn().mockRejectedValue(networkError()),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/experts/__tests__/expertSync.test.ts",
+      "line": 75,
+      "snippet": "updateStatus: jest.fn().mockRejectedValue(new ExpertError('bad', 'x')),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/experts/__tests__/localExpertProvider.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/farm/components/BoundaryEditor.tsx",
+      "line": 303,
+      "snippet": "disabled={!vertices.length}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/farm/components/BoundaryEditor.tsx",
+      "line": 309,
+      "snippet": "disabled={!vertices.length}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/farm/components/BoundaryEditor.tsx",
+      "line": 338,
+      "snippet": "disabled={disabled}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/farm/components/FarmImageGallery.tsx",
+      "line": 29,
+      "snippet": "disabled={adding}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/farm/screens/FarmFormScreen.tsx",
+      "line": 245,
+      "snippet": "placeholder={t('farm.namePlaceholder')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/farm/screens/FarmFormScreen.tsx",
+      "line": 261,
+      "snippet": "placeholder={t('farm.selectCrop')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/farm/screens/FarmFormScreen.tsx",
+      "line": 276,
+      "snippet": "placeholder={t('farm.varietyPlaceholder')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/farm/screens/FarmFormScreen.tsx",
+      "line": 368,
+      "snippet": "placeholder={t('farm.selectDistrict')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/farm/screens/FarmFormScreen.tsx",
+      "line": 412,
+      "snippet": "placeholder={t('farm.select')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/farm/screens/FarmFormScreen.tsx",
+      "line": 427,
+      "snippet": "placeholder={t('farm.select')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/farm/screens/FarmFormScreen.tsx",
+      "line": 442,
+      "snippet": "placeholder={t('farm.select')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/farm/screens/FarmFormScreen.tsx",
+      "line": 457,
+      "snippet": "placeholder={t('farm.selectDate')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/farm/screens/FarmFormScreen.tsx",
+      "line": 494,
+      "snippet": "placeholder={t('farm.notesPlaceholder')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/farm/screens/FarmFormScreen.tsx",
+      "line": 509,
+      "snippet": "disabled={!formState.isValid}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/farm/__tests__/farmSync.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/farm/__tests__/localFarmProvider.test.ts",
+      "line": 1,
+      "snippet": "// Deterministic, unique ids (the global expo-crypto mock returns a fixed UUID).",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/farm/__tests__/localFarmProvider.test.ts",
+      "line": 2,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/growth/components/GrowthCard.tsx",
+      "line": 53,
+      "snippet": "disabled={busy}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/growth/services/growthProvider.ts",
+      "line": 15,
+      "snippet": "* deterministic mock analysis (mirrors the app's other swappable providers).",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/growth/services/localGrowthProvider.ts",
+      "line": 14,
+      "snippet": "import { deriveRisk, imageToTimelineEntry, mockGrowthAnalysis } from './mockGrowth';",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/growth/services/localGrowthProvider.ts",
+      "line": 18,
+      "snippet": "* deterministic mock analysis, so the monitor and timeline work in development",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/growth/services/localGrowthProvider.ts",
+      "line": 62,
+      "snippet": "const analysis = mockGrowthAnalysis(input, hasPrevious);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/growth/services/mockGrowth.ts",
+      "line": 9,
+      "snippet": "/** Deterministic offline growth analysis (mirrors the backend mock provider). */",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/growth/services/mockGrowth.ts",
+      "line": 10,
+      "snippet": "export function mockGrowthAnalysis(",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/growth/services/mockGrowth.ts",
+      "line": 39,
+      "snippet": "modelUsed: 'mock-gemini-growth',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/growth/__tests__/growthMapper.test.ts",
+      "line": 61,
+      "snippet": "model_used: 'mock-gemini-growth',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/growth/__tests__/localGrowthProvider.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/growth/__tests__/localGrowthProvider.test.ts",
+      "line": 58,
+      "snippet": "// Same mock health each week → delta 0 on the second entry.",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/growth/__tests__/timeline.test.ts",
+      "line": 4,
+      "snippet": "mockGrowthAnalysis,",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/growth/__tests__/timeline.test.ts",
+      "line": 5,
+      "snippet": "} from '../services/mockGrowth';",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/growth/__tests__/timeline.test.ts",
+      "line": 23,
+      "snippet": "modelUsed: 'mock',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/growth/__tests__/timeline.test.ts",
+      "line": 57,
+      "snippet": "describe('mockGrowthAnalysis', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/growth/__tests__/timeline.test.ts",
+      "line": 59,
+      "snippet": "const a = mockGrowthAnalysis(baseInput, false);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/growth/__tests__/timeline.test.ts",
+      "line": 66,
+      "snippet": "const a = mockGrowthAnalysis({ ...baseInput, language: 'en' }, true);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/home/components/TodaysFarmCard.tsx",
+      "line": 115,
+      "snippet": "value={t('home.growthStagePlaceholder')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/home/__tests__/QuickActions.test.tsx",
+      "line": 3,
+      "snippet": "const mockPush = jest.fn();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/home/__tests__/QuickActions.test.tsx",
+      "line": 4,
+      "snippet": "jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/home/__tests__/QuickActions.test.tsx",
+      "line": 5,
+      "snippet": "jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/home/__tests__/QuickActions.test.tsx",
+      "line": 6,
+      "snippet": "jest.mock('@/hooks/useAppTheme', () => ({ useAppTheme: () => ({ colors: { primary: '#080' } }) }));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/home/__tests__/QuickActions.test.tsx",
+      "line": 7,
+      "snippet": "jest.mock('lucide-react-native', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/home/__tests__/QuickActions.test.tsx",
+      "line": 11,
+      "snippet": "jest.mock('@/components/ui', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/home/__tests__/QuickActions.test.tsx",
+      "line": 12,
+      "snippet": "const MockReact = require('react');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/home/__tests__/QuickActions.test.tsx",
+      "line": 14,
+      "snippet": "return { AgCard: View, AgText: Text, AgPressable: (props: any) => MockReact.createElement(Pressable, props) };",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/home/__tests__/routeMatrix.test.ts",
+      "line": 4,
+      "snippet": "it('maps every visible feature to its actual non-placeholder pathname', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/intelligence/__tests__/intelligenceSync.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/intelligence/__tests__/intelligenceSync.test.ts",
+      "line": 23,
+      "snippet": "refresh: jest.fn().mockResolvedValue(undefined),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/intelligence/__tests__/intelligenceSync.test.ts",
+      "line": 58,
+      "snippet": "const provider = fakeProvider({ refresh: jest.fn().mockRejectedValue(networkError()) });",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/intelligence/__tests__/intelligenceSync.test.ts",
+      "line": 67,
+      "snippet": "refresh: jest.fn().mockRejectedValue(new IntelligenceError('invalid', 'x')),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/intelligence/__tests__/localIntelligenceProvider.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/market/components/MarketCard.tsx",
+      "line": 66,
+      "snippet": "disabled={busy}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/market/components/MarketSearchBar.tsx",
+      "line": 34,
+      "snippet": "placeholder={t('market.searchPlaceholder')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/market/components/MarketSearchBar.tsx",
+      "line": 35,
+      "snippet": "accessibilityLabel={t('market.searchPlaceholder')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/market/screens/MarketScreen.tsx",
+      "line": 257,
+      "snippet": "disabled={busy}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/market/services/localMarketProvider.ts",
+      "line": 19,
+      "snippet": "* the backend mock so the screen is fully usable in dev / without a backend, and",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/market/services/localMarketProvider.ts",
+      "line": 69,
+      "snippet": "source: 'mock',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/market/__tests__/localMarketProvider.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/memory/components/MemoryFilters.tsx",
+      "line": 35,
+      "snippet": "placeholder={t('memory.searchPlaceholder')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/memory/__tests__/localMemoryProvider.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/memory/__tests__/memoryEngine.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/memory/__tests__/memorySync.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/memory/__tests__/memorySync.test.ts",
+      "line": 20,
+      "snippet": "rebuild: jest.fn().mockResolvedValue({ farmId: 'f', created: 0, total: 0, summaries: 0, links: 0 }),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/memory/__tests__/memorySync.test.ts",
+      "line": 55,
+      "snippet": "const provider = fakeProvider({ rebuild: jest.fn().mockRejectedValue(networkError()) });",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/memory/__tests__/memorySync.test.ts",
+      "line": 64,
+      "snippet": "rebuild: jest.fn().mockRejectedValue(new MemoryError('invalid', 'x')),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/multiCropDiagnosis/components/CropPhotoConfirmation.tsx",
+      "line": 22,
+      "snippet": "disabled={props.confirmed}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/multiCropDiagnosis/__tests__/adapters.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/services/apiClient', () => ({ httpClient: { post: jest.fn() } }));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/multiCropDiagnosis/__tests__/adapters.test.ts",
+      "line": 7,
+      "snippet": "'%s placeholder returns typed MODEL_NOT_AVAILABLE and no diagnosis',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/multiCropDiagnosis/__tests__/adapters.test.ts",
+      "line": 36,
+      "snippet": "(httpClient.post as jest.Mock).mockResolvedValueOnce({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/multiCropDiagnosis/__tests__/adapters.test.ts",
+      "line": 68,
+      "snippet": "(httpClient.post as jest.Mock).mockClear();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/multiCropDiagnosis/__tests__/adapters.test.ts",
+      "line": 76,
+      "snippet": "(httpClient.post as jest.Mock).mockResolvedValueOnce({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/multiCropDiagnosis/__tests__/adapters.test.ts",
+      "line": 107,
+      "snippet": "(httpClient.post as jest.Mock).mockResolvedValueOnce({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/multiCropDiagnosis/__tests__/adapters.test.ts",
+      "line": 129,
+      "snippet": "(httpClient.post as jest.Mock).mockResolvedValueOnce({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/multiCropDiagnosis/__tests__/adapters.test.ts",
+      "line": 150,
+      "snippet": "(httpClient.post as jest.Mock).mockResolvedValueOnce({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/multiCropDiagnosis/__tests__/cropRegistry.test.ts",
+      "line": 11,
+      "snippet": "jest.mock('@/services/apiClient', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/multiCropDiagnosis/__tests__/cropRegistry.test.ts",
+      "line": 53,
+      "snippet": "jest.mocked(api.get).mockRejectedValueOnce(new Error('offline'));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/multiCropDiagnosis/__tests__/DiagnosisStates.test.tsx",
+      "line": 4,
+      "snippet": "jest.mock('@/components/ui', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/multiCropDiagnosis/__tests__/DiagnosisStates.test.tsx",
+      "line": 5,
+      "snippet": "const MockReact = require('react');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/multiCropDiagnosis/__tests__/DiagnosisStates.test.tsx",
+      "line": 11,
+      "snippet": "MockReact.createElement(Pressable, { accessibilityLabel: title, onPress }),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/multiCropDiagnosis/__tests__/EvidenceRecommendationCard.test.tsx",
+      "line": 4,
+      "snippet": "jest.mock('@/components/ui', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/notifications/screens/NotificationCenterScreen.tsx",
+      "line": 51,
+      "snippet": "disabled={!hasUnread || markAllRead.isPending}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/notifications/screens/NotificationPreferencesScreen.tsx",
+      "line": 50,
+      "snippet": "placeholder={t('notifications.minSeverity')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/notifications/services/rules.ts",
+      "line": 76,
+      "snippet": "/** Fill {placeholder} slots in an action route from a payload (never throws). */",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/notifications/__tests__/localNotificationProvider.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/notifications/__tests__/notificationSamples.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/notifications/__tests__/notificationSync.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/notifications/__tests__/notificationSync.test.ts",
+      "line": 23,
+      "snippet": "markRead: jest.fn().mockResolvedValue(undefined),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/notifications/__tests__/notificationSync.test.ts",
+      "line": 24,
+      "snippet": "markAllRead: jest.fn().mockResolvedValue(0),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/notifications/__tests__/notificationSync.test.ts",
+      "line": 25,
+      "snippet": "dismiss: jest.fn().mockResolvedValue(undefined),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/notifications/__tests__/notificationSync.test.ts",
+      "line": 60,
+      "snippet": "markRead: jest.fn().mockRejectedValue(networkError()),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/notifications/__tests__/notificationSync.test.ts",
+      "line": 70,
+      "snippet": "dismiss: jest.fn().mockRejectedValue(new NotificationError('not_found', 'x')),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/nutrient/screens/NutrientAnalysisScreen.tsx",
+      "line": 235,
+      "snippet": "disabled={!selected}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/nutrient/services/localNutrientProvider.ts",
+      "line": 8,
+      "snippet": "import { mockNutrientReport } from './mockNutrient';",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/nutrient/services/localNutrientProvider.ts",
+      "line": 20,
+      "snippet": "const report = mockNutrientReport(input, uuid());",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/nutrient/services/mockNutrient.ts",
+      "line": 9,
+      "snippet": "* Deterministic offline analysis, mirroring the backend mock provider + engine.",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/nutrient/services/mockNutrient.ts",
+      "line": 14,
+      "snippet": "export function mockNutrientReport(input: AnalyzeInput, id: string): NutrientReport {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/nutrient/services/mockNutrient.ts",
+      "line": 34,
+      "snippet": "provider: 'mock',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/nutrient/services/mockNutrient.ts",
+      "line": 35,
+      "snippet": "modelUsed: 'mock-nutrient-vision',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/nutrient/__tests__/localNutrientProvider.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/nutrient/__tests__/localNutrientProvider.test.ts",
+      "line": 31,
+      "snippet": "expect(report.provider).toBe('mock');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/nutrient/__tests__/nutrientSync.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/nutrient/__tests__/nutrientSync.test.ts",
+      "line": 26,
+      "snippet": "analyze: jest.fn().mockResolvedValue(undefined),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/nutrient/__tests__/nutrientSync.test.ts",
+      "line": 60,
+      "snippet": "analyze: jest.fn().mockRejectedValue(networkError()),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/nutrient/__tests__/nutrientSync.test.ts",
+      "line": 70,
+      "snippet": "analyze: jest.fn().mockRejectedValue(new NutrientError('bad', 'x')),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/PlantIdentifierScreen.tsx",
+      "line": 61,
+      "snippet": "{!qualityIssues.length && !result ? <AgButton title=\"Identify plant\" loading={status === 'submitting'} disabled={status === 'submitting'} onPress={() => void analyze()} /> : null}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/__tests__/plantIdentifierApi.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/services/apiClient', () => ({ httpClient: { post: jest.fn() } }));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/__tests__/plantIdentifierApi.test.ts",
+      "line": 6,
+      "snippet": "(httpClient.post as jest.Mock).mockResolvedValueOnce({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/__tests__/plantIdentifierApi.test.ts",
+      "line": 28,
+      "snippet": "(httpClient.post as jest.Mock).mockResolvedValueOnce({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/__tests__/PlantIdentifierScreen.test.tsx",
+      "line": 1,
+      "snippet": "const mockReact = require('react');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/__tests__/PlantIdentifierScreen.test.tsx",
+      "line": 3,
+      "snippet": "const mockIdentifyPlant = jest.fn();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/__tests__/PlantIdentifierScreen.test.tsx",
+      "line": 4,
+      "snippet": "const mockPick = jest.fn();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/__tests__/PlantIdentifierScreen.test.tsx",
+      "line": 6,
+      "snippet": "jest.mock('expo-image', () => ({ Image: 'Image' }));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/__tests__/PlantIdentifierScreen.test.tsx",
+      "line": 7,
+      "snippet": "jest.mock('lucide-react-native', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/__tests__/PlantIdentifierScreen.test.tsx",
+      "line": 11,
+      "snippet": "jest.mock('@/hooks/useAppTheme', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/__tests__/PlantIdentifierScreen.test.tsx",
+      "line": 14,
+      "snippet": "jest.mock('@/features/disease/utils/imageQuality', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/__tests__/PlantIdentifierScreen.test.tsx",
+      "line": 17,
+      "snippet": "jest.mock('@/features/disease/utils/pickDiseaseImage', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/__tests__/PlantIdentifierScreen.test.tsx",
+      "line": 18,
+      "snippet": "captureFromCamera: (...args: unknown[]) => mockPick(...args),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/__tests__/PlantIdentifierScreen.test.tsx",
+      "line": 19,
+      "snippet": "pickFromGallery: (...args: unknown[]) => mockPick(...args),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/__tests__/PlantIdentifierScreen.test.tsx",
+      "line": 21,
+      "snippet": "jest.mock('../plantIdentifierApi', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/__tests__/PlantIdentifierScreen.test.tsx",
+      "line": 22,
+      "snippet": "identifyPlant: (...args: unknown[]) => mockIdentifyPlant(...args),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/__tests__/PlantIdentifierScreen.test.tsx",
+      "line": 24,
+      "snippet": "jest.mock('@/components/ui', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/__tests__/PlantIdentifierScreen.test.tsx",
+      "line": 29,
+      "snippet": "mockReact.createElement(Pressable, { accessibilityLabel: title, onPress, disabled }),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/__tests__/PlantIdentifierScreen.test.tsx",
+      "line": 50,
+      "snippet": "mockPick.mockResolvedValueOnce(image);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/__tests__/PlantIdentifierScreen.test.tsx",
+      "line": 51,
+      "snippet": "mockIdentifyPlant.mockResolvedValueOnce(result);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/__tests__/PlantIdentifierScreen.test.tsx",
+      "line": 54,
+      "snippet": "tree = TestRenderer.create(mockReact.createElement(PlantIdentifierScreen));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/__tests__/PlantIdentifierScreen.test.tsx",
+      "line": 65,
+      "snippet": "beforeEach(() => jest.clearAllMocks());",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/__tests__/PlantIdentifierScreen.test.tsx",
+      "line": 104,
+      "snippet": "mockPick.mockResolvedValueOnce(image);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/__tests__/PlantIdentifierScreen.test.tsx",
+      "line": 105,
+      "snippet": "mockIdentifyPlant.mockRejectedValueOnce(new Error('network'));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/plantIdentifier/__tests__/PlantIdentifierScreen.test.tsx",
+      "line": 108,
+      "snippet": "tree = TestRenderer.create(mockReact.createElement(PlantIdentifierScreen));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/components/ProduceForm.tsx",
+      "line": 152,
+      "snippet": "placeholder={t('produce.selectFarm')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/components/ProduceForm.tsx",
+      "line": 168,
+      "snippet": "placeholder={t('produce.selectCrop')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/components/ProduceForm.tsx",
+      "line": 183,
+      "snippet": "placeholder={t('produce.varietyPlaceholder')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/components/ProduceForm.tsx",
+      "line": 199,
+      "snippet": "placeholder=\"0\"",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/components/ProduceForm.tsx",
+      "line": 217,
+      "snippet": "placeholder={t('produce.unit')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/components/ProduceForm.tsx",
+      "line": 234,
+      "snippet": "placeholder=\"YYYY-MM-DD\"",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/components/ProduceForm.tsx",
+      "line": 261,
+      "snippet": "placeholder={t('produce.selectGrade')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/components/ProduceForm.tsx",
+      "line": 276,
+      "snippet": "placeholder=\"0\"",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/components/ProduceForm.tsx",
+      "line": 294,
+      "snippet": "placeholder={t('produce.status')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/components/ProduceForm.tsx",
+      "line": 309,
+      "snippet": "placeholder={t('produce.notesPlaceholder')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/components/ProduceForm.tsx",
+      "line": 344,
+      "snippet": "disabled={uploading}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/screens/ProduceDetailScreen.tsx",
+      "line": 325,
+      "snippet": "disabled={adding}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/services/localProduceProvider.ts",
+      "line": 154,
+      "snippet": "procurementChannel: submitted ? 'mock' : null,",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/services/localProduceProvider.ts",
+      "line": 155,
+      "snippet": "procurementReference: submitted ? `MOCK-${uuid().slice(0, 8).toUpperCase()}` : null,",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/__tests__/localProduceProvider.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/__tests__/localProduceProvider.test.ts",
+      "line": 27,
+      "snippet": "it('creates an offer, acknowledges it (mock) and records status history', async () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/__tests__/localProduceProvider.test.ts",
+      "line": 31,
+      "snippet": "expect(offer.procurementChannel).toBe('mock');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/__tests__/localProduceProvider.test.ts",
+      "line": 32,
+      "snippet": "expect(offer.procurementReference).toMatch(/^MOCK-/);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/__tests__/produceMapper.test.ts",
+      "line": 94,
+      "snippet": "procurement_channel: 'mock',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/__tests__/produceMapper.test.ts",
+      "line": 95,
+      "snippet": "procurement_reference: 'MOCK-ABC123',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/__tests__/produceMapper.test.ts",
+      "line": 119,
+      "snippet": "expect(detail.procurementChannel).toBe('mock');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/__tests__/produceMapper.test.ts",
+      "line": 120,
+      "snippet": "expect(detail.procurementReference).toBe('MOCK-ABC123');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/__tests__/produceSync.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/__tests__/produceSync.test.ts",
+      "line": 27,
+      "snippet": "create: jest.fn().mockResolvedValue({}),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/__tests__/produceSync.test.ts",
+      "line": 28,
+      "snippet": "update: jest.fn().mockResolvedValue({}),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/__tests__/produceSync.test.ts",
+      "line": 29,
+      "snippet": "remove: jest.fn().mockResolvedValue(undefined),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/__tests__/produceSync.test.ts",
+      "line": 79,
+      "snippet": "create: jest.fn().mockRejectedValue(networkError()),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/produce/__tests__/produceSync.test.ts",
+      "line": 90,
+      "snippet": "create: jest.fn().mockRejectedValue(new ProduceError('invalid_produce', 'bad')),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/profile/screens/AccountSettingsScreen.tsx",
+      "line": 68,
+      "snippet": "disabled={disabled}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/profile/screens/AccountSettingsScreen.tsx",
+      "line": 166,
+      "snippet": "disabled={updatePrefs.isPending}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/profile/screens/AccountSettingsScreen.tsx",
+      "line": 176,
+      "snippet": "disabled={updatePrefs.isPending}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/profile/screens/EditProfileScreen.tsx",
+      "line": 151,
+      "snippet": "disabled={upload.isPending}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/profile/screens/EditProfileScreen.tsx",
+      "line": 184,
+      "snippet": "placeholder={t('profile.namePlaceholder')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/profile/screens/EditProfileScreen.tsx",
+      "line": 219,
+      "snippet": "placeholder={t('profile.district')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/profile/screens/EditProfileScreen.tsx",
+      "line": 294,
+      "snippet": "disabled={!formState.isValid || upload.isPending}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/profile/services/uploadProvider.ts",
+      "line": 9,
+      "snippet": "* Two real implementations, chosen by config (mirrors the mock↔firebase auth",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/profile/services/uploadProvider.ts",
+      "line": 10,
+      "snippet": "* provider): S3 when an upload endpoint is configured, otherwise a local mock",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/profile/services/uploadProvider.ts",
+      "line": 23,
+      "snippet": "async function mockUpload(localUri: string): Promise<string> {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/profile/services/uploadProvider.ts",
+      "line": 26,
+      "snippet": "logger.info('upload', 'mock avatar upload', localUri);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/profile/services/uploadProvider.ts",
+      "line": 49,
+      "snippet": "return isS3Configured ? s3Upload(localUri, folder) : mockUpload(localUri);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/profile/__tests__/apiProfileProvider.test.ts",
+      "line": 2,
+      "snippet": "jest.mock('@/localization', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/profile/__tests__/apiProfileProvider.test.ts",
+      "line": 9,
+      "snippet": "jest.mock('@/services/apiClient', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/profile/__tests__/apiProfileProvider.test.ts",
+      "line": 22,
+      "snippet": "const apiGet = api.get as jest.Mock;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/profile/__tests__/apiProfileProvider.test.ts",
+      "line": 47,
+      "snippet": "apiGet.mockReset();",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/profile/__tests__/apiProfileProvider.test.ts",
+      "line": 52,
+      "snippet": "apiGet.mockRejectedValue(apiError(404));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/profile/__tests__/apiProfileProvider.test.ts",
+      "line": 60,
+      "snippet": "apiGet.mockRejectedValue(apiError(404));",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/profile/__tests__/apiProfileProvider.test.ts",
+      "line": 81,
+      "snippet": "apiGet.mockRejectedValue(err);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/profile/__tests__/apiProfileProvider.test.ts",
+      "line": 88,
+      "snippet": "apiGet.mockRejectedValue(err);",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/profile/__tests__/localProfileProvider.test.ts",
+      "line": 2,
+      "snippet": "jest.mock('@/localization', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/profile/__tests__/uploadProvider.test.ts",
+      "line": 4,
+      "snippet": "// service uses the local mock, which keeps the on-device URI as the stored ref.",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/profile/__tests__/uploadProvider.test.ts",
+      "line": 5,
+      "snippet": "describe('uploadService (mock provider)', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/profile/__tests__/uploadProvider.test.ts",
+      "line": 12,
+      "snippet": "it('accepts a folder argument without changing the mock result', async () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/satellite/services/localSatelliteProvider.ts",
+      "line": 140,
+      "snippet": "provider: 'mock',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/satellite/__tests__/localSatelliteProvider.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/satellite/__tests__/localSatelliteProvider.test.ts",
+      "line": 18,
+      "snippet": "expect(s.provider).toBe('mock');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/satellite/__tests__/satelliteSync.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/satellite/__tests__/satelliteSync.test.ts",
+      "line": 20,
+      "snippet": "refresh: jest.fn().mockResolvedValue(undefined),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/satellite/__tests__/satelliteSync.test.ts",
+      "line": 56,
+      "snippet": "refresh: jest.fn().mockRejectedValue(networkError()),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/satellite/__tests__/satelliteSync.test.ts",
+      "line": 66,
+      "snippet": "refresh: jest.fn().mockRejectedValue(new SatelliteError('provider_error', 'x')),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/schemes/components/SchemeCard.tsx",
+      "line": 68,
+      "snippet": "disabled={busy}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/schemes/components/SchemeFilterBar.tsx",
+      "line": 34,
+      "snippet": "placeholder={t('schemes.searchPlaceholder')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/schemes/components/SchemeFilterBar.tsx",
+      "line": 35,
+      "snippet": "accessibilityLabel={t('schemes.searchPlaceholder')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/schemes/screens/SchemeDetailScreen.tsx",
+      "line": 99,
+      "snippet": "disabled={busy}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/schemes/services/sampleSchemes.ts",
+      "line": 3,
+      "snippet": "* backend ``MockSchemeProvider`` (same slugs + eligibility rules) so the offline",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/schemes/services/sampleSchemes.ts",
+      "line": 71,
+      "snippet": "source: 'mock',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/schemes/services/sampleSchemes.ts",
+      "line": 99,
+      "snippet": "source: 'mock',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/schemes/services/sampleSchemes.ts",
+      "line": 127,
+      "snippet": "source: 'mock',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/schemes/services/sampleSchemes.ts",
+      "line": 152,
+      "snippet": "source: 'mock',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/schemes/services/sampleSchemes.ts",
+      "line": 179,
+      "snippet": "source: 'mock',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/schemes/services/sampleSchemes.ts",
+      "line": 207,
+      "snippet": "source: 'mock',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/schemes/services/sampleSchemes.ts",
+      "line": 236,
+      "snippet": "source: 'mock',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/schemes/services/sampleSchemes.ts",
+      "line": 269,
+      "snippet": "source: 'mock',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/schemes/__tests__/schemeMapper.test.ts",
+      "line": 69,
+      "snippet": "source: 'mock',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/soil/components/SoilReportForm.tsx",
+      "line": 111,
+      "snippet": "placeholder={t('soil.source')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/soil/components/SoilReportForm.tsx",
+      "line": 118,
+      "snippet": "placeholder=\"YYYY-MM-DD\"",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/soil/components/SoilReportForm.tsx",
+      "line": 130,
+      "snippet": "placeholder={t('soil.optional')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/soil/components/SoilReportForm.tsx",
+      "line": 138,
+      "snippet": "placeholder={t('soil.optional')}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/soil/components/SoilReportForm.tsx",
+      "line": 168,
+      "snippet": "disabled={uploading}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/soil/components/SoilReportForm.tsx",
+      "line": 199,
+      "snippet": "disabled={uploading}",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/soil/__tests__/localSoilProvider.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/soil/__tests__/soilSync.test.ts",
+      "line": 1,
+      "snippet": "jest.mock('@/utils/id', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/soil/__tests__/soilSync.test.ts",
+      "line": 27,
+      "snippet": "submitReport: jest.fn().mockResolvedValue(undefined),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/soil/__tests__/soilSync.test.ts",
+      "line": 57,
+      "snippet": "submitReport: jest.fn().mockRejectedValue(networkError()),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/soil/__tests__/soilSync.test.ts",
+      "line": 67,
+      "snippet": "submitReport: jest.fn().mockRejectedValue(new SoilError('invalid', 'x')),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/weather/services/mockWeatherProvider.ts",
+      "line": 94,
+      "snippet": "export const mockWeatherProvider: WeatherProvider = {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/weather/services/mockWeatherProvider.ts",
+      "line": 127,
+      "snippet": "source: 'mock',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/weather/services/weatherProvider.ts",
+      "line": 8,
+      "snippet": "* when configured, or a deterministic local mock otherwise — selected at runtime",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/weather/services/weatherProvider.ts",
+      "line": 23,
+      "snippet": "provider = require('./mockWeatherProvider').mockWeatherProvider as WeatherProvider;",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/weather/services/weatherProvider.ts",
+      "line": 24,
+      "snippet": "logger.info('weather', 'using mock provider');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/weather/__tests__/mockWeatherProvider.test.ts",
+      "line": 1,
+      "snippet": "import { mockWeatherProvider } from '../services/mockWeatherProvider';",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/weather/__tests__/mockWeatherProvider.test.ts",
+      "line": 3,
+      "snippet": "describe('mockWeatherProvider', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/weather/__tests__/mockWeatherProvider.test.ts",
+      "line": 5,
+      "snippet": "const bundle = await mockWeatherProvider.getWeather({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/weather/__tests__/mockWeatherProvider.test.ts",
+      "line": 16,
+      "snippet": "expect(bundle.source).toBe('mock');",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/features/weather/__tests__/mockWeatherProvider.test.ts",
+      "line": 25,
+      "snippet": "const bundle = await mockWeatherProvider.getWeather({});",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/jest.setup.js",
+      "line": 3,
+      "snippet": "// In-memory MMKV mock (no native module in Jest).",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/jest.setup.js",
+      "line": 4,
+      "snippet": "jest.mock('react-native-mmkv', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/jest.setup.js",
+      "line": 5,
+      "snippet": "class MockMMKV {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/jest.setup.js",
+      "line": 34,
+      "snippet": "return { createMMKV: () => new MockMMKV(), MMKV: MockMMKV };",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/jest.setup.js",
+      "line": 38,
+      "snippet": "// module under Jest — use the official in-memory mock.",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/jest.setup.js",
+      "line": 39,
+      "snippet": "jest.mock('@react-native-async-storage/async-storage', () =>",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/jest.setup.js",
+      "line": 40,
+      "snippet": "require('@react-native-async-storage/async-storage/jest/async-storage-mock'),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/jest.setup.js",
+      "line": 43,
+      "snippet": "// In-memory mock for expo-secure-store (no native keychain in Jest).",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/jest.setup.js",
+      "line": 44,
+      "snippet": "jest.mock('expo-secure-store', () => {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/jest.setup.js",
+      "line": 60,
+      "snippet": "jest.mock('expo-crypto', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/jest.setup.js",
+      "line": 68,
+      "snippet": "// Jest, so mock its app + auth entry points. Unit tests drive these jest.fns",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/jest.setup.js",
+      "line": 70,
+      "snippet": "jest.mock('@react-native-firebase/app', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/jest.setup.js",
+      "line": 75,
+      "snippet": "jest.mock('@react-native-firebase/auth', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/jest.setup.js",
+      "line": 100,
+      "snippet": "// Mock expo-localization so i18n init is deterministic.",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/jest.setup.js",
+      "line": 101,
+      "snippet": "jest.mock('expo-localization', () => ({",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/jest.setup.js",
+      "line": 106,
+      "snippet": "jest.mock('react-native-reanimated', () =>",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/jest.setup.js",
+      "line": 107,
+      "snippet": "require('react-native-reanimated/mock'),",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/lib/firebase.ts",
+      "line": 17,
+      "snippet": "* They now only (a) gate mock-vs-real provider selection via",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/en.ts",
+      "line": 25,
+      "snippet": "comingSoon: 'This section is coming soon',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/en.ts",
+      "line": 45,
+      "snippet": "phonePlaceholder: '00000 00000',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/en.ts",
+      "line": 81,
+      "snippet": "namePlaceholder: 'e.g. Muthu Kumar',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/en.ts",
+      "line": 133,
+      "snippet": "namePlaceholder: 'e.g. North Field',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/en.ts",
+      "line": 137,
+      "snippet": "varietyPlaceholder: 'e.g. ADT 43',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/en.ts",
+      "line": 158,
+      "snippet": "notesPlaceholder: 'Anything else to remember about this farm',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/en.ts",
+      "line": 315,
+      "snippet": "placeholder: 'Ask about your crop, weather, fertilizer…',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/en.ts",
+      "line": 530,
+      "snippet": "searchPlaceholder: 'Search crop, market or district',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/en.ts",
+      "line": 577,
+      "snippet": "searchPlaceholder: 'Search schemes',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/en.ts",
+      "line": 653,
+      "snippet": "varietyPlaceholder: 'e.g. Ponni',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/en.ts",
+      "line": 664,
+      "snippet": "notesPlaceholder: 'Anything a buyer should know',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/en.ts",
+      "line": 993,
+      "snippet": "cropPlaceholder: 'e.g. Paddy',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/en.ts",
+      "line": 995,
+      "snippet": "subjectPlaceholder: 'Briefly, what is the problem?',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/en.ts",
+      "line": 997,
+      "snippet": "descriptionPlaceholder: 'Explain what you are seeing and when it started…',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/en.ts",
+      "line": 1001,
+      "snippet": "voiceComingSoon: 'Voice notes are coming soon.',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/en.ts",
+      "line": 1006,
+      "snippet": "replyPlaceholder: 'Type your reply…',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/en.ts",
+      "line": 1521,
+      "snippet": "growthStagePlaceholder: 'Coming with Growth Monitor',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/en.ts",
+      "line": 1731,
+      "snippet": "searchPlaceholder: 'Search your farm memory…',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/en.ts",
+      "line": 1899,
+      "snippet": "broadcastTitlePlaceholder: 'Short headline',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/en.ts",
+      "line": 1901,
+      "snippet": "broadcastBodyPlaceholder: 'What do you want to tell farmers?',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/en.ts",
+      "line": 1904,
+      "snippet": "broadcastTargetValuePlaceholder: 'e.g. Thanjavur / paddy / ta',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/ta.ts",
+      "line": 47,
+      "snippet": "phonePlaceholder: '00000 00000',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/ta.ts",
+      "line": 85,
+      "snippet": "namePlaceholder: 'எ.கா. முத்து குமார்',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/ta.ts",
+      "line": 137,
+      "snippet": "namePlaceholder: 'எ.கா. வடக்கு வயல்',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/ta.ts",
+      "line": 141,
+      "snippet": "varietyPlaceholder: 'எ.கா. ADT 43',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/ta.ts",
+      "line": 162,
+      "snippet": "notesPlaceholder: 'இந்த பண்ணை பற்றி நினைவில் வைக்க வேண்டியவை',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/ta.ts",
+      "line": 320,
+      "snippet": "placeholder: 'உங்கள் பயிர், வானிலை, உரம் பற்றி கேளுங்கள்…',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/ta.ts",
+      "line": 536,
+      "snippet": "searchPlaceholder: 'பயிர், சந்தை அல்லது மாவட்டம் தேடுங்கள்',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/ta.ts",
+      "line": 583,
+      "snippet": "searchPlaceholder: 'திட்டங்களைத் தேடுங்கள்',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/ta.ts",
+      "line": 659,
+      "snippet": "varietyPlaceholder: 'எ.கா. பொன்னி',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/ta.ts",
+      "line": 670,
+      "snippet": "notesPlaceholder: 'வாங்குபவர் அறிய வேண்டியவை',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/ta.ts",
+      "line": 995,
+      "snippet": "cropPlaceholder: 'எ.கா. நெல்',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/ta.ts",
+      "line": 997,
+      "snippet": "subjectPlaceholder: 'சுருக்கமாக, பிரச்சனை என்ன?',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/ta.ts",
+      "line": 999,
+      "snippet": "descriptionPlaceholder: 'நீங்கள் பார்ப்பதையும் எப்போது தொடங்கியது என்பதையும் விளக்குங்கள்…',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/ta.ts",
+      "line": 1007,
+      "snippet": "replyPlaceholder: 'உங்கள் பதிலைத் தட்டச்சு செய்யுங்கள்…',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/ta.ts",
+      "line": 1510,
+      "snippet": "growthStagePlaceholder: 'வளர்ச்சி கண்காணிப்புடன் வரும்',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/ta.ts",
+      "line": 1719,
+      "snippet": "searchPlaceholder: 'உங்கள் பண்ணை நினைவகத்தில் தேடுங்கள்…',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/ta.ts",
+      "line": 1879,
+      "snippet": "broadcastTitlePlaceholder: 'சுருக்கமான தலைப்பு',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/ta.ts",
+      "line": 1881,
+      "snippet": "broadcastBodyPlaceholder: 'விவசாயிகளுக்கு என்ன சொல்ல விரும்புகிறீர்கள்?',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/localization/locales/ta.ts",
+      "line": 1884,
+      "snippet": "broadcastTargetValuePlaceholder: 'எ.கா. தஞ்சாவூர் / நெல் / ta',",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/package-lock.json",
+      "line": 2762,
+      "snippet": "\"jest-mock\": \"^29.7.0\"",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/package-lock.json",
+      "line": 2803,
+      "snippet": "\"jest-mock\": \"^29.7.0\",",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/package-lock.json",
+      "line": 2819,
+      "snippet": "\"jest-mock\": \"^29.7.0\"",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/package-lock.json",
+      "line": 8636,
+      "snippet": "\"jest-mock\": \"^29.7.0\",",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/package-lock.json",
+      "line": 8662,
+      "snippet": "\"jest-mock\": \"^29.7.0\",",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/package-lock.json",
+      "line": 8789,
+      "snippet": "\"node_modules/jest-mock\": {",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/package-lock.json",
+      "line": 8791,
+      "snippet": "\"resolved\": \"https://registry.npmjs.org/jest-mock/-/jest-mock-29.7.0.tgz\",",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/package-lock.json",
+      "line": 8934,
+      "snippet": "\"jest-mock\": \"^29.7.0\",",
+      "classification": "REVIEWED_FEATURE_CONTROL"
+    },
+    {
+      "source_file": "agrow-ai/scripts/build-local-standalone.ps1",
+      "line": 14,
+      "snippet": "$env:EXPO_PUBLIC_API_BASE_URL = 'http://127.0.0.1:8000/api/v1'",
+      "classification": "ENVIRONMENT_REFERENCE"
+    },
+    {
+      "source_file": "agrow-ai/scripts/build-local-standalone.ps1",
+      "line": 15,
+      "snippet": "$env:EXPO_PUBLIC_DIAGNOSIS_API_BASE_URL = 'http://127.0.0.1:8000'",
+      "classification": "ENVIRONMENT_REFERENCE"
+    },
+    {
+      "source_file": "agrow-ai/scripts/generate-internal-testing-audit.js",
+      "line": 53,
+      "snippet": "const patterns = [/coming soon/i,/testing in progress/i,/internal_tester/i,/pilot_tester/i,/\\bdisabled\\s*=/i,/localhost|127\\.0\\.0\\.1/i,/mock/i,/placeholder/i,/RESTRICTED_INTERNAL_TESTING_ONLY/];",
+      "classification": "SAFETY_GATE"
+    },
+    {
+      "source_file": "agrow-ai/scripts/generate-internal-testing-audit.js",
+      "line": 55,
+      "snippet": "for(const file of searchFiles){const lines=fs.readFileSync(file,'utf8').split(/\\r?\\n/); lines.forEach((line,i)=>{if(patterns.some((p)=>p.test(line))) gates.push({source_file:path.relative(repo,file).replaceAll('\\\\','/'),line:i+1,snippet:lin",
+      "classification": "SAFETY_GATE"
+    },
+    {
+      "source_file": "agrow-ai/scripts/generate-internal-testing-audit.js",
+      "line": 61,
+      "snippet": "const md=['# AgrowAI internal-testing feature audit','',`Generated: ${new Date().toISOString()}`,'',`- Required features represented: ${features.length}` ,`- Mobile routes represented: ${mobileRoutes.length}`,`- Backend router capabilities ",
+      "classification": "SAFETY_GATE"
+    },
+    {
+      "source_file": "agrow-ai/scripts/validate-release-env.js",
+      "line": 5,
+      "snippet": "const LOCAL_STANDALONE_HOSTS = new Set(['127.0.0.1', 'localhost']);",
+      "classification": "ENVIRONMENT_REFERENCE"
+    },
+    {
+      "source_file": "agrow-ai/scripts/validate-release-env.js",
+      "line": 28,
+      "snippet": "const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '10.0.2.2', '::1']);",
+      "classification": "ENVIRONMENT_REFERENCE"
+    },
+    {
+      "source_file": "agrow-ai/scripts/__tests__/validate-release-env.test.js",
+      "line": 25,
+      "snippet": "['https://localhost/api/v1', 'api_url_local'],",
+      "classification": "ENVIRONMENT_REFERENCE"
+    },
+    {
+      "source_file": "agrow-ai/scripts/__tests__/validate-release-env.test.js",
+      "line": 56,
+      "snippet": "EXPO_PUBLIC_API_BASE_URL: 'http://localhost:8000/api/v1',",
+      "classification": "ENVIRONMENT_REFERENCE"
+    },
+    {
+      "source_file": "agrow-ai/scripts/__tests__/validate-release-env.test.js",
+      "line": 61,
+      "snippet": "it.each(['127.0.0.1', 'localhost'])(",
+      "classification": "ENVIRONMENT_REFERENCE"
+    },
+    {
+      "source_file": "agrow-ai/scripts/__tests__/validate-release-env.test.js",
+      "line": 106,
+      "snippet": "'http://127.0.0.1:8000/api/v1',",
+      "classification": "ENVIRONMENT_REFERENCE"
+    }
+  ]
+}

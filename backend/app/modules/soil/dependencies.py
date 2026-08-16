@@ -1,4 +1,5 @@
 """Soil Intelligence dependency injection (docs/BACKEND_ARCHITECTURE.md → DI)."""
+
 from __future__ import annotations
 
 from typing import Annotated

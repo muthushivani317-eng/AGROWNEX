@@ -1,0 +1,14 @@
+{
+  "focused_auth": {"passed": 20, "failed": 0, "status": "PASS"},
+  "full_backend": {
+    "status": "BLOCKED_DURING_COLLECTION",
+    "reason": "pre-existing ModuleNotFoundError: internal_challenge_sets in test_crop_identity_access_control.py"
+  },
+  "ruff_changed_files": "PASS",
+  "python_compile": "PASS",
+  "backend_import": "PASS",
+  "alembic_graph": {"status": "PASS", "head": "ba143fe612a8"},
+  "production_health": 200,
+  "production_readiness": 200,
+  "production_invalid_token": 401
+}

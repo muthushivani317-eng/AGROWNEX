@@ -1,0 +1,23 @@
+{
+  "crop_identification": {
+    "data_acquisition": "INCOMPLETE",
+    "dataset_review": "FOUR_CLASS_CONDITIONAL_HIGH_SHORTCUT_RISK",
+    "dataset_ready": false,
+    "training": "FOUR_CLASS_PROVISIONAL_EXISTS_EIGHT_CLASS_BLOCKED",
+    "calibration": "FOUR_CLASS_PRESENT",
+    "provisional_test": "CONSUMED_DO_NOT_REOPEN",
+    "runtime_package": "FOUR_CLASS_RESTRICTED_PRESENT",
+    "backend_integration": "CONTROLLED_TESTER_ONLY",
+    "mobile_integration": "PRESENT_UNVERIFIED",
+    "railway_deployment": "MANUAL_ACCESS_REQUIRED",
+    "farmer_release_readiness": false
+  },
+  "recommendations": {
+    "source_collection": "PARTIAL",
+    "source_authority_review": "HUMAN_REVIEW_REQUIRED",
+    "disease_label_mapping": "PARTIAL",
+    "tamil_review": "NOT_PROVEN",
+    "runtime_database": "NOT_BUILT_NO_APPROVED_RECORDS",
+    "farmer_release_readiness": false
+  }
+}

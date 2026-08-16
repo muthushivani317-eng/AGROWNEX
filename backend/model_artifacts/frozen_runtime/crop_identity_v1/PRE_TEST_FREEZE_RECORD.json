@@ -1,0 +1,16 @@
+{
+  "status": "PRE_TEST_CONFIGURATION_FROZEN",
+  "frozen_at_utc": "2026-07-29T19:13:03.107938+00:00",
+  "checkpoint_epoch": 2,
+  "frozen_files": {
+    "best.pt": "7cf80d093267821024577275f7538766d03271d765fbe5f18798b1d9fc26ca81",
+    "temperature.json": "08935d625f33766bfa93c1b4cdfb19aeedd6b41b3c1a8576bae84e9f3007d0db",
+    "selected_class_specific_thresholds.json": "614536aa39535faf4bddaa2bb6e646b578681d2daefc236b7810c4e03ab6040b",
+    "abstention_policy.json": "71a65c9ea94c4ddfb362e8d20d18be26ec66fb1ac140b9d50e073bcb4b906712",
+    "DEV_EVALUATION.json": "012469b209767d27fdb1b323955b475b64f574c752eaeb8085a6f044178a5784",
+    "CALIBRATION_REPORT.json": "71e130c93401056f4d834c0ff295dd83bc2f04c7b7d6e2879f9fcced1966ec0d"
+  },
+  "provisional_test_opened_before_freeze": false,
+  "post_test_tuning_authorized": false,
+  "official_accuracy_claim": false
+}

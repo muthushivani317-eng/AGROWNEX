@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agrowai.local/contracts/disease_evaluation_report.schema.json",
+  "title": "AgrowAI unified classifier evaluation report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "lineage", "labels", "metrics", "slices", "bootstrap", "report_sha256"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model_version", "artifact_sha256", "policy_sha256", "dataset_sha256", "code_sha"],
+      "properties": {
+        "model_version": {"type": "string", "minLength": 1},
+        "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "policy_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "dataset_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "code_sha": {"type": "string", "minLength": 1}
+      }
+    },
+    "labels": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sample_count", "accuracy", "balanced_accuracy", "micro_f1", "macro_f1", "per_class", "confusion_matrix", "calibration", "selection", "ood", "latency_ms", "confidence_intervals"],
+      "properties": {
+        "sample_count": {"type": "integer", "minimum": 1},
+        "accuracy": {"type": "number", "minimum": 0, "maximum": 1},
+        "balanced_accuracy": {"type": "number", "minimum": 0, "maximum": 1},
+        "micro_f1": {"type": "number", "minimum": 0, "maximum": 1},
+        "macro_f1": {"type": "number", "minimum": 0, "maximum": 1},
+        "per_class": {"type": "object"},
+        "confusion_matrix": {"type": "object"},
+        "calibration": {"type": "object"},
+        "selection": {"type": "object"},
+        "ood": {"type": "object"},
+        "latency_ms": {"type": "object"},
+        "confidence_intervals": {"type": "object"}
+      }
+    },
+    "slices": {"type": "object"},
+    "bootstrap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["iterations", "seed", "method", "group_field"],
+      "properties": {
+        "iterations": {"type": "integer", "minimum": 0},
+        "seed": {"type": "integer"},
+        "method": {"const": "cluster_bootstrap"},
+        "group_field": {"const": "evaluation_group_id"}
+      }
+    },
+    "report_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

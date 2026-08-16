@@ -57,7 +57,8 @@ def test_flash_is_cheaper_than_pro_for_same_tokens():
 # --------------------------------------------------------------------------- #
 # Recording
 # --------------------------------------------------------------------------- #
-async def test_chat_records_token_usage(db_session):
+async def test_chat_records_token_usage(db_session, session_factory, monkeypatch):
+    monkeypatch.setattr("app.modules.ai.usage_ledger.SessionLocal", session_factory)
     service = AIService(db_session, provider=UsageProvider())
     user = await _user(db_session)
 

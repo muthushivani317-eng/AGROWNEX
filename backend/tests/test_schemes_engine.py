@@ -153,6 +153,30 @@ def test_closed_scheme_is_never_eligible() -> None:
 
 
 # --------------------------------------------------------------------------- #
+# Application deadlines
+# --------------------------------------------------------------------------- #
+def test_scheme_past_its_deadline_is_never_eligible() -> None:
+    rules = _open_rules(last_date=date(2026, 7, 31))
+    result = evaluate(rules, FarmerContext(), today=date(2026, 8, 15))
+    assert result.status == EligibilityStatus.NOT_ELIGIBLE.value
+    assert "deadline" in result.unmet
+    assert not is_eligible(result)
+
+
+def test_scheme_before_its_deadline_or_with_no_today_stays_eligible() -> None:
+    still_open = evaluate(
+        _open_rules(last_date=date(2026, 12, 31)),
+        FarmerContext(),
+        today=date(2026, 8, 15),
+    )
+    assert still_open.status == EligibilityStatus.ELIGIBLE.value
+
+    # No `today` passed → deadline check is skipped (caller not yet updated).
+    no_today = evaluate(_open_rules(last_date=date(2026, 7, 31)), FarmerContext())
+    assert no_today.status == EligibilityStatus.ELIGIBLE.value
+
+
+# --------------------------------------------------------------------------- #
 # Scoring
 # --------------------------------------------------------------------------- #
 def test_more_matches_score_higher_than_open_scheme() -> None:

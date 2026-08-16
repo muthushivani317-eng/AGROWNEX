@@ -33,7 +33,14 @@ from sqlalchemy.pool import StaticPool
 
 
 @pytest_asyncio.fixture
-async def db_session() -> AsyncGenerator[AsyncSession, None]:
+async def session_factory() -> AsyncGenerator[async_sessionmaker[AsyncSession], None]:
+    """A sessionmaker bound to a fresh in-memory engine.
+
+    Exposed so tests can point a background task's own session factory (e.g.
+    ``app.modules.market.service.SessionLocal``) at the same in-memory engine
+    the request-scoped ``db_session`` uses. ``StaticPool`` keeps a single shared
+    connection, so writes committed on one session are visible to the other.
+    """
     engine = create_async_engine(
         "sqlite+aiosqlite:///:memory:",
         connect_args={"check_same_thread": False},
@@ -42,12 +49,18 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    maker = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-    async with maker() as session:
+    yield async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+    await engine.dispose()
+
+
+@pytest_asyncio.fixture
+async def db_session(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> AsyncGenerator[AsyncSession, None]:
+    async with session_factory() as session:
         # Seed default roles (the migration does this in production).
         for name in RoleName:
             session.add(Role(role_name=name.value))
         await session.flush()
         yield session
-
-    await engine.dispose()

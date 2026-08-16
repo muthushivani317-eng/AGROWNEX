@@ -113,3 +113,26 @@ def test_exactly_one_per_core_category():
     assert cats.count("spraying") == 1
     assert cats.count("irrigation") == 1
     assert cats.count("field_work") == 1
+
+
+def test_missing_weather_data_never_creates_a_favorable_action():
+    current = mk_current().model_copy(
+        update={
+            "temperature_c": None,
+            "apparent_temperature_c": None,
+            "wind_speed_kmh": None,
+            "wind_gusts_kmh": None,
+            "precipitation_mm": None,
+            "rain_mm": None,
+        }
+    )
+    hourly = mk_hourly(prob=None, precip=None)
+    for point in hourly:
+        point.wind_speed_kmh = None
+    daily = mk_daily(tmax=None, precip_sum=None, prob=None)
+
+    result = codes(current, hourly, daily)
+
+    assert "spraying.good_window" not in result
+    assert "irrigation.normal" not in result
+    assert "field_work.favorable" not in result

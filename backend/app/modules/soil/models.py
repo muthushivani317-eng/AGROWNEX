@@ -14,6 +14,7 @@ Normalized tables:
 
 ``user_id`` is the farmer (FK ``users.id``), matching every module.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -44,9 +45,7 @@ from app.shared.base_model import (
 
 class SoilProfile(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     __tablename__ = "soil_profiles"
-    __table_args__ = (
-        UniqueConstraint("farm_id", name="uq_soil_profiles_farm"),
-    )
+    __table_args__ = (UniqueConstraint("farm_id", name="uq_soil_profiles_farm"),)
 
     user_id: Mapped[uuid.UUID] = mapped_column(
         GUID(), ForeignKey("users.id"), index=True, nullable=False
@@ -69,9 +68,7 @@ class SoilProfile(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     water_holding_capacity: Mapped[float | None] = mapped_column(Float)
     drainage: Mapped[str | None] = mapped_column(String(20))
 
-    source: Mapped[str] = mapped_column(
-        String(24), default=SoilSource.SELF.value, nullable=False
-    )
+    source: Mapped[str] = mapped_column(String(24), default=SoilSource.SELF.value, nullable=False)
     confidence: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     last_test_date: Mapped[date | None] = mapped_column(Date)
 
@@ -127,6 +124,35 @@ class SoilTestResult(UUIDMixin, TimestampMixin, Base):
     report: Mapped[SoilReport] = relationship(back_populates="result")
 
 
+class SoilIndicatorEvidence(UUIDMixin, TimestampMixin, Base):
+    __tablename__ = "soil_indicator_evidence"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("users.id"), index=True, nullable=False
+    )
+    farm_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("farms.id"), index=True, nullable=False
+    )
+    report_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID(), ForeignKey("soil_reports.id"), index=True
+    )
+    indicator: Mapped[str] = mapped_column(String(40), index=True, nullable=False)
+    numeric_value: Mapped[float | None] = mapped_column(Float)
+    text_value: Mapped[str | None] = mapped_column(String(80))
+    unit: Mapped[str] = mapped_column(String(20), nullable=False)
+    evidence_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    collection_method: Mapped[str] = mapped_column(String(80), nullable=False)
+    collected_at: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    source_reference: Mapped[str] = mapped_column(String(256), nullable=False)
+    spatial_coverage: Mapped[str] = mapped_column(String(40), nullable=False)
+    confidence: Mapped[int | None] = mapped_column(Integer)
+    uncertainty_low: Mapped[float | None] = mapped_column(Float)
+    uncertainty_high: Mapped[float | None] = mapped_column(Float)
+    verification_state: Mapped[str] = mapped_column(String(24), nullable=False)
+    report_reference: Mapped[str | None] = mapped_column(String(256))
+    provenance: Mapped[dict | None] = mapped_column(JSON)
+
+
 class SoilRecommendation(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "soil_recommendations"
 
@@ -169,6 +195,26 @@ class SoilHistory(UUIDMixin, TimestampMixin, Base):
     potassium: Mapped[float | None] = mapped_column(Float)
     source: Mapped[str] = mapped_column(String(24), nullable=False)
     confidence: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    recorded_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
+    recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class SoilScanRecord(UUIDMixin, TimestampMixin, Base):
+    """Immutable, farm-scoped snapshot of one bounded Soil Scan run."""
+
+    __tablename__ = "soil_scan_records"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("users.id"), index=True, nullable=False
     )
+    farm_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("farms.id"), index=True, nullable=False
+    )
+    aoi_geojson: Mapped[dict | None] = mapped_column(JSON)
+    aoi_reference: Mapped[str | None] = mapped_column(String(80))
+    generated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+    provider_states: Mapped[dict] = mapped_column(JSON, nullable=False)
+    indicators: Mapped[list] = mapped_column(JSON, nullable=False)
+    sampling_plan: Mapped[dict | None] = mapped_column(JSON)
+    provenance: Mapped[dict] = mapped_column(JSON, nullable=False)

@@ -1,0 +1,42 @@
+{
+  "crop": "redgram",
+  "exact_runtime_label": "redgram__sterility_mosaic",
+  "mapping_status": "PENDING_HUMAN_REVIEW",
+  "human_approval_status": "PENDING",
+  "candidate_canonical_disease": null,
+  "official_english_disease_name": null,
+  "candidate_tamil_disease_name": null,
+  "candidate_evidence": [
+    {
+      "source_id": "src_adbb66a8efc7bc24",
+      "source_filename": "AGRICULTURE.pdf",
+      "printed_page": 143,
+      "pdf_page_index": 142,
+      "exact_relevant_passage": "B. Disease management\nSeed treatment : Treat the seeds with Trichoderma asperellum @ 4 g or P. fluorescens @ 10\nPigeonpea sterility mosaic virus\n• Spray fenazaquin @ 1ml/ l soon after appearance of the disease\nC. Nematode management\nSeed treatment with Pseudomonas fluorescens and Trichoderma viride @ 5+5 g/kg seed\nPre-sowing seed treatment\n• Spray 2 % DAP at the time of flowering and a second spray at 15 days after the first\nspray.\n• Spray NAA 40 ppm at the time of flowerin g and a second spray at 15 days after the\nfirst spray.\nPre-harvest sanitation spray",
+      "verification": "VERIFY AGAINST OFFICIAL SOURCE"
+    },
+    {
+      "source_id": "src_2df8781d45cf7e49",
+      "source_filename": "Management of diseases of important Agriculture  .pdf",
+      "printed_page": 20,
+      "pdf_page_index": 19,
+      "exact_relevant_passage": "Symptoms: Leaves show light brown small spots. Shot holes are formed\nCausal organism : Pigeonpea sterility mosaic virus\nSymptoms:The affected plants are stunted and the internodes are\nsmall and crinkled exhibiting mottling symptom.The Eriophid mite\nDisease Management:\n1.Seed treatment\nSpray Fenazaquin @ 1 ml/lit on 45 and 60 DAS as prophylactic spray.",
+      "verification": "VERIFY AGAINST OFFICIAL SOURCE"
+    }
+  ],
+  "symptom_candidate": [],
+  "immediate_action_candidate": [],
+  "prevention_candidate": [],
+  "cultural_control_candidate": [],
+  "biological_control_candidate": [],
+  "chemical_control_candidate": [],
+  "safety_note_candidate": [
+    "VERIFY AGAINST OFFICIAL SOURCE"
+  ],
+  "conflict_notes": [],
+  "english_draft": null,
+  "tamil_draft": null,
+  "tamil_status": "AGRICULTURAL_REVIEW_REQUIRED",
+  "reviewer_status": "PENDING_HUMAN_REVIEW",
+  "notice": "INTERNAL NON-EXPERT REVIEW ONLY\nOFFICIAL AGRICULTURAL EXPERT VERIFICATION NOT COMPLETED"
+}

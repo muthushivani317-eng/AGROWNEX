@@ -244,8 +244,21 @@ class ExpertService:
 
         if preferred_expert_id is not None and str(preferred_expert_id) in by_id:
             chosen = by_id[str(preferred_expert_id)]
-            return chosen, AssignmentResult(
-                expert_id=str(chosen.id), score=0, reasons=("preferred",)
+            # `all_active_experts()` only filters is_deleted/status=="active" -- it
+            # does not filter `verified`. Without this check, a farmer-supplied
+            # `preferred_expert_id` (client-controllable, ConsultationCreate) could
+            # get an unverified desk assigned directly, bypassing the same
+            # verified-only guarantee the normal auto-assign path enforces in
+            # engine.assign_expert() (`if candidate.verified and candidate.is_available`).
+            # Fall through to deterministic auto-assignment instead of honouring an
+            # unverified preference (2026-08 pre-release audit follow-up).
+            if chosen.verified:
+                return chosen, AssignmentResult(
+                    expert_id=str(chosen.id), score=0, reasons=("preferred",)
+                )
+            logger.warning(
+                "preferred_expert_id %s is not a verified desk; falling back to "
+                "auto-assignment", preferred_expert_id,
             )
 
         candidates = [await self._candidate(e) for e in experts]

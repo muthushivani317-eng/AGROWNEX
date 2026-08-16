@@ -1,0 +1,10 @@
+{
+  "endpoint": "/api/v1/auth/otp/verify",
+  "observed_status": 500,
+  "safe_error_code": "internal_error",
+  "request_correlation_id": "NOT_CAPTURED",
+  "exception_class": "NOT_CAPTURED",
+  "sqlstate": "NOT_CAPTURED",
+  "rollback_owner": "FastAPI get_session dependency",
+  "secrets_redacted": true
+}

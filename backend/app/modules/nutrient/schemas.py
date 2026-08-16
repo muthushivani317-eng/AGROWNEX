@@ -4,6 +4,7 @@ Deficiencies, symptoms and recommendations travel as localization ``code``s /
 enum values so the Tamil-first client renders them. An unconfirmed or unavailable
 value is ``null`` / ``not_confirmed`` and surfaced honestly — never fabricated.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -11,11 +12,13 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.modules.nutrient.engine import NutrientAssessment, SoilReference, soil_signal
 from app.modules.nutrient.models import (
     NutrientHistory,
     NutrientRecommendation,
     NutrientReport,
 )
+from app.modules.nutrient.safety import build_safe_result
 
 _MIME_PATTERN = "^image/(jpeg|png|webp)$"
 
@@ -70,6 +73,14 @@ class NutrientAnalysisOut(BaseModel):
     weather_reference: dict | None
     explanation_tamil: str | None
     explanation_english: str | None
+    result_code: str
+    confidence_band: str
+    evidence_observed: list[str]
+    evidence_missing: list[str]
+    conflicts: list[str]
+    abstention_reason: str | None
+    suggested_next_evidence: list[str]
+    expert_verified: bool
 
 
 class NutrientReportOut(BaseModel):
@@ -96,6 +107,40 @@ class NutrientReportOut(BaseModel):
         analysis = None
         if report.analysis is not None:
             a = report.analysis
+            soil = a.soil_reference or {}
+            # Rebuild the same SoilReference the engine used at analysis time and
+            # reuse its own soil_signal() rather than re-deriving soil_supports here
+            # -- this used to only check macro_ratings (N/P/K), so a soil-confirmed
+            # micronutrient deficiency (zinc/iron/boron/copper/manganese, tracked via
+            # deficient_micronutrients, not macro_ratings) always came back as
+            # unsupported and got abstained on the API even though it was genuinely
+            # soil-confirmed when the report was created (2026-08 pre-release audit).
+            soil_ref = SoilReference(
+                has_data=bool(soil.get("has_data", False)),
+                macro_ratings=soil.get("macro_ratings") or {},
+                deficient_micronutrients=tuple(soil.get("deficient_micronutrients") or []),
+            )
+            _, soil_supports = (
+                soil_signal(a.primary_deficiency, soil_ref)
+                if a.primary_deficiency
+                else (0, None)
+            )
+            safe = build_safe_result(
+                NutrientAssessment(
+                    primary_deficiency=a.primary_deficiency,
+                    secondary_deficiency=a.secondary_deficiency,
+                    status=a.status,
+                    confidence=a.confidence,
+                    severity=a.severity,
+                    affected_area=a.affected_area,
+                    soil_supports=soil_supports,
+                    satellite_supports=False,
+                    weather_supports=False,
+                    disease_conflict=a.disease_conflict,
+                    needs_test=a.needs_test,
+                    needs_expert=a.needs_expert,
+                )
+            )
             analysis = NutrientAnalysisOut(
                 primary_deficiency=a.primary_deficiency,
                 secondary_deficiency=a.secondary_deficiency,
@@ -111,6 +156,14 @@ class NutrientReportOut(BaseModel):
                 weather_reference=a.weather_reference,
                 explanation_tamil=a.explanation_tamil,
                 explanation_english=a.explanation_english,
+                result_code=safe.code.value,
+                confidence_band=safe.confidence_band,
+                evidence_observed=safe.evidence_observed,
+                evidence_missing=safe.evidence_missing,
+                conflicts=safe.conflicts,
+                abstention_reason=safe.abstention_reason,
+                suggested_next_evidence=safe.suggested_next_evidence,
+                expert_verified=False,
             )
         return cls(
             id=report.id,

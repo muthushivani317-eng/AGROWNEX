@@ -145,7 +145,12 @@ class NotificationPreferences(UUIDMixin, TimestampMixin, Base):
     ai_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     system_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
-    # Channel opt-outs — in-app always available; the rest are future channels.
+    # Channel opt-outs. in_app is the only channel actually implemented today
+    # (push/sms/whatsapp/email are reserved for future providers, gated off
+    # unless a real provider like FCM is configured — see
+    # NotificationService._channels_for); it defaults to on but a farmer can
+    # opt out, which stops notifications from being generated for them at all
+    # (NotificationService._passes_preferences).
     in_app_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     push_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     sms_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

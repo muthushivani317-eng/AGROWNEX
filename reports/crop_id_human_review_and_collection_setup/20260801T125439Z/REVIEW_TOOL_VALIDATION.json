@@ -1,0 +1,27 @@
+{
+  "validation_timestamp_utc": "2026-08-01T12:54:39Z",
+  "result": "PASS",
+  "manifest_validation": "PASS",
+  "chilli_candidate_rows": 4032,
+  "redgram_candidate_rows": 18,
+  "existing_human_approvals": 0,
+  "recommendation_packets_discovered": 21,
+  "readiness_gate": "PASS_NOT_READY",
+  "python_compile": "PASS",
+  "pillow_image_processing_smoke": "PASS",
+  "decision_storage": "ATOMIC_SEPARATE_FROM_SOURCE_MANIFEST",
+  "network_binding": "LOCALHOST_ONLY",
+  "security_controls": [
+    "manifest allowlist controls image access",
+    "image SHA-256 is checked before preview",
+    "request bodies and notes are bounded",
+    "review status values are allowlisted",
+    "processed local copies omit EXIF",
+    "original captures remain separate",
+    "supported crops are rejected from unknown_crop ingestion"
+  ],
+  "sealed_test_accessed": false,
+  "model_accessed": false,
+  "training_performed": false,
+  "human_review_claimed": false
+}

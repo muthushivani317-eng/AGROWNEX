@@ -66,3 +66,28 @@ backend/logs/
 backend/model_artifacts/incoming/
 backend/agrowai_local_test.db
 backend/banana_v3_production_bundle.zip
+
+# --- Nested repo (own .git, never embed) ---
+agrow-ai/
+
+# --- AI tooling scratch/cache (2026-08 pre-release audit follow-up) ---
+.claude/
+.codegraph/
+.codex/
+.codex_*.txt
+.codex_quarantine/
+.codex_tmp/
+.playwright-mcp/
+.pnpm-store/
+_to_delete/
+
+# --- ML dataset/training pipeline workspace (not app code; not needed by Railway) ---
+agrowai_autonomous_pipeline/
+
+# --- Root-level scratch/working notes ---
+EXECUTE_CONTROLLED_CROP_ID_DOWNLOADS_CODEX_PROMPT.md
+fix-*.md
+investigate-*.md
+redesign-status-report.md
+test_disease_registry.py
+test_legacy_joint_local_signal.py

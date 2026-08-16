@@ -1,0 +1,15 @@
+{
+  "safety_gate_id": "crop_id_safety_gate_v2",
+  "version": "2.0.0-internal",
+  "scope": "INTERNAL_ONLY",
+  "prototype_status": "INSUFFICIENT_INDEPENDENT_DATA",
+  "threshold_status": "NOT_FITTED",
+  "plant_gate_status": "NOT_FITTED",
+  "default_outcome": "OOD_UNCERTAIN",
+  "classifier_invocation_authorized": false,
+  "farmer_confirmation_required": true,
+  "general_farmer_release": "BLOCKED",
+  "official_field_validation": false,
+  "sealed_test_access_count": 1,
+  "sealed_test_repeated": false
+}

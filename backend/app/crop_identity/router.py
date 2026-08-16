@@ -12,7 +12,12 @@ from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from PIL import Image, UnidentifiedImageError
 
 from app.core.logging import get_logger
+from app.field_testing import field_test_logger
 from app.image_safety import UnsafeImageError, require_safe_image
+from app.gemini_crop_identification.confirmation import (
+    ConfirmationError,
+    confirmation_store,
+)
 from app.modules.auth.dependencies import ControlledTester
 
 from .pipeline import run_controlled_crop_identity_pipeline
@@ -32,34 +37,7 @@ def _serializable(value: Any) -> Any:
     return value
 
 
-def _disease_dispatchers() -> dict[str, Any]:
-    def banana(image: Image.Image):
-        from app.banana_v3.inference_service import InferenceService
-
-        payload = io.BytesIO()
-        image.convert("RGB").save(payload, format="PNG")
-        return InferenceService().predict(payload.getvalue())
-
-    def legacy(crop: str):
-        def dispatch(image: Image.Image):
-            from app.legacy_joint.runtime import get_legacy_joint_runtime
-
-            canonical = "rice" if crop == "paddy" else crop
-            return get_legacy_joint_runtime().predict(
-                canonical, image, crop_confirmed=True
-            )
-
-        return dispatch
-
-    return {
-        "banana": banana,
-        "paddy": legacy("paddy"),
-        "cotton": legacy("cotton"),
-        "groundnut": legacy("groundnut"),
-    }
-
-
-async def _decode_upload(upload: UploadFile) -> Image.Image:
+async def _decode_upload(upload: UploadFile) -> tuple[Image.Image, bytes]:
     if upload.content_type not in ALLOWED_TYPES:
         raise HTTPException(415, detail={"code": "IMAGE_FORMAT_UNSUPPORTED"})
     data = await upload.read(MAX_IMAGE_BYTES + 1)
@@ -72,7 +50,7 @@ async def _decode_upload(upload: UploadFile) -> Image.Image:
         image = Image.open(io.BytesIO(data))
         image.load()
         require_safe_image(image)
-        return image
+        return image, data
     except UnsafeImageError as exc:
         raise HTTPException(422, detail={"code": exc.reason_code}) from exc
     except (UnidentifiedImageError, OSError, ValueError) as exc:
@@ -92,22 +70,19 @@ async def predict_controlled(
     request: Request,
     tester: ControlledTester,
     image: UploadFile = File(...),
-    requested_crop: str = Form(...),
 ) -> dict[str, Any]:
     """Run the full crop gate only for a server-authorized controlled tester."""
     started = time.perf_counter()
-    decoded = await _decode_upload(image)
+    decoded, image_bytes = await _decode_upload(image)
     result = run_controlled_crop_identity_pipeline(
         authenticated=True,
         controlled_test_authorized=True,
         image=decoded,
-        requested_crop=requested_crop.strip().lower(),
         quality_passed=True,
         # No independent semantic plant detector is proven. This does not claim
         # non-plant rejection; crop-ID remains closed-set and may abstain.
         plant_gate_passed=True,
         runtime=get_crop_identity_runtime(),
-        disease_dispatchers=_disease_dispatchers(),
     )
     subject = hashlib.sha256(str(tester.user.id).encode()).hexdigest()[:16]
     audit_logger.info(
@@ -123,7 +98,7 @@ async def predict_controlled(
                 "model_invocation_attempted": True,
                 "crop_id_model_invoked": result.crop_identity is not None,
                 "disease_model_invoked": result.disease_adapter_called,
-                "requested_crop": requested_crop.strip().lower(),
+                "requested_crop": None,
                 "request_id": getattr(request.state, "request_id", ""),
             },
             separators=(",", ":"),
@@ -131,6 +106,20 @@ async def predict_controlled(
     )
     crop_identity = dict(result.crop_identity or {})
     crop_identity.pop("checkpoint_sha256", None)
+    identified_crop = crop_identity.get("predicted_crop")
+    record = confirmation_store.create(
+        actor_id=str(tester.user.id),
+        image=image_bytes,
+        identified_crop=identified_crop,
+    )
+    field_test_logger.record(
+        tester=tester,
+        crop=identified_crop or "unknown",
+        model_id=str(crop_identity.get("model_name", "crop_identity_mobilenetv3_small_v1")),
+        predicted_class=crop_identity.get("predicted_crop"),
+        confidence=crop_identity.get("confidence"),
+        outcome=result.reason_code,
+    )
     return {
         "reason_code": result.reason_code,
         "resolved_role": tester.role,
@@ -142,4 +131,44 @@ async def predict_controlled(
         "official_accuracy_claim": False,
         "general_farmer_inference_authorized": False,
         "non_plant_rejection_proven": False,
+        "request_id": record.request_id,
+        "image_sha256": record.image_sha256,
+        "expires_at": record.expires_at,
+        "confirmation_token": record.suggestion_token,
+        "farmer_confirmation_required": True,
+        "suggested_crop": identified_crop,
+    }
+
+
+@router.post("/confirm")
+async def confirm_controlled(
+    tester: ControlledTester,
+    request_id: str = Form(...),
+    confirmed_crop: str = Form(...),
+    correction: bool = Form(False),
+    confirmation_token: str | None = Form(None),
+) -> dict[str, Any]:
+    if confirmed_crop not in {"banana", "paddy", "cotton", "groundnut"}:
+        raise HTTPException(422, detail={"code": "UNSUPPORTED_CROP"})
+    try:
+        record = confirmation_store.confirm(
+            actor_id=str(tester.user.id),
+            request_id=request_id,
+            confirmed_crop=confirmed_crop,
+            correction=correction,
+            suggestion_token=confirmation_token,
+        )
+    except ConfirmationError as exc:
+        raise HTTPException(409, detail={"code": str(exc)}) from exc
+    return {
+        "status": "FARMER_CORRECTED" if correction else "FARMER_CONFIRMED",
+        "request_id": record.request_id,
+        "confirmed_crop": record.confirmed_crop,
+        "image_sha256": record.image_sha256,
+        "expires_at": record.expires_at,
+        "confirmation_token": record.confirmation_token,
+        "farmer_confirmation_required": True,
+        "disease_routing_authorized": True,
+        "scope": "CONTROLLED_TESTING_ONLY",
+        "general_farmer_release": "BLOCKED",
     }

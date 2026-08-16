@@ -1,0 +1,8 @@
+{
+  "temperature": 2.193619697974462,
+  "calibration_nll_before": 0.37390166321891216,
+  "calibration_nll_after": 0.2585683270522443,
+  "nll_improved": true,
+  "fit_split": "calibration_only",
+  "calibration_rows": 44
+}

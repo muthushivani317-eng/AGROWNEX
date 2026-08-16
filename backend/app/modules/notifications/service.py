@@ -125,6 +125,18 @@ class NotificationService:
     def _passes_preferences(
         self, prefs: NotificationPreferences, draft: NotificationDraft
     ) -> bool:
+        if not prefs.in_app_enabled:
+            # In-app is currently the only implemented delivery channel (push/
+            # sms/whatsapp/email are reserved for future providers -- see
+            # _channels_for). A farmer who turns this off should stop
+            # receiving notifications altogether, not just miss an audit-log
+            # entry -- previously this preference was read in _channels_for
+            # but never actually enforced (that method always included
+            # "in_app" in the delivery-log channels regardless, and the
+            # Notification row itself was created unconditionally), so a
+            # farmer who opted out kept getting every notification anyway
+            # (2026-08 pre-release audit).
+            return False
         if not self._module_enabled(prefs, draft.module):
             return False
         return severity_at_least(draft.severity, prefs.min_severity)
@@ -211,8 +223,10 @@ class NotificationService:
         for queued in await self.repo.list_due_queued(user.id, now=now):
             queued.processed = True
             queued.processed_at = now
-            if not self._module_enabled(prefs, queued.module) or not severity_at_least(
-                queued.severity, prefs.min_severity
+            if (
+                not prefs.in_app_enabled
+                or not self._module_enabled(prefs, queued.module)
+                or not severity_at_least(queued.severity, prefs.min_severity)
             ):
                 continue
             if await self.repo.get_by_dedup(user.id, queued.dedup_key) is not None:
@@ -240,11 +254,16 @@ class NotificationService:
     # Delivery (provider seam + audit)
     # ----------------------------------------------------------------- #
     def _channels_for(self, prefs: NotificationPreferences) -> tuple[str, ...]:
-        # In-app is always attempted; push joins only when a real FCM provider is
-        # active and the farmer hasn't opted out (mock stays in-app-only, so the
-        # audit trail never shows an unconfigured "push" attempt).
-        channels = list(DEFAULT_DELIVERY_CHANNELS)
-        if prefs.in_app_enabled and DeliveryChannel.IN_APP.value not in channels:
+        # In-app is currently the only implemented delivery channel; push joins
+        # only when a real FCM provider is active and the farmer hasn't opted
+        # out (mock stays in-app-only, so the audit trail never shows an
+        # unconfigured "push" attempt). Notifications are only generated at all
+        # when in_app_enabled is True (see _passes_preferences /
+        # _promote_due_queue), so in practice this always includes "in_app" --
+        # it's still derived from prefs rather than hardcoded, so this stays
+        # correct if that gate is ever relaxed.
+        channels: list[str] = []
+        if prefs.in_app_enabled:
             channels.append(DeliveryChannel.IN_APP.value)
         if getattr(self.provider, "name", "") == "fcm" and prefs.push_enabled:
             channels.append(DeliveryChannel.PUSH.value)

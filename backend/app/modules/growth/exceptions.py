@@ -3,6 +3,7 @@
 Reuses the Disease pipeline's image-quality and analysis errors so the client
 handles a single, consistent set of error codes across photo features.
 """
+
 from __future__ import annotations
 
 from app.core.exceptions import AppError, NotFoundError

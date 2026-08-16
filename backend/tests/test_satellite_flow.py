@@ -1,9 +1,11 @@
 """Integration tests for the Satellite service: acquisition, honest unavailability,
 index/alert/history persistence, trend detection and ownership (in-memory DB,
 injected providers, fixed 'now')."""
+
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
+from types import SimpleNamespace
 
 import pytest
 from app.modules.auth.models import User
@@ -18,8 +20,10 @@ from app.modules.satellite.provider import (
     MockSatelliteProvider,
     ProviderScene,
     SatelliteProvider,
+    WaterEvidenceOutcome,
 )
 from app.modules.satellite.service import SatelliteService
+from app.modules.satellite.waterlogging import WaterloggingEvidence
 
 NOW = datetime(2026, 7, 12, 6, 0, tzinfo=UTC)
 POLYGON = {
@@ -38,6 +42,15 @@ class FakeProvider:
 
     async def fetch_scene(self, polygon, *, capture_before) -> FetchOutcome:
         return self._outcome
+
+
+class WaterProvider(FakeProvider):
+    def __init__(self, water_outcome: WaterEvidenceOutcome) -> None:
+        super().__init__(FetchOutcome(None, "no_imagery"))
+        self.water_outcome = water_outcome
+
+    async def fetch_water_evidence(self, polygon, *, capture_before) -> WaterEvidenceOutcome:
+        return self.water_outcome
 
 
 def _scene(*, red: float, nir: float, cloud: float = 5.0, std: float = 0.05) -> ProviderScene:
@@ -126,6 +139,21 @@ async def test_refresh_available_scene_computes_indices(db_session) -> None:
     assert page.total == 1
 
 
+async def test_refresh_is_idempotent_for_same_provider_scene(db_session) -> None:
+    user = await _make_user(db_session)
+    farm = await _make_farm(db_session, user)
+    scene = _scene(red=0.15, nir=0.45)
+    scene = ProviderScene(**{**scene.__dict__, "metadata": {"scene_id": "S2-fixed"}})
+    service = _service(db_session, FakeProvider(FetchOutcome(scene)))
+
+    first = await service.refresh(user, farm.id)
+    second = await service.refresh(user, farm.id)
+
+    assert second.id == first.id
+    page = await service.history(user, farm.id, page=1, page_size=10)
+    assert page.total == 1
+
+
 async def test_requires_owned_farm(db_session) -> None:
     owner = await _make_user(db_session, uid="owner")
     other = await _make_user(db_session, uid="other")
@@ -209,8 +237,8 @@ async def test_mock_provider_is_sample_and_no_imagery(db_session) -> None:
     service = _service(db_session, MockSatelliteProvider())
     session = await service.refresh(user, farm.id)
     assert session.status == "available"
-    assert session.is_sample is True          # clearly flagged sample data
-    assert session.images == []               # no fabricated imagery
+    assert session.is_sample is True  # clearly flagged sample data
+    assert session.images == []  # no fabricated imagery
 
 
 async def test_provider_never_fabricates_without_config(db_session) -> None:
@@ -218,3 +246,135 @@ async def test_provider_never_fabricates_without_config(db_session) -> None:
 
     outcome = await SentinelProvider().fetch_scene(POLYGON, capture_before=date(2026, 7, 12))
     assert outcome.scene is None  # honest "not available" until wired
+    assert outcome.reason == "provider_not_configured"
+
+
+async def test_invalid_aoi_fails_before_provider_and_emits_no_alert(db_session) -> None:
+    user = await _make_user(db_session)
+    farm = await _make_farm(
+        db_session,
+        user,
+        polygon={"type": "Polygon", "coordinates": [[[79, 10], [80, 10], [80, 11]]]},
+    )
+    provider = FakeProvider(FetchOutcome(_scene(red=0.15, nir=0.45)))
+    result = await _service(db_session, provider).refresh(user, farm.id)
+    assert result.status == "unavailable"
+    assert result.unavailable_reason == "processing_error"
+    assert result.indices == []
+    assert result.alerts == []
+
+
+async def test_waterlogging_missing_credentials_persists_insufficient_without_measurement(
+    db_session,
+) -> None:
+    user = await _make_user(db_session)
+    farm = await _make_farm(db_session, user)
+    provider = WaterProvider(WaterEvidenceOutcome(None, "provider_not_configured"))
+    result = await _service(db_session, provider).refresh_waterlogging(user, farm.id)
+    assert result.decision == "insufficient_data"
+    assert result.coverage_pct is None
+    assert result.provenance["surface_water_change"] is None
+    assert result.provenance["evidence_missing"] == ["provider_not_configured"]
+
+
+async def test_waterlogging_verified_consistent_evidence_is_possible_and_owned(db_session) -> None:
+    user = await _make_user(db_session)
+    farm = await _make_farm(db_session, user)
+    evidence = WaterloggingEvidence(
+        observed_at=NOW,
+        source="controlled_test",
+        scene_id="current",
+        baseline_scene_id="baseline",
+        coverage_pct=95.0,
+        evidence_present=["surface_water_change", "compatible_baseline"],
+        evidence_missing=[],
+        surface_water_change="increase",
+        quality_usable=True,
+        policy_verified=True,
+    )
+    service = _service(db_session, WaterProvider(WaterEvidenceOutcome(evidence)))
+    result = await service.refresh_waterlogging(user, farm.id)
+    assert result.decision == "possible_waterlogging"
+    assert result.provenance["scene_id"] == "current"
+    assert result.provenance["baseline_scene_id"] == "baseline"
+    assert result.provenance["aoi_hash"]
+    assert await service.latest_waterlogging(user, farm.id) == result
+
+    page = await service.waterlogging_history(user, farm.id, page=1, page_size=10)
+    assert page.total == 1
+    assert page.items == [result]
+
+
+async def test_waterlogging_history_is_isolated_by_owner_and_farm(db_session) -> None:
+    owner = await _make_user(db_session, uid="water-owner")
+    other = await _make_user(db_session, uid="water-other")
+    farm = await _make_farm(db_session, owner)
+    service = _service(
+        db_session,
+        WaterProvider(WaterEvidenceOutcome(None, "provider_not_configured")),
+    )
+    await service.refresh_waterlogging(owner, farm.id)
+    with pytest.raises(FarmNotOwnedError):
+        await service.waterlogging_history(other, farm.id, page=1, page_size=10)
+
+
+async def test_waterlogging_reuses_weather_provenance_without_inventing_measurement(
+    db_session, monkeypatch
+) -> None:
+    user = await _make_user(db_session, uid="water-weather")
+    farm = await _make_farm(db_session, user)
+
+    async def fake_weather(_service, _user, _farm_id):
+        return SimpleNamespace(
+            data_state="live",
+            source="open-meteo",
+            fetched_at="2026-07-12T06:00:00Z",
+            insights=[SimpleNamespace(category="heavy_rain")],
+        )
+
+    monkeypatch.setattr(
+        "app.modules.weather.service.WeatherService.get_by_farm", fake_weather
+    )
+    service = SatelliteService(
+        db_session,
+        provider=WaterProvider(WaterEvidenceOutcome(None, "no_imagery")),
+        now=NOW,
+        enable_weather=True,
+    )
+    result = await service.refresh_waterlogging(user, farm.id)
+    assert result.decision == "rainfall_risk_only"
+    assert result.provenance["evidence_type"] == "weather_only"
+    assert result.provenance["surface_water_change"] is None
+    assert result.provenance["policy_verification"] == "unverified"
+
+
+async def test_waterlogging_missing_boundary_stays_insufficient_even_with_weather(
+    db_session, monkeypatch
+) -> None:
+    user = await _make_user(db_session, uid="water-no-boundary")
+    farm = await _make_farm(db_session, user, polygon=None)
+
+    async def should_not_fetch(*_args, **_kwargs):
+        raise AssertionError("weather must not replace a verified farm boundary")
+
+    monkeypatch.setattr(
+        "app.modules.weather.service.WeatherService.get_by_farm", should_not_fetch
+    )
+    service = SatelliteService(
+        db_session,
+        provider=WaterProvider(WaterEvidenceOutcome(None, "no_imagery")),
+        now=NOW,
+        enable_weather=True,
+    )
+    result = await service.refresh_waterlogging(user, farm.id)
+    assert result.decision == "insufficient_data"
+    assert result.provenance["evidence_missing"] == ["no_polygon"]
+
+
+def test_waterlogging_router_exposes_latest_refresh_and_history() -> None:
+    from app.modules.satellite.router import router
+
+    paths = {route.path for route in router.routes}
+    assert "/satellite/waterlogging" in paths
+    assert "/satellite/waterlogging/refresh" in paths
+    assert "/satellite/waterlogging/history" in paths

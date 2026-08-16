@@ -1,0 +1,40 @@
+{
+  "artifact_status": "PROVISIONAL_CONTROLLED_TEST_ONLY",
+  "source_repository": "https://github.com/omroy07/AgriTech",
+  "source_snapshot_path": "crop_recommendation/model/rf_model.pkl",
+  "features": [
+    "nitrogen",
+    "phosphorus",
+    "potassium",
+    "temperature_c",
+    "humidity_percent",
+    "ph",
+    "rainfall_mm"
+  ],
+  "classes": [
+    "apple",
+    "banana",
+    "blackgram",
+    "chickpea",
+    "coconut",
+    "coffee",
+    "cotton",
+    "grapes",
+    "jute",
+    "kidneybeans",
+    "lentil",
+    "maize",
+    "mango",
+    "mothbeans",
+    "mungbean",
+    "muskmelon",
+    "orange",
+    "papaya",
+    "pigeonpeas",
+    "pomegranate",
+    "rice",
+    "watermelon"
+  ],
+  "validation_status": "NO_INDEPENDENT_AGROWAI_EVALUATION",
+  "general_farmer_release_authorized": false
+}

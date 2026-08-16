@@ -143,6 +143,14 @@ def require_any_role(*allowed_roles: str):
     return dependency
 
 
+def require_crop_role(crop_id: str):
+    """Return the same registry-aware role boundary advertised by capabilities."""
+    from app.crop_runtime.authorization import allowed_roles
+    from app.crop_runtime.registry import load_registry
+
+    return require_any_role(*allowed_roles(load_registry().get(crop_id)))
+
+
 CurrentUser = Annotated[User, Depends(get_current_user)]
 AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
 ControlledTester = Annotated[

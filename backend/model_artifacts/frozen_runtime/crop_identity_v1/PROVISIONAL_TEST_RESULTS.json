@@ -1,0 +1,75 @@
+{
+  "status": "PUBLIC_DATASET_PROVISIONAL",
+  "split": "provisional_test",
+  "samples": 618,
+  "metrics": {
+    "top1": 1.0,
+    "macro_f1": 1.0,
+    "balanced_accuracy": 1.0,
+    "per_class": {
+      "banana": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 57
+      },
+      "paddy": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 466
+      },
+      "cotton": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 49
+      },
+      "groundnut": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 46
+      }
+    },
+    "confusion_matrix": [
+      [
+        57,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        466,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        49,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        46
+      ]
+    ]
+  },
+  "ece": 0.001161447842605412,
+  "abstention": {
+    "accepted": 592,
+    "abstained": 26,
+    "coverage": 0.9579288025889967,
+    "accepted_accuracy": 1.0,
+    "false_confident_count": 0,
+    "false_confident_errors": []
+  },
+  "shortcut_risk": "HIGH",
+  "field_validation_status": "PUBLIC_DATASET_PROVISIONAL",
+  "official_accuracy_claim": false,
+  "general_farmer_inference_authorized": false
+}

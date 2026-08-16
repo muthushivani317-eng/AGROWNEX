@@ -1,0 +1,29 @@
+{
+  "crop_id": "redgram",
+  "display_name_en": "Redgram",
+  "display_name_ta": "HUMAN_TRANSLATION_REVIEW_REQUIRED",
+  "aliases": [
+    "redgram",
+    "pigeonpea"
+  ],
+  "model_status": "FROZEN_RUNTIME_READY",
+  "model_version": "redgram_mobilenetv3_small_v2",
+  "architecture": "MobileNetV3 Small",
+  "runtime_path": "model_artifacts/frozen_runtime/redgram_v2",
+  "checkpoint_sha256": "2f766c519cbf016c7c3600c4ceb75419c49ce752f4b293119bdc54f93fb8129e",
+  "supported_classes": [
+    "redgram__healthy",
+    "redgram__leaf_spot",
+    "redgram__sterility_mosaic"
+  ],
+  "crop_enabled": true,
+  "disease_detection_enabled": false,
+  "advisory_enabled": false,
+  "pilot_inference_eligible": true,
+  "limitation_message_en": "The Redgram V2 runtime passed a one-time public-dataset provisional evaluation, but general farmer diagnosis remains disabled until the exact runtime is installed, locally verified, and Tamil Nadu field validation is completed.",
+  "limitation_message_ta": "HUMAN_TRANSLATION_REVIEW_REQUIRED",
+  "official_accuracy_claim": false,
+  "field_validation_status": "PUBLIC_DATASET_PROVISIONAL_PASSED_TN_FIELD_VALIDATION_PENDING",
+  "last_verified_at": null,
+  "registry_schema_version": "1.0.0"
+}

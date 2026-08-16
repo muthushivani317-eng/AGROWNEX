@@ -12,14 +12,19 @@ they unit-test with mocked providers (no network):
 """
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.modules.auth.models import User
+from app.modules.disease.repositories import DiseaseReportRepository
 from app.modules.farms.repositories import FarmRepository
+from app.modules.notifications.constants import (
+    OUTBREAK_MIN_DISTINCT_FARMS,
+    OUTBREAK_WINDOW_DAYS,
+)
 from app.modules.notifications.models import NotificationDeliveryLog
 from app.modules.notifications.provider import (
     DeliveryRequest,
@@ -40,16 +45,35 @@ async def evaluate_weather_alerts(
     sources: NotificationSources | None = None,
     now: datetime | None = None,
 ) -> dict[str, int]:
+    effective_now = now or datetime.now(UTC)
+    groups = await DiseaseReportRepository(session).district_outbreak_groups(
+        since=effective_now - timedelta(days=OUTBREAK_WINDOW_DAYS),
+        min_distinct_farms=OUTBREAK_MIN_DISTINCT_FARMS,
+    )
+    outbreak_index: dict[str, list[tuple[str, str]]] = {}
+    for district, crop, disease, _count in groups:
+        outbreak_index.setdefault(district, []).append((crop, disease))
+
     owner_ids = await FarmRepository(session).list_owner_ids()
     users: list[User] = []
     if owner_ids:
         result = await session.execute(select(User).where(User.id.in_(owner_ids)))
         users = list(result.scalars().all())
 
+    run_sources = sources or NotificationSources(
+        session,
+        now=effective_now,
+        enable_weather=True,
+        outbreak_index=outbreak_index,
+    )
     created = 0
     for user in users:
         service = NotificationService(
-            session, provider=provider, sources=sources, now=now, enable_weather=True
+            session,
+            provider=provider,
+            sources=run_sources,
+            now=effective_now,
+            enable_weather=True,
         )
         created += await service.sync(user)
 

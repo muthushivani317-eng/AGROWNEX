@@ -1,0 +1,16 @@
+{
+  "crop_id": "crop_identity",
+  "model_name": "crop_identity_mobilenetv3_small_v1",
+  "model_version": "v1",
+  "architecture": "mobilenet_v3_small",
+  "classes": [
+    "banana",
+    "paddy",
+    "cotton",
+    "groundnut"
+  ],
+  "field_validation_status": "PUBLIC_DATASET_PROVISIONAL",
+  "official_accuracy_claim": false,
+  "general_farmer_inference_authorized": false,
+  "non_plant_rejection_proven": false
+}

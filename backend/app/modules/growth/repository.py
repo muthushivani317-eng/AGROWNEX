@@ -3,6 +3,7 @@
 The only layer that queries the crop_growth_* tables. Always scoped by
 ``user_id`` and excludes soft-deleted rows. No SQL lives in routes or the service.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -83,31 +84,48 @@ class GrowthRepository:
         base = self._session_filter(user_id, farm_id=farm_id, crop=crop)
         total = int(
             (
-                await self.session.execute(
-                    select(func.count()).select_from(base.subquery())
-                )
+                await self.session.execute(select(func.count()).select_from(base.subquery()))
             ).scalar_one()
         )
         rows = (
-            await self.session.execute(
-                base.order_by(CropGrowthSession.updated_at.desc())
-                .limit(limit)
-                .offset(offset)
+            (
+                await self.session.execute(
+                    base.order_by(CropGrowthSession.updated_at.desc()).limit(limit).offset(offset)
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         return list(rows), total
 
-    async def latest_session(self, user_id: uuid.UUID) -> CropGrowthSession | None:
+    async def latest_session(
+        self, user_id: uuid.UUID, *, farm_id: uuid.UUID | None = None
+    ) -> CropGrowthSession | None:
+        conditions = [
+            CropGrowthSession.user_id == user_id,
+            CropGrowthSession.is_deleted.is_(False),
+        ]
+        if farm_id is not None:
+            conditions.append(CropGrowthSession.farm_id == farm_id)
+        result = await self.session.execute(
+            select(CropGrowthSession)
+            .where(*conditions)
+            .order_by(CropGrowthSession.updated_at.desc())
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
+    async def active_sessions_for_user(self, user_id: uuid.UUID) -> list[CropGrowthSession]:
         result = await self.session.execute(
             select(CropGrowthSession)
             .where(
                 CropGrowthSession.user_id == user_id,
                 CropGrowthSession.is_deleted.is_(False),
+                CropGrowthSession.status == SessionStatus.ACTIVE.value,
             )
             .order_by(CropGrowthSession.updated_at.desc())
-            .limit(1)
         )
-        return result.scalar_one_or_none()
+        return list(result.scalars().all())
 
     # ----------------------------------------------------------------- #
     # Images
@@ -117,9 +135,7 @@ class GrowthRepository:
         await self.session.flush()
         return image
 
-    async def get_image(
-        self, image_id: uuid.UUID, user_id: uuid.UUID
-    ) -> CropGrowthImage | None:
+    async def get_image(self, image_id: uuid.UUID, user_id: uuid.UUID) -> CropGrowthImage | None:
         result = await self.session.execute(
             select(CropGrowthImage).where(
                 CropGrowthImage.id == image_id,
@@ -129,16 +145,19 @@ class GrowthRepository:
         )
         return result.scalar_one_or_none()
 
-    async def latest_image_for_session(
-        self, session_id: uuid.UUID
-    ) -> CropGrowthImage | None:
+    async def latest_image_for_session(self, session_id: uuid.UUID) -> CropGrowthImage | None:
         result = await self.session.execute(
             select(CropGrowthImage)
             .where(
                 CropGrowthImage.session_id == session_id,
                 CropGrowthImage.is_deleted.is_(False),
             )
-            .order_by(CropGrowthImage.captured_at.desc())
+            .order_by(
+                CropGrowthImage.captured_at.desc(),
+                CropGrowthImage.week_number.desc(),
+                CropGrowthImage.created_at.desc(),
+                CropGrowthImage.id.desc(),
+            )
             .limit(1)
         )
         return result.scalar_one_or_none()
@@ -154,9 +173,7 @@ class GrowthRepository:
         )
         return int(result.scalar_one())
 
-    def _image_join(
-        self, user_id: uuid.UUID
-    ) -> Select[tuple[CropGrowthImage, CropGrowthAnalysis]]:
+    def _image_join(self, user_id: uuid.UUID) -> Select[tuple[CropGrowthImage, CropGrowthAnalysis]]:
         return (
             select(CropGrowthImage, CropGrowthAnalysis)
             .outerjoin(
@@ -200,9 +217,7 @@ class GrowthRepository:
 
         rows = (
             await self.session.execute(
-                base.order_by(CropGrowthImage.captured_at.desc())
-                .limit(limit)
-                .offset(offset)
+                base.order_by(CropGrowthImage.captured_at.desc()).limit(limit).offset(offset)
             )
         ).all()
         return [(row[0], row[1]) for row in rows], total
@@ -237,16 +252,12 @@ class GrowthRepository:
     # ----------------------------------------------------------------- #
     # Timeline
     # ----------------------------------------------------------------- #
-    async def add_timeline_entry(
-        self, entry: CropGrowthTimeline
-    ) -> CropGrowthTimeline:
+    async def add_timeline_entry(self, entry: CropGrowthTimeline) -> CropGrowthTimeline:
         self.session.add(entry)
         await self.session.flush()
         return entry
 
-    async def latest_timeline_entry(
-        self, session_id: uuid.UUID
-    ) -> CropGrowthTimeline | None:
+    async def latest_timeline_entry(self, session_id: uuid.UUID) -> CropGrowthTimeline | None:
         result = await self.session.execute(
             select(CropGrowthTimeline)
             .where(CropGrowthTimeline.session_id == session_id)
@@ -264,24 +275,25 @@ class GrowthRepository:
         rows = (
             await self.session.execute(
                 select(CropGrowthTimeline, CropGrowthImage)
-                .outerjoin(
-                    CropGrowthImage, CropGrowthImage.id == CropGrowthTimeline.image_id
-                )
+                .outerjoin(CropGrowthImage, CropGrowthImage.id == CropGrowthTimeline.image_id)
                 .where(CropGrowthTimeline.session_id == session_id)
-                .order_by(CropGrowthTimeline.week_number.asc(),
-                          CropGrowthTimeline.recorded_at.asc())
+                .order_by(
+                    CropGrowthTimeline.week_number.asc(), CropGrowthTimeline.recorded_at.asc()
+                )
             )
         ).all()
         return [(row[0], row[1]) for row in rows]
 
     async def delete_timeline_for_image(self, image_id: uuid.UUID) -> None:
         entries = (
-            await self.session.execute(
-                select(CropGrowthTimeline).where(
-                    CropGrowthTimeline.image_id == image_id
+            (
+                await self.session.execute(
+                    select(CropGrowthTimeline).where(CropGrowthTimeline.image_id == image_id)
                 )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         for entry in entries:
             await self.session.delete(entry)
         await self.session.flush()

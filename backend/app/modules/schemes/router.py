@@ -17,15 +17,17 @@ import uuid
 
 from fastapi import APIRouter, Query, status
 
-from app.modules.schemes.constants import FarmerCategory
+from app.modules.schemes.constants import DocumentType, FarmerCategory
 from app.modules.schemes.dependencies import CurrentUser, SchemeServiceDep
 from app.modules.schemes.schemas import (
     BookmarkRequest,
     EligibilityQuery,
     EligibleSchemesOut,
+    FarmerDocumentOut,
     RecommendedSchemesOut,
     SchemeDetailOut,
     SchemeSummaryOut,
+    SetDocumentRequest,
 )
 from app.schemas.response import PaginatedData, SuccessResponse, success
 
@@ -138,6 +140,33 @@ async def list_bookmarks(
     """The farmer's bookmarked schemes (with their current eligibility)."""
     items = await service.list_bookmarks(current_user)
     return success(items)
+
+
+@router.get(
+    "/my-documents", response_model=SuccessResponse[list[FarmerDocumentOut]]
+)
+async def list_my_documents(
+    current_user: CurrentUser,
+    service: SchemeServiceDep,
+):
+    return success(await service.list_farmer_documents(current_user))
+
+
+@router.put(
+    "/my-documents/{document_type}",
+    response_model=SuccessResponse[FarmerDocumentOut],
+)
+async def set_my_document(
+    document_type: DocumentType,
+    payload: SetDocumentRequest,
+    current_user: CurrentUser,
+    service: SchemeServiceDep,
+):
+    return success(
+        await service.set_farmer_document(
+            current_user, document_type, payload.has_document
+        )
+    )
 
 
 @router.post(

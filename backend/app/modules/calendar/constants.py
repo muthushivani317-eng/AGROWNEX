@@ -1,4 +1,5 @@
 """Crop Calendar constants (docs: Calendar Generation)."""
+
 from __future__ import annotations
 
 from enum import StrEnum

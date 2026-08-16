@@ -1,0 +1,53 @@
+{
+  "model_name": "redgram_mobilenetv3_small_v2",
+  "architecture": "mobilenet_v3_small",
+  "canonical_crop_id": "redgram",
+  "supported_classes": [
+    "redgram__healthy",
+    "redgram__leaf_spot",
+    "redgram__sterility_mosaic"
+  ],
+  "checkpoint_sha256": "2f766c519cbf016c7c3600c4ceb75419c49ce752f4b293119bdc54f93fb8129e",
+  "temperature": 2.193619697974462,
+  "abstention_policy_type": "CLASS_SPECIFIC_CONFIDENCE_AND_MARGIN",
+  "class_thresholds": {
+    "redgram__healthy": {
+      "confidence_threshold": 0.81,
+      "margin_threshold": 0.0,
+      "accepted_count": 41,
+      "accepted_accuracy": 1.0,
+      "false_confident_errors": 0,
+      "class_prediction_coverage": 0.9761904761904762,
+      "predicted_count": 42,
+      "selection_rule": "ZERO_ACCEPTED_ERRORS_MAXIMUM_COVERAGE"
+    },
+    "redgram__leaf_spot": {
+      "confidence_threshold": 0.97,
+      "margin_threshold": 0.0,
+      "accepted_count": 9,
+      "accepted_accuracy": 1.0,
+      "false_confident_errors": 0,
+      "class_prediction_coverage": 0.1875,
+      "predicted_count": 48,
+      "selection_rule": "ZERO_ACCEPTED_ERRORS_MAXIMUM_COVERAGE"
+    },
+    "redgram__sterility_mosaic": {
+      "confidence_threshold": 0.67,
+      "margin_threshold": 0.0,
+      "accepted_count": 37,
+      "accepted_accuracy": 1.0,
+      "false_confident_errors": 0,
+      "class_prediction_coverage": 0.8809523809523809,
+      "predicted_count": 42,
+      "selection_rule": "ZERO_ACCEPTED_ERRORS_MAXIMUM_COVERAGE"
+    }
+  },
+  "development_validation_rows": 88,
+  "calibration_rows": 44,
+  "sealed_new_untouched_test_opened": false,
+  "consumed_v1_provisional_test_opened": false,
+  "official_accuracy_claim": false,
+  "field_validation_status": "NEW_UNTOUCHED_TEST_NOT_YET_EVALUATED",
+  "expert_verified": false,
+  "limitation": "Provisional public-dataset development and calibration evaluation. Not Tamil Nadu field accuracy. Not agricultural-expert verified."
+}

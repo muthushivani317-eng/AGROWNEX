@@ -1,0 +1,33 @@
+{
+  "model_name": "crop_identity_mobilenetv3_small_v1",
+  "architecture": "mobilenet_v3_small",
+  "input_size": 224,
+  "random_seed": 20260729,
+  "pretrained_weights": "torchvision IMAGENET1K_V1",
+  "optimizer": "AdamW",
+  "learning_rate": 0.0003,
+  "scheduler": "ReduceLROnPlateau(macro_f1)",
+  "batch_size": 64,
+  "max_epochs": 30,
+  "early_stopping_patience": 6,
+  "loss": "class-weighted cross-entropy",
+  "imbalance_strategy": "class-weighted loss; natural unweighted evaluation loaders",
+  "normalization": {
+    "mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "std": [
+      0.229,
+      0.224,
+      0.225
+    ]
+  },
+  "augmentations": [
+    "random_resized_crop(scale=0.75..1.0)",
+    "horizontal_flip",
+    "rotation_10_degrees",
+    "mild_color_jitter"
+  ]
+}

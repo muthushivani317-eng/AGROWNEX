@@ -30,6 +30,7 @@ class ProfileUpdateRequest(BaseModel):
     block: str | None = Field(default=None, max_length=80)
     village: str | None = Field(default=None, max_length=80)
     experience_years: int | None = Field(default=None, ge=0, le=80)
+    annual_income: int | None = Field(default=None, ge=0, le=100_000_000)
     profile_photo: str | None = Field(default=None, max_length=512)
     preferred_crops: list[str] = Field(default_factory=list)
 
@@ -64,6 +65,7 @@ class ProfileOut(BaseModel):
     village: str | None
     profile_photo: str | None
     experience_years: int | None
+    annual_income: int | None
     primary_crop: str | None
     secondary_crop: str | None
 

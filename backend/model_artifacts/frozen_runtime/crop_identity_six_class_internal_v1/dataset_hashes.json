@@ -1,0 +1,11 @@
+{
+  "class_order.json": "faee06864674cf96be1b4b8e5a70c0b97b6e8ae1358052433c51a08f8e6aa443",
+  "internal_pool_manifest.json": "6f03eb69493d0760626a4dbbc6623448f3f240656aa8847dc5b92e6c20efb0f9",
+  "exclusion_manifest.json": "83616a2e30126f18e5ec75672c019f34fdcee7f16afec544e499e9c996aeb3f8",
+  "banana_recovery_audit.json": "1486ee15d90b3a2603700a05d84276e9e0627f705db47ee6bfa893592754167f",
+  "augmentation_candidate_resolution.json": "cd95d0a4a70a26bc30bd683f0b7bc4d2962add988d7015c8e6e75d5c846f849f",
+  "split_manifest.json": "847ba78146ab6cd7018d9f08bb9fc776795ce213e606a3e5fc96aed3e0a7fdc9",
+  "split_manifest.csv": "e244bf8ed56f3ef6d8f012686fb33864d52a1c2eed4a37c190ff6323ca580ebe",
+  "safety_manifest.json": "f463db02884ba9b4246e87949f3051bae8a8acf06e05c97a2b0834de91ed5cf6",
+  "split_integrity.json": "51372d97c207f32faf25cfd29aa0dd1c94dbc626916e991ce78ef03c8ec5f909"
+}

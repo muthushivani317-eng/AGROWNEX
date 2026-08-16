@@ -1,0 +1,10 @@
+{
+  "focused_jest": { "suites": 4, "tests": 34, "status": "PASS" },
+  "full_jest": { "suites": 112, "tests": 725, "status": "PASS" },
+  "typescript": "PASS",
+  "expo_doctor": { "checks": 20, "status": "PASS" },
+  "release_build": "PASS",
+  "device_keyboard": "PASS",
+  "device_backspace": "PASS",
+  "device_send_otp_enabled": "PASS"
+}

@@ -1,0 +1,9 @@
+{
+  "abstention_thresholds.json": "1bded45c7bedc63b903ec04d74eb1bcfc740387f1d7e2fa5b938ff8d534a2225",
+  "calibration.json": "86c5385964e5acc8d8e394ad81e9a02bff1fe8053f51259116c2e8abb7ec1a36",
+  "class_order.json": "faee06864674cf96be1b4b8e5a70c0b97b6e8ae1358052433c51a08f8e6aa443",
+  "dataset_hashes.json": "1352d1a4789153d53cc1d893c92d9a0cdb0651723016e008c69e97fa2bb44ae8",
+  "model.pt": "61dab083068bfdee463111c154cff0c22cf52fe9a7afc97bab2382e802fd4e97",
+  "rollback.json": "c3b179daaf05c4f67b656dc73a29bff2b29ac9393eff9e1a2c7917d97f47572d",
+  "runtime_config.json": "29c10439a7dd6425c729a79688cdbf189101e0ec2ef2fab30f972fd18d6e3eda"
+}

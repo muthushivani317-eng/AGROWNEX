@@ -1,0 +1,21 @@
+{
+  "status": "MOBILE_AND_FIREBASE_FLOW_PASS_BACKEND_SESSION_EXCHANGE_FAILED_HTTP_500",
+  "phone_number_visible": "PASS",
+  "phone_text_contrast": "PASS",
+  "otp_duplicate_rendering_fixed": "PASS",
+  "otp_one_digit_per_box": "PASS",
+  "raw_localization_key_removed": true,
+  "error_messages_localized": true,
+  "tamil_translation_status": "DRAFT_HUMAN_PRODUCT_REVIEW_REQUIRED",
+  "e164_normalization": "PASS",
+  "firebase_request_confirmed": "PASS",
+  "otp_navigation_guard": "PASS",
+  "sms_request": "PASS_BY_RECEIVED_OTP_AND_FIREBASE_CONFIRMATION",
+  "firebase_otp_verification": "PASS",
+  "backend_session_exchange": "FAIL_HTTP_500",
+  "release_build": "PASS",
+  "device_ui_validation": "PASS",
+  "auth_flow": "FAIL_BACKEND_SESSION_ESTABLISHMENT",
+  "farmer_release_readiness": "NO",
+  "apk_sha256": "12c7f0ef29000f8f039525f6a28cac9dc07c2b615782eca50e952ea2e2208263"
+}

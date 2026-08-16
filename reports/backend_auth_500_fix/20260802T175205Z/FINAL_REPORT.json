@@ -1,0 +1,15 @@
+{
+  "status": "FIX_PREPARED_DEPLOYMENT_AND_PRODUCTION_OTP_VALIDATION_PENDING",
+  "root_cause": "PRODUCTION_MIGRATION_STARTUP_GATE_MISSING_EXACT_RAILWAY_EXCEPTION_PENDING",
+  "railway_exception_captured": false,
+  "database_schema_match": "UNVERIFIED",
+  "migrations_applied": "PENDING_DEPLOYMENT",
+  "firebase_token_verification": "FAIL_CLOSED_CONFIRMED",
+  "user_upsert": "LOCAL_TEST_PASS",
+  "session_creation": "LOCAL_TEST_PASS",
+  "otp_verify_endpoint": "PRODUCTION_HTTP_500_UNRESOLVED",
+  "production_http_status": 500,
+  "post_login_navigation": "BLOCKED",
+  "secret_redaction": "PASS",
+  "farmer_release_readiness": "NO"
+}

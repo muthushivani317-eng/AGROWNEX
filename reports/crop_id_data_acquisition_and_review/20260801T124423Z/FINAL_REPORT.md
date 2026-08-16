@@ -1,0 +1,21 @@
+# Final Report
+
+Existing legal Chilli and Redgram acquisitions were converted into non-approving review manifests and eight local HTML review packets. Seven exact runtime-label recommendation packets were created for Chilli and Redgram using only existing extracted passages; missing evidence remains explicit. Existing Banana/Paddy/Cotton/Groundnut packets were preserved because no evidence justified changing their candidate facts.
+
+```text
+DATA_DISCOVERY=PARTIAL
+LEGAL_DOWNLOADS=REUSED_3_VERIFIED_ARCHIVES_NO_NEW_DOWNLOADS
+IMAGE_VALIDATION=CHILLI_COMPLETE_EXISTING_SCREENING_REDGRAM_BASIC_HASH_ONLY
+DUPLICATE_ANALYSIS=CHILLI_EXISTING_38_CANDIDATES_REDGRAM_PENDING
+REVIEW_PACKETS=CREATED_8_CLASS_HTML_AND_7_RECOMMENDATION_PACKETS
+CHILLI_DATA_STATUS=ELIGIBLE_FOR_INTERNAL_REVIEW_NOT_APPROVED
+REDGRAM_DATA_STATUS=INSUFFICIENT_QUARANTINED
+UNKNOWN_CROP_DATA_STATUS=MISSING
+NON_PLANT_DATA_STATUS=MISSING
+EXISTING_FOUR_CROP_EXPANSION_STATUS=NO_NEW_APPROVED_IMAGES
+RECOMMENDATION_PACKET_COMPLETION=CHILLI_AND_REDGRAM_STRUCTURES_CREATED_HUMAN_REVIEW_REQUIRED
+HUMAN_REVIEW=NOT_PERFORMED
+TRAINING_READINESS=NOT_READY
+```
+
+No model, frozen artifact, split, calibration, provisional test, deployment or APK was accessed or changed.

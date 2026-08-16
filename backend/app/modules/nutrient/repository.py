@@ -3,6 +3,7 @@
 The only layer that queries the nutrient tables — reports, analysis, symptoms,
 recommendations and history. No SQL lives in routes or the service.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -37,17 +38,11 @@ class NutrientRepository:
         await self.session.flush()
         return report
 
-    async def get_report(
-        self, report_id: uuid.UUID, user_id: uuid.UUID
-    ) -> NutrientReport | None:
-        res = await self.session.execute(
-            self._owned(user_id).where(NutrientReport.id == report_id)
-        )
+    async def get_report(self, report_id: uuid.UUID, user_id: uuid.UUID) -> NutrientReport | None:
+        res = await self.session.execute(self._owned(user_id).where(NutrientReport.id == report_id))
         return res.scalar_one_or_none()
 
-    async def latest_report(
-        self, user_id: uuid.UUID, farm_id: uuid.UUID
-    ) -> NutrientReport | None:
+    async def latest_report(self, user_id: uuid.UUID, farm_id: uuid.UUID) -> NutrientReport | None:
         res = await self.session.execute(
             self._owned(user_id)
             .where(NutrientReport.farm_id == farm_id)
@@ -67,17 +62,13 @@ class NutrientRepository:
         base = self._owned(user_id).where(NutrientReport.farm_id == farm_id)
         total = int(
             (
-                await self.session.execute(
-                    select(func.count()).select_from(base.subquery())
-                )
+                await self.session.execute(select(func.count()).select_from(base.subquery()))
             ).scalar_one()
         )
         rows = (
             (
                 await self.session.execute(
-                    base.order_by(NutrientReport.created_at.desc())
-                    .limit(limit)
-                    .offset(offset)
+                    base.order_by(NutrientReport.created_at.desc()).limit(limit).offset(offset)
                 )
             )
             .scalars()
@@ -86,17 +77,18 @@ class NutrientRepository:
         )
         return list(rows), total
 
-    async def recent_reports(
-        self, user_id: uuid.UUID, *, limit: int = 50
-    ) -> list[NutrientReport]:
+    async def recent_reports(self, user_id: uuid.UUID, *, limit: int = 50) -> list[NutrientReport]:
         """Recent analysed reports across farms (for the notification source)."""
         rows = (
-            await self.session.execute(
-                self._owned(user_id)
-                .order_by(NutrientReport.created_at.desc())
-                .limit(limit)
+            (
+                await self.session.execute(
+                    self._owned(user_id).order_by(NutrientReport.created_at.desc()).limit(limit)
+                )
             )
-        ).scalars().unique().all()
+            .scalars()
+            .unique()
+            .all()
+        )
         return list(rows)
 
     # ----------------------------------------------------------------- #
@@ -115,9 +107,7 @@ class NutrientRepository:
     # ----------------------------------------------------------------- #
     # Recommendations
     # ----------------------------------------------------------------- #
-    async def add_recommendation(
-        self, rec: NutrientRecommendation
-    ) -> NutrientRecommendation:
+    async def add_recommendation(self, rec: NutrientRecommendation) -> NutrientRecommendation:
         self.session.add(rec)
         await self.session.flush()
         return rec
@@ -126,12 +116,16 @@ class NutrientRepository:
         self, report_id: uuid.UUID
     ) -> list[NutrientRecommendation]:
         rows = (
-            await self.session.execute(
-                select(NutrientRecommendation)
-                .where(NutrientRecommendation.report_id == report_id)
-                .order_by(NutrientRecommendation.created_at.asc())
+            (
+                await self.session.execute(
+                    select(NutrientRecommendation)
+                    .where(NutrientRecommendation.report_id == report_id)
+                    .order_by(NutrientRecommendation.created_at.asc())
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         return list(rows)
 
     async def latest_recommendations(
@@ -164,17 +158,13 @@ class NutrientRepository:
         )
         total = int(
             (
-                await self.session.execute(
-                    select(func.count()).select_from(base.subquery())
-                )
+                await self.session.execute(select(func.count()).select_from(base.subquery()))
             ).scalar_one()
         )
         rows = (
             (
                 await self.session.execute(
-                    base.order_by(NutrientHistory.recorded_at.desc())
-                    .limit(limit)
-                    .offset(offset)
+                    base.order_by(NutrientHistory.recorded_at.desc()).limit(limit).offset(offset)
                 )
             )
             .scalars()

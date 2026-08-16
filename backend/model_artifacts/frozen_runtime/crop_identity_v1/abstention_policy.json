@@ -1,0 +1,18 @@
+{
+  "policy_version": "crop_identity_abstention_v1",
+  "selection_split": "calibration",
+  "class_thresholds": {
+    "banana": 0.5,
+    "paddy": 0.5,
+    "cotton": 0.5,
+    "groundnut": 0.5
+  },
+  "fallback_threshold": 0.5,
+  "margin_threshold": 1.0,
+  "entropy_threshold": 2.3740658328108566e-09,
+  "accepted_reason_code": "CROP_MATCH",
+  "rejected_reason_code": "CROP_IDENTITY_UNCERTAIN",
+  "non_plant_rejection_proven": false,
+  "field_validation_status": "PUBLIC_DATASET_PROVISIONAL",
+  "general_farmer_inference_authorized": false
+}

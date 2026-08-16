@@ -21,6 +21,8 @@ from app.modules.growth.exceptions import (
 )
 from app.modules.growth.schemas import UploadGrowthRequest
 from app.modules.growth.service import GrowthService
+from app.modules.ai.models import TokenUsage
+from sqlalchemy import select
 
 
 def make_analysis(
@@ -65,37 +67,6 @@ class FakeProvider:
         return self.analysis
 
 
-class FakeDiseaseProvider:
-    model = "fake-vision"
-
-    def __init__(self) -> None:
-        self.calls = 0
-
-    async def analyze(self, request):
-        self.calls += 1
-        from app.modules.disease.parser import DiseaseAnalysis
-
-        return DiseaseAnalysis(
-            plant_present=True,
-            reject_reason=None,
-            visible_parts=["leaf"],
-            crop="paddy",
-            crop_confidence=80,
-            disease="Leaf blast",
-            confidence=66,
-            severity="moderate",
-            symptoms=["spots"],
-            causes=["fungus"],
-            recommendations=["prune"],
-            prevention=["rotate"],
-            needs_expert_review=False,
-            explanation_tamil="ta",
-            explanation_english="en",
-            model_used="fake-vision",
-            raw={},
-        )
-
-
 def _b64(nbytes: int) -> str:
     return base64.b64encode(b"\x00" * nbytes).decode()
 
@@ -136,7 +107,10 @@ def _req(farm_id, **kwargs) -> UploadGrowthRequest:
     return UploadGrowthRequest(**base)
 
 
-async def test_upload_creates_session_image_analysis_timeline(db_session, monkeypatch):
+async def test_upload_creates_session_image_analysis_timeline(
+    db_session, session_factory, monkeypatch
+):
+    monkeypatch.setattr("app.modules.ai.usage_ledger.SessionLocal", session_factory)
     _accept_quality(monkeypatch)
     provider = FakeProvider(make_analysis())
     service = _service(db_session, provider)
@@ -156,6 +130,9 @@ async def test_upload_creates_session_image_analysis_timeline(db_session, monkey
     assert outcome.session.latest_health_score == 78
     # Weather snapshot captured (farm has GPS; weather service absent → None ok).
     assert outcome.image.week_number == 1
+    usage_rows = (await db_session.execute(select(TokenUsage))).scalars().all()
+    assert len(usage_rows) == 1
+    assert usage_rows[0].module == "growth"
 
 
 async def test_poor_quality_rejected_before_ai(db_session):
@@ -200,21 +177,6 @@ async def test_second_upload_reuses_session_and_computes_delta(db_session, monke
     assert second.timeline_entry.health_delta == 15
     # Previous context was passed to the analyzer for comparison.
     assert provider.last_request.previous_context is not None
-
-
-async def test_run_disease_check_attaches_result(db_session, monkeypatch):
-    _accept_quality(monkeypatch)
-    disease = FakeDiseaseProvider()
-    service = _service(db_session, FakeProvider(make_analysis()), disease_provider=disease)
-    user = await _make_user(db_session)
-    farm = await _make_farm(db_session, user)
-
-    outcome = await service.upload(user, _req(farm.id, run_disease_check=True))
-    assert disease.calls == 1
-    assert outcome.analysis.disease_result is not None
-    assert outcome.analysis.disease_result["disease"] == "Leaf blast"
-    # Nutrient seam returns None until a model is configured.
-    assert outcome.analysis.nutrient_result is None
 
 
 async def test_history_timeline_latest_and_session_detail(db_session, monkeypatch):

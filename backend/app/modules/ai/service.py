@@ -34,6 +34,7 @@ from app.modules.ai.repositories import (
     TokenUsageRepository,
 )
 from app.modules.ai.schemas import ChatRequest
+from app.modules.ai.usage_ledger import record_usage_durable
 from app.modules.ai.validator import validate_response
 from app.modules.auth.models import User
 from app.modules.auth.repositories import FarmerProfileRepository
@@ -111,7 +112,7 @@ class AIService:
             system=system, history=turns, message=message
         )
         metrics.observe_ai_call(result.model)
-        await self.token_usage.record(
+        await record_usage_durable(
             farmer_id=user.id,
             module="ai_chat",
             model=result.model,
@@ -136,7 +137,7 @@ class AIService:
 
         if conversation.title is None:
             conversation.title = _derive_title(message)
-        if farm is not None and conversation.farm_id is None:
+        if farm is not None:
             conversation.farm_id = farm.id
         await self.session.flush()
         logger.info("AI reply for conversation=%s user=%s", conversation.id, user.id)

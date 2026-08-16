@@ -1,0 +1,42 @@
+{
+  "evidence_source": "D:\\AgrowAI\\knowledge_base\\vision\\crop_expansion_v2\\colab_ready\\training_tools\\train_crop_baseline.py",
+  "inference": {
+    "resize": [
+      256,
+      256
+    ],
+    "center_crop": [
+      224,
+      224
+    ],
+    "tensor_conversion": "torchvision.transforms.ToTensor",
+    "normalization_mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "normalization_std": [
+      0.229,
+      0.224,
+      0.225
+    ]
+  },
+  "training_augmentation": {
+    "random_resized_crop": {
+      "size": 224,
+      "scale": [
+        0.85,
+        1.0
+      ]
+    },
+    "random_horizontal_flip": true,
+    "random_rotation_degrees": 8,
+    "color_jitter": [
+      0.12,
+      0.12,
+      0.08,
+      0.02
+    ]
+  },
+  "runtime_excludes_random_augmentation": true
+}

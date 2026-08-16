@@ -10,7 +10,9 @@ from app.modules.admin.dependencies import AdminContextDep
 
 from .runtime import get_redgram_runtime
 
-router = APIRouter(prefix="/disease/redgram", tags=["redgram-v2-internal"])
+# Superseded candidate adapter retained for authenticated diagnostic checks only.
+# It is not mounted by the application API router and is not the deployed runtime.
+router = APIRouter(prefix="/disease/redgram", tags=["redgram-v2-unvalidated-candidate"])
 runtime = get_redgram_runtime()
 MAX_IMAGE_BYTES = 12_000_000
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp"}
@@ -60,7 +62,7 @@ async def health():
     try:
         runtime.load()
         return {
-            "status": "ready_for_authenticated_internal_testing",
+            "status": "unvalidated_candidate_not_deployed",
             "general_farmer_inference_authorized": False,
         }
     except Exception:

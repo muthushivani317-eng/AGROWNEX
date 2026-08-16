@@ -1,0 +1,16 @@
+{
+  "source_runtime_equivalence": "PASS",
+  "max_absolute_logit_difference": 0.0,
+  "source_checkpoint_sha256": "61dab083068bfdee463111c154cff0c22cf52fe9a7afc97bab2382e802fd4e97",
+  "runtime_model_sha256": "61dab083068bfdee463111c154cff0c22cf52fe9a7afc97bab2382e802fd4e97",
+  "tamper_detection": {
+    "model.pt": true,
+    "runtime_config.json": true,
+    "class_order.json": true,
+    "calibration.json": true,
+    "abstention_thresholds.json": true,
+    "dataset_hashes.json": true,
+    "rollback.json": true
+  },
+  "tamper_detection_status": "PASS"
+}

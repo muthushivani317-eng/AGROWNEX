@@ -10,6 +10,7 @@ Nutrient-deficiency and pest models plug in through the small ``NutrientProvider
 seam (and the reused Disease ``AnalysisProvider``) — both return optional results
 the service simply attaches, so nothing here fabricates data when a model is absent.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -20,6 +21,7 @@ from typing import Any, Protocol
 import httpx
 
 from app.core.logging import get_logger
+from app.core.provider_policy import test_mocks_enabled
 from app.modules.growth.constants import (
     GEMINI_API_KEY,
     GEMINI_BASE_URL,
@@ -219,9 +221,7 @@ class GeminiGrowthProvider:
                 "temperature": 0.2,
                 "responseMimeType": "application/json",
                 "maxOutputTokens": 1200,
-                "thinkingConfig": {
-                    "thinkingBudget": 0
-                },
+                "thinkingConfig": {"thinkingBudget": 0},
             },
         }
 
@@ -245,9 +245,7 @@ class GeminiGrowthProvider:
         for attempt in range(1, 3):
             try:
                 async with httpx.AsyncClient(timeout=self.timeout) as client:
-                    response = await client.post(
-                        url, params={"key": self.api_key}, json=body
-                    )
+                    response = await client.post(url, params={"key": self.api_key}, json=body)
                     response.raise_for_status()
                     return self._text(response.json())
             except (httpx.TransportError, httpx.TimeoutException) as exc:
@@ -305,9 +303,7 @@ class MockGrowthProvider:
                 else ["Continue regular irrigation", "Remove weeds around the crop"]
             ),
             needs_expert_review=False,
-            growth_summary_tamil=(
-                "பயிர் நல்ல வளர்ச்சியில் உள்ளது. இது டெமோ பதில்."
-            ),
+            growth_summary_tamil=("பயிர் நல்ல வளர்ச்சியில் உள்ளது. இது டெமோ பதில்."),
             growth_summary_english=(
                 "The crop is growing well and looks healthy. This is a demo response."
             ),
@@ -316,12 +312,35 @@ class MockGrowthProvider:
         )
 
 
+class UnavailableGrowthProvider:
+    """Production-safe provider used when no real analyzer is configured."""
+
+    model = "unavailable"
+
+    async def analyze(self, request: GrowthAnalysisRequest) -> GrowthAnalysis:
+        del request
+        raise GrowthAnalysisError()
+
+
 def get_default_provider() -> GrowthAnalysisProvider:
     if GEMINI_API_KEY:
         logger.info("growth analysis provider: Gemini (%s)", GEMINI_MODEL)
         return GeminiGrowthProvider()
-    logger.info("growth analysis provider: mock (no GEMINI_API_KEY)")
-    return MockGrowthProvider()
+    # Was: a locally-reimplemented check against ENVIRONMENT only (not the
+    # canonical APP_ENV convention documented for ops) plus a leftover
+    # GROWTH_PROVIDER=mock env var -- if ops only ever sets APP_ENV=production
+    # (the documented convention) this module's own dev-mode check silently
+    # defaulted wrong, and a stray GROWTH_PROVIDER=mock could then serve a
+    # canned demo response to real farmers undetected (2026-08 pre-release
+    # audit). Now uses the same shared guard as every other module's mock
+    # provider (see app.modules.disease.storage.get_default_storage for the
+    # identical pattern) -- APP_ENV (falling back to ENVIRONMENT), and an
+    # explicit opt-in flag, not just a crop-specific env var.
+    if test_mocks_enabled():
+        logger.info("growth analysis provider: explicit development/test mock")
+        return MockGrowthProvider()
+    logger.warning("growth analysis provider unavailable: credentials not configured")
+    return UnavailableGrowthProvider()
 
 
 # --------------------------------------------------------------------------- #
@@ -330,9 +349,7 @@ def get_default_provider() -> GrowthAnalysisProvider:
 class NutrientProvider(Protocol):
     """Future nutrient-deficiency model. Returns a structured result or ``None``."""
 
-    async def analyze(
-        self, request: GrowthAnalysisRequest
-    ) -> dict[str, Any] | None: ...
+    async def analyze(self, request: GrowthAnalysisRequest) -> dict[str, Any] | None: ...
 
 
 class NullNutrientProvider:

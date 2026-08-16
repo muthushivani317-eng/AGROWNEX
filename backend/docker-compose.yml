@@ -39,6 +39,9 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - ./:/code
+      # Read-only frozen artifacts; relative to this compose file, never a
+      # machine-specific Windows path and never included in the image layer.
+      - ../../model_exports/mobilenetv3_baseline_v1/freeze_inputs:/models/mobilenetv3_small_v1:ro
 
   worker:
     build: .

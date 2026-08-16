@@ -1,0 +1,9 @@
+{
+  "status": "NOT_COMPARED",
+  "methods": [
+    "cosine",
+    "euclidean",
+    "energy",
+    "nearest_prototype_margin"
+  ]
+}

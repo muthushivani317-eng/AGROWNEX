@@ -1,0 +1,32 @@
+{
+  "crop_id": "cotton",
+  "runtime_label_exact": "cotton_healthy",
+  "runtime_class_index": 1,
+  "candidate_canonical_disease_name": null,
+  "candidate_tamil_disease_name": null,
+  "mapping_status": "PENDING_HUMAN_REVIEW",
+  "authority_summary": {
+    "official_government": 0,
+    "official_university": 0,
+    "official_research_institute": 0,
+    "unknown_authority": 0
+  },
+  "candidate_fields": {
+    "symptoms": [],
+    "immediate_actions": [],
+    "prevention": [],
+    "cultural_practices": [],
+    "biological_options": [],
+    "chemical_options": [],
+    "avoid_actions": []
+  },
+  "source_conflicts": [],
+  "missing_fields": [
+    "symptoms",
+    "immediate_actions",
+    "prevention"
+  ],
+  "tamil_translation_status": "NOT_TRANSLATED",
+  "human_approval_status": "PENDING",
+  "healthy_treatment_blocked": true
+}

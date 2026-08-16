@@ -226,6 +226,17 @@ class AuthService:
         user = await self.users.get(token.user_id)
         if user is None:
             raise UserNotFoundError()
+        # Match the same account-status gate app.modules.auth.dependencies.
+        # get_current_user applies to every other authenticated request --
+        # previously a deactivated/deleted account's still-valid refresh
+        # token could keep minting new sessions indefinitely, since this was
+        # the one auth path that never re-checked status after the initial
+        # login (2026-08 pre-release audit). Deliberately reuses
+        # InvalidRefreshTokenError rather than a more specific "account
+        # deactivated" error, so a stolen refresh token doesn't let an
+        # attacker distinguish "revoked" from "account disabled".
+        if user.status != UserStatus.ACTIVE or user.deleted_at is not None:
+            raise InvalidRefreshTokenError()
         new_plain = await self._issue_refresh_token(user.id)
         return user, new_plain
 
@@ -273,6 +284,7 @@ class AuthService:
         profile.block = data.block
         profile.village = data.village
         profile.experience_years = data.experience_years
+        profile.annual_income = data.annual_income
         profile.profile_photo = data.profile_photo
         profile.primary_crop = primary
         profile.secondary_crop = secondary

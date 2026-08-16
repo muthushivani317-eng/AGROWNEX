@@ -1,0 +1,1 @@
+{"crop_id":"chilli","status":"MODEL_PIPELINE_PENDING","required":["approved_manifest","split_manifest","leakage_report","checkpoint","class_mapping","calibration","thresholds_abstention","onnx_opset_17","onnx_parity_receipt","sha256_receipt","verified_bundle","backend_adapter","tests"],"manual_bypass_allowed":false}

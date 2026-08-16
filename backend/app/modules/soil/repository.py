@@ -3,6 +3,7 @@
 The only layer that queries the soil tables — profiles, reports, test results,
 recommendations and history. No SQL lives in routes or the service.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -12,9 +13,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.soil.models import (
     SoilHistory,
+    SoilIndicatorEvidence,
     SoilProfile,
     SoilRecommendation,
     SoilReport,
+    SoilScanRecord,
     SoilTestResult,
 )
 
@@ -26,9 +29,7 @@ class SoilRepository:
     # ----------------------------------------------------------------- #
     # Profile
     # ----------------------------------------------------------------- #
-    async def get_profile(
-        self, user_id: uuid.UUID, farm_id: uuid.UUID
-    ) -> SoilProfile | None:
+    async def get_profile(self, user_id: uuid.UUID, farm_id: uuid.UUID) -> SoilProfile | None:
         result = await self.session.execute(
             select(SoilProfile).where(
                 SoilProfile.user_id == user_id,
@@ -62,17 +63,31 @@ class SoilRepository:
         await self.session.flush()
         return result
 
-    async def get_report(
-        self, report_id: uuid.UUID, user_id: uuid.UUID
-    ) -> SoilReport | None:
+    async def add_evidence(self, evidence: SoilIndicatorEvidence) -> SoilIndicatorEvidence:
+        self.session.add(evidence)
+        await self.session.flush()
+        return evidence
+
+    async def list_evidence(
+        self, user_id: uuid.UUID, farm_id: uuid.UUID
+    ) -> list[SoilIndicatorEvidence]:
+        rows = await self.session.execute(
+            select(SoilIndicatorEvidence)
+            .where(
+                SoilIndicatorEvidence.user_id == user_id,
+                SoilIndicatorEvidence.farm_id == farm_id,
+            )
+            .order_by(SoilIndicatorEvidence.collected_at.desc())
+        )
+        return list(rows.scalars().all())
+
+    async def get_report(self, report_id: uuid.UUID, user_id: uuid.UUID) -> SoilReport | None:
         res = await self.session.execute(
             self._owned_reports(user_id).where(SoilReport.id == report_id)
         )
         return res.scalar_one_or_none()
 
-    async def latest_report(
-        self, user_id: uuid.UUID, farm_id: uuid.UUID
-    ) -> SoilReport | None:
+    async def latest_report(self, user_id: uuid.UUID, farm_id: uuid.UUID) -> SoilReport | None:
         res = await self.session.execute(
             self._owned_reports(user_id)
             .where(SoilReport.farm_id == farm_id)
@@ -92,9 +107,7 @@ class SoilRepository:
         base = self._owned_reports(user_id).where(SoilReport.farm_id == farm_id)
         total = int(
             (
-                await self.session.execute(
-                    select(func.count()).select_from(base.subquery())
-                )
+                await self.session.execute(select(func.count()).select_from(base.subquery()))
             ).scalar_one()
         )
         rows = (
@@ -112,9 +125,7 @@ class SoilRepository:
     # ----------------------------------------------------------------- #
     # Recommendations
     # ----------------------------------------------------------------- #
-    async def add_recommendation(
-        self, rec: SoilRecommendation
-    ) -> SoilRecommendation:
+    async def add_recommendation(self, rec: SoilRecommendation) -> SoilRecommendation:
         self.session.add(rec)
         await self.session.flush()
         return rec
@@ -174,15 +185,65 @@ class SoilRepository:
         )
         total = int(
             (
-                await self.session.execute(
-                    select(func.count()).select_from(base.subquery())
-                )
+                await self.session.execute(select(func.count()).select_from(base.subquery()))
             ).scalar_one()
         )
         rows = (
             (
                 await self.session.execute(
                     base.order_by(SoilHistory.recorded_at.desc()).limit(limit).offset(offset)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        return list(rows), total
+
+    async def add_scan(self, row: SoilScanRecord) -> SoilScanRecord:
+        self.session.add(row)
+        await self.session.flush()
+        return row
+
+    async def latest_scan(self, user_id: uuid.UUID, farm_id: uuid.UUID) -> SoilScanRecord | None:
+        stmt = (
+            select(SoilScanRecord)
+            .where(
+                SoilScanRecord.user_id == user_id,
+                SoilScanRecord.farm_id == farm_id,
+            )
+            .order_by(SoilScanRecord.generated_at.desc(), SoilScanRecord.created_at.desc())
+            .limit(1)
+        )
+        return (await self.session.execute(stmt)).scalar_one_or_none()
+
+    async def get_scan(self, scan_id: uuid.UUID, user_id: uuid.UUID) -> SoilScanRecord | None:
+        stmt = select(SoilScanRecord).where(
+            SoilScanRecord.id == scan_id,
+            SoilScanRecord.user_id == user_id,
+        )
+        return (await self.session.execute(stmt)).scalar_one_or_none()
+
+    async def list_scans(
+        self,
+        user_id: uuid.UUID,
+        farm_id: uuid.UUID,
+        *,
+        limit: int,
+        offset: int,
+    ) -> tuple[list[SoilScanRecord], int]:
+        base = select(SoilScanRecord).where(
+            SoilScanRecord.user_id == user_id,
+            SoilScanRecord.farm_id == farm_id,
+        )
+        total = int(
+            (
+                await self.session.execute(select(func.count()).select_from(base.subquery()))
+            ).scalar_one()
+        )
+        rows = (
+            (
+                await self.session.execute(
+                    base.order_by(SoilScanRecord.generated_at.desc()).limit(limit).offset(offset)
                 )
             )
             .scalars()

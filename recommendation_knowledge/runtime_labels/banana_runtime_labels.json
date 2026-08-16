@@ -1,0 +1,66 @@
+{
+  "crop_id": "banana",
+  "model_artifact_path": "backend\\app\\banana_v3\\artifacts\\onnx\\disease_classifier.onnx",
+  "model_artifact_sha256": "ad820570fd79c0aa46c7c04996db8c1746f82bab61555dca48a7e4120b457523",
+  "runtime_loader_path": "backend\\app\\banana_v3\\config.py",
+  "runtime_label_source_path": "backend\\app\\banana_v3\\artifacts\\runtime\\class_mappings.json",
+  "runtime_label_source_sha256": "b7716982a231e5f7da1eb509d02c8aaad44c9c2bcf8e0034d786c4c00ec8f0a2",
+  "label_count": 5,
+  "labels": [
+    {
+      "classifier_head": "healthy_gate",
+      "class_index": 0,
+      "runtime_label_exact": "banana__healthy",
+      "normalized_lookup_key": "banana_healthy",
+      "is_healthy": true,
+      "is_unknown_or_background": false
+    },
+    {
+      "classifier_head": "healthy_gate",
+      "class_index": 1,
+      "runtime_label_exact": "banana__diseased",
+      "normalized_lookup_key": "banana_diseased",
+      "is_healthy": false,
+      "is_unknown_or_background": false
+    },
+    {
+      "classifier_head": "disease_classifier",
+      "class_index": 0,
+      "runtime_label_exact": "banana__cordana_leaf_spot",
+      "normalized_lookup_key": "banana_cordana_leaf_spot",
+      "is_healthy": false,
+      "is_unknown_or_background": false
+    },
+    {
+      "classifier_head": "disease_classifier",
+      "class_index": 1,
+      "runtime_label_exact": "banana__pestalotiopsis_leaf_spot",
+      "normalized_lookup_key": "banana_pestalotiopsis_leaf_spot",
+      "is_healthy": false,
+      "is_unknown_or_background": false
+    },
+    {
+      "classifier_head": "disease_classifier",
+      "class_index": 2,
+      "runtime_label_exact": "banana__sigatoka_leaf_spot",
+      "normalized_lookup_key": "banana_sigatoka_leaf_spot",
+      "is_healthy": false,
+      "is_unknown_or_background": false
+    }
+  ],
+  "registry_status": "FROZEN",
+  "blocking_reason": null,
+  "generated_at_utc": "2026-07-30T11:02:01.594425+00:00",
+  "model_artifacts": [
+    {
+      "classifier_head": "healthy_gate",
+      "path": "backend/app/banana_v3/artifacts/onnx/healthy_gate.onnx",
+      "sha256": "58ee7cfc58845e159a18cff392aa63626840bfc005e7de9cfffe5227894e4222"
+    },
+    {
+      "classifier_head": "disease_classifier",
+      "path": "backend\\app\\banana_v3\\artifacts\\onnx\\disease_classifier.onnx",
+      "sha256": "ad820570fd79c0aa46c7c04996db8c1746f82bab61555dca48a7e4120b457523"
+    }
+  ]
+}

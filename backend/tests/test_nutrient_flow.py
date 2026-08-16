@@ -9,6 +9,7 @@ from __future__ import annotations
 import base64
 
 import pytest
+from app.modules.ai.models import TokenUsage
 from app.modules.auth.models import User
 from app.modules.disease.models import DiseaseReport
 from app.modules.disease.quality import QualityResult
@@ -26,6 +27,7 @@ from app.modules.nutrient.parser import NutrientObservation
 from app.modules.nutrient.schemas import AnalyzeNutrientRequest
 from app.modules.nutrient.service import NutrientService
 from app.modules.soil.models import SoilProfile
+from sqlalchemy import select
 
 
 def make_observation(
@@ -100,7 +102,10 @@ def _request(farm_id, size: int = 64) -> AnalyzeNutrientRequest:
 # --------------------------------------------------------------------------- #
 # Analyze
 # --------------------------------------------------------------------------- #
-async def test_analyze_saves_report_with_analysis(db_session, monkeypatch) -> None:
+async def test_analyze_saves_report_with_analysis(
+    db_session, session_factory, monkeypatch
+) -> None:
+    monkeypatch.setattr("app.modules.ai.usage_ledger.SessionLocal", session_factory)
     _accept_quality(monkeypatch)
     provider = FakeProvider(make_observation())
     service = _service(db_session, provider)
@@ -115,7 +120,11 @@ async def test_analyze_saves_report_with_analysis(db_session, monkeypatch) -> No
     # No corroboration yet → an honest "possible", not a confirmed claim.
     assert report.analysis.status == "possible"
     assert "yellowing" in [s.code for s in report.symptoms]
-    assert any(r.code == "nutrient.rec.nitrogen.deficiency" for r in report.recommendations)
+    assert not any(r.category == "nutrient" for r in report.recommendations)
+    assert any(r.code == "nutrient.rec.test.soil_test" for r in report.recommendations)
+    usage_rows = (await db_session.execute(select(TokenUsage))).scalars().all()
+    assert len(usage_rows) == 1
+    assert usage_rows[0].module == "nutrient"
 
 
 async def test_soil_low_nitrogen_confirms(db_session, monkeypatch) -> None:

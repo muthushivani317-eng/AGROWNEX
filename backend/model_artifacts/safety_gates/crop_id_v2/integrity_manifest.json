@@ -1,0 +1,11 @@
+{
+  "README.md": "dc03d1c9370dc7ccc936022403edd667bcbeb80968709160c9804628e5a7e368",
+  "category_policy.json": "783305fd0881fd569140913ced418fe6308d728bccab3f00498d52374f199515",
+  "dataset_manifest_hashes.json": "9e41f543eb1f6a693bf2faf7145ba5cef8f7307fc4a12f05e7b729ef6f36c5dd",
+  "distance_policy.json": "1d30c82e7bb1b18207a0845ee8ce5c54d49c7a654ff98ea2879bc30023c25faf",
+  "feature_extractor_reference.json": "73f3af5495a864b9bc2e8b52d2134fa6f51d4a1d815c199cba74ae60bfd14fce",
+  "gate_config.json": "8c7d8cea07206cff8dc7f2b8446d68773345bc4c0b19f7427a1eb71e49daf36d",
+  "rollback_metadata.json": "a8aba820b57046dc8bb790f9ca8ddd662501acc1d82fa5a5d888826ea3ce425c",
+  "source_manifest_hashes.json": "15a83423ffd63b3e7602667d374716510608a0c9293af085728304de3f60ca91",
+  "threshold_policy.json": "a2b1d50b72c62231fa4685cf8b5a28665b8bbf91697b2569818ab4987aeb5c28"
+}

@@ -1,0 +1,4 @@
+env: load .env
+env: exported public and private key names (values redacted)
+Running 20 checks on your project...
+20/20 checks passed. No issues detected!

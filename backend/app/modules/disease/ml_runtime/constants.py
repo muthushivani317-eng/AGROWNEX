@@ -30,8 +30,8 @@ CLASS_TO_INDEX = {
 }
 INDEX_TO_CLASS = {value: key for key, value in CLASS_TO_INDEX.items()}
 CLASS_TO_CROP = {
-    name: ("rice" if name.startswith(("rice_", "paddy_")) else name.split("_", 1)[0])
+    name: ("paddy" if name.startswith(("rice_", "paddy_")) else name.split("_", 1)[0])
     for name in CLASS_TO_INDEX
 }
-SUPPORTED_CROPS = ("rice", "cotton", "groundnut")
+SUPPORTED_CROPS = ("paddy", "cotton", "groundnut")
 HEALTHY_CLASSES = frozenset({"cotton_healthy", "groundnut_healthy", "paddy_healthy"})

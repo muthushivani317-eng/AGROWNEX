@@ -6,6 +6,7 @@ error handlers into a single app (docs/BACKEND_ARCHITECTURE.md).
 
 from __future__ import annotations
 
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -27,6 +28,7 @@ from app.core.middleware import (
     build_rate_limiter,
 )
 from app.legacy_joint import get_legacy_joint_runtime
+from app.legacy_joint.artifacts import LegacyJointArtifactError
 
 configure_logging()
 init_sentry()
@@ -35,10 +37,33 @@ logger = get_logger("main")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # The required crop-constrained legacy classifier is verified and loaded
-    # exactly once. Failure aborts startup; there is no silent fallback.
+    from app.crop_runtime.inventory import get_model_inventory, refresh_model_inventory
+    from app.crop_runtime.readiness_cache import (
+        get_technical_readiness,
+        refresh_technical_readiness,
+    )
+
+    def refresh_model_caches() -> None:
+        refresh_technical_readiness()
+        refresh_model_inventory()
+        get_technical_readiness()
+        get_model_inventory()
+
+    # Hashing and runtime loads are startup work, never event-loop request work.
+    await asyncio.to_thread(refresh_model_caches)
+    # Load the general-release runtime only when its release record authorizes it.
+    # A denied app-enablement decision keeps legacy predictions fail-closed, but
+    # must not prevent the separately gated controlled-field-test runtime (or
+    # unrelated application routes) from starting.
     if settings.disease_model_required:
-        get_legacy_joint_runtime().load()
+        try:
+            get_legacy_joint_runtime().load()
+        except LegacyJointArtifactError as exc:
+            if str(exc) != "APP_ENABLEMENT_NOT_AUTHORIZED":
+                raise
+            logger.warning(
+                "legacy joint general-release runtime remains disabled: %s", exc
+            )
     yield
     # Shutdown: release the shared pooled HTTP client.
     await close_http_client()
@@ -80,6 +105,7 @@ def create_app() -> FastAPI:
         auth_limit=settings.rate_limit_auth,
         window=settings.rate_limit_window_seconds,
         auth_prefixes=(f"{settings.api_v1_prefix}/auth",),
+        trust_proxy_headers=settings.trust_proxy_headers,
     )
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(MetricsMiddleware)

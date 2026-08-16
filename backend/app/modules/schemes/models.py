@@ -89,6 +89,19 @@ class SchemeDocument(UUIDMixin, TimestampMixin, Base):
     display_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
 
+class FarmerDocument(UUIDMixin, TimestampMixin, Base):
+    __tablename__ = "farmer_documents"
+    __table_args__ = (
+        UniqueConstraint("user_id", "document_type", name="uq_farmer_document_type"),
+    )
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("users.id"), index=True, nullable=False
+    )
+    document_type: Mapped[str] = mapped_column(String(40), nullable=False)
+    has_document: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+
 class SchemeBookmark(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     __tablename__ = "scheme_bookmarks"
     __table_args__ = (

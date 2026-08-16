@@ -1,0 +1,119 @@
+{
+  "schema_version": "1.0",
+  "crop": "banana",
+  "verification_notice": "Verify against official source or qualified plant-pathology expert.",
+  "fields": {
+    "lesion_shape": {
+      "type": "string",
+      "allowed_values": ["round", "oval", "elongated", "irregular", "angular", "not_visible", "unknown"],
+      "required": false,
+      "missing_value": "unknown",
+      "description": "Generic visible lesion-shape observation; it is not a confirmed disease rule."
+    },
+    "lesion_colour": {
+      "type": "string",
+      "allowed_values": ["green", "yellow", "brown", "black", "grey", "mixed", "not_visible", "unknown"],
+      "required": false,
+      "missing_value": "unknown",
+      "description": "Generic observed lesion colour without inferring a diagnosis."
+    },
+    "yellow_halo_present": {
+      "type": "string",
+      "allowed_values": ["yes", "no", "uncertain", "not_visible", "unknown"],
+      "required": false,
+      "missing_value": "unknown",
+      "description": "Whether a yellow region appears to surround a visible lesion."
+    },
+    "lesion_distribution": {
+      "type": "string",
+      "allowed_values": ["single", "scattered", "clustered", "widespread", "coalescing", "not_visible", "unknown"],
+      "required": false,
+      "missing_value": "unknown",
+      "description": "Generic spatial distribution of visible lesions."
+    },
+    "vein_alignment": {
+      "type": "string",
+      "allowed_values": ["aligned", "not_aligned", "mixed", "not_visible", "unknown"],
+      "required": false,
+      "missing_value": "unknown",
+      "description": "Whether visible symptoms appear aligned with leaf veins."
+    },
+    "leaf_edge_involvement": {
+      "type": "string",
+      "allowed_values": ["present", "absent", "partial", "not_visible", "unknown"],
+      "required": false,
+      "missing_value": "unknown",
+      "description": "Generic observation of whether visible symptoms involve the leaf edge."
+    },
+    "leaf_surface": {
+      "type": "string",
+      "allowed_values": ["upper", "lower", "both", "not_known", "not_visible"],
+      "required": false,
+      "missing_value": "not_known",
+      "description": "Leaf surface represented by the observation or image."
+    },
+    "symptom_stage": {
+      "type": "string",
+      "allowed_values": ["early", "intermediate", "advanced", "mixed", "not_known"],
+      "required": false,
+      "missing_value": "not_known",
+      "description": "Provisional visual stage observation without a disease-specific claim."
+    },
+    "wet_or_dry_appearance": {
+      "type": "string",
+      "allowed_values": ["wet", "dry", "mixed", "not_visible", "unknown"],
+      "required": false,
+      "missing_value": "unknown",
+      "description": "Generic appearance of the visible symptom region."
+    },
+    "symptom_progression": {
+      "type": "string",
+      "allowed_values": ["new", "stable", "spreading", "worsening", "improving", "not_known"],
+      "required": false,
+      "missing_value": "not_known",
+      "description": "User-observed change over time when known."
+    },
+    "mixed_symptoms_possible": {
+      "type": "string",
+      "allowed_values": ["yes", "no", "uncertain", "unknown"],
+      "required": false,
+      "missing_value": "unknown",
+      "description": "Whether more than one visual symptom pattern may be present."
+    },
+    "pest_signs_present": {
+      "type": "string",
+      "allowed_values": ["yes", "no", "uncertain", "not_visible", "unknown"],
+      "required": false,
+      "missing_value": "unknown",
+      "description": "Generic observation of possible pest signs without identifying a pest."
+    },
+    "nutrient_deficiency_possible": {
+      "type": "string",
+      "allowed_values": ["yes", "no", "uncertain", "unknown"],
+      "required": false,
+      "missing_value": "unknown",
+      "description": "Whether nutrient deficiency remains a possible non-disease explanation."
+    },
+    "environmental_damage_possible": {
+      "type": "string",
+      "allowed_values": ["yes", "no", "uncertain", "unknown"],
+      "required": false,
+      "missing_value": "unknown",
+      "description": "Whether environmental damage remains a possible explanation."
+    },
+    "user_confidence": {
+      "type": "string",
+      "allowed_values": ["high", "medium", "low", "not_sure"],
+      "required": false,
+      "missing_value": "not_sure",
+      "description": "User confidence in the submitted observations, not diagnostic confidence."
+    },
+    "symptom_notes": {
+      "type": "string",
+      "allowed_values": ["free_text", "none"],
+      "required": false,
+      "missing_value": "none",
+      "description": "Optional concise notes; do not include unnecessary personal data or an invented diagnosis."
+    }
+  }
+}

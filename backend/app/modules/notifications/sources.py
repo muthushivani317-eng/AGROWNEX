@@ -7,6 +7,7 @@ pure collector views; the pure collectors then emit ``CandidateEvent``s. Every
 source is wrapped so a single module failing (or the weather network being down)
 never breaks generation — resilience mirrors the Market module's offline fallback.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -19,6 +20,8 @@ from app.modules.ai.repositories import ConversationRepository
 from app.modules.auth.models import User
 from app.modules.calendar.repositories import CalendarEventRepository
 from app.modules.disease.repositories import DiseaseReportRepository
+from app.modules.disease_risk.engine import RiskEvaluation, RiskOutcome
+from app.modules.disease_risk.models import DiseaseRiskAlert
 from app.modules.farms.repositories import FarmRepository
 from app.modules.growth.repository import GrowthRepository
 from app.modules.market.repository import MarketRepository
@@ -31,6 +34,7 @@ from app.modules.notifications.collectors import (
     IntelligenceReportView,
     MarketMoveView,
     NutrientReportView,
+    OutbreakView,
     ProduceOfferView,
     SatelliteSessionView,
     SchemeView,
@@ -39,11 +43,13 @@ from app.modules.notifications.collectors import (
     collect_ai,
     collect_calendar,
     collect_disease,
+    collect_disease_risk_conditions,
     collect_experts,
     collect_growth,
     collect_intelligence,
     collect_market,
     collect_nutrient,
+    collect_outbreak,
     collect_produce,
     collect_satellite,
     collect_schemes,
@@ -78,11 +84,13 @@ class NotificationSources:
         *,
         now: datetime,
         enable_weather: bool = True,
+        outbreak_index: dict[str, list[tuple[str, str]]] | None = None,
     ) -> None:
         self.session = session
         self.now = now
         self.today: date = now.date()
         self.enable_weather = enable_weather
+        self._outbreak_index = outbreak_index or {}
 
     async def collect(self, user: User) -> list[CandidateEvent]:
         """Run every source; a failing source is logged and skipped, never fatal."""
@@ -90,6 +98,7 @@ class NotificationSources:
         for name, adapter in (
             ("calendar", self._collect_calendar),
             ("disease", self._collect_disease),
+            ("outbreak", self._collect_outbreak),
             ("growth", self._collect_growth),
             ("market", self._collect_market),
             ("schemes", self._collect_schemes),
@@ -118,6 +127,8 @@ class NotificationSources:
     async def _collect_calendar(self, user: User) -> list[CandidateEvent]:
         from datetime import timedelta
 
+        from app.modules.calendar.registry import ACTIVE_CROP_STAGE_REGISTRY
+
         repo = CalendarEventRepository(self.session)
         # Counts per farm for today / the upcoming window / missed.
         today_events = await repo.list_events(
@@ -141,19 +152,28 @@ class NotificationSources:
                 buckets[fid] = CalendarCounts(farm_id=fid or "none")
             return buckets[fid]
 
-        for ev in today_events:
+        def _is_current_verified(ev) -> bool:
+            schedule = ACTIVE_CROP_STAGE_REGISTRY.resolve(ev.crop)
+            return bool(
+                schedule
+                and ev.registry_verification_status == "VERIFIED"
+                and ev.registry_version == schedule.version
+                and ev.registry_content_hash == schedule.content_hash
+            )
+
+        for ev in filter(_is_current_verified, today_events):
             fid = _bucket(ev.farm_id)
             cur = _ensure(fid)
             buckets[fid] = CalendarCounts(
                 farm_id=cur.farm_id, today=cur.today + 1, upcoming=cur.upcoming, missed=cur.missed
             )
-        for ev in upcoming_events:
+        for ev in filter(_is_current_verified, upcoming_events):
             fid = _bucket(ev.farm_id)
             cur = _ensure(fid)
             buckets[fid] = CalendarCounts(
                 farm_id=cur.farm_id, today=cur.today, upcoming=cur.upcoming + 1, missed=cur.missed
             )
-        for ev in missed_events:
+        for ev in filter(_is_current_verified, missed_events):
             fid = _bucket(ev.farm_id)
             cur = _ensure(fid)
             buckets[fid] = CalendarCounts(
@@ -181,27 +201,81 @@ class NotificationSources:
                 quality_poor=False,  # poor images are rejected before storage
             )
             events.extend(collect_disease(view))
+        from sqlalchemy import select
+
+        risks = list(
+            (
+                await self.session.execute(
+                    select(DiseaseRiskAlert).where(
+                        DiseaseRiskAlert.user_id == user.id,
+                        DiseaseRiskAlert.status == "RISK_CONDITIONS_PRESENT",
+                    )
+                )
+            ).scalars()
+        )
+        for risk in risks:
+            evaluation = RiskEvaluation(
+                outcome=RiskOutcome.RISK_CONDITIONS_PRESENT,
+                matched_conditions=risk.weather_factors,
+                rule_pack_id=risk.rule_pack_id,
+                rule_pack_version=risk.rule_version,
+                evaluated_at=risk.generated_at,
+            )
+            events.extend(
+                collect_disease_risk_conditions(
+                    evaluation,
+                    farm_id=str(risk.farm_id),
+                    crop_id=risk.crop,
+                    disease_id=risk.disease_key or "unknown",
+                )
+            )
+        return events
+
+    async def _collect_outbreak(self, user: User) -> list[CandidateEvent]:
+        if not self._outbreak_index:
+            return []
+        farms = await FarmRepository(self.session).list_for_user(user.id, limit=50, offset=0)
+        districts = {
+            farm.location.district.strip().lower()
+            for farm in farms
+            if farm.location and farm.location.district
+        }
+        events: list[CandidateEvent] = []
+        for district in districts:
+            for crop, disease in self._outbreak_index.get(district, []):
+                events.extend(
+                    collect_outbreak(
+                        OutbreakView(
+                            district=district,
+                            crop=crop,
+                            disease=disease,
+                        ),
+                        week=self.today,
+                    )
+                )
         return events
 
     # ----------------------------------------------------------------- #
     async def _collect_growth(self, user: User) -> list[CandidateEvent]:
         repo = GrowthRepository(self.session)
-        session = await repo.latest_session(user.id)
-        if session is None:
-            return []
-        latest_image = await repo.latest_image_for_session(session.id)
-        latest_timeline = await repo.latest_timeline_entry(session.id)
-        view = GrowthView(
-            session_id=str(session.id),
-            farm_id=str(session.farm_id) if session.farm_id else None,
-            week_number=latest_image.week_number if latest_image else 1,
-            last_image_days_ago=self._days_since(
-                latest_image.captured_at if latest_image else None
-            ),
-            latest_health_delta=latest_timeline.health_delta if latest_timeline else None,
-            latest_timeline_id=str(latest_timeline.id) if latest_timeline else None,
-        )
-        return collect_growth(view)
+        sessions = await repo.active_sessions_for_user(user.id)
+        events: list[CandidateEvent] = []
+        for session in sessions:
+            latest_image = await repo.latest_image_for_session(session.id)
+            latest_timeline = await repo.latest_timeline_entry(session.id)
+            view = GrowthView(
+                session_id=str(session.id),
+                farm_id=str(session.farm_id) if session.farm_id else None,
+                week_number=latest_image.week_number if latest_image else 1,
+                last_image_days_ago=self._days_since(
+                    latest_image.captured_at if latest_image else None
+                ),
+                current_growth_stage=session.current_growth_stage,
+                latest_health_delta=(latest_timeline.health_delta if latest_timeline else None),
+                latest_timeline_id=(str(latest_timeline.id) if latest_timeline else None),
+            )
+            events.extend(collect_growth(view))
+        return events
 
     # ----------------------------------------------------------------- #
     async def _collect_market(self, user: User) -> list[CandidateEvent]:
@@ -227,6 +301,9 @@ class NotificationSources:
             if len(history) >= 2 and history[0].modal_price:
                 first = history[0].modal_price
                 change_percent = (price_row.modal_price - first) / first * 100.0
+            is_period_high = bool(history) and price_row.modal_price >= max(
+                h.modal_price for h in history
+            )
             events.extend(
                 collect_market(
                     MarketMoveView(
@@ -235,6 +312,7 @@ class NotificationSources:
                         market=fav.market_name,
                         latest_price=price_row.modal_price,
                         change_percent=change_percent,
+                        is_period_high=is_period_high,
                     ),
                     day=self.today,
                 )
@@ -250,9 +328,7 @@ class NotificationSources:
         page, _meta = await service.eligible(user, None, page=1, page_size=25)
         events: list[CandidateEvent] = []
         for item in page.items:
-            days_to_deadline = (
-                (item.last_date - self.today).days if item.last_date else None
-            )
+            days_to_deadline = (item.last_date - self.today).days if item.last_date else None
             view = SchemeView(
                 scheme_id=str(item.id),
                 title=item.title,
@@ -313,9 +389,7 @@ class NotificationSources:
                 for m in (c.messages or [])
                 if m.sender_type == SenderType.EXPERT.value and not m.is_system
             ]
-            latest_expert_message_id = (
-                str(expert_messages[-1].id) if expert_messages else None
-            )
+            latest_expert_message_id = str(expert_messages[-1].id) if expert_messages else None
             resolved_by_expert = c.status == ConsultationStatus.RESOLVED.value and any(
                 h.new_status == ConsultationStatus.RESOLVED.value
                 and h.changed_by_type == SenderType.EXPERT.value
@@ -343,27 +417,35 @@ class NotificationSources:
         from app.modules.soil.models import SoilRecommendation, SoilReport
 
         reports = (
-            await self.session.execute(
-                select(SoilReport)
-                .where(
-                    SoilReport.user_id == user.id,
-                    SoilReport.is_deleted.is_(False),
-                    SoilReport.status == ReportStatus.PROCESSED.value,
+            (
+                await self.session.execute(
+                    select(SoilReport)
+                    .where(
+                        SoilReport.user_id == user.id,
+                        SoilReport.is_deleted.is_(False),
+                        SoilReport.status == ReportStatus.PROCESSED.value,
+                    )
+                    .order_by(SoilReport.created_at.desc())
+                    .limit(50)
                 )
-                .order_by(SoilReport.created_at.desc())
-                .limit(50)
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
 
         events: list[CandidateEvent] = []
         for report in reports:
             severities = (
-                await self.session.execute(
-                    select(SoilRecommendation.severity).where(
-                        SoilRecommendation.report_id == report.id
+                (
+                    await self.session.execute(
+                        select(SoilRecommendation.severity).where(
+                            SoilRecommendation.report_id == report.id
+                        )
                     )
                 )
-            ).scalars().all()
+                .scalars()
+                .all()
+            )
             deficiencies = [s for s in severities if s in ("warning", "critical")]
             events.extend(
                 collect_soil(
@@ -387,9 +469,7 @@ class NotificationSources:
         sessions = await repo.sessions_with_alerts(user.id)
         events: list[CandidateEvent] = []
         for sat in sessions:
-            has_veg = any(
-                a.code in _SATELLITE_VEGETATION_CODES for a in (sat.alerts or [])
-            )
+            has_veg = any(a.code in _SATELLITE_VEGETATION_CODES for a in (sat.alerts or []))
             unavailable = sat.status == SessionStatus.UNAVAILABLE.value
             events.extend(
                 collect_satellite(
@@ -408,9 +488,7 @@ class NotificationSources:
         from app.modules.nutrient.constants import DeficiencyStatus
         from app.modules.nutrient.repository import NutrientRepository
 
-        reports = await NutrientRepository(self.session).recent_reports(
-            user.id, limit=50
-        )
+        reports = await NutrientRepository(self.session).recent_reports(user.id, limit=50)
         events: list[CandidateEvent] = []
         for report in reports:
             analysis = report.analysis
@@ -433,9 +511,7 @@ class NotificationSources:
     async def _collect_intelligence(self, user: User) -> list[CandidateEvent]:
         from app.modules.intelligence.repository import IntelligenceRepository
 
-        reports = await IntelligenceRepository(self.session).recent_reports(
-            user.id, limit=50
-        )
+        reports = await IntelligenceRepository(self.session).recent_reports(user.id, limit=50)
         events: list[CandidateEvent] = []
         for report in reports:
             events.extend(
@@ -458,9 +534,7 @@ class NotificationSources:
         from app.modules.weather.service import WeatherService
 
         service = WeatherService(self.session)
-        farms = await FarmRepository(self.session).list_for_user(
-            user.id, limit=50, offset=0
-        )
+        farms = await FarmRepository(self.session).list_for_user(user.id, limit=50, offset=0)
         events: list[CandidateEvent] = []
         for farm in farms:
             location = getattr(farm, "location", None)

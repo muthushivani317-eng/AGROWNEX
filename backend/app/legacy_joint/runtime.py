@@ -10,7 +10,11 @@ from typing import Any
 import numpy as np
 from PIL import Image, ImageOps
 
-from .artifacts import LegacyJointArtifactError, verify_bundle
+from .artifacts import (
+    LegacyJointArtifactError,
+    verify_bundle,
+    verify_bundle_for_controlled_field_test,
+)
 
 ARTIFACT_ROOT = (
     Path(__file__).resolve().parents[2]
@@ -27,10 +31,13 @@ class JointPrediction:
     class_id: str | None
     qualitative_confidence: str
     accepted: bool
+    calibrated_confidence: float
 
 
 class LegacyJointRuntime:
-    def __init__(self, artifact_root: Path = ARTIFACT_ROOT) -> None:
+    def __init__(
+        self, artifact_root: Path = ARTIFACT_ROOT, *, controlled_field_test: bool = False
+    ) -> None:
         self.root = artifact_root
         self._lock = threading.RLock()
         self._session: Any = None
@@ -38,6 +45,7 @@ class LegacyJointRuntime:
         self._routing: dict[str, Any] = {}
         self._temperature: dict[str, float] = {}
         self._thresholds: dict[str, tuple[float, float]] = {}
+        self._controlled_field_test = controlled_field_test
 
     @property
     def ready(self) -> bool:
@@ -47,7 +55,11 @@ class LegacyJointRuntime:
         with self._lock:
             if self.ready:
                 return
-            verified = verify_bundle(self.root)
+            verified = (
+                verify_bundle_for_controlled_field_test(self.root)
+                if self._controlled_field_test
+                else verify_bundle(self.root)
+            )
             routing = json.loads(
                 (self.root / "runtime/crop_routing_policy.json").read_text("utf-8")
             )
@@ -129,12 +141,12 @@ class LegacyJointRuntime:
         confidence_threshold, margin_threshold = self._thresholds[crop_id]
         accepted = confidence >= confidence_threshold and margin >= margin_threshold
         if not accepted:
-            return JointPrediction("uncertain", crop_id, None, "low", False)
+            return JointPrediction("uncertain", crop_id, None, "low", False, confidence)
         class_id = str(group["class_ids"][top_index])
         if class_id not in group["class_ids"] or class_id in group["forbidden_class_ids"]:
             raise LegacyJointArtifactError("CROSS_CROP_CLASS_LEAK")
         qualitative = "high" if confidence >= 0.9 else "moderate"
-        return JointPrediction("accepted", crop_id, class_id, qualitative, True)
+        return JointPrediction("accepted", crop_id, class_id, qualitative, True, confidence)
 
     def health(self) -> dict[str, Any]:
         try:
@@ -162,7 +174,12 @@ class LegacyJointRuntime:
 
 
 _runtime = LegacyJointRuntime()
+_controlled_field_test_runtime = LegacyJointRuntime(controlled_field_test=True)
 
 
 def get_legacy_joint_runtime() -> LegacyJointRuntime:
     return _runtime
+
+
+def get_legacy_joint_controlled_field_test_runtime() -> LegacyJointRuntime:
+    return _controlled_field_test_runtime

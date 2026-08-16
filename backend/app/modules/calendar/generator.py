@@ -4,6 +4,7 @@ Pure functions: given a crop, sowing date, season and irrigation type, expand th
 predefined schedule templates into concrete dated activities. No database, no
 network, no AI — fully reproducible and unit-testable.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -16,6 +17,7 @@ from app.modules.calendar.constants import (
     Season,
     WeatherDependency,
 )
+from app.modules.calendar.registry import CropStageSchedule
 from app.modules.calendar.schedules import ActivityTemplate, get_schedule
 
 
@@ -47,9 +49,7 @@ def _is_rainfed(irrigation_type: str | None) -> bool:
     return bool(irrigation_type) and irrigation_type.strip().lower() in RAINFED_IRRIGATION
 
 
-def _apply_irrigation_policy(
-    template: ActivityTemplate, *, rainfed: bool
-) -> tuple[Priority, bool]:
+def _apply_irrigation_policy(template: ActivityTemplate, *, rainfed: bool) -> tuple[Priority, bool]:
     """Rainfed farms rely on rainfall — irrigation tasks are advisory, not urgent."""
     if rainfed and template.weather_dependency == WeatherDependency.IRRIGATION:
         return Priority.LOW, False
@@ -84,3 +84,40 @@ def generate_events(
         )
     events.sort(key=lambda e: (e.scheduled_date, e.day_offset))
     return events
+
+
+def generate_verified_events(
+    schedule: CropStageSchedule,
+    sowing_date: date,
+    *,
+    reminders_enabled: bool = True,
+    irrigation_type: str | None = None,
+) -> list[GeneratedEvent]:
+    events: list[GeneratedEvent] = []
+    rainfed = _is_rainfed(irrigation_type)
+    for stage in schedule.stages:
+        for activity in stage.activities:
+            events.append(
+                GeneratedEvent(
+                    code=activity.code,
+                    activity_type=ActivityType(activity.activity_type),
+                    title=activity.label_key,
+                    description=activity.description_key,
+                    scheduled_date=sowing_date + timedelta(days=activity.day_offset),
+                    priority=(
+                        Priority.LOW
+                        if rainfed and activity.weather_dependency == "irrigation"
+                        else Priority(activity.priority)
+                    ),
+                    growth_stage=stage.code,
+                    weather_dependency=WeatherDependency(activity.weather_dependency),
+                    reminder_enabled=(
+                        reminders_enabled
+                        and activity.notification_eligible
+                        and activity.notification_offset_days is not None
+                        and not (rainfed and activity.weather_dependency == "irrigation")
+                    ),
+                    day_offset=activity.day_offset,
+                )
+            )
+    return sorted(events, key=lambda event: (event.scheduled_date, event.code))

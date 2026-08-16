@@ -1,0 +1,77 @@
+{
+  "status": "PUBLIC_DATASET_PROVISIONAL",
+  "split": "calibration",
+  "samples": 619,
+  "temperature": 0.2968480513819703,
+  "nll_before": 0.00046743001439608634,
+  "nll_after": 1.943766095282724e-08,
+  "ece_before": 0.00046563148498535156,
+  "ece_after": 0.0,
+  "metrics_after_temperature": {
+    "top1": 1.0,
+    "macro_f1": 1.0,
+    "balanced_accuracy": 1.0,
+    "per_class": {
+      "banana": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 57
+      },
+      "paddy": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 466
+      },
+      "cotton": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 50
+      },
+      "groundnut": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 46
+      }
+    },
+    "confusion_matrix": [
+      [
+        57,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        466,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        50,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        46
+      ]
+    ]
+  },
+  "class_thresholds": {
+    "banana": 0.5,
+    "paddy": 0.5,
+    "cotton": 0.5,
+    "groundnut": 0.5
+  },
+  "fallback_threshold": 0.5,
+  "margin_threshold": 1.0,
+  "entropy_threshold": 2.3740658328108566e-09,
+  "official_accuracy_claim": false
+}

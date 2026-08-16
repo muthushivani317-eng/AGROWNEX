@@ -1,0 +1,36 @@
+# AgrowAI real-device UI repair
+
+The device evidence proved a zero-height routed React view. The release route was correct, but critical geometry depended only on NativeWind and collapsed on the physical release build. Native layout fallbacks and an explicit OTP route are implemented, all software gates pass, and a new release APK is installed.
+
+Visual acceptance is not claimed: the phone remains locked, so Android System UI—not AgrowAI—owns the screenshot and hierarchy.
+
+## Validation
+
+- Focused Jest: 36/36
+- Full Jest: 700/700
+- TypeScript: PASS
+- Expo Doctor: 20/20
+- Release build: PASS
+- APK SHA-256: `017dc97e6533d36c6a2b787cdf84b3d33b0c39506c1aec28216f4ca932f4ff24`
+- Fresh installation: PASS
+- Device visual acceptance: BLOCKED_PENDING_UNLOCK
+
+ROOT_CAUSE=release-routed React child collapsed to zero height because critical flex layout depended only on NativeWind class interop
+ROUTE_TREE_VALID=YES
+STARTUP_REDIRECTS_FIXED=YES
+DUPLICATE_SPLASH_FIXED=YES_CODE_DEVICE_VISUAL_PENDING
+ROOT_VIEW_VISIBLE=PENDING_UNLOCKED_DEVICE_SCREENSHOT
+LANGUAGE_SCREEN_VISIBLE=NO_DEVICE_PROOF
+LANGUAGE_SELECTION_WORKS=NO_DEVICE_PROOF
+PHONE_LOGIN_SCREEN_VISIBLE=NO_DEVICE_PROOF
+SEND_OTP_ACTION_VISIBLE=NO_DEVICE_PROOF
+OTP_SCREEN_VISIBLE=NO_DEVICE_PROOF
+MAIN_MENU_ROUTE_VALID=YES_STATIC_AND_TESTED
+NATIVEWIND_RELEASE_RENDERING=NATIVE_GEOMETRY_FALLBACK_ADDED
+FRESH_INSTALL_TEST=INSTALL_PASS_VISUAL_BLOCKED
+COLD_START_TEST=PROCESS_PASS_VISUAL_BLOCKED
+DEVICE_UI_VALIDATION=FAIL_PENDING_UNLOCK
+OTP_TEST_READINESS=NO
+FARMER_RELEASE_READINESS=NO
+
+Nothing was staged, committed, or pushed.

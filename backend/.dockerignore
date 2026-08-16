@@ -21,7 +21,6 @@ logs/
 *.zip
 deployment/
 model_artifacts/incoming/
-model_artifacts/frozen_runtime/crop_identity_v1/
 model_artifacts/frozen_runtime/redgram_v2/
 banana_v3_build_receipt.json
 openapi.json

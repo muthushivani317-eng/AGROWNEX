@@ -1,0 +1,15 @@
+{
+  "global_theme": "PASS_BY_CODE_AND_RELEASE_BUILD_DEVICE_PENDING",
+  "design_system": "PASS_BY_CODE_AND_RELEASE_BUILD_DEVICE_PENDING",
+  "home_ui": "DEVICE_PENDING",
+  "ai_ui": "DEVICE_PENDING",
+  "farm_ui": "DEVICE_PENDING",
+  "profile_ui": "DEVICE_PENDING",
+  "profile_setup_ui": "DEVICE_PENDING",
+  "phone_masking": "PASS_BY_TEST_DEVICE_PENDING",
+  "quick_action_grid": "PASS_BY_TEST_DEVICE_PENDING",
+  "feature_route_matrix": "PASS_BY_TEST_DEVICE_PENDING",
+  "release_build": "PASS",
+  "device_ui_validation": "BLOCKED_DEVICE_LOCKED",
+  "farmer_release_readiness": "NO"
+}

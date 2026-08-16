@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 
 from pydantic import BaseModel, Field
 
@@ -27,12 +27,16 @@ class MarketPriceOut(BaseModel):
     price_date: date
     source: str
     verified: bool
+    is_stale: bool
+    age_days: int
     updated_at: datetime
 
     @classmethod
     def from_row(
         cls, price: MarketPrice, *, market: str, district: str, state: str
     ) -> MarketPriceOut:
+        today = datetime.now(UTC).date()
+        age_days = max(0, (today - price.price_date).days)
         return cls(
             id=price.id,
             commodity=price.commodity,
@@ -48,6 +52,8 @@ class MarketPriceOut(BaseModel):
             price_date=price.price_date,
             source=price.source,
             verified=price.verified,
+            is_stale=age_days > 0,
+            age_days=age_days,
             updated_at=price.updated_at,
         )
 

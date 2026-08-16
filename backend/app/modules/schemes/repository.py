@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.schemes.constants import SchemeStatus
 from app.modules.schemes.models import (
+    FarmerDocument,
     GovernmentScheme,
     SchemeBookmark,
     SchemeDocument,
@@ -203,6 +204,34 @@ class SchemeRepository:
             .order_by(SchemeDocument.display_order.asc())
         )
         return list(result.scalars().all())
+
+    async def farmer_documents(self, user_id: uuid.UUID) -> list[FarmerDocument]:
+        result = await self.session.execute(
+            select(FarmerDocument).where(FarmerDocument.user_id == user_id)
+        )
+        return list(result.scalars().all())
+
+    async def set_farmer_document(
+        self, user_id: uuid.UUID, document_type: str, has_document: bool
+    ) -> FarmerDocument:
+        result = await self.session.execute(
+            select(FarmerDocument).where(
+                FarmerDocument.user_id == user_id,
+                FarmerDocument.document_type == document_type,
+            )
+        )
+        row = result.scalar_one_or_none()
+        if row is None:
+            row = FarmerDocument(
+                user_id=user_id,
+                document_type=document_type,
+                has_document=has_document,
+            )
+            self.session.add(row)
+        else:
+            row.has_document = has_document
+        await self.session.flush()
+        return row
 
     # ----------------------------------------------------------------- #
     # Bookmarks (user-scoped)

@@ -1,7 +1,7 @@
 """Background job unit tests (Phase 3 — ARQ). Mocked providers, no network."""
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 
 from app.modules.auth.models import User
 from app.modules.farms.models import Farm
@@ -15,6 +15,10 @@ from app.modules.notifications.jobs import (
 )
 from app.modules.notifications.models import Notification, NotificationDeliveryLog
 from app.modules.notifications.provider import DeliveryRequest, DeliveryResult
+from app.modules.produce.constants import ProduceStatus
+from app.modules.produce.jobs import EXPIRY_GRACE_DAYS, expire_stale_offers
+from app.modules.produce.models import ProduceOffer
+from app.modules.produce.repository import ProduceRepository
 
 
 async def _user(db_session, uid: str = "fb-job") -> User:
@@ -174,3 +178,78 @@ async def test_retry_respects_max_attempts_cap(db_session):
         db_session, provider=RecoveringProvider(), max_retries=3, now=datetime.now(UTC)
     )
     assert result["retried"] == 0
+
+
+# --------------------------------------------------------------------------- #
+# (d) expire_stale_offers
+# --------------------------------------------------------------------------- #
+async def _make_farm(db_session, user) -> Farm:
+    farm = Farm(user_id=user.id, name="Field A")
+    db_session.add(farm)
+    await db_session.flush()
+    return farm
+
+
+async def _offer(db_session, user, farm, *, harvest_date, status) -> ProduceOffer:
+    offer = ProduceOffer(
+        user_id=user.id,
+        farm_id=farm.id,
+        crop_name="Paddy",
+        quantity=100,
+        unit="kg",
+        expected_harvest_date=harvest_date,
+        status=status,
+    )
+    db_session.add(offer)
+    await db_session.flush()
+    return offer
+
+
+async def test_expire_stale_offers_moves_long_overdue_open_offers(db_session):
+    user = await _user(db_session, "fb-produce-expiry")
+    farm = await _make_farm(db_session, user)
+    today = date.today()
+    stale = await _offer(
+        db_session,
+        user,
+        farm,
+        harvest_date=today - timedelta(days=EXPIRY_GRACE_DAYS + 1),
+        status=ProduceStatus.SUBMITTED.value,
+    )
+
+    result = await expire_stale_offers(db_session)
+
+    assert result["expired"] == 1
+    await db_session.refresh(stale)
+    assert stale.status == ProduceStatus.EXPIRED.value
+    history = await ProduceRepository(db_session).list_status_history(stale.id)
+    assert history[-1].new_status == ProduceStatus.EXPIRED.value
+    assert history[-1].old_status == ProduceStatus.SUBMITTED.value
+
+
+async def test_expire_stale_offers_leaves_recent_and_concluded_offers_alone(db_session):
+    user = await _user(db_session, "fb-produce-expiry-2")
+    farm = await _make_farm(db_session, user)
+    today = date.today()
+    recent = await _offer(
+        db_session,
+        user,
+        farm,
+        harvest_date=today - timedelta(days=1),
+        status=ProduceStatus.SUBMITTED.value,
+    )
+    concluded = await _offer(
+        db_session,
+        user,
+        farm,
+        harvest_date=today - timedelta(days=EXPIRY_GRACE_DAYS + 30),
+        status=ProduceStatus.HARVESTED.value,
+    )
+
+    result = await expire_stale_offers(db_session)
+
+    assert result["expired"] == 0
+    await db_session.refresh(recent)
+    await db_session.refresh(concluded)
+    assert recent.status == ProduceStatus.SUBMITTED.value
+    assert concluded.status == ProduceStatus.HARVESTED.value

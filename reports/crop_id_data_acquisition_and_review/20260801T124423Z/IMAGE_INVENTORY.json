@@ -1,0 +1,101 @@
+{
+  "rows": 4050,
+  "per_class": {
+    "banana": {
+      "downloaded": 0,
+      "extracted": 0,
+      "decodable": 0,
+      "original_candidates": 0,
+      "augmented_candidates": 0,
+      "duplicate_candidates": 0,
+      "quarantined": 0,
+      "rejected": 0,
+      "awaiting_human_review": 0,
+      "approved": 0
+    },
+    "paddy": {
+      "downloaded": 0,
+      "extracted": 0,
+      "decodable": 0,
+      "original_candidates": 0,
+      "augmented_candidates": 0,
+      "duplicate_candidates": 0,
+      "quarantined": 0,
+      "rejected": 0,
+      "awaiting_human_review": 0,
+      "approved": 0
+    },
+    "cotton": {
+      "downloaded": 0,
+      "extracted": 0,
+      "decodable": 0,
+      "original_candidates": 0,
+      "augmented_candidates": 0,
+      "duplicate_candidates": 0,
+      "quarantined": 0,
+      "rejected": 0,
+      "awaiting_human_review": 0,
+      "approved": 0
+    },
+    "groundnut": {
+      "downloaded": 0,
+      "extracted": 0,
+      "decodable": 0,
+      "original_candidates": 0,
+      "augmented_candidates": 0,
+      "duplicate_candidates": 0,
+      "quarantined": 0,
+      "rejected": 0,
+      "awaiting_human_review": 0,
+      "approved": 0
+    },
+    "chilli": {
+      "downloaded": 4032,
+      "extracted": 4032,
+      "decodable": 4032,
+      "original_candidates": 4032,
+      "augmented_candidates": 0,
+      "duplicate_candidates": 38,
+      "quarantined": 2307,
+      "rejected": 448,
+      "awaiting_human_review": 4032,
+      "approved": 0
+    },
+    "redgram": {
+      "downloaded": 18,
+      "extracted": 18,
+      "decodable": 18,
+      "original_candidates": 18,
+      "augmented_candidates": 0,
+      "duplicate_candidates": 0,
+      "quarantined": 18,
+      "rejected": 0,
+      "awaiting_human_review": 18,
+      "approved": 0
+    },
+    "unknown_crop": {
+      "downloaded": 0,
+      "extracted": 0,
+      "decodable": 0,
+      "original_candidates": 0,
+      "augmented_candidates": 0,
+      "duplicate_candidates": 0,
+      "quarantined": 0,
+      "rejected": 0,
+      "awaiting_human_review": 0,
+      "approved": 0
+    },
+    "non_plant": {
+      "downloaded": 0,
+      "extracted": 0,
+      "decodable": 0,
+      "original_candidates": 0,
+      "augmented_candidates": 0,
+      "duplicate_candidates": 0,
+      "quarantined": 0,
+      "rejected": 0,
+      "awaiting_human_review": 0,
+      "approved": 0
+    }
+  }
+}

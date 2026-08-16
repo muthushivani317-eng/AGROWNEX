@@ -1,0 +1,30 @@
+{
+  "artifact_version": "1.0.0",
+  "scope": "INTERNAL_ONLY",
+  "quality": {
+    "minimum_dimension": 96,
+    "minimum_effective_pixels": 9216,
+    "minimum_brightness": 10.0,
+    "maximum_brightness": 245.0,
+    "minimum_contrast": 2.0,
+    "minimum_texture": 0.75,
+    "maximum_texture": 15.0,
+    "maximum_near_black_ratio": 0.97,
+    "maximum_near_white_ratio": 0.97
+  },
+  "plant_heuristic": {
+    "minimum_green_fraction": 0.08,
+    "minimum_saturated_fraction": 0.05,
+    "non_plant_maximum_green_fraction": 0.01
+  },
+  "ood": {
+    "independent_supported_crop_reference_available": false,
+    "default_outcome": "OOD_UNCERTAIN"
+  },
+  "ambiguity": {
+    "minimum_confidence": 0.5,
+    "require_transform_agreement": true
+  },
+  "general_farmer_release": "BLOCKED",
+  "official_field_validation": false
+}

@@ -89,6 +89,13 @@ class Settings(BaseSettings):
     rate_limit_window_seconds: int = 60
     # Reject request bodies larger than this before reading them into memory (8MB).
     max_request_body_bytes: int = 8 * 1024 * 1024
+    # X-Forwarded-For is client-supplied and trivially spoofable unless a trusted
+    # edge proxy (load balancer/CDN) overwrites it before the request reaches us.
+    # Defaults to false (trust the direct TCP peer only) so a bare deployment
+    # can't have its rate limits/audit IPs bypassed by a forged header; set true
+    # only when deployed behind a proxy that is known to sanitize this header
+    # (docs/SECURITY.md → client IP resolution).
+    trust_proxy_headers: bool = Field(default=False)
 
     # --- Frozen disease classifier (Phase 3 Part 3) ---
     disease_model_required: bool = True
@@ -109,6 +116,16 @@ class Settings(BaseSettings):
     openai_disease_comparison_api_key: str = ""
     openai_disease_comparison_model: str = ""
     openai_disease_comparison_timeout_seconds: float = Field(default=30.0, gt=0, le=120)
+
+    # --- Farmer-facing AI vision diagnosis (general release) ---
+    # Primary diagnosis engine for crops with no field-validated local classifier,
+    # and an independent read alongside banana/chilli/redgram's local models
+    # (which are public-dataset provisional models, not farmer-photo validated —
+    # see model_artifacts/frozen_runtime/*/README.md). Distinct from the
+    # internal-only shadow comparison above: this one is shown to the farmer.
+    openai_vision_diagnosis_api_key: str = ""
+    openai_vision_diagnosis_model: str = "gpt-4o"
+    openai_vision_diagnosis_timeout_seconds: float = Field(default=45.0, gt=0, le=120)
 
     # --- Mock-provider safety (product rule 5) ---
     # Production refuses to boot with a mock provider active unless allow-listed here.
@@ -150,6 +167,10 @@ class Settings(BaseSettings):
     def async_database_url(self) -> str:
         """Database URL adapted for SQLAlchemy's async engine."""
         return normalize_async_database_url(self.database_url)
+
+    @property
+    def openai_vision_diagnosis_enabled(self) -> bool:
+        return bool(self.openai_vision_diagnosis_api_key and self.openai_vision_diagnosis_model)
 
     def validate_production(self) -> None:
         """Fail fast at boot on an unsafe production configuration (docs/SECURITY.md).

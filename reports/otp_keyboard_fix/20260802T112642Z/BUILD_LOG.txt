@@ -1,0 +1,4 @@
+Command: gradlew.bat :app:assembleRelease --no-daemon --console=plain
+Result: PASS (exit code 0)
+APK SHA-256: 30c97d690ea459482ae58eae8b1bedb6e0590c7cb348c7ec1ae52324f757eb63
+Metro: stopped/not required

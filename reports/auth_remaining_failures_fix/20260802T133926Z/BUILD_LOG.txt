@@ -1,0 +1,7 @@
+COMMAND=.\gradlew.bat --no-daemon :app:assembleRelease -PreactNativeArchitectures=arm64-v8a
+RESULT=BUILD SUCCESSFUL
+DURATION=3m57s
+APK=D:\AgrowAI\AgrowAi_app\agrow-ai\android\app\build\outputs\apk\release\app-release.apk
+APK_SHA256=12c7f0ef29000f8f039525f6a28cac9dc07c2b615782eca50e952ea2e2208263
+JAVASCRIPT_BUNDLED=YES
+METRO_REQUIRED=NO

@@ -1,0 +1,161 @@
+﻿
+08-02 13:06:44.855 D/WindowManager( 1580): prepareSync <SYNC_STATE_WAITING_FOR_DRAW>, mPrepareSyncSeqId=0, 
+win=Window{97bf54e u0 Splash Screen com.agrowai.app}
+08-02 13:06:44.855 I/SurfaceFlinger( 1254): id=1419 createSurf, flag=84004, 97bf54e Splash Screen com.agrowai.app#1419
+08-02 13:06:44.856 V/WindowManager( 1580): addWindow: ActivityRecord{161467051 u0 com.agrowai.app/.MainActivity 
+t26743} startingWindow=Window{97bf54e u0 Splash Screen com.agrowai.app}
+08-02 13:06:44.863 I/InsetsController( 2391): onStateChanged: host=Splash Screen com.agrowai.app, 
+from=android.view.ViewRootImpl.onInsetsStateChanged:3038, state=InsetsState: {mDisplayFrame=Rect(0, 0 - 1080, 2340), 
+mDisplayCutout=DisplayCutout{insets=Rect(0, 100 - 0, 0) waterfall=Insets{left=0, top=0, right=0, bottom=0} 
+boundingRect={Bounds=[Rect(0, 0 - 0, 0), Rect(470, 0 - 610, 100), Rect(0, 0 - 0, 0), Rect(0, 0 - 0, 0)]} 
+cutoutPathParserInfo={CutoutPathParserInfo{displayWidth=1080 displayHeight=2340 physicalDisplayWidth=1080 
+physicalDisplayHeight=2340 density={2.8125} cutoutSpec={M 0,0 H -24.88888888888889 V 35.55555555555556 H 
+24.88888888888889 V 0 H 0 Z @dp} rotation={0} scale={1.0} physicalPixelDisplaySizeRatio={1.0}}} sideOverrides={}}, 
+mRoundedCorners=RoundedCorners{[RoundedCorner{position=TopLeft, radius=110, center=Point(110, 110)}, 
+RoundedCorner{position=TopRight, radius=110, center=Point(970, 110)}, RoundedCorner{position=BottomRight, radius=110, 
+center=Point(970, 2230)}, RoundedCorner{position=BottomLeft, radius=110, center=Point(110, 2230)}]}  
+mRoundedCornerFrame=Rect(0, 0 - 1080, 2340), mPrivacyIndicatorBounds=PrivacyIndicatorBounds {static bounds=Rect(956, 0 
+- 1080, 100) rotation=0}, mDisplayShape=DisplayShape{ spec=-311912193 displayWidth=1080 displayHeight=2340 
+physicalPixelDisplaySizeRatio=1.0 rotation=0 offsetX=0 offsetY=0 scale=1.0}, mSources= { InsetsSource: {9f5b0001 
+mType=navigationBars mFrame=[0,2205][1080,2340] mAttachedInsets=null mVisible=false mFlags= mSideHint=BOTTOM 
+mBoundingRects=null}, InsetsSource: {9f5b0004 mType=systemGestures mFrame=[0,0][0,0] mAttachedInsets=null 
+mVisible=true mFlags= mSideHint=NONE mBoundingRects=null}, InsetsSource: {9f5b0005 mType=mandatorySystemGestures 
+mFrame=[0,2205][1080,2340] mAttachedInsets=null mVisible=true mFlags= mSideHint=BOTTOM mBoundingRects=null}, 
+InsetsSource: {9f5b0006 mType=tappableElement mFrame=[0,2205][1080,2340] mAttachedInsets=null mVisible=true mFlags= 
+mSideHint=BOTTOM mBoundingRects=null}, InsetsSource: {9f5b0024 mType=systemGestures mFrame=[0,0][0,0] 
+mAttachedInsets=null mVisible=true mFlags= mSideHint=NONE mBoundingRects=null}, InsetsSource: {3 mType=ime 
+mFrame=[0,0][0,0] mAttachedInsets=null mVisible=false mFlags=INVALID mSideHint=NONE mBoundingRects=null}, 
+InsetsSource: {27 mType=displayCutout mFrame=[0,0][1080,100] mAttachedInsets=null mVisible=true mFlags= mSideHint=TOP 
+mBoundingRects=null}, InsetsSource: {4a7e0000 mType=statusBars mFrame=[0,0][1080,100] mAttachedInsets=null 
+mVisible=true mFlags= mSideHint=TOP mBoundingRects=null}, InsetsSource: {4a7e0005 mType=mandatorySystemGestures 
+mFrame=[0,0][1080,134] mAttachedInsets=null mVisible=true mFlags= mSideHint=TOP mBoundingRects=null}, InsetsSource: 
+{4a7e0006 mType=tappableElement mFrame=[0,0][1080,100] mAttachedInsets=null mVisible=true mFlags= mSideHint=TOP 
+mBoundingRects=null} }
+08-02 13:06:44.866 I/SurfaceFlinger( 1254): [97bf54e Splash Screen com.agrowai.app#1419] attach to parent 
+LayerHierarchy{RequestedLayerState{ActivityRecord{161467051 u0 com.agrowai.app/.MainActivity t26743}#1418 
+parentId=1417} 1 children}
+08-02 13:06:44.893 D/CoreBackPreview( 1580): Window{97bf54e u0 Splash Screen com.agrowai.app}: Setting back callback 
+OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@a26185a, mPriority=0, 
+mIsAnimationCallback=false, mOverrideBehavior=0}
+08-02 13:06:44.893 I/WindowManager( 1580): Relayout Window{97bf54e u0 Splash Screen com.agrowai.app}: viewVisibility=0 
+req=1080x2340 ty=3 d0
+08-02 13:06:44.894 I/SurfaceFlinger( 1254): id=1420 createSurf, flag=44004, Splash Screen com.agrowai.app$_2391#1420
+08-02 13:06:44.895 D/WindowManager( 1580): makeSurface duration=2 name=Splash Screen com.agrowai.app$_2391
+08-02 13:06:44.899 I/SurfaceFlinger( 1254): [Splash Screen com.agrowai.app$_2391#1420] attach to parent 
+LayerHierarchy{RequestedLayerState{97bf54e Splash Screen com.agrowai.app#1419 parentId=1418} 1 children}
+08-02 13:06:44.916 I/SurfaceFlinger( 1254): RequestedLayer [97bf54e Splash Screen com.agrowai.app#1419] hidden!! flag  
+from(1) --> to(0)
+08-02 13:06:44.928 I/SurfaceFlinger( 1254): [Splash Screen com.agrowai.app$_2391#1420] setTransactionState with the 
+first frame. bufferData(ID: 10269266805258, frameNumber: 1)
+08-02 13:06:44.930 D/WindowManager( 1580): finishDrawingWindow: Window{97bf54e u0 Splash Screen com.agrowai.app} 
+mDrawState=DRAW_PENDING seqId=0
+08-02 13:06:44.930 V/WindowManager( 1580): Finishing drawing window Window{97bf54e u0 Splash Screen com.agrowai.app}: 
+mDrawState=DRAW_PENDING
+08-02 13:06:44.930 V/WindowManager( 1580): Draw state now committed in Window{97bf54e u0 Splash Screen com.agrowai.app}
+08-02 13:06:45.181 D/TaskOrganizerController( 1580): applyStartingWindowAnimation, window=Window{97bf54e u0 Splash 
+Screen com.agrowai.app}, caller=com.android.server.wm.ActivityRecord.onCopySplashScreenFinish:40 
+com.android.server.wm.ActivityTaskManagerService.onSplashScreenViewCopyFinished:41 
+android.app.IActivityTaskManager$Stub.onTransact:3412 
+08-02 13:06:45.181 I/WindowManager( 1580): Reparenting to leash, surface=Surface(name=97bf54e Splash Screen 
+com.agrowai.app#1419)/@0xef4633f, leashParent=Surface(name=ActivityRecord{161467051 u0 com.agrowai.app/.MainActivity 
+t26743}#1418)/@0x605a40c
+08-02 13:06:45.182 I/SurfaceFlinger( 1254): id=1423 createSurf, flag=24000, Surface(name=97bf54e Splash Screen 
+com.agrowai.app#1419)/@0xef4633f - animation-leash of starting_reveal#1423
+08-02 13:06:45.183 D/WindowManager( 1580): makeSurface duration=1 leash=Surface(name=Surface(name=97bf54e Splash 
+Screen com.agrowai.app#1419)/@0xef4633f - animation-leash of starting_reveal#1423)/@0x5aab155
+08-02 13:06:45.183 I/SurfaceFlinger( 1254): [Surface(name=97bf54e Splash Screen com.agrowai.app#1419)/@0xef4633f - 
+animation-leash of starting_reveal#1423] attach to parent LayerHierarchy{RequestedLayerState{ActivityRecord{161467051 
+u0 com.agrowai.app/.MainActivity t26743}#1418 parentId=1417} 3 children}
+08-02 13:06:45.199 I/SurfaceFlinger( 1254): [LayerHierarchy{RequestedLayerState{97bf54e Splash Screen 
+com.agrowai.app#1419 parentId=1423 z=2147483647} 1 children}] reparent to 
+LayerHierarchy{RequestedLayerState{Surface(name=97bf54e Splash Screen com.agrowai.app#1419)/@0xef4633f - 
+animation-leash of starting_reveal#1423 parentId=1418} 1 children}
+08-02 13:06:46.066 I/ReactNativeJS(26245): Running "main"
+08-02 13:06:46.068 W/ReactNativeJS(26245): SafeAreaView has been deprecated and will be removed in a future release. 
+Please use 'react-native-safe-area-context' instead. See https://github.com/AppAndFlow/react-native-safe-area-context
+08-02 13:06:46.552 I/ReactNativeJS(26245): '[auth]', 'provider_category=firebase'
+08-02 13:06:47.189 V/WindowManager( 1580): Schedule remove starting ActivityRecord{161467051 u0 
+com.agrowai.app/.MainActivity t26743} startingWindow=Window{97bf54e u0 Splash Screen com.agrowai.app} animate=true 
+Callers=com.android.server.wm.ActivityRecord.removeStartingWindow:178 com.android.server.wm.ActivityRecord$1.run:66 
+android.os.Handler.handleCallback:1070 android.os.Handler.dispatchMessage:125 android.os.Looper.dispatchMessage:358 
+08-02 13:06:47.210 I/WindowManager( 1580): Relayout Window{97bf54e u0 Splash Screen com.agrowai.app}: viewVisibility=8 
+req=1080x2340 ty=3 d0
+08-02 13:06:47.211 E/WindowManager( 1580): win=Window{97bf54e u0 Splash Screen com.agrowai.app} destroySurfaces: 
+appStopped=true cleanupOnResume=false win.mWindowRemovalAllowed=false win.mRemoveOnExit=false win.mViewVisibility=8 
+caller=com.android.server.wm.WindowManagerService.tryStartExitingAnimation:128 
+com.android.server.wm.WindowManagerService.relayoutWindow:1121 com.android.server.wm.Session.relayout:30 
+android.view.IWindowSession$Stub.onTransact:840 com.android.server.wm.Session.onTransact:1 
+android.os.Binder.execTransactInternal:1514 android.os.Binder.execTransact:1454 
+08-02 13:06:47.231 I/SurfaceFlinger( 1254): [LayerHierarchy{RequestedLayerState{Splash Screen 
+com.agrowai.app$_2391#1420} no children}] reparent to OffscreenRoot
+08-02 13:06:47.232 I/SurfaceFlinger( 1254): [LayerHierarchy{RequestedLayerState{Splash Screen 
+com.agrowai.app$_2391#1420} no children}] RelativeParent to null
+08-02 13:06:47.236 I/SurfaceFlinger( 1254): id=1420 Removed Splash Screen com.agrowai.app$_2391#1420 (115)
+08-02 13:06:47.239 D/CoreBackPreview( 1580): Window{97bf54e u0 Splash Screen com.agrowai.app}: Setting back callback 
+null
+08-02 13:06:47.243 D/WindowManager( 1580): Starting window removed Window{97bf54e u0 Splash Screen com.agrowai.app}
+08-02 13:06:47.243 I/WindowManager( 1580): Cancelling animation restarting=false, 
+leash=Surface(name=Surface(name=97bf54e Splash Screen com.agrowai.app#1419)/@0xef4633f - animation-leash of 
+starting_reveal#1423)/@0x5aab155
+08-02 13:06:47.243 I/WindowManager( 1580): Reparenting to original parent: Surface(name=ActivityRecord{161467051 u0 
+com.agrowai.app/.MainActivity t26743}#1418)/@0x605a40c, destroy=false, surface=Surface(name=97bf54e Splash Screen 
+com.agrowai.app#1419)/@0xef4633f
+08-02 13:06:47.246 V/WindowManager( 1580): Remove Window{97bf54e u0 Splash Screen com.agrowai.app}: 
+mSurfaceControl=null mAnimatingExit=false mRemoveOnExit=false mHasSurface=false surfaceShowing=false animating=false 
+app-animation=false callers=com.android.server.wm.Session.remove:15 android.view.IWindowSession$Stub.onTransact:813 
+com.android.server.wm.Session.onTransact:1 android.os.Binder.execTransactInternal:1514 
+android.os.Binder.execTransact:1454 <bottom of call stack> 
+08-02 13:06:47.248 I/SurfaceFlinger( 1254): destroyed Splash Screen com.agrowai.app$_2391#1420
+08-02 13:06:47.250 I/SurfaceFlinger( 1254): id=1420 Destroyed Splash Screen com.agrowai.app$_2391#1420
+08-02 13:06:47.266 I/SurfaceFlinger( 1254): [LayerHierarchy{RequestedLayerState{97bf54e Splash Screen 
+com.agrowai.app#1419 z=2147483647} no children}] reparent to OffscreenRoot
+08-02 13:06:47.266 I/SurfaceFlinger( 1254): [LayerHierarchy{RequestedLayerState{97bf54e Splash Screen 
+com.agrowai.app#1419 z=2147483647} no children}] RelativeParent to null
+08-02 13:06:47.266 I/SurfaceFlinger( 1254): [LayerHierarchy{RequestedLayerState{Surface(name=97bf54e Splash Screen 
+com.agrowai.app#1419)/@0xef4633f - animation-leash of starting_reveal#1423} no children}] reparent to OffscreenRoot
+08-02 13:06:47.266 I/SurfaceFlinger( 1254): [LayerHierarchy{RequestedLayerState{Surface(name=97bf54e Splash Screen 
+com.agrowai.app#1419)/@0xef4633f - animation-leash of starting_reveal#1423} no children}] RelativeParent to null
+08-02 13:06:47.268 I/SurfaceFlinger( 1254): id=1423 Removed Surface(name=97bf54e Splash Screen 
+com.agrowai.app#1419)/@0xef4633f - animation-leash of starting_reveal#1423 (114)
+08-02 13:06:47.268 I/SurfaceFlinger( 1254): id=1419 Removed 97bf54e Splash Screen com.agrowai.app#1419 (114)
+08-02 13:06:47.283 I/SurfaceFlinger( 1254): destroyed 97bf54e Splash Screen com.agrowai.app#1419
+08-02 13:06:47.283 I/SurfaceFlinger( 1254): destroyed Surface(name=97bf54e Splash Screen 
+com.agrowai.app#1419)/@0xef4633f - animation-leash of starting_reveal#1423
+08-02 13:06:47.285 I/SurfaceFlinger( 1254): id=1419 Destroyed 97bf54e Splash Screen com.agrowai.app#1419
+08-02 13:06:47.285 I/SurfaceFlinger( 1254): id=1423 Destroyed Surface(name=97bf54e Splash Screen 
+com.agrowai.app#1419)/@0xef4633f - animation-leash of starting_reveal#1423
+08-02 13:06:56.378 I/adbd    (21117): adbd service requested 'shell,v2:export ANDROID_LOG_TAGS=''; exec logcat '-d' 
+'-v' 'brief' 'ReactNativeJS:I' 'AndroidRuntime:E' '*:S''
+08-02 13:07:14.674 I/adbd    (21117): adbd service requested 'shell,v2:export ANDROID_LOG_TAGS=''; exec logcat '-d' 
+'-v' 'brief' 'ReactNativeJS:I' 'AndroidRuntime:E' '*:S''
+08-02 13:07:29.856 I/WNC]VendorCamera( 1236): [operator():110] [CAMSYSKPI]1st setParameters : skip 
+runEarlySensorStartUp in 3rd party
+08-02 13:07:45.701 I/Bugle   (26519): BugleStartup: Updating app config...
+08-02 13:07:45.748 I/Bugle   (26519): BugleStartup: Done with app config.
+08-02 13:07:45.749 I/Bugle   (26519): BugleStartup: Handling shared prefs upgrade & Load MMS Configuration...
+08-02 13:07:45.781 I/Bugle   (26519): BugleStartup: Done initializing with enabled individual init failures.
+08-02 13:07:46.171 I/BugleNetwork(26519): FirebaseRegistrationStartupTask: Enabling Firebase component
+08-02 13:07:46.454 I/BugleE2eeEtouffee(26519): EtouffeeStateMachine: onRegistrationUpdate from Tachyon, previousState: 
+REGISTERED_WITH_PREKEYS, newState: REGISTERED_WITH_PREKEYS, reason: STARTUP_ENSURE_CONSISTENCY
+08-02 13:07:46.517 I/BugleMDD(26519): MddBackgroundStartupTask: Scheduled MDD periodic tasks.
+08-02 13:07:46.536 I/BugleRcsProvisioning(26519): RcsProvisioningTrigger: Schedule provisioning on app startup
+08-02 13:07:46.539 I/BugleNetwork(26519): Startup: registering tachyon.
+08-02 13:07:46.547 I/BugleNetwork(26519): Startup: registering tachyon for phone.
+08-02 13:07:46.735 I/Bugle   (26519): kickOffPendingIfNowConnected: RCS is ready and it was off. Trigger scheduling: 
+[scheduleProcessPendingMessagesActionForStartup, scheduleOnlyForCurrentProcess, maybeScheduleImmediately]
+08-02 13:07:47.381 D/AndroidRuntime(26739): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+08-02 13:07:47.398 I/AndroidRuntime(26739): Using default boot image
+08-02 13:07:47.398 I/AndroidRuntime(26739): Leaving lock profiling enabled
+08-02 13:07:47.403 D/AndroidRuntime(26739): addProductProperty not brand or 7
+08-02 13:07:47.701 D/AndroidRuntime(26739): Calling main entry com.android.commands.uiautomator.Launcher
+08-02 13:07:49.133 D/AndroidRuntime(26739): Shutting down VM
+08-02 13:07:51.799 I/BugleDataModel(26519): ActionExecutorImpl: ACTION_EXECUTE_QUEUED_FixupMessageStatusOnStartupAction
+08-02 13:07:51.799 I/BugleDataModel(26519): running action FixupMessageStatusOnStartupAction
+08-02 13:07:51.875 I/BugleDataModel(26519): FixupMessageStatusOnStartupAction: sendFailedCnt: 0, downloadFailedCnt: 0, 
+partsProcessingFailedCnt: 0
+08-02 13:07:51.888 I/BugleDataModel(26519): PendingMessagesProcessor process from FixupMessageStatusOnStartupAction 
+due to process restarts throttled  with delay 0s with queues smsMessagesToSend:0 mmsMessagesToSend:0 
+rcsMessagesToSend:0 rcsFTMessagesToSend:0 messagesToDownload:0
+08-02 13:07:51.894 I/BugleDataModel(26519): finished running action FixupMessageStatusOnStartupAction in 95 ms
+
+

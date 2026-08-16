@@ -1,0 +1,24 @@
+{
+  "timestamp_utc": "2026-08-02T07:56:47Z",
+  "apk_path": "D:\\AgrowAI\\AgrowAi_app\\agrow-ai\\android\\app\\build\\outputs\\apk\\release\\app-release.apk",
+  "apk_sha256": "95bd598666d85ab380d79c135435ec63240e4082aa3f889e348ea98b75bda142",
+  "firebase_functionality_changed": false,
+  "backend_changed": false,
+  "staged": false,
+  "committed": false,
+  "pushed": false,
+  "statuses": {
+    "LOGO_SHARPNESS": "PASS",
+    "PHONE_INPUT_VISIBILITY": "PASS",
+    "SEND_OTP_BUTTON": "PASS",
+    "GOOGLE_BUTTON": "PASS",
+    "ERROR_STATE_UI": "IMPLEMENTED_DEVICE_SCREENSHOT_PENDING",
+    "OTP_BOX_VISIBILITY": "IMPLEMENTED_DEVICE_SCREENSHOT_PENDING",
+    "VERIFY_BUTTON": "IMPLEMENTED_DEVICE_SCREENSHOT_PENDING",
+    "LANGUAGE_SELECTOR_UI": "PASS",
+    "KEYBOARD_USABILITY": "IMPLEMENTED_MANUAL_DEVICE_VALIDATION_PENDING",
+    "RELEASE_BUILD": "PASS",
+    "DEVICE_UI_VALIDATION": "PARTIAL_PASS_OTP_PENDING",
+    "AUTH_UI_PREMIUM_POLISH": "CONDITIONAL_PASS_DEVICE_OTP_VALIDATION_PENDING"
+  }
+}

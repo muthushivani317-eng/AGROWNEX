@@ -1,0 +1,12 @@
+Baseline APK SHA-256: 47a5ef077a6b684ba77ab421285b3d1550548b806e9c4a729e9bd2310287f04b
+Focused Jest: PASS (4 suites, 24 tests)
+Full Jest: PASS (117 suites, 746 tests)
+TypeScript tsc --noEmit: PASS
+Expo Doctor: PASS (20/20)
+Expo Android production export: PASS (4701 modules, 58 output files)
+First Gradle assembleRelease: TIMEOUT during native compilation; no new artifact accepted.
+Final Gradle command: NODE_ENV=production gradlew.bat assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon
+Final Gradle result after all code changes: BUILD SUCCESSFUL in 4m 21s; 795 actionable tasks (31 executed, 764 up-to-date)
+APK: D:\AgrowAI\AgrowAi_app\agrow-ai\android\app\build\outputs\apk\release\app-release.apk
+APK bytes: 61747955
+APK SHA-256: 673bc3c8354d36d5271ca132bda9727f6dcc6ec8afb647f9eef2e5bbbb342219

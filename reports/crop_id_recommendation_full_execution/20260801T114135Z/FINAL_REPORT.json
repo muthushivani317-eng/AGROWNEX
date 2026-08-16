@@ -1,0 +1,9 @@
+{
+  "final_status": "BLOCKED_INSUFFICIENT_DATA_AND_HUMAN_REVIEW",
+  "crop_identity": "RESEARCH_BASELINE_ONLY",
+  "recommendations": "HUMAN_REVIEW_REQUIRED",
+  "railway_deployment": "MANUAL_ACCESS_REQUIRED",
+  "live_e2e": "NOT_RUN",
+  "farmer_release_readiness": false,
+  "claims": {"official_accuracy": false, "field_validation": false, "deployment_success": false}
+}

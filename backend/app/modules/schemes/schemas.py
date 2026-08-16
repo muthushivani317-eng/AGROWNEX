@@ -6,7 +6,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, Field
 
-from app.modules.schemes.constants import FarmerCategory
+from app.modules.schemes.constants import DocumentType, FarmerCategory, classify_document
 from app.modules.schemes.engine import EligibilityResult
 from app.modules.schemes.models import GovernmentScheme, SchemeDocument
 from app.schemas.response import PaginatedData
@@ -35,10 +35,32 @@ class EligibilityOut(BaseModel):
 class DocumentOut(BaseModel):
     name: str
     required: bool
+    document_type: DocumentType
+    has_document: bool
 
     @classmethod
-    def from_row(cls, doc: SchemeDocument) -> DocumentOut:
-        return cls(name=doc.document_name, required=doc.is_required)
+    def from_row(cls, doc: SchemeDocument, owned: set[str]) -> DocumentOut:
+        document_type = classify_document(doc.document_name)
+        return cls(
+            name=doc.document_name,
+            required=doc.is_required,
+            document_type=document_type,
+            has_document=document_type.value in owned,
+        )
+
+
+class DocumentReadinessOut(BaseModel):
+    ready_count: int
+    total_count: int
+
+
+class FarmerDocumentOut(BaseModel):
+    document_type: DocumentType
+    has_document: bool
+
+
+class SetDocumentRequest(BaseModel):
+    has_document: bool
 
 
 class SchemeSummaryOut(BaseModel):
@@ -86,6 +108,7 @@ class SchemeDetailOut(SchemeSummaryOut):
     eligibility_summary: str | None = None
     application_steps: list[str] = Field(default_factory=list)
     documents: list[DocumentOut] = Field(default_factory=list)
+    document_readiness: DocumentReadinessOut
     source: str | None = None
     verified_at: datetime | None = None
 
@@ -95,9 +118,11 @@ class SchemeDetailOut(SchemeSummaryOut):
         scheme: GovernmentScheme,
         *,
         documents: list[SchemeDocument],
+        owned_documents: set[str],
         bookmarked: bool = False,
         eligibility: EligibilityResult | None = None,
     ) -> SchemeDetailOut:
+        document_rows = [DocumentOut.from_row(d, owned_documents) for d in documents]
         return cls(
             id=scheme.id,
             slug=scheme.slug,
@@ -116,7 +141,11 @@ class SchemeDetailOut(SchemeSummaryOut):
             benefits=scheme.benefits,
             eligibility_summary=scheme.eligibility_summary,
             application_steps=scheme.application_steps or [],
-            documents=[DocumentOut.from_row(d) for d in documents],
+            documents=document_rows,
+            document_readiness=DocumentReadinessOut(
+                ready_count=sum(d.has_document for d in document_rows),
+                total_count=len(document_rows),
+            ),
             source=scheme.source,
             verified_at=scheme.verified_at,
         )

@@ -1,0 +1,2 @@
+NOT_RUN: no Android device was visible to ADB.
+No Metro or Expo development server was started.

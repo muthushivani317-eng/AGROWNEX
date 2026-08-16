@@ -13,6 +13,11 @@ DISCLAIMER = (
     "as a disease diagnosis, treatment recommendation, or proof that a plant is "
     "safe to eat, touch, or use."
 )
+DISCLAIMER_TA = (
+    "இந்த அடையாளம் பொதுத் தகவலுக்காக மட்டுமே வழங்கப்படுகிறது. இதை நோய் "
+    "கண்டறிதல், சிகிச்சைப் பரிந்துரை அல்லது ஒரு தாவரத்தை உண்ண, தொட, அல்லது "
+    "பயன்படுத்த பாதுகாப்பானது என்பதற்கான சான்றாக பயன்படுத்த வேண்டாம்."
+)
 MAX_PROVIDER_RESPONSE_CHARS = 20_000
 _FENCE = re.compile(r"^\s*```(?:json)?\s*(.*?)\s*```\s*$", re.DOTALL | re.IGNORECASE)
 
@@ -51,7 +56,7 @@ def response_from_identification(
         request_id=request_id,
         **parsed.model_dump(),
         language=language,
-        disclaimer=DISCLAIMER,
+        disclaimer=DISCLAIMER_TA if language == "ta" else DISCLAIMER,
         processing_status="complete",
         error_code=error_code,
         retry_allowed=parsed.status != "identified",
@@ -71,7 +76,7 @@ def failure_response(
         status=status,
         confidence=0.0,
         language=language,
-        disclaimer=DISCLAIMER,
+        disclaimer=DISCLAIMER_TA if language == "ta" else DISCLAIMER,
         processing_status="rejected" if status == "invalid_image" else "failed",
         error_code=error_code,
         retry_allowed=retry_allowed,

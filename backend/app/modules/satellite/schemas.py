@@ -1,5 +1,6 @@
 """Satellite Intelligence schemas (docs: reuse response envelope). Unavailable
 imagery is reported honestly; indices are never fabricated."""
+
 from __future__ import annotations
 
 import uuid
@@ -160,3 +161,19 @@ class SatelliteTimelineOut(BaseModel):
     farm_id: uuid.UUID
     range: str
     points: list[TimelinePointOut]
+
+
+class WaterloggingAssessmentOut(BaseModel):
+    id: uuid.UUID
+    farm_id: uuid.UUID
+    decision: str
+    observed_at: datetime | None
+    processed_at: datetime
+    source: str | None
+    aoi_coverage_pct: float | None
+    evidence_present: list[str]
+    evidence_missing: list[str]
+    freshness: str
+    explanation: str
+    is_sample: bool
+    provenance: dict

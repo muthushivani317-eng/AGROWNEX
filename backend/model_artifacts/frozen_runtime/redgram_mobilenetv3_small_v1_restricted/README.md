@@ -17,11 +17,14 @@ Temperature: `3.1163787841796875`
 
 ## Evidence limits
 
-- Public-dataset development Top-1: 90.48%.
-- One-time public-dataset provisional raw accuracy: 86.54%.
-- Frozen selective policy accepted 25 of 52 provisional images with
-  zero accepted errors.
-- Selective coverage: 48.08%.
+- The deployed safety policy answered 25 of 52 one-time provisional images and
+  made zero errors among those 25 answered cases.
+- It deliberately abstains whenever leaf spot is suspected rather than guessing.
+- The underlying classifier's raw public-dataset provisional accuracy was 86.54%,
+  but that number does not describe the deployed selective behavior by itself.
+- This was a small, single-source public-dataset evaluation; real field performance
+  is still being established under supervision.
+- Selective coverage on that provisional set was 48.08%.
 - The provisional test must not be rerun or used for tuning.
 - This runtime is not a complete three-class automatic diagnosis model.
 - It is not field validated.

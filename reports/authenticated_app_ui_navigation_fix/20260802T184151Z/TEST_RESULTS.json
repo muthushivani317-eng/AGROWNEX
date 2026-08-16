@@ -1,0 +1,10 @@
+{
+  "focused_jest": {"suites": 6, "tests": 23, "status": "PASS"},
+  "full_jest": {"suites": 117, "tests": 746, "status": "PASS"},
+  "typescript": "PASS",
+  "expo_doctor": "20/20 PASS",
+  "production_android_bundle": {"status": "PASS", "modules": 4701},
+  "release_apk": "PASS",
+  "device_install": "PASS_IN_PLACE",
+  "device_ui_validation": "BLOCKED_DEVICE_LOCKED"
+}

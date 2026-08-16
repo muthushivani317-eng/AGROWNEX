@@ -16,14 +16,17 @@ Normalized tables:
 ``user_id`` is the farmer (FK ``users.id``) — the codebase scopes every module by
 the authenticated user, matching the docs' ``farmer_id`` concept.
 """
+
 from __future__ import annotations
 
 import uuid
-from datetime import date
+from datetime import date, datetime
 
 from sqlalchemy import (
     JSON,
+    Boolean,
     Date,
+    DateTime,
     Float,
     ForeignKey,
     Integer,
@@ -165,3 +168,68 @@ class BuyerInterest(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     status: Mapped[str] = mapped_column(String(20), default="pending", nullable=False)
     notes: Mapped[str | None] = mapped_column(Text)
     external_reference: Mapped[str | None] = mapped_column(String(80))
+
+
+class HarvestReadinessRecord(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
+    __tablename__ = "harvest_readiness_records"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(GUID(), ForeignKey("users.id"), index=True)
+    farm_id: Mapped[uuid.UUID] = mapped_column(GUID(), ForeignKey("farms.id"), index=True)
+    crop_cycle_id: Mapped[str] = mapped_column(String(80), index=True)
+    state: Mapped[str] = mapped_column(String(40), nullable=False)
+    version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    criteria_version: Mapped[str | None] = mapped_column(String(80))
+    criteria_hash: Mapped[str | None] = mapped_column(String(64))
+    evidence_snapshot: Mapped[dict] = mapped_column(JSON, nullable=False)
+    pending_sync: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+
+class HarvestReadinessHistory(UUIDMixin, TimestampMixin, Base):
+    __tablename__ = "harvest_readiness_history"
+
+    record_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("harvest_readiness_records.id"), index=True
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(GUID(), ForeignKey("users.id"), index=True)
+    event: Mapped[str] = mapped_column(String(24), nullable=False)
+    prior_state: Mapped[str | None] = mapped_column(String(40))
+    next_state: Mapped[str] = mapped_column(String(40), nullable=False)
+    note: Mapped[str | None] = mapped_column(String(500))
+    photo_reference: Mapped[str | None] = mapped_column(String(512))
+    idempotency_key: Mapped[str] = mapped_column(String(100), index=True)
+    evidence_snapshot: Mapped[dict] = mapped_column(JSON, nullable=False)
+    farmer_confirmed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+
+class ProduceTraceBatch(UUIDMixin, TimestampMixin, Base):
+    """Controlled-test traceability identity for one farmer-owned produce offer."""
+
+    __tablename__ = "produce_trace_batches"
+
+    offer_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("produce_offers.id", ondelete="CASCADE"), unique=True, index=True
+    )
+    owner_user_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("users.id"), index=True, nullable=False
+    )
+    batch_code: Mapped[str] = mapped_column(String(40), unique=True, index=True)
+
+
+class ProduceTraceEvent(UUIDMixin, TimestampMixin, Base):
+    """Append-only, hash-chained farmer declaration; not a certification record."""
+
+    __tablename__ = "produce_trace_events"
+
+    batch_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("produce_trace_batches.id", ondelete="CASCADE"), index=True
+    )
+    actor_user_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("users.id"), index=True, nullable=False
+    )
+    event_type: Mapped[str] = mapped_column(String(40), index=True, nullable=False)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    location_text: Mapped[str | None] = mapped_column(String(160))
+    notes: Mapped[str | None] = mapped_column(String(1000))
+    evidence_url: Mapped[str | None] = mapped_column(String(512))
+    previous_hash: Mapped[str | None] = mapped_column(String(64))
+    event_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)

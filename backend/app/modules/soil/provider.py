@@ -8,13 +8,14 @@ fabricates a soil value (docs/PRODUCT_RULES.md). Farmer-entered values are the o
 source of truth in V1. Future providers implement the same Protocol and are
 selected in ``get_default_provider`` with no change to the rest of the module.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import date
 from typing import Protocol
 
 from app.core.logging import get_logger
-from app.modules.soil.constants import SOIL_PROVIDER
 
 logger = get_logger("soil.provider")
 
@@ -46,6 +47,29 @@ class ParsedReport:
     test_date: str | None = None
 
 
+@dataclass(frozen=True)
+class RemoteSoilEstimate:
+    indicator: str
+    value: float
+    unit: str
+    provider: str
+    model_version: str
+    scene_id: str
+    aoi_hash: str
+    capture_date: date
+    resolution_m: float
+    coverage_pct: float
+    uncertainty_low: float | None
+    uncertainty_high: float | None
+
+
+@dataclass(frozen=True)
+class RemoteSoilOutcome:
+    estimates: tuple[RemoteSoilEstimate, ...] = ()
+    status: str = "insufficient_data"
+    reason: str = "provider_not_configured"
+
+
 class SoilProvider(Protocol):
     """Supplies soil data from an external source. The external seam."""
 
@@ -55,9 +79,9 @@ class SoilProvider(Protocol):
         self, latitude: float, longitude: float
     ) -> ProviderSoilData | None: ...
 
-    async def parse_report(
-        self, report_url: str, mime_type: str | None
-    ) -> ParsedReport | None: ...
+    async def parse_report(self, report_url: str, mime_type: str | None) -> ParsedReport | None: ...
+
+    async def fetch_remote_estimates(self, aoi: dict) -> RemoteSoilOutcome: ...
 
 
 class MockSoilProvider:
@@ -72,17 +96,45 @@ class MockSoilProvider:
         logger.info("no location soil dataset configured (%.4f, %.4f)", latitude, longitude)
         return None
 
-    async def parse_report(
-        self, report_url: str, mime_type: str | None
-    ) -> ParsedReport | None:
+    async def parse_report(self, report_url: str, mime_type: str | None) -> ParsedReport | None:
         # No OCR / lab API wired in → the farmer supplies the values (never invented).
         return None
 
+    async def fetch_remote_estimates(self, aoi: dict) -> RemoteSoilOutcome:
+        return RemoteSoilOutcome()
+
+
+class UnavailableSoilProvider:
+    """Production-safe null provider; it never returns sample soil values."""
+
+    name = "unavailable"
+
+    async def fetch_location_soil(
+        self, latitude: float, longitude: float
+    ) -> ProviderSoilData | None:
+        return None
+
+    async def parse_report(self, report_url: str, mime_type: str | None) -> ParsedReport | None:
+        return None
+
+    async def fetch_remote_estimates(self, aoi: dict) -> RemoteSoilOutcome:
+        return RemoteSoilOutcome(
+            status="remote_estimation_unavailable",
+            reason="provider_not_configured",
+        )
+
 
 def get_default_provider() -> SoilProvider:
-    """Select the configured provider (mock until a real source is wired in)."""
-    if SOIL_PROVIDER:
-        logger.info(
-            "soil provider '%s' requested but not wired; using mock", SOIL_PROVIDER
-        )
-    return MockSoilProvider()
+    """Select an explicit development mock or fail closed without a real adapter."""
+    import os
+
+    configured = os.getenv("SOIL_PROVIDER", "").lower()
+    environment = os.getenv("ENVIRONMENT", "development").lower()
+    if configured == "mock" and environment in {"development", "test"}:
+        logger.info("soil provider: explicit development mock")
+        return MockSoilProvider()
+    if configured:
+        logger.warning("soil provider unavailable: configured adapter is not installed")
+    else:
+        logger.info("soil provider unavailable: no real adapter configured")
+    return UnavailableSoilProvider()

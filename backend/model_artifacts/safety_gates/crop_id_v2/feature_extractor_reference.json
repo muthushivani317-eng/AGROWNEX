@@ -1,0 +1,6 @@
+{
+  "status": "NOT_FITTED",
+  "planned_layer": "mobilenet_v3_small classifier pre-logit embedding",
+  "frozen_classifier_modified": false,
+  "runtime_model_sha256": "61dab083068bfdee463111c154cff0c22cf52fe9a7afc97bab2382e802fd4e97"
+}

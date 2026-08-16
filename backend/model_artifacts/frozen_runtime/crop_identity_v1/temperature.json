@@ -1,0 +1,7 @@
+{
+  "method": "temperature_scaling",
+  "temperature": 0.2968480513819703,
+  "calibration_split": "calibration",
+  "nll_before": 0.00046743001439608634,
+  "nll_after": 1.943766095282724e-08
+}

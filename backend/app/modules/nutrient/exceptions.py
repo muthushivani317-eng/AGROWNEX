@@ -3,6 +3,7 @@
 Image-quality and no-plant errors are reused from the Disease module so the two
 image pipelines share one contract (no duplicate error codes).
 """
+
 from __future__ import annotations
 
 from app.core.exceptions import AppError, NotFoundError
@@ -34,3 +35,21 @@ class NutrientAnalysisError(AppError):
     status_code = 503
     error_code = "nutrient_analysis_failed"
     message = "Could not analyse the image right now. Please try again."
+
+
+class NutrientProviderUnavailableError(AppError):
+    status_code = 503
+    error_code = "analysis_unavailable"
+    message = "Nutrient image analysis is unavailable right now."
+
+
+class NutrientCropMismatchError(AppError):
+    status_code = 422
+    error_code = "nutrient_crop_mismatch"
+    message = "The selected crop does not match this farm."
+
+
+class NutrientUnsupportedCropError(AppError):
+    status_code = 422
+    error_code = "nutrient_unsupported_crop"
+    message = "This crop is not supported for nutrient image assessment."

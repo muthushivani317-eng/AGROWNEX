@@ -8,6 +8,7 @@ so recommendations are explainable and reproducible.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import date
 
 from app.modules.schemes.constants import (
     ANY,
@@ -49,6 +50,7 @@ class SchemeRules:
     max_land_hectares: float | None = None
     max_annual_income: int | None = None
     status: str = SchemeStatus.ACTIVE.value
+    last_date: date | None = None
 
     @classmethod
     def from_scheme(cls, scheme: object) -> SchemeRules:
@@ -62,6 +64,7 @@ class SchemeRules:
             max_land_hectares=getattr(scheme, "max_land_hectares", None),
             max_annual_income=getattr(scheme, "max_annual_income", None),
             status=getattr(scheme, "status", SchemeStatus.ACTIVE.value),
+            last_date=getattr(scheme, "last_date", None),
         )
 
 
@@ -114,8 +117,23 @@ def _score(matched: list[str], unknown: list[str]) -> int:
     return max(10, min(100, score))
 
 
-def evaluate(rules: SchemeRules, context: FarmerContext) -> EligibilityResult:
-    """Classify a single scheme for a farmer (pure)."""
+def evaluate(
+    rules: SchemeRules, context: FarmerContext, *, today: date | None = None
+) -> EligibilityResult:
+    """Classify a single scheme for a farmer (pure — ``today`` is supplied by
+    the caller rather than read from the clock, so this stays deterministic
+    and testable; the real service passes ``app.core.timezone.today_ist()``).
+
+    A scheme whose application window has already closed (``last_date`` in
+    the past) is treated exactly like a closed scheme: NOT_ELIGIBLE, never
+    "eligible"/"likely eligible", regardless of how well the farmer otherwise
+    matches. Before this check existed, an expired scheme (e.g. one seeded
+    with ``last_date`` weeks in the past) still surfaced via
+    ``/schemes/eligible`` and ``/schemes/recommended`` as if it were live
+    (found in the 2026-08 pre-release audit). When ``today`` is not supplied,
+    the deadline is not checked (matches the old behaviour) -- this keeps any
+    caller that hasn't been updated to pass ``today`` working unchanged.
+    """
     category_value = (
         context.farmer_category.value if context.farmer_category else None
     )
@@ -133,7 +151,11 @@ def evaluate(rules: SchemeRules, context: FarmerContext) -> EligibilityResult:
     unmet = [c for c in _CRITERIA if outcomes[c] == _FAIL]
     unknown = [c for c in _CRITERIA if outcomes[c] == _UNKNOWN]
 
-    if rules.status == SchemeStatus.CLOSED.value or unmet:
+    expired = rules.last_date is not None and today is not None and today > rules.last_date
+    if expired:
+        unmet = [*unmet, "deadline"]
+
+    if rules.status == SchemeStatus.CLOSED.value or expired or unmet:
         return EligibilityResult(
             status=EligibilityStatus.NOT_ELIGIBLE.value,
             score=0,

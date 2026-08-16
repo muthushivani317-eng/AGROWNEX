@@ -12,6 +12,7 @@ Business logic lives here; routes stay thin. A deficiency is never fabricated: w
 the evidence is thin the engine returns "not confirmed" and a soil/tissue test is
 advised.
 """
+
 from __future__ import annotations
 
 import base64
@@ -21,8 +22,13 @@ from datetime import UTC, datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
+from app.core.exceptions import QuotaExceededError
 from app.core.logging import get_logger
+from app.crop_runtime.registry import load_registry
 from app.modules.ai.context import build_farm_memory
+from app.modules.ai.repositories import TokenUsageRepository
+from app.modules.ai.usage_ledger import record_usage_durable
 from app.modules.auth.models import User
 from app.modules.auth.repositories import FarmerProfileRepository
 from app.modules.disease.constants import QualityIssue
@@ -48,8 +54,10 @@ from app.modules.nutrient.engine import (
 from app.modules.nutrient.exceptions import (
     FarmNotOwnedError,
     NoPlantDetectedError,
+    NutrientCropMismatchError,
     NutrientDataUnavailableError,
     NutrientReportNotFoundError,
+    NutrientUnsupportedCropError,
     PoorImageQualityError,
 )
 from app.modules.nutrient.models import (
@@ -80,6 +88,7 @@ _EXT = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
 # (the engine then lowers certainty and asks for an expert — never a silent override).
 _DISEASE_CONFLICT_CONFIDENCE = 80
 _LOW_VIGOR_HEALTH = frozenset({"bare", "very_low", "low"})
+_MAX_DECODED_IMAGE_BYTES = 10 * 1024 * 1024
 
 
 def _weather_snapshot(weather: WeatherBundle | None) -> dict | None:
@@ -106,6 +115,7 @@ class NutrientService:
     ) -> None:
         self.session = session
         self.repo = NutrientRepository(session)
+        self.token_usage = TokenUsageRepository(session)
         self.profiles = FarmerProfileRepository(session)
         self.farms = FarmRepository(session)
         self.provider = provider or get_default_provider()
@@ -125,29 +135,39 @@ class NutrientService:
     # ----------------------------------------------------------------- #
     # Analyze
     # ----------------------------------------------------------------- #
-    async def analyze(
-        self, user: User, req: AnalyzeNutrientRequest
-    ) -> NutrientReport:
+    async def analyze(self, user: User, req: AnalyzeNutrientRequest) -> NutrientReport:
         farm = await self._require_farm(user, req.farm_id)
+        if req.crop and farm.crop and req.crop.strip().casefold() != farm.crop.strip().casefold():
+            raise NutrientCropMismatchError()
+        selected_crop = req.crop or farm.crop
+        if selected_crop:
+            try:
+                load_registry().normalize(selected_crop)
+            except KeyError as exc:
+                raise NutrientUnsupportedCropError() from exc
 
         # STEP 1 — decode + deterministic quality gate (never call the model on junk).
         try:
             data = base64.b64decode(req.image_base64, validate=True)
         except (binascii.Error, ValueError) as exc:
             raise PoorImageQualityError([QualityIssue.CORRUPTED.value]) from exc
+        if len(data) > _MAX_DECODED_IMAGE_BYTES:
+            raise PoorImageQualityError(["image_too_large"])
         quality = assess_quality(extract_metrics(data, req.mime_type))
         if not quality.acceptable:
             raise PoorImageQualityError(quality.issues)
 
         # Context (farm memory + best-effort weather).
         profile = await self.profiles.get_by_user_id(user.id)
-        language = (
-            req.language or (profile.language if profile else None) or DEFAULT_LANGUAGE
-        )
+        language = req.language or (profile.language if profile else None) or DEFAULT_LANGUAGE
         weather = await self._safe_weather(user, farm)
         farm_context = build_farm_memory(profile, farm, weather)
 
         # STEP 2 — visual observation from the provider.
+        day_start = self._now_dt().replace(hour=0, minute=0, second=0, microsecond=0)
+        used = await self.token_usage.count_today(user.id, "nutrient", since=day_start)
+        if used >= settings.ai_daily_nutrient_quota:
+            raise QuotaExceededError()
         observation = await self.provider.analyze(
             AnalysisInput(
                 image_base64=req.image_base64,
@@ -157,8 +177,28 @@ class NutrientService:
                 farm_context=farm_context,
             )
         )
+        model_used = observation.model_used or getattr(self.provider, "model", "unknown")
+        provider_name = getattr(self.provider, "name", "gemini")
+        await record_usage_durable(
+            farmer_id=user.id,
+            module="nutrient",
+            model=model_used,
+            input_tokens=None,
+            output_tokens=None,
+            latency_ms=None,
+            provider=provider_name,
+            is_sample=provider_name == "mock" or "mock" in model_used.lower(),
+        )
         if not observation.plant_present:
             raise NoPlantDetectedError(observation.reject_reason)
+        if selected_crop and observation.crop not in {"unknown", None}:
+            try:
+                observed_crop = load_registry().normalize(observation.crop)
+                expected_crop = load_registry().normalize(selected_crop)
+            except KeyError as exc:
+                raise NutrientUnsupportedCropError() from exc
+            if observed_crop != expected_crop:
+                raise NutrientCropMismatchError()
 
         # STEP 3 — gather corroborating signals from the other modules.
         soil_ref = await self._soil_reference(user, farm.id)
@@ -260,9 +300,7 @@ class NutrientService:
         )
 
         for code in observation.visible_symptoms:
-            await self.repo.add_symptom(
-                NutrientSymptom(report_id=report.id, code=code)
-            )
+            await self.repo.add_symptom(NutrientSymptom(report_id=report.id, code=code))
 
         for draft in drafts:
             await self.repo.add_recommendation(
@@ -305,9 +343,7 @@ class NutrientService:
         except Exception:  # noqa: BLE001 — soil is an optional corroborating signal
             logger.info("soil reference unavailable; continuing without it")
             return SoilReference()
-        has_data = assessment.has_any_value or bool(
-            assessment.deficient_micronutrients
-        )
+        has_data = assessment.has_any_value or bool(assessment.deficient_micronutrients)
         return SoilReference(
             has_data=has_data,
             macro_ratings={
@@ -318,9 +354,7 @@ class NutrientService:
             deficient_micronutrients=tuple(assessment.deficient_micronutrients),
         )
 
-    async def _satellite_reference(
-        self, user: User, farm_id: uuid.UUID
-    ) -> SatelliteReference:
+    async def _satellite_reference(self, user: User, farm_id: uuid.UUID) -> SatelliteReference:
         try:
             session = await SatelliteRepository(self.session).latest_session(
                 user.id, farm_id, available_only=True
@@ -331,12 +365,8 @@ class NutrientService:
         if session is None:
             return SatelliteReference()
         health = session.vegetation_health
-        low_vigor = health in _LOW_VIGOR_HEALTH or (
-            session.ndvi is not None and session.ndvi < 0.3
-        )
-        return SatelliteReference(
-            has_data=True, vegetation_health=health, low_vigor=low_vigor
-        )
+        low_vigor = health in _LOW_VIGOR_HEALTH or (session.ndvi is not None and session.ndvi < 0.3)
+        return SatelliteReference(has_data=True, vegetation_health=health, low_vigor=low_vigor)
 
     @staticmethod
     def _weather_reference(weather: WeatherBundle | None) -> WeatherReference:
@@ -353,13 +383,9 @@ class NutrientService:
             )
         except Exception:  # noqa: BLE001 — disease overlap is an optional check
             return False
-        return any(
-            (r.confidence or 0) >= _DISEASE_CONFLICT_CONFIDENCE for r in reports
-        )
+        return any((r.confidence or 0) >= _DISEASE_CONFLICT_CONFIDENCE for r in reports)
 
-    async def _safe_weather(
-        self, user: User, farm: Farm | None
-    ) -> WeatherBundle | None:
+    async def _safe_weather(self, user: User, farm: Farm | None) -> WeatherBundle | None:
         if self.weather_service is None or farm is None:
             return None
         location = farm.location
@@ -416,12 +442,13 @@ class NutrientService:
     ) -> PaginatedData[NutrientReport]:
         await self._require_farm(user, farm_id)
         offset = (page - 1) * page_size
-        rows, total = await self.repo.list_reports(
-            user.id, farm_id, limit=page_size, offset=offset
-        )
+        rows, total = await self.repo.list_reports(user.id, farm_id, limit=page_size, offset=offset)
         total_pages = (total + page_size - 1) // page_size if total else 0
         return PaginatedData(
-            items=rows, page=page, page_size=page_size, total=total,
+            items=rows,
+            page=page,
+            page_size=page_size,
+            total=total,
             total_pages=total_pages,
         )
 
@@ -432,9 +459,7 @@ class NutrientService:
             raise NutrientDataUnavailableError()
         return report
 
-    async def recommendations(
-        self, user: User, farm_id: uuid.UUID
-    ) -> list[NutrientRecommendation]:
+    async def recommendations(self, user: User, farm_id: uuid.UUID) -> list[NutrientRecommendation]:
         await self._require_farm(user, farm_id)
         return await self.repo.latest_recommendations(user.id, farm_id)
 

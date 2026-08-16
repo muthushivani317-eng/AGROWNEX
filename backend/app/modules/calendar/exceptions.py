@@ -1,4 +1,5 @@
 """Calendar-specific exceptions (docs/CODING_STANDARDS.md → Error Handling)."""
+
 from __future__ import annotations
 
 from app.core.exceptions import NotFoundError, ValidationError
@@ -19,3 +20,13 @@ class SowingDateRequiredError(ValidationError):
 
     error_code = "sowing_date_required"
     message = "Set the crop and sowing date for this farm before generating a calendar."
+
+
+class FarmCalendarContextMismatchError(ValidationError):
+    error_code = "farm_calendar_context_mismatch"
+    message = "Calendar inputs must match the selected farm. Update the farm first."
+
+
+class StageDataUnavailableError(ValidationError):
+    error_code = "STAGE_DATA_UNAVAILABLE"
+    message = "Verified crop-stage information is not available."

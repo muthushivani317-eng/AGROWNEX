@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0",
+  "crop": "banana",
+  "healthy_gate": {
+    "banana__healthy": 0,
+    "banana__diseased": 1
+  },
+  "disease_classifier": {
+    "banana__cordana_leaf_spot": 0,
+    "banana__pestalotiopsis_leaf_spot": 1,
+    "banana__sigatoka_leaf_spot": 2
+  },
+  "source_label_mapping": {
+    "banana__healthy": {
+      "healthy_gate": "banana__healthy",
+      "disease_classifier": null
+    },
+    "banana__cordana_leaf_spot": {
+      "healthy_gate": "banana__diseased",
+      "disease_classifier": "banana__cordana_leaf_spot"
+    },
+    "banana__pestalotiopsis_leaf_spot": {
+      "healthy_gate": "banana__diseased",
+      "disease_classifier": "banana__pestalotiopsis_leaf_spot"
+    },
+    "banana__sigatoka_leaf_spot": {
+      "healthy_gate": "banana__diseased",
+      "disease_classifier": "banana__sigatoka_leaf_spot"
+    }
+  }
+}

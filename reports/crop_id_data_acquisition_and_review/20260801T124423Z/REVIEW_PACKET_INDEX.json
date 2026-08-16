@@ -1,0 +1,42 @@
+[
+  {
+    "class": "banana",
+    "path": "datasets/crop_identity_v2/review_packets/banana.html",
+    "rows": 0
+  },
+  {
+    "class": "paddy",
+    "path": "datasets/crop_identity_v2/review_packets/paddy.html",
+    "rows": 0
+  },
+  {
+    "class": "cotton",
+    "path": "datasets/crop_identity_v2/review_packets/cotton.html",
+    "rows": 0
+  },
+  {
+    "class": "groundnut",
+    "path": "datasets/crop_identity_v2/review_packets/groundnut.html",
+    "rows": 0
+  },
+  {
+    "class": "chilli",
+    "path": "datasets/crop_identity_v2/review_packets/chilli.html",
+    "rows": 4032
+  },
+  {
+    "class": "redgram",
+    "path": "datasets/crop_identity_v2/review_packets/redgram.html",
+    "rows": 18
+  },
+  {
+    "class": "unknown_crop",
+    "path": "datasets/crop_identity_v2/review_packets/unknown_crop.html",
+    "rows": 0
+  },
+  {
+    "class": "non_plant",
+    "path": "datasets/crop_identity_v2/review_packets/non_plant.html",
+    "rows": 0
+  }
+]

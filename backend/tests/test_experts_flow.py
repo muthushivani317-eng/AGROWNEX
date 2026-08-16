@@ -21,6 +21,7 @@ from app.modules.experts.exceptions import (
     FarmNotOwnedError,
     InvalidStatusTransitionError,
 )
+from app.modules.experts.models import Expert
 from app.modules.experts.provider import MockExpertProvider
 from app.modules.experts.schemas import (
     AttachmentIn,
@@ -153,6 +154,39 @@ async def test_preferred_expert_is_honoured(db_session) -> None:
         user, _create(preferred_expert_id=preferred.id)
     )
     assert c.assigned_expert_id == preferred.id
+
+
+async def test_unverified_preferred_expert_is_rejected_and_auto_assigned(
+    db_session,
+) -> None:
+    """A client-controllable `preferred_expert_id` must not bypass the
+    verified-only guarantee (2026-08 pre-release audit follow-up): an active
+    but *unverified* expert record must never be assigned just because a
+    farmer's request happened to name its id."""
+    user = await _make_user(db_session)
+    service = _service(db_session)
+    await service.ensure_seeded()
+
+    unverified = Expert(
+        full_name="Unverified Desk",
+        expert_type="tnau",
+        organization="Not Yet Reviewed",
+        districts=[],
+        languages=["ta", "en"],
+        verified=False,
+        status="active",
+        slug="unverified-test-desk",
+    )
+    db_session.add(unverified)
+    await db_session.flush()
+
+    c = await service.create_consultation(
+        user, _create(preferred_expert_id=unverified.id)
+    )
+    assert c.assigned_expert_id != unverified.id
+    # Still lands on a real, verified desk via normal auto-assignment.
+    assert c.assigned_expert_id is not None
+    assert c.expert.verified is True
 
 
 # --------------------------------------------------------------------------- #

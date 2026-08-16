@@ -1,0 +1,173 @@
+{
+  "schema_version": "1.0.0",
+  "audit_date_utc": "2026-07-28",
+  "sealed_or_provisional_test_data_used": false,
+  "agricultural_statement_marker": "VERIFY_AGAINST_OFFICIAL_SOURCE",
+  "source_licences": {
+    "banana_lsd_9tb7k297ff_v1": {
+      "source_reference": "Mendeley Data DOI 10.17632/9tb7k297ff.1",
+      "licence_or_permission": "CC BY 4.0",
+      "archive_sha256": "420523152c2b65c3f116c072cf95017733e9b8cd0cd01b7f667c588ca81dc85d"
+    },
+    "riceleafdiseasebd_v2": {
+      "source_reference": "Mendeley Data DOI 10.17632/86s4jzj2m4.2",
+      "licence_or_permission": "CC BY 4.0",
+      "archive_sha256": "f3d47107212db817b3941232258630b46b472134742b26f505eb03727bde8164"
+    },
+    "cotton_leaf_ripon": {
+      "source_reference": "Mendeley Data DOI 10.17632/t9hgvk2h9p.1",
+      "licence_or_permission": "CC BY 4.0",
+      "archive_sha256": "a75beeb9d505d6450dadb5acd9531d26a554350e4bc0a9f69e73775a851cd6a7"
+    },
+    "groundnut_sasmal": {
+      "source_reference": "Mendeley Data DOI 10.17632/x6x5jkk873.2",
+      "licence_or_permission": "CC BY 4.0",
+      "archive_sha256": "a4cb2db982d2733100efa444f8eb46a4b547489faeb569042e9007a5ad93df05"
+    }
+  },
+  "fixtures": [
+    {
+      "fixture_id": "banana-dev-healthy-107",
+      "file_path": "D:\\AgrowAI\\knowledge_base\\vision\\crop_expansion_v2\\colab_ready\\banana\\images\\healthy\\107.jpeg",
+      "sha256": "48c02269596612a69ff526565d6c803c9e7af1ba4d1e811172d66898da0eb47d",
+      "crop_id": "banana",
+      "fixture_category": "VALID_SAME_CROP",
+      "expected_system_behavior": "Reach the Banana runtime or safely abstain.",
+      "source_type": "non-sealed development-validation record",
+      "source_reference": "banana_lsd_9tb7k297ff_v1 split_manifest.csv",
+      "licence_or_permission": "CC BY 4.0",
+      "original_or_augmented": "original per cleaned manifest",
+      "label_evidence": "manifest class banana__healthy; VERIFY_AGAINST_OFFICIAL_SOURCE",
+      "disease_label_verified": false,
+      "crop_identity_verified": true,
+      "approved_for_internal_testing": true,
+      "notes": "Not evidence of field accuracy."
+    },
+    {
+      "fixture_id": "banana-dev-disease-102",
+      "file_path": "D:\\AgrowAI\\knowledge_base\\vision\\crop_expansion_v2\\colab_ready\\banana\\images\\cordana\\102.jpeg",
+      "sha256": "b0365e6da6249c1586c003976e236def1fd65f74bb7962079a152fa48121c607",
+      "crop_id": "banana",
+      "fixture_category": "VALID_SAME_CROP",
+      "expected_system_behavior": "Reach the Banana runtime or safely abstain.",
+      "source_type": "non-sealed development-validation record",
+      "source_reference": "banana_lsd_9tb7k297ff_v1 split_manifest.csv",
+      "licence_or_permission": "CC BY 4.0",
+      "original_or_augmented": "original per cleaned manifest",
+      "label_evidence": "manifest class banana__cordana_leaf_spot; VERIFY_AGAINST_OFFICIAL_SOURCE",
+      "disease_label_verified": false,
+      "crop_identity_verified": true,
+      "approved_for_internal_testing": true,
+      "notes": "May verify routing/abstention only; not disease correctness."
+    },
+    {
+      "fixture_id": "paddy-dev-healthy-655",
+      "file_path": "D:\\AgrowAI\\knowledge_base\\vision\\datasets\\extracted\\riceleafdiseasebd_v2\\RiceLeafDiseaseBD\\Original images\\Healthy\\Healthy_655.jpg",
+      "sha256": "b90e4e7488c1d01cdc918c4cd3e2f17b15d202fc5f7158c1c7da892be2723a16",
+      "crop_id": "paddy",
+      "fixture_category": "VALID_SAME_CROP",
+      "expected_system_behavior": "Reach the Paddy-constrained runtime or safely abstain.",
+      "source_type": "non-sealed development-validation record",
+      "source_reference": "riceleafdiseasebd_v2 v1_split_manifest.json",
+      "licence_or_permission": "CC BY 4.0",
+      "original_or_augmented": "original",
+      "label_evidence": "manifest class paddy_healthy; VERIFY_AGAINST_OFFICIAL_SOURCE",
+      "disease_label_verified": false,
+      "crop_identity_verified": true,
+      "approved_for_internal_testing": true,
+      "notes": "Not evidence of field accuracy."
+    },
+    {
+      "fixture_id": "paddy-dev-blast-778",
+      "file_path": "D:\\AgrowAI\\knowledge_base\\vision\\datasets\\extracted\\riceleafdiseasebd_v2\\RiceLeafDiseaseBD\\Original images\\Blast\\blast_778.jpg",
+      "sha256": "ec9c09d9707e90cad488f73185d844a6ea7e73c741d0365c4501d5d298fd75a7",
+      "crop_id": "paddy",
+      "fixture_category": "VALID_SAME_CROP",
+      "expected_system_behavior": "Reach the Paddy-constrained runtime or safely abstain.",
+      "source_type": "non-sealed development-validation record",
+      "source_reference": "riceleafdiseasebd_v2 v1_split_manifest.json",
+      "licence_or_permission": "CC BY 4.0",
+      "original_or_augmented": "original",
+      "label_evidence": "manifest class rice_blast; VERIFY_AGAINST_OFFICIAL_SOURCE",
+      "disease_label_verified": false,
+      "crop_identity_verified": true,
+      "approved_for_internal_testing": true,
+      "notes": "May verify routing/abstention only; not disease correctness."
+    },
+    {
+      "fixture_id": "cotton-dev-healthy-213",
+      "file_path": "D:\\AgrowAI\\knowledge_base\\vision\\datasets\\extracted\\cotton_leaf_ripon\\Cotton_Original_Dataset\\Healthy Leaf\\healthy_(213).png",
+      "sha256": "30b9dc3bd10e03720773204c1aa14e1ce34797a183c89c6d28808befc9901fcc",
+      "crop_id": "cotton",
+      "fixture_category": "VALID_SAME_CROP",
+      "expected_system_behavior": "Reach the Cotton-constrained runtime or safely abstain.",
+      "source_type": "non-sealed development-validation record",
+      "source_reference": "cotton_leaf_ripon v1_split_manifest.json",
+      "licence_or_permission": "CC BY 4.0",
+      "original_or_augmented": "original",
+      "label_evidence": "manifest class cotton_healthy; VERIFY_AGAINST_OFFICIAL_SOURCE",
+      "disease_label_verified": false,
+      "crop_identity_verified": true,
+      "approved_for_internal_testing": true,
+      "notes": "Not evidence of field accuracy."
+    },
+    {
+      "fixture_id": "cotton-dev-fusarium-14",
+      "file_path": "D:\\AgrowAI\\knowledge_base\\vision\\datasets\\extracted\\cotton_leaf_ripon\\Cotton_Original_Dataset\\Fusarium Wilt\\fusarium_(14).png",
+      "sha256": "9a8c817e721098dbc208e645b06b0773cae5bc7bdef7a34e1c62c166be434751",
+      "crop_id": "cotton",
+      "fixture_category": "VALID_SAME_CROP",
+      "expected_system_behavior": "Reach the Cotton-constrained runtime or safely abstain.",
+      "source_type": "non-sealed development-validation record",
+      "source_reference": "cotton_leaf_ripon v1_split_manifest.json",
+      "licence_or_permission": "CC BY 4.0",
+      "original_or_augmented": "original",
+      "label_evidence": "manifest class cotton_fusarium_wilt; VERIFY_AGAINST_OFFICIAL_SOURCE",
+      "disease_label_verified": false,
+      "crop_identity_verified": true,
+      "approved_for_internal_testing": true,
+      "notes": "May verify routing/abstention only; not disease correctness."
+    },
+    {
+      "fixture_id": "groundnut-dev-healthy-117",
+      "file_path": "D:\\AgrowAI\\knowledge_base\\vision\\datasets\\extracted\\groundnut_sasmal\\A novel groundnut leaf dataset for detection and classification of groundnut leaf diseases\\HEALTHY\\Healthy (117).jpg",
+      "sha256": "2f9e755d2382a01595218d5b5d1331f9665f722d90674192ac1ac6f0d3fe3c22",
+      "crop_id": "groundnut",
+      "fixture_category": "VALID_SAME_CROP",
+      "expected_system_behavior": "Reach the Groundnut-constrained runtime or safely abstain.",
+      "source_type": "non-sealed development-validation record",
+      "source_reference": "groundnut_sasmal v1_split_manifest.json",
+      "licence_or_permission": "CC BY 4.0",
+      "original_or_augmented": "original",
+      "label_evidence": "manifest class groundnut_healthy; VERIFY_AGAINST_OFFICIAL_SOURCE",
+      "disease_label_verified": false,
+      "crop_identity_verified": true,
+      "approved_for_internal_testing": true,
+      "notes": "Not evidence of field accuracy."
+    },
+    {
+      "fixture_id": "groundnut-dev-rust-65",
+      "file_path": "D:\\AgrowAI\\knowledge_base\\vision\\datasets\\extracted\\groundnut_sasmal\\A novel groundnut leaf dataset for detection and classification of groundnut leaf diseases\\RUST\\Rust (65).jpg",
+      "sha256": "cf8dffb0d53821a3a0de65608d16c728170f4b6bcf8b146bcf81217b204c651a",
+      "crop_id": "groundnut",
+      "fixture_category": "VALID_SAME_CROP",
+      "expected_system_behavior": "Reach the Groundnut-constrained runtime or safely abstain.",
+      "source_type": "non-sealed development-validation record",
+      "source_reference": "groundnut_sasmal v1_split_manifest.json",
+      "licence_or_permission": "CC BY 4.0",
+      "original_or_augmented": "original",
+      "label_evidence": "manifest class groundnut_rust; VERIFY_AGAINST_OFFICIAL_SOURCE",
+      "disease_label_verified": false,
+      "crop_identity_verified": true,
+      "approved_for_internal_testing": true,
+      "notes": "May verify routing/abstention only; not disease correctness."
+    }
+  ],
+  "programmatic_fixture_manifest": "../generated/GENERATION_MANIFEST.json",
+  "missing_required_categories": [
+    "provenance-approved REAL_NON_PLANT for all crops",
+    "verified wrong-crop safety outcome",
+    "complete lighting/background/partial/multiple-leaf/low-quality coverage",
+    "networked real mobile-to-backend E2E"
+  ]
+}

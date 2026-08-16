@@ -1,0 +1,6 @@
+Device: RZCY80YM62A
+Package: com.agrowai.app
+Old package uninstall: Success
+Release APK install: Success
+Launch: Success
+Build type: standalone release; no Expo Go, development client, debug APK, or Metro

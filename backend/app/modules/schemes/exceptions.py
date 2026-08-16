@@ -1,7 +1,13 @@
 """Scheme-specific exceptions (docs/CODING_STANDARDS.md → Error Handling)."""
 from __future__ import annotations
 
-from app.core.exceptions import ConflictError, NotFoundError
+from app.core.exceptions import AppError, ConflictError, NotFoundError
+
+
+class SchemeDataUnavailableError(AppError):
+    status_code = 503
+    error_code = "scheme_data_unavailable"
+    message = "Current verified government scheme data is unavailable."
 
 
 class SchemeNotFoundError(NotFoundError):

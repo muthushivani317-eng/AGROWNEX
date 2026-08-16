@@ -117,6 +117,18 @@ def build_insights(
     daily: list[DailyPoint],
 ) -> list[WeatherInsight]:
     next24 = hourly[:24]
+    has_rain_forecast = bool(next24) and any(
+        p.precipitation_mm is not None
+        or p.precipitation_probability_pct is not None
+        for p in next24
+    )
+    has_near_term_rain = bool(hourly[:SPRAY_WINDOW_HOURS]) and any(
+        p.precipitation_mm is not None
+        or p.precipitation_probability_pct is not None
+        for p in hourly[:SPRAY_WINDOW_HOURS]
+    )
+    has_wind = current.wind_speed_kmh is not None
+    has_current_rain = current.precipitation_mm is not None
     rain_sum_24 = round(sum(p.precipitation_mm or 0 for p in next24), 1)
     rain_prob_24 = max((p.precipitation_probability_pct or 0 for p in next24), default=0)
     rain_prob_soon = max(
@@ -156,7 +168,7 @@ def build_insights(
         )
 
     # Heavy rain
-    if rain_sum_24 >= SEVERE_RAIN_MM_24H:
+    if has_rain_forecast and rain_sum_24 >= SEVERE_RAIN_MM_24H:
         insights.append(
             _insight(
                 "heavy_rain.severe",
@@ -165,7 +177,9 @@ def build_insights(
                 {"mm": round(rain_sum_24)},
             )
         )
-    elif rain_sum_24 >= HEAVY_RAIN_MM_24H or rain_prob_24 >= RAIN_PROB_HIGH_PCT:
+    elif has_rain_forecast and (
+        rain_sum_24 >= HEAVY_RAIN_MM_24H or rain_prob_24 >= RAIN_PROB_HIGH_PCT
+    ):
         insights.append(
             _insight(
                 "heavy_rain.expected",
@@ -176,7 +190,7 @@ def build_insights(
         )
 
     # Wind
-    if wind_now >= WIND_WARNING_KMH:
+    if has_wind and wind_now >= WIND_WARNING_KMH:
         insights.append(
             _insight(
                 "wind.strong",
@@ -185,7 +199,7 @@ def build_insights(
                 {"speed": round(wind_now)},
             )
         )
-    elif wind_now >= WIND_ADVISORY_KMH:
+    elif has_wind and wind_now >= WIND_ADVISORY_KMH:
         insights.append(
             _insight(
                 "wind.high",
@@ -197,7 +211,10 @@ def build_insights(
 
     # Spraying
     if (
-        wind_now <= SPRAY_MAX_WIND_KMH
+        has_wind
+        and has_current_rain
+        and has_near_term_rain
+        and wind_now <= SPRAY_MAX_WIND_KMH
         and rain_prob_soon <= SPRAY_MAX_RAIN_PROB_PCT
         and not raining_now
     ):
@@ -209,7 +226,7 @@ def build_insights(
                 {},
             )
         )
-    elif wind_now > SPRAY_MAX_WIND_KMH:
+    elif has_wind and wind_now > SPRAY_MAX_WIND_KMH:
         insights.append(
             _insight(
                 "spraying.avoid_wind",
@@ -218,7 +235,7 @@ def build_insights(
                 {"speed": round(wind_now)},
             )
         )
-    else:
+    elif has_near_term_rain:
         insights.append(
             _insight(
                 "spraying.avoid_rain",
@@ -229,7 +246,10 @@ def build_insights(
         )
 
     # Irrigation
-    if rain_sum_24 >= IRRIGATION_RAIN_MM_24H or rain_prob_24 >= IRRIGATION_RAIN_PROB_PCT:
+    if has_rain_forecast and (
+        rain_sum_24 >= IRRIGATION_RAIN_MM_24H
+        or rain_prob_24 >= IRRIGATION_RAIN_PROB_PCT
+    ):
         insights.append(
             _insight(
                 "irrigation.hold",
@@ -247,7 +267,7 @@ def build_insights(
                 {},
             )
         )
-    else:
+    elif has_rain_forecast and heat_peak is not None:
         insights.append(
             _insight(
                 "irrigation.normal",
@@ -264,13 +284,15 @@ def build_insights(
         or (heat_peak is not None and heat_peak >= HEAT_EXTREME_C)
         or wind_now >= WIND_WARNING_KMH
     )
-    insights.append(
-        _insight(
-            "field_work.unfavorable" if rough else "field_work.favorable",
-            InsightCategory.FIELD_WORK,
-            InsightSeverity.WARNING if rough else InsightSeverity.INFO,
-            {},
+    has_field_work_data = has_rain_forecast and has_wind and heat_peak is not None
+    if rough or has_field_work_data:
+        insights.append(
+            _insight(
+                "field_work.unfavorable" if rough else "field_work.favorable",
+                InsightCategory.FIELD_WORK,
+                InsightSeverity.WARNING if rough else InsightSeverity.INFO,
+                {},
+            )
         )
-    )
 
     return insights

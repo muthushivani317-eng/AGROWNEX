@@ -22,6 +22,7 @@ import httpx
 
 from app.core.http import get_http_client
 from app.core.logging import get_logger
+from app.core.provider_policy import test_mocks_enabled
 from app.modules.market.constants import (
     AGMARKNET_FETCH_LIMIT,
     AGMARKNET_MAX_RETRIES,
@@ -264,10 +265,22 @@ class MockMarketProvider:
         return results[: query.limit]
 
 
+class UnavailableMarketProvider:
+    """Never substitutes synthetic prices for an unavailable live source."""
+
+    source = "unavailable"
+
+    async def fetch_prices(self, query: PriceQuery) -> list[ProviderPrice]:
+        raise MarketDataUnavailableError()
+
+
 def get_default_provider() -> MarketPriceProvider:
     """Select the configured provider (docs: Agmarknet first, mock fallback)."""
     if DATA_GOV_API_KEY:
         logger.info("market provider: Agmarknet (data.gov.in)")
         return AgmarknetProvider()
-    logger.info("market provider: mock (no DATA_GOV_API_KEY)")
-    return MockMarketProvider()
+    if test_mocks_enabled():
+        logger.info("market provider: explicit development/test mock")
+        return MockMarketProvider()
+    logger.warning("market provider unavailable: DATA_GOV_API_KEY is not configured")
+    return UnavailableMarketProvider()

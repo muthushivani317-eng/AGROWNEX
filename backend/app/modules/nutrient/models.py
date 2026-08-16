@@ -13,6 +13,7 @@
 
 ``user_id`` is the farmer (FK ``users.id``), matching every module.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -62,9 +63,7 @@ class NutrientReport(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     status: Mapped[str] = mapped_column(
         String(12), default=ReportStatus.ANALYZED.value, nullable=False, index=True
     )
-    language: Mapped[str] = mapped_column(
-        String(5), default=DEFAULT_LANGUAGE, nullable=False
-    )
+    language: Mapped[str] = mapped_column(String(5), default=DEFAULT_LANGUAGE, nullable=False)
 
     latitude: Mapped[float | None] = mapped_column(Float)
     longitude: Mapped[float | None] = mapped_column(Float)
@@ -149,9 +148,7 @@ class NutrientRecommendation(UUIDMixin, TimestampMixin, Base):
     severity: Mapped[str] = mapped_column(String(12), nullable=False)
     priority: Mapped[str] = mapped_column(String(12), nullable=False)
 
-    report: Mapped[NutrientReport | None] = relationship(
-        back_populates="recommendations"
-    )
+    report: Mapped[NutrientReport | None] = relationship(back_populates="recommendations")
 
 
 class NutrientHistory(UUIDMixin, TimestampMixin, Base):
@@ -171,6 +168,4 @@ class NutrientHistory(UUIDMixin, TimestampMixin, Base):
     status: Mapped[str] = mapped_column(String(16), nullable=False)
     confidence: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     severity: Mapped[str | None] = mapped_column(String(12))
-    recorded_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
+    recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

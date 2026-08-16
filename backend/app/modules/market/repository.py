@@ -205,6 +205,23 @@ class MarketRepository:
         rows = list((await self.session.execute(page_stmt)).all())
         return [(row[0], row[1]) for row in rows], total
 
+    async def latest_price_date(
+        self,
+        *,
+        crop: str | None = None,
+        market: str | None = None,
+        district: str | None = None,
+        state: str | None = None,
+    ) -> date | None:
+        """Return the newest reporting date available for the active filters."""
+        stmt = self._price_filter(
+            crop=crop,
+            market=market,
+            district=district,
+            state=state,
+        ).with_only_columns(func.max(MarketPrice.price_date)).order_by(None)
+        return (await self.session.execute(stmt)).scalar_one_or_none()
+
     async def latest_price(
         self, *, commodity: str, market: str, district: str
     ) -> tuple[MarketPrice, MarketLocation] | None:

@@ -1,4 +1,5 @@
 """Calendar request/response schemas (docs/API_CONTRACT.md → CROP CALENDAR)."""
+
 from __future__ import annotations
 
 import uuid
@@ -14,9 +15,9 @@ class GenerateCalendarRequest(BaseModel):
     """Generate (or regenerate) a farm's calendar.
 
     Inputs default to the farm's own crop / sowing date / irrigation type; the
-    optional overrides let a farmer preview a different plan without editing the
-    farm (docs: deterministic generation from crop, sowing date, season,
-    irrigation type).
+    optional values are compatibility assertions and must match the owned farm.
+    Farmers edit the farm record before generating a different plan, preventing
+    one farm's crop or planting date from being applied to another.
     """
 
     farm_id: uuid.UUID
@@ -54,6 +55,9 @@ class CalendarEventOut(BaseModel):
     reminder_hour: int | None
     completed_at: datetime | None
     notes: str | None
+    registry_version: str | None
+    registry_verification_status: str | None
+    registry_source_reference: str | None
     created_at: datetime
 
     @classmethod
@@ -83,6 +87,9 @@ class CalendarEventOut(BaseModel):
             reminder_hour=event.reminder_hour,
             completed_at=event.completed_at,
             notes=event.notes,
+            registry_version=event.registry_version,
+            registry_verification_status=event.registry_verification_status,
+            registry_source_reference=event.registry_source_reference,
             created_at=event.created_at,
         )
 

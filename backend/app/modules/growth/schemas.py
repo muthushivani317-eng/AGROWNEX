@@ -1,4 +1,5 @@
 """Growth request/response schemas (docs/API_CONTRACT.md → CROP GROWTH)."""
+
 from __future__ import annotations
 
 import uuid
@@ -29,8 +30,6 @@ class UploadGrowthRequest(BaseModel):
     latitude: float | None = Field(default=None, ge=-90, le=90)
     longitude: float | None = Field(default=None, ge=-180, le=180)
     notes: str | None = Field(default=None, max_length=500)
-    # Optionally also run the reused Disease Detection pipeline on this photo.
-    run_disease_check: bool = False
 
 
 class GrowthAnalysisOut(BaseModel):
@@ -196,3 +195,63 @@ class UploadResultOut(BaseModel):
     session: GrowthSessionOut
     image: GrowthImageOut
     timeline_entry: TimelineEntryOut
+
+
+class StageEvidenceIn(BaseModel):
+    registry_verified: bool = False
+    registry_version: str | None = Field(default=None, max_length=80)
+    planting_date_present: bool = False
+    weather_source: str | None = Field(default=None, pattern="^(live|cached|stale|missing)$")
+    image_observation: str | None = Field(default=None, max_length=80)
+    suggested_stage: str | None = Field(default=None, max_length=20)
+    supports: list[str] = Field(default_factory=list, max_length=20)
+    conflicts: list[str] = Field(default_factory=list, max_length=20)
+    missing: list[str] = Field(default_factory=list, max_length=20)
+
+
+class StageTransitionRequest(BaseModel):
+    farm_id: uuid.UUID
+    crop_cycle_id: str = Field(min_length=1, max_length=80)
+    event: str = Field(pattern="^(evaluate|confirm|correct|complete)$")
+    stage: str | None = Field(default=None, max_length=20)
+    expected_version: int | None = Field(default=None, ge=1)
+    idempotency_key: str = Field(min_length=8, max_length=100)
+    evidence: StageEvidenceIn = Field(default_factory=StageEvidenceIn)
+    reason: str | None = Field(default=None, max_length=500)
+    photo_reference: str | None = Field(default=None, max_length=512)
+    expert_reviewed: bool = False
+    allow_large_jump: bool = False
+
+
+class StageStateOut(BaseModel):
+    model_config = {"from_attributes": True}
+
+    id: uuid.UUID
+    farm_id: uuid.UUID
+    crop_cycle_id: str
+    state: str
+    suggested_stage: str | None
+    confirmed_stage: str | None
+    registry_version: str | None
+    calculation_version: str
+    version: int
+    pending_sync: bool
+    evidence_snapshot: dict
+    updated_at: datetime
+
+
+class StageTransitionOut(BaseModel):
+    model_config = {"from_attributes": True}
+
+    id: uuid.UUID
+    event: str
+    prior_state: str | None
+    next_state: str
+    prior_stage: str | None
+    stage: str | None
+    reason: str | None
+    photo_reference: str | None
+    registry_version: str | None
+    evidence_snapshot: dict
+    expert_reviewed: bool
+    created_at: datetime

@@ -21,6 +21,8 @@ class PlantIdentifierProviderError(RuntimeError):
 
 
 class PlantIdentifierProvider(Protocol):
+    model: str
+
     async def identify(
         self, image: bytes, mime_type: str, language: str, note: str | None
     ) -> str: ...
@@ -38,7 +40,7 @@ class GeminiPlantIdentifierProvider:
         if not api_key or not model:
             raise PlantIdentifierProviderError("PLANT_IDENTIFIER_PROVIDER_UNAVAILABLE")
         self._api_key = api_key
-        self._model = model
+        self.model = model
         self._base_url = base_url.rstrip("/")
         self._timeout = timeout
 
@@ -69,7 +71,7 @@ class GeminiPlantIdentifierProvider:
         }
         try:
             response = await get_http_client().post(
-                f"{self._base_url}/models/{self._model}:generateContent",
+                f"{self._base_url}/models/{self.model}:generateContent",
                 params={"key": self._api_key},
                 json=body,
                 timeout=self._timeout,
@@ -103,4 +105,3 @@ class GeminiPlantIdentifierProvider:
 
 def get_plant_identifier_provider() -> PlantIdentifierProvider:
     return GeminiPlantIdentifierProvider()
-

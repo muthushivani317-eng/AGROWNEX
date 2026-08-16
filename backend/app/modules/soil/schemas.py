@@ -3,6 +3,7 @@
 Recommendations travel as localization ``code``s so the Tamil-first client renders
 them. Unavailable values are ``null`` and surfaced honestly — never fabricated.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -93,9 +94,7 @@ class SoilReportOut(BaseModel):
             status=report.status,
             confidence=report.confidence,
             created_at=report.created_at,
-            result=(
-                SoilTestResultOut.model_validate(report.result) if report.result else None
-            ),
+            result=(SoilTestResultOut.model_validate(report.result) if report.result else None),
         )
 
 
@@ -232,3 +231,89 @@ class SoilDashboardOut(BaseModel):
     assessment: SoilAssessmentOut | None
     recommendations: list[SoilRecommendationOut]
     latest_report: SoilReportOut | None
+    indicator_evidence: list[SoilIndicatorEvidenceOut] = Field(default_factory=list)
+    overall_status: str = "insufficient_data"
+    laboratory_equivalent: bool = False
+
+
+class SoilIndicatorEvidenceOut(BaseModel):
+    indicator: str
+    value: float | str
+    unit: str
+    evidence_type: str
+    collection_method: str
+    collected_at: date
+    source_reference: str
+    spatial_coverage: str
+    confidence: int | None
+    uncertainty_low: float | None
+    uncertainty_high: float | None
+    verification_state: str
+    freshness: str
+    status: str
+    report_reference: str | None
+
+
+class RemoteSoilEstimateOut(BaseModel):
+    indicator: str
+    value: float
+    unit: str
+    provider: str
+    model_version: str
+    scene_id: str
+    aoi_hash: str
+    capture_date: date
+    resolution_m: float
+    coverage_pct: float
+    uncertainty_low: float | None
+    uncertainty_high: float | None
+
+
+class RemoteSoilOutcomeOut(BaseModel):
+    status: str
+    reason: str
+    estimates: list[RemoteSoilEstimateOut] = Field(default_factory=list)
+
+
+class SoilSamplingPointOut(BaseModel):
+    zone_id: str
+    longitude: float
+    latitude: float
+    source: str
+    reference: str | None = None
+    reason: str = "spatial_variability_zone"
+    quality: str = "usable"
+    sample_data: bool = False
+
+
+class SoilScanIndicatorOut(BaseModel):
+    code: str
+    status: str
+    evidence_class: str
+    value: str | float | None
+    explanation_code: str
+    details: dict = Field(default_factory=dict)
+    sampling_points: list[SoilSamplingPointOut] = Field(default_factory=list)
+    sources: list[str] = Field(default_factory=list)
+    observation_timestamps: list[datetime] = Field(default_factory=list)
+    missing_evidence: list[str] = Field(default_factory=list)
+
+
+class SoilSamplingPlanOut(BaseModel):
+    id: str
+    status: str
+    created_at: datetime
+    scope: str
+    points: list[SoilSamplingPointOut] = Field(default_factory=list)
+
+
+class SoilScanOut(BaseModel):
+    id: uuid.UUID
+    farm_id: uuid.UUID
+    aoi_verified: bool
+    aoi_geojson: dict | None = None
+    generated_at: datetime
+    indicators: list[SoilScanIndicatorOut]
+    provider_states: dict[str, str] = Field(default_factory=dict)
+    provenance: dict = Field(default_factory=dict)
+    sampling_plan: SoilSamplingPlanOut | None = None

@@ -1,4 +1,5 @@
 """Satellite Intelligence dependency injection (docs/BACKEND_ARCHITECTURE.md → DI)."""
+
 from __future__ import annotations
 
 from typing import Annotated
@@ -16,7 +17,7 @@ __all__ = ["CurrentUser", "SatelliteServiceDep"]
 def get_satellite_service(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> SatelliteService:
-    return SatelliteService(session)
+    return SatelliteService(session, enable_weather=True)
 
 
 SatelliteServiceDep = Annotated[SatelliteService, Depends(get_satellite_service)]

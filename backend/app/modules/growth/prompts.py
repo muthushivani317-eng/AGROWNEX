@@ -4,6 +4,7 @@ Prompts live here — never embedded in components or the frontend. A single Gem
 call compares the current photo with the previous upload, estimates the growth
 stage, notes leaf colour and abnormalities, and writes a farmer-friendly summary.
 """
+
 from __future__ import annotations
 
 GROWTH_SYSTEM_PROMPT = """You are a Crop Growth Specialist for AgrowAI, helping \

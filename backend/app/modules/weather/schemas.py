@@ -1,7 +1,7 @@
 """Weather response schemas (docs/API_CONTRACT.md → WEATHER MODULE)."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel
 
@@ -77,11 +77,25 @@ class AlertsOut(BaseModel):
     insights: list[WeatherInsight]
 
 
+class WeatherMission(BaseModel):
+    """One ranked, rule-based farm action derived from the existing insights."""
+
+    primary_action: str
+    reason: str
+    avoid: str | None
+    secondary_actions: list[str]
+    confidence_note: str
+    source_insight_code: str | None = None
+    crop: str | None = None
+
+
 class WeatherBundle(BaseModel):
     location: WeatherLocation
     current: CurrentWeather
     hourly: list[HourlyPoint]
     daily: list[DailyPoint]
     insights: list[WeatherInsight]
+    mission: WeatherMission
     fetched_at: str
     source: str = "open-meteo"
+    data_state: Literal["live", "cached"] = "live"

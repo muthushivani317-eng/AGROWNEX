@@ -9,6 +9,7 @@ Schedules:
 * market price refresh — every 2 hours
 * weather alert evaluation — every 30 minutes
 * failed-notification retry — every 5 minutes
+* produce offer expiry — once daily
 """
 from __future__ import annotations
 
@@ -30,6 +31,7 @@ from app.modules.notifications.jobs import (
 from app.modules.notifications.jobs import (
     retry_failed_notifications as _retry_failed_notifications,
 )
+from app.modules.produce.jobs import expire_stale_offers as _expire_stale_offers
 
 logger = get_logger("worker")
 
@@ -58,15 +60,21 @@ async def retry_failed_notifications(ctx: dict[str, Any]) -> dict:
     return await _run(_retry_failed_notifications)
 
 
+async def expire_stale_offers(ctx: dict[str, Any]) -> dict:
+    return await _run(_expire_stale_offers)
+
+
 class WorkerSettings:
     redis_settings = RedisSettings.from_dsn(settings.redis_url)
     functions = [
         refresh_market_prices,
         evaluate_weather_alerts,
         retry_failed_notifications,
+        expire_stale_offers,
     ]
     cron_jobs = [
         cron(refresh_market_prices, hour=set(range(0, 24, 2)), minute=0),
         cron(evaluate_weather_alerts, minute={0, 30}),
         cron(retry_failed_notifications, minute=set(range(0, 60, 5))),
+        cron(expire_stale_offers, hour={3}, minute=0),
     ]

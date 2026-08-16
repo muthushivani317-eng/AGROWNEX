@@ -19,6 +19,11 @@ MAX_PAGE_SIZE = 100
 ANY = "all"
 
 SOURCE_MOCK = "mock"
+# Hand-curated, individually-verified static snapshot of real official scheme
+# data (app/modules/schemes/curated_data.py) -- not a live government API, but
+# real sourced and dated content, not a fabrication (2026-08 pre-release audit
+# follow-up: see curated_data.py's module docstring for why).
+SOURCE_CURATED = "curated_verified"
 # Future providers read a source key from the environment; absent → mock.
 SCHEME_PROVIDER = os.getenv("SCHEME_PROVIDER", "")
 
@@ -69,6 +74,41 @@ class SchemeTab(StrEnum):
     RECOMMENDED = "recommended"
     ALL = "all"
     BOOKMARKED = "bookmarked"
+
+
+class DocumentType(StrEnum):
+    AADHAAR = "aadhaar"
+    LAND_TENURE_PROOF = "land_tenure_proof"
+    BANK_PASSBOOK = "bank_passbook"
+    PHOTOGRAPH = "photograph"
+    INCOME_CERTIFICATE = "income_certificate"
+    SOWING_CERTIFICATE = "sowing_certificate"
+    SERVICE_CONNECTION = "service_connection"
+    WATER_SOURCE_PROOF = "water_source_proof"
+    OTHER = "other"
+
+
+# Maps every exact document_name currently used across scheme records to its
+# canonical type. Add new entries whenever a provider introduces a new name.
+DOCUMENT_TYPE_ALIASES: dict[str, DocumentType] = {
+    "Aadhaar card": DocumentType.AADHAAR,
+    "Identity proof (Aadhaar/Voter ID)": DocumentType.AADHAAR,
+    "Land ownership records": DocumentType.LAND_TENURE_PROOF,
+    "Land ownership documents": DocumentType.LAND_TENURE_PROOF,
+    "Land records": DocumentType.LAND_TENURE_PROOF,
+    "Land records / tenancy proof": DocumentType.LAND_TENURE_PROOF,
+    "Bank account passbook": DocumentType.BANK_PASSBOOK,
+    "Bank passbook": DocumentType.BANK_PASSBOOK,
+    "Passport-size photograph": DocumentType.PHOTOGRAPH,
+    "Income certificate": DocumentType.INCOME_CERTIFICATE,
+    "Sowing certificate": DocumentType.SOWING_CERTIFICATE,
+    "Agricultural service connection number": DocumentType.SERVICE_CONNECTION,
+    "Water source proof": DocumentType.WATER_SOURCE_PROOF,
+}
+
+
+def classify_document(name: str) -> DocumentType:
+    return DOCUMENT_TYPE_ALIASES.get(name, DocumentType.OTHER)
 
 
 # Farmer-category thresholds in hectares (upper bound, exclusive except LARGE).

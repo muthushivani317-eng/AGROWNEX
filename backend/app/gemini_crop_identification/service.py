@@ -5,58 +5,37 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from .schemas import CropIdentificationResponse, GeminiCropIdentification
+from .schemas import GeminiCropIdentification
 
-SUPPORTED_CROPS = frozenset(
-    {"banana", "paddy", "cotton", "groundnut", "redgram", "chilli"}
-)
+SUPPORTED_CROPS = frozenset({"banana", "paddy", "cotton", "groundnut", "redgram", "chilli"})
 IDENTIFICATION_THRESHOLD = 0.90
+CROP_ID_VERSION = "temporary-gemini-v1"
 
 
 class InvalidGeminiCropResponseError(ValueError):
     pass
 
 
-def parse_crop_identification(raw: str) -> CropIdentificationResponse:
+def parse_crop_identification(raw: str) -> GeminiCropIdentification:
     try:
         data: Any = json.loads(raw)
-    except (json.JSONDecodeError, TypeError) as exc:
-        raise InvalidGeminiCropResponseError("MALFORMED_GEMINI_JSON") from exc
-    if not isinstance(data, dict):
-        raise InvalidGeminiCropResponseError("INVALID_GEMINI_SCHEMA")
-
-    crop_id = data.get("crop_id")
-    if crop_id is None:
-        raise InvalidGeminiCropResponseError("MISSING_CROP_ID")
-
-    # An unsupported name is never allowed into the disease registry.
-    if crop_id not in SUPPORTED_CROPS | {"unknown", "non_plant"}:
-        data.update(
-            status="uncertain",
-            crop_id="unknown",
-            confidence=0.0,
-            needs_another_image=True,
-        )
-
-    try:
+        if not isinstance(data, dict):
+            raise TypeError
         parsed = GeminiCropIdentification.model_validate(data)
-    except ValidationError as exc:
+    except (json.JSONDecodeError, TypeError, ValidationError) as exc:
         raise InvalidGeminiCropResponseError("INVALID_GEMINI_SCHEMA") from exc
 
-    if parsed.status == "non_plant":
-        parsed = parsed.model_copy(
-            update={"crop_id": "non_plant", "needs_another_image": True}
-        )
-    elif (
-        parsed.status != "identified"
-        or parsed.crop_id not in SUPPORTED_CROPS
-        or parsed.confidence < IDENTIFICATION_THRESHOLD
+    # Gemini confidence is a self-report, not calibrated probability. It may only
+    # decide whether to fail closed; it is never presented as model accuracy.
+    if parsed.status == "identified" and (
+        parsed.confidence is None or parsed.confidence < IDENTIFICATION_THRESHOLD
     ):
-        parsed = parsed.model_copy(
+        return parsed.model_copy(
             update={
                 "status": "uncertain",
-                "crop_id": "unknown",
+                "crop_id": None,
+                "reason_code": "CROP_IDENTIFICATION_UNCERTAIN",
                 "needs_another_image": True,
             }
         )
-    return CropIdentificationResponse(**parsed.model_dump())
+    return parsed

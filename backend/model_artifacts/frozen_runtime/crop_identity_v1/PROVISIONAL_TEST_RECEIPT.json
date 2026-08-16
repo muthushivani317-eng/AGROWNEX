@@ -1,0 +1,9 @@
+{
+  "status": "PROVISIONAL_TEST_OPENED_ONCE",
+  "opened_at_utc": "2026-07-29T19:13:03.225754+00:00",
+  "samples": 618,
+  "checkpoint_sha256": "7cf80d093267821024577275f7538766d03271d765fbe5f18798b1d9fc26ca81",
+  "freeze_record_sha256": "0de2e03f948ced2d2a14444187077ee0b23c090e28757d5179f83763ae1c5260",
+  "post_test_tuning_authorized": false,
+  "official_accuracy_claim": false
+}

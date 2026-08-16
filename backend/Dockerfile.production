@@ -16,6 +16,9 @@ COPY requirements.txt /app/requirements.txt
 RUN pip install --no-compile -r /app/requirements.txt
 
 COPY --chown=agrowai:agrowai . /app
+RUN python -m scripts.verify_model_inventory
+RUN mkdir -p /app/logs \
+    && chown -R agrowai:agrowai /app/logs
 USER agrowai
 
 EXPOSE 8000

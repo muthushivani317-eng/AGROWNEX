@@ -11,12 +11,14 @@ import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
+from app.core.timezone import today_ist
 from app.modules.auth.models import User
 from app.modules.auth.repositories import FarmerProfileRepository
 from app.modules.farms.repositories import FarmRepository
 from app.modules.schemes.constants import (
     RECOMMENDED_MIN_COUNT,
     RECOMMENDED_SCORE_THRESHOLD,
+    DocumentType,
     derive_farmer_category,
 )
 from app.modules.schemes.engine import (
@@ -37,6 +39,7 @@ from app.modules.schemes.provider import GovernmentSchemeProvider, get_default_p
 from app.modules.schemes.repository import SchemeRepository
 from app.modules.schemes.schemas import (
     EligibilityQuery,
+    FarmerDocumentOut,
     SchemeDetailOut,
     SchemePageMeta,
     SchemeSummaryOut,
@@ -87,6 +90,7 @@ class SchemeService:
         land = query.land_hectares
         crop = query.crop
         district = query.district
+        annual_income = query.annual_income
 
         farm = None
         if query.farm_id is not None:
@@ -111,6 +115,9 @@ class SchemeService:
         if profile is not None:
             district = district or profile.district
             crop = crop or profile.primary_crop
+            annual_income = (
+                annual_income if annual_income is not None else profile.annual_income
+            )
 
         category = query.farmer_category or derive_farmer_category(land)
         return FarmerContext(
@@ -118,7 +125,7 @@ class SchemeService:
             district=district,
             crop=crop,
             land_hectares=land,
-            annual_income=query.annual_income,
+            annual_income=annual_income,
             farmer_category=category,
         )
 
@@ -179,11 +186,41 @@ class SchemeService:
         if scheme is None:
             raise SchemeNotFoundError()
         documents = await self.repo.documents_for(scheme.id)
+        farmer_documents = await self.repo.farmer_documents(user.id)
+        owned_documents = {
+            row.document_type for row in farmer_documents if row.has_document
+        }
         bookmarked = await self.repo.get_bookmark(user.id, scheme.id) is not None
         context = await self.build_context(user, query)
-        result = evaluate(SchemeRules.from_scheme(scheme), context)
+        result = evaluate(SchemeRules.from_scheme(scheme), context, today=today_ist())
         return SchemeDetailOut.from_detail(
-            scheme, documents=documents, bookmarked=bookmarked, eligibility=result
+            scheme,
+            documents=documents,
+            owned_documents=owned_documents,
+            bookmarked=bookmarked,
+            eligibility=result,
+        )
+
+    async def list_farmer_documents(self, user: User) -> list[FarmerDocumentOut]:
+        rows = await self.repo.farmer_documents(user.id)
+        values = {row.document_type: row.has_document for row in rows}
+        return [
+            FarmerDocumentOut(
+                document_type=document_type,
+                has_document=values.get(document_type.value, False),
+            )
+            for document_type in DocumentType
+        ]
+
+    async def set_farmer_document(
+        self, user: User, document_type: DocumentType, has_document: bool
+    ) -> FarmerDocumentOut:
+        row = await self.repo.set_farmer_document(
+            user.id, document_type.value, has_document
+        )
+        return FarmerDocumentOut(
+            document_type=DocumentType(row.document_type),
+            has_document=row.has_document,
         )
 
     # ----------------------------------------------------------------- #
@@ -193,7 +230,11 @@ class SchemeService:
         self, user: User, context: FarmerContext
     ) -> list[tuple[GovernmentScheme, EligibilityResult]]:
         schemes = await self.repo.list_active()
-        return [(s, evaluate(SchemeRules.from_scheme(s), context)) for s in schemes]
+        today = today_ist()
+        return [
+            (s, evaluate(SchemeRules.from_scheme(s), context, today=today))
+            for s in schemes
+        ]
 
     async def eligible(
         self,
@@ -269,7 +310,9 @@ class SchemeService:
             SchemeSummaryOut.from_scheme(
                 s,
                 bookmarked=True,
-                eligibility=evaluate(SchemeRules.from_scheme(s), context),
+                eligibility=evaluate(
+                    SchemeRules.from_scheme(s), context, today=today_ist()
+                ),
             )
             for s in ordered
         ]

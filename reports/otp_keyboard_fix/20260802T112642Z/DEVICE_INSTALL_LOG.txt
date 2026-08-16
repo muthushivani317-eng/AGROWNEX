@@ -1,0 +1,5 @@
+Device: RZCY80YM62A
+Package: com.agrowai.app
+Clean uninstall: Success
+Release install: Success
+Launch: Success

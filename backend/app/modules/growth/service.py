@@ -8,6 +8,7 @@ API → Service → Repository. Reuses the AI context builder, the farm/profile
 repositories, the weather service and the Disease pipeline's quality gate + R2
 storage; identity comes from auth. Business logic never lives in routes.
 """
+
 from __future__ import annotations
 
 import base64
@@ -18,8 +19,12 @@ from datetime import UTC, datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
+from app.core.exceptions import QuotaExceededError
 from app.core.logging import get_logger
 from app.modules.ai.context import build_farm_memory
+from app.modules.ai.repositories import TokenUsageRepository
+from app.modules.ai.usage_ledger import record_usage_durable
 from app.modules.auth.models import User
 from app.modules.auth.repositories import FarmerProfileRepository
 from app.modules.disease.constants import CaptureMethod, QualityIssue
@@ -29,13 +34,6 @@ from app.modules.disease.quality import (
     extract_metrics,
 )
 from app.modules.disease.storage import ObjectStorage, get_default_storage
-from app.modules.disease.vision import (
-    AnalysisProvider,
-    AnalysisRequest,
-)
-from app.modules.disease.vision import (
-    get_default_provider as get_disease_provider,
-)
 from app.modules.farms.models import Farm
 from app.modules.farms.repositories import FarmRepository
 from app.modules.growth.analyzer import (
@@ -100,9 +98,7 @@ def _quality_snapshot(metrics: QualityMetrics) -> dict:
     }
 
 
-def _risk_level(
-    health_score: int | None, *, needs_review: bool, abnormalities: list[str]
-) -> str:
+def _risk_level(health_score: int | None, *, needs_review: bool, abnormalities: list[str]) -> str:
     if needs_review or (health_score is not None and health_score < 40):
         return RiskLevel.HIGH.value
     if (health_score is not None and health_score < 65) or abnormalities:
@@ -126,19 +122,17 @@ class GrowthService:
         provider: GrowthAnalysisProvider | None = None,
         storage: ObjectStorage | None = None,
         weather_service: WeatherService | None = None,
-        disease_provider: AnalysisProvider | None = None,
         nutrient_provider: NutrientProvider | None = None,
     ) -> None:
         self.session = session
         self.repo = GrowthRepository(session)
+        self.token_usage = TokenUsageRepository(session)
         self.profiles = FarmerProfileRepository(session)
         self.farms = FarmRepository(session)
         self.provider = provider or get_default_provider()
         self.storage = storage or get_default_storage()
         self.weather_service = weather_service
-        # Reused Disease pipeline (future YOLO/pest models swap in here) + a
-        # nutrient seam that returns None until a model is configured.
-        self._disease_provider = disease_provider
+        # Optional nutrient seam that returns None until a model is configured.
         self.nutrient_provider = nutrient_provider or NullNutrientProvider()
 
     # ----------------------------------------------------------------- #
@@ -157,11 +151,7 @@ class GrowthService:
 
         # Context: farmer profile → language, farm (ownership), weather snapshot.
         profile = await self.profiles.get_by_user_id(user.id)
-        language = (
-            req.language
-            or (profile.language if profile else None)
-            or DEFAULT_LANGUAGE
-        )
+        language = req.language or (profile.language if profile else None) or DEFAULT_LANGUAGE
         farm = await self._load_farm(user, req.farm_id)
         weather = await self._safe_weather(user, farm)
         farm_context = build_farm_memory(profile, farm, weather)
@@ -175,6 +165,10 @@ class GrowthService:
         previous_context = self._previous_context(previous_entry)
 
         # STEP 2 — growth analysis (compares against the previous week).
+        day_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+        used = await self.token_usage.count_today(user.id, "growth", since=day_start)
+        if used >= settings.ai_daily_growth_quota:
+            raise QuotaExceededError()
         analysis = await self.provider.analyze(
             GrowthAnalysisRequest(
                 image_base64=req.image_base64,
@@ -185,11 +179,24 @@ class GrowthService:
                 previous_context=previous_context,
             )
         )
+        model_used = analysis.model_used or self.provider.model
+        is_sample = "mock" in model_used.lower()
+        await record_usage_durable(
+            farmer_id=user.id,
+            module="growth",
+            model=model_used,
+            input_tokens=None,
+            output_tokens=None,
+            latency_ms=None,
+            provider="mock" if is_sample else "gemini",
+            is_sample=is_sample,
+        )
         if not analysis.plant_present:
             raise NoPlantDetectedError(analysis.reject_reason)
 
-        # Optional reused Disease Detection + future nutrient seam.
-        disease_result = await self._maybe_disease(req, farm_context, language)
+        # Disease diagnosis is intentionally separate from Growth; keep only the
+        # optional nutrient-analysis seam here.
+        disease_result = None
         nutrient_result = await self.nutrient_provider.analyze(
             GrowthAnalysisRequest(
                 image_base64=req.image_base64,
@@ -204,9 +211,7 @@ class GrowthService:
         # STEP 3 — store the image in R2 (only for genuine plant photos).
         ext = _EXT.get(req.mime_type, "jpg")
         key = f"{GROWTH_IMAGE_PREFIX}/{user.id}/{session.id}/{uuid.uuid4().hex}.{ext}"
-        image_url = await self.storage.put(
-            key=key, data=data, content_type=req.mime_type
-        )
+        image_url = await self.storage.put(key=key, data=data, content_type=req.mime_type)
 
         now = datetime.now(UTC)
         week_number = self._week_number(session, now)
@@ -268,8 +273,7 @@ class GrowthService:
                 health_score=analysis.health_score,
                 health_delta=health_delta,
                 risk_level=risk,
-                summary=analysis.growth_summary_english
-                or analysis.growth_summary_tamil,
+                summary=analysis.growth_summary_english or analysis.growth_summary_tamil,
                 recorded_at=now,
             )
         )
@@ -333,24 +337,24 @@ class GrowthService:
         )
 
     async def timeline(
-        self, user: User, session_id: uuid.UUID | None
+        self,
+        user: User,
+        session_id: uuid.UUID | None,
+        *,
+        farm_id: uuid.UUID | None = None,
     ) -> tuple[CropGrowthSession, list[tuple[CropGrowthTimeline, CropGrowthImage | None]]]:
-        session = await self._resolve_read_session(user, session_id)
+        session = await self._resolve_read_session(user, session_id, farm_id=farm_id)
         entries = await self.repo.timeline_for_session(session.id)
         return session, entries
 
-    async def latest(
-        self, user: User
-    ) -> tuple[CropGrowthImage, CropGrowthAnalysis | None] | None:
+    async def latest(self, user: User) -> tuple[CropGrowthImage, CropGrowthAnalysis | None] | None:
         session = await self.repo.latest_session(user.id)
         if session is None:
             return None
         image = await self.repo.latest_image_for_session(session.id)
         if image is None:
             return None
-        images, _ = await self.repo.list_images(
-            user.id, session_id=session.id, limit=1, offset=0
-        )
+        images, _ = await self.repo.list_images(user.id, session_id=session.id, limit=1, offset=0)
         return images[0] if images else (image, None)
 
     async def session_detail(
@@ -413,12 +417,16 @@ class GrowthService:
         )
 
     async def _resolve_read_session(
-        self, user: User, session_id: uuid.UUID | None
+        self,
+        user: User,
+        session_id: uuid.UUID | None,
+        *,
+        farm_id: uuid.UUID | None = None,
     ) -> CropGrowthSession:
         if session_id is not None:
             session = await self.repo.get_session(session_id, user.id)
         else:
-            session = await self.repo.latest_session(user.id)
+            session = await self.repo.latest_session(user.id, farm_id=farm_id)
         if session is None:
             raise GrowthSessionNotFoundError()
         return session
@@ -441,44 +449,13 @@ class GrowthService:
             session.variety = variety
         await self.session.flush()
 
-    async def _maybe_disease(
-        self, req: UploadGrowthRequest, farm_context: str, language: str
-    ) -> dict | None:
-        if not req.run_disease_check:
-            return None
-        provider = self._disease_provider or get_disease_provider()
-        try:
-            result = await provider.analyze(
-                AnalysisRequest(
-                    image_base64=req.image_base64,
-                    mime_type=req.mime_type,
-                    crop=req.crop,
-                    language=language,
-                    farm_context=farm_context,
-                )
-            )
-        except Exception:
-            logger.info("disease check unavailable; continuing without it")
-            return None
-        if not result.plant_present:
-            return None
-        return {
-            "disease": result.disease,
-            "confidence": result.confidence,
-            "severity": result.severity,
-            "needs_expert_review": result.needs_expert_review,
-            "model_used": result.model_used,
-        }
-
     async def _load_farm(self, user: User, farm_id: uuid.UUID) -> Farm:
         farm = await self.farms.get_for_user(farm_id, user.id)
         if farm is None:
             raise FarmNotFoundError()
         return farm
 
-    async def _safe_weather(
-        self, user: User, farm: Farm | None
-    ) -> WeatherBundle | None:
+    async def _safe_weather(self, user: User, farm: Farm | None) -> WeatherBundle | None:
         if self.weather_service is None or farm is None:
             return None
         location = farm.location
@@ -502,9 +479,7 @@ class GrowthService:
         return ", ".join(parts)
 
     @staticmethod
-    def _health_delta(
-        health_score: int | None, previous: CropGrowthTimeline | None
-    ) -> int | None:
+    def _health_delta(health_score: int | None, previous: CropGrowthTimeline | None) -> int | None:
         if health_score is None or previous is None or previous.health_score is None:
             return None
         return health_score - previous.health_score

@@ -4,6 +4,7 @@ from __future__ import annotations
 import uuid
 
 import pytest
+from app.modules.action_verification.service import ActionVerificationService
 from app.modules.auth.models import User
 from app.modules.farms.exceptions import FarmNotFoundError
 from app.modules.farms.models import Farm, FarmLocation
@@ -39,7 +40,7 @@ async def _make_user(db_session, uid: str = "fb-weather-1") -> User:
 
 
 async def _make_farm(db_session, user: User, *, with_location: bool = True) -> Farm:
-    farm = Farm(user_id=user.id, name="North Field")
+    farm = Farm(user_id=user.id, name="North Field", crop="paddy")
     db_session.add(farm)
     await db_session.flush()
     if with_location:
@@ -65,7 +66,13 @@ async def test_get_by_farm_returns_full_bundle(db_session):
     assert len(bundle.hourly) == 24
     assert len(bundle.daily) == 7
     assert bundle.insights  # deterministic insights always present
+    assert bundle.mission.primary_action
+    assert bundle.mission.crop == "paddy"
     assert bundle.source == "open-meteo"
+    actions = await ActionVerificationService(db_session).list(user, pending_only=True)
+    assert len(actions) == 1
+    assert actions[0].source_module == "weather_to_action"
+    assert actions[0].action_code == bundle.mission.primary_action
 
 
 async def test_farm_without_location_raises(db_session):
@@ -93,9 +100,14 @@ async def test_cache_avoids_a_second_upstream_call(db_session):
     provider = FakeProvider(build_raw())
     service = WeatherService(db_session, provider=provider, cache=WeatherCache())
 
-    await service.get_by_farm(user, farm.id)
-    await service.get_by_farm(user, farm.id)
+    live = await service.get_by_farm(user, farm.id)
+    cached = await service.get_by_farm(user, farm.id)
     assert provider.calls == 1  # second read served from cache
+    assert live.data_state == "live"
+    assert cached.data_state == "cached"
+    assert cached.fetched_at == live.fetched_at
+    actions = await ActionVerificationService(db_session).list(user, pending_only=True)
+    assert len(actions) == 1
 
 
 async def test_get_by_coordinates_has_no_farm_name(db_session):

@@ -6,6 +6,7 @@ a commercial fertilizer brand, never a fabricated value (docs/PRODUCT_RULES.md).
 Each recommendation is a localization ``code`` (+ the measured value) so the
 Tamil-first client renders the wording. No AI, no I/O, no side effects.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -161,8 +162,12 @@ def assess(values: SoilValues) -> SoilAssessment:
     has_any = any(
         v is not None
         for v in (
-            values.ph, values.organic_carbon, values.nitrogen,
-            values.phosphorus, values.potassium, values.ec_salinity,
+            values.ph,
+            values.organic_carbon,
+            values.nitrogen,
+            values.phosphorus,
+            values.potassium,
+            values.ec_salinity,
         )
     )
     return SoilAssessment(
@@ -223,9 +228,7 @@ def build_recommendations(values: SoilValues) -> list[RecommendationDraft]:
         rating: str | None = None,
         value: float | None = None,
     ) -> None:
-        recs.append(
-            _rec(category, key, severity, parameter=parameter, rating=rating, value=value)
-        )
+        recs.append(_rec(category, key, severity, parameter=parameter, rating=rating, value=value))
 
     # pH
     _ph_rule: dict[str, tuple[str, Severity]] = {
@@ -256,11 +259,23 @@ def build_recommendations(values: SoilValues) -> list[RecommendationDraft]:
 
     # Salinity
     if a.salinity == _R.HIGH.value:
-        add(_C.GENERAL, "salinity_high", _S.CRITICAL, parameter="ec_salinity",
-            rating=a.salinity, value=values.ec_salinity)
+        add(
+            _C.GENERAL,
+            "salinity_high",
+            _S.CRITICAL,
+            parameter="ec_salinity",
+            rating=a.salinity,
+            value=values.ec_salinity,
+        )
     elif a.salinity == _R.MEDIUM.value:
-        add(_C.GENERAL, "salinity_medium", _S.WARNING, parameter="ec_salinity",
-            rating=a.salinity, value=values.ec_salinity)
+        add(
+            _C.GENERAL,
+            "salinity_medium",
+            _S.WARNING,
+            parameter="ec_salinity",
+            rating=a.salinity,
+            value=values.ec_salinity,
+        )
 
     # Drainage
     if values.drainage == DrainageClass.POOR.value:

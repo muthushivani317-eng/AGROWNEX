@@ -4,6 +4,7 @@ Reuses the Disease module's Cloudflare R2 configuration and image-quality gate,
 and the AI module's Gemini configuration — a single source of truth, no
 duplication (docs/PRODUCT_RULES.md → no duplicate code).
 """
+
 from __future__ import annotations
 
 from enum import StrEnum

@@ -6,6 +6,7 @@ primary is a valid "nothing conclusive" outcome that the engine turns into an ho
 ``not_confirmed``. It is strict about validity: unknown nutrient names, symptom codes
 and out-of-range confidence are dropped rather than trusted (never fabricated).
 """
+
 from __future__ import annotations
 
 import json

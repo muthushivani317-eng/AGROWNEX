@@ -1,0 +1,686 @@
+{
+  "audit_completed": true,
+  "mobile_route_count": 70,
+  "backend_capability_count": 30,
+  "mobile_routes": [
+    {
+      "route": "/(auth)/complete-profile",
+      "source_file": "agrow-ai/app/(auth)/complete-profile.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "unauthenticated_flow"
+    },
+    {
+      "route": "/(auth)/language",
+      "source_file": "agrow-ai/app/(auth)/language.tsx",
+      "registered": true,
+      "entry_point_features": [
+        "language_selection"
+      ],
+      "auth_policy": "unauthenticated_flow"
+    },
+    {
+      "route": "/(auth)/login",
+      "source_file": "agrow-ai/app/(auth)/login.tsx",
+      "registered": true,
+      "entry_point_features": [
+        "phone_authentication"
+      ],
+      "auth_policy": "unauthenticated_flow"
+    },
+    {
+      "route": "/(auth)/onboarding",
+      "source_file": "agrow-ai/app/(auth)/onboarding.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "unauthenticated_flow"
+    },
+    {
+      "route": "/(auth)/otp",
+      "source_file": "agrow-ai/app/(auth)/otp.tsx",
+      "registered": true,
+      "entry_point_features": [
+        "otp_verification"
+      ],
+      "auth_policy": "unauthenticated_flow"
+    },
+    {
+      "route": "/(auth)/verify",
+      "source_file": "agrow-ai/app/(auth)/verify.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "unauthenticated_flow"
+    },
+    {
+      "route": "/(tabs)/ai",
+      "source_file": "agrow-ai/app/(tabs)/ai.tsx",
+      "registered": true,
+      "entry_point_features": [
+        "ai_chat"
+      ],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/(tabs)/farm",
+      "source_file": "agrow-ai/app/(tabs)/farm.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/(tabs)",
+      "source_file": "agrow-ai/app/(tabs)/index.tsx",
+      "registered": true,
+      "entry_point_features": [
+        "home_dashboard"
+      ],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/(tabs)/market",
+      "source_file": "agrow-ai/app/(tabs)/market.tsx",
+      "registered": true,
+      "entry_point_features": [
+        "market_prices"
+      ],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/(tabs)/profile",
+      "source_file": "agrow-ai/app/(tabs)/profile.tsx",
+      "registered": true,
+      "entry_point_features": [
+        "farmer_profile"
+      ],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/admin/ai",
+      "source_file": "agrow-ai/app/admin/ai.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/admin/analytics",
+      "source_file": "agrow-ai/app/admin/analytics.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/admin/audit",
+      "source_file": "agrow-ai/app/admin/audit.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/admin/broadcast",
+      "source_file": "agrow-ai/app/admin/broadcast.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/admin/farmers",
+      "source_file": "agrow-ai/app/admin/farmers/index.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/admin/farmers/[id]",
+      "source_file": "agrow-ai/app/admin/farmers/[id].tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/admin",
+      "source_file": "agrow-ai/app/admin/index.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/admin/procurement",
+      "source_file": "agrow-ai/app/admin/procurement.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/ai/history",
+      "source_file": "agrow-ai/app/ai/history.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/calendar",
+      "source_file": "agrow-ai/app/calendar/index.tsx",
+      "registered": true,
+      "entry_point_features": [
+        "crop_calendar"
+      ],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/consultations/history",
+      "source_file": "agrow-ai/app/consultations/history.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/consultations",
+      "source_file": "agrow-ai/app/consultations/index.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/consultations/new",
+      "source_file": "agrow-ai/app/consultations/new.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/consultations/pending",
+      "source_file": "agrow-ai/app/consultations/pending.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/consultations/[id]",
+      "source_file": "agrow-ai/app/consultations/[id].tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/disease/history",
+      "source_file": "agrow-ai/app/disease/history.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/disease",
+      "source_file": "agrow-ai/app/disease/index.tsx",
+      "registered": true,
+      "entry_point_features": [
+        "farmer_crop_confirmation",
+        "disease_detection"
+      ],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/disease/[id]",
+      "source_file": "agrow-ai/app/disease/[id].tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/experts",
+      "source_file": "agrow-ai/app/experts/index.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/experts/[id]",
+      "source_file": "agrow-ai/app/experts/[id].tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/farm/new",
+      "source_file": "agrow-ai/app/farm/new.tsx",
+      "registered": true,
+      "entry_point_features": [
+        "farm_registration"
+      ],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/farm/[id]/boundary",
+      "source_file": "agrow-ai/app/farm/[id]/boundary.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/farm/[id]/edit",
+      "source_file": "agrow-ai/app/farm/[id]/edit.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/farm/[id]/gallery",
+      "source_file": "agrow-ai/app/farm/[id]/gallery.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/farm/[id]",
+      "source_file": "agrow-ai/app/farm/[id]/index.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/growth",
+      "source_file": "agrow-ai/app/growth/index.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/index",
+      "source_file": "agrow-ai/app/index.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/intelligence/history",
+      "source_file": "agrow-ai/app/intelligence/history.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/intelligence",
+      "source_file": "agrow-ai/app/intelligence/index.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/intelligence/[id]",
+      "source_file": "agrow-ai/app/intelligence/[id].tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/memory/history",
+      "source_file": "agrow-ai/app/memory/history.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/memory",
+      "source_file": "agrow-ai/app/memory/index.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/memory/summary",
+      "source_file": "agrow-ai/app/memory/summary.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/memory/[id]",
+      "source_file": "agrow-ai/app/memory/[id].tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/notifications",
+      "source_file": "agrow-ai/app/notifications/index.tsx",
+      "registered": true,
+      "entry_point_features": [
+        "notifications"
+      ],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/notifications/preferences",
+      "source_file": "agrow-ai/app/notifications/preferences.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/notifications/[id]",
+      "source_file": "agrow-ai/app/notifications/[id].tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/nutrient/history",
+      "source_file": "agrow-ai/app/nutrient/history.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/nutrient",
+      "source_file": "agrow-ai/app/nutrient/index.tsx",
+      "registered": true,
+      "entry_point_features": [
+        "nutrient_deficiency"
+      ],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/nutrient/[id]",
+      "source_file": "agrow-ai/app/nutrient/[id].tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/plant-identifier",
+      "source_file": "agrow-ai/app/plant-identifier/index.tsx",
+      "registered": true,
+      "entry_point_features": [
+        "crop_identification"
+      ],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/produce/history",
+      "source_file": "agrow-ai/app/produce/history.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/produce",
+      "source_file": "agrow-ai/app/produce/index.tsx",
+      "registered": true,
+      "entry_point_features": [
+        "sell_produce"
+      ],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/produce/new",
+      "source_file": "agrow-ai/app/produce/new.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/produce/upcoming",
+      "source_file": "agrow-ai/app/produce/upcoming.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/produce/[id]/edit",
+      "source_file": "agrow-ai/app/produce/[id]/edit.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/produce/[id]",
+      "source_file": "agrow-ai/app/produce/[id]/index.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/profile/account",
+      "source_file": "agrow-ai/app/profile/account.tsx",
+      "registered": true,
+      "entry_point_features": [
+        "settings",
+        "language_switching",
+        "logout"
+      ],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/profile/edit",
+      "source_file": "agrow-ai/app/profile/edit.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/satellite/alerts",
+      "source_file": "agrow-ai/app/satellite/alerts.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/satellite",
+      "source_file": "agrow-ai/app/satellite/index.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/satellite/timeline",
+      "source_file": "agrow-ai/app/satellite/timeline.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/schemes",
+      "source_file": "agrow-ai/app/schemes/index.tsx",
+      "registered": true,
+      "entry_point_features": [
+        "government_schemes"
+      ],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/schemes/[id]",
+      "source_file": "agrow-ai/app/schemes/[id].tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/soil/history",
+      "source_file": "agrow-ai/app/soil/history.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/soil",
+      "source_file": "agrow-ai/app/soil/index.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/soil/recommendations",
+      "source_file": "agrow-ai/app/soil/recommendations.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/soil/upload",
+      "source_file": "agrow-ai/app/soil/upload.tsx",
+      "registered": true,
+      "entry_point_features": [],
+      "auth_policy": "authenticated"
+    },
+    {
+      "route": "/weather",
+      "source_file": "agrow-ai/app/weather.tsx",
+      "registered": true,
+      "entry_point_features": [
+        "weather"
+      ],
+      "auth_policy": "authenticated"
+    }
+  ],
+  "backend_capabilities": [
+    {
+      "router_symbol": "health_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "auth_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "farmers_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "farms_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "weather_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "ai_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "disease_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "banana_v3_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "legacy_joint_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "restricted_crops_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "model_boundaries_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "crop_runtime_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "disease_recommendations_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "crop_identity_six_class_internal_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "gemini_crop_identification_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "plant_identifier_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "calendar_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "market_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "growth_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "schemes_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "produce_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "notifications_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "experts_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "consultations_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "soil_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "satellite_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "nutrient_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "intelligence_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "memory_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    },
+    {
+      "router_symbol": "admin_router",
+      "source_file": "backend/app/api/v1/router.py",
+      "registered": true
+    }
+  ]
+}

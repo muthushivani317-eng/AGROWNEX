@@ -1,0 +1,14 @@
+{
+  "confidence_threshold": 0.5,
+  "margin_threshold": 0.0,
+  "fallback": "CROP_IDENTITY_UNCERTAIN",
+  "fit_split": "calibration",
+  "class_order": [
+    "banana",
+    "paddy",
+    "cotton",
+    "groundnut",
+    "chilli",
+    "redgram"
+  ]
+}

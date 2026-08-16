@@ -8,6 +8,7 @@ are reproducible. When the evidence is insufficient the deficiency is reported a
 recommendations are *generic* localization codes; no commercial fertilizer brand is
 ever recommended.
 """
+
 from __future__ import annotations
 
 import os
@@ -31,12 +32,12 @@ class NutrientProviderName(StrEnum):
 
     GEMINI = "gemini"
     MOCK = "mock"
-    YOLO = "yolo"                 # future — YOLO nutrient model
+    YOLO = "yolo"  # future — YOLO nutrient model
     EFFICIENTNET = "efficientnet"  # future
-    CONVNEXT = "convnext"        # future
-    TENSORRT = "tensorrt"        # future — custom TensorRT model
-    ONNX = "onnx"                # future — ONNX Runtime
-    ENSEMBLE = "ensemble"        # future — hybrid AI ensemble
+    CONVNEXT = "convnext"  # future
+    TENSORRT = "tensorrt"  # future — custom TensorRT model
+    ONNX = "onnx"  # future — ONNX Runtime
+    ENSEMBLE = "ensemble"  # future — hybrid AI ensemble
 
 
 class Nutrient(StrEnum):
@@ -85,14 +86,12 @@ SOIL_MACRO_PARAM: dict[str, str] = {
 }
 # Micronutrients the Soil Health Card measures (DTPA) — a soil deficiency here is
 # strong corroboration of the visual finding.
-SOIL_MICRO_ELEMENTS: frozenset[str] = frozenset(
-    {"zinc", "iron", "manganese", "copper", "boron"}
-)
+SOIL_MICRO_ELEMENTS: frozenset[str] = frozenset({"zinc", "iron", "manganese", "copper", "boron"})
 
 
 class DeficiencyStatus(StrEnum):
-    CONFIRMED = "confirmed"          # strong visual + corroboration
-    POSSIBLE = "possible"            # visible signs, not yet corroborated
+    CONFIRMED = "confirmed"  # strong visual + corroboration
+    POSSIBLE = "possible"  # visible signs, not yet corroborated
     NOT_CONFIRMED = "not_confirmed"  # insufficient evidence — never invented
 
 
@@ -169,13 +168,13 @@ SEVERITY_ORDER: dict[str, int] = {
 # Confidence thresholds (transparent + tunable).
 # --------------------------------------------------------------------------- #
 # Visual/adjusted confidence (0-100) → deficiency status.
-CONFIDENCE_CONFIRM = 75   # at/above this AND corroborated → confirmed
+CONFIDENCE_CONFIRM = 75  # at/above this AND corroborated → confirmed
 CONFIDENCE_POSSIBLE = 50  # at/above this → possible; below → not_confirmed
 
 # Corroboration adjustments applied by the engine (points).
-CORROBORATION_BOOST = 12       # a supporting soil/satellite/weather signal
-STRONG_SOIL_BOOST = 18         # soil directly measures this nutrient as low
-CONTRADICTION_PENALTY = 15     # soil measures this nutrient as sufficient/high
+CORROBORATION_BOOST = 12  # a supporting soil/satellite/weather signal
+STRONG_SOIL_BOOST = 18  # soil directly measures this nutrient as low
+CONTRADICTION_PENALTY = 15  # soil measures this nutrient as sufficient/high
 DISEASE_CONFLICT_PENALTY = 20  # a recent high-confidence disease on the same farm
 
 CONFIDENCE_MIN = 0

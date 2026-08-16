@@ -5,6 +5,7 @@ its localization keys, severity, priority, expiry and action route. The engine
 evaluates it (no AI) and the repository seeds ``notification_templates`` from it,
 so rules stay in one place and are future-editable.
 """
+
 from __future__ import annotations
 
 import os
@@ -132,95 +133,341 @@ _INTELLIGENCE_ROUTE = "/intelligence?farmId={farm_id}"
 
 _RULE_LIST: tuple[NotificationRule, ...] = (
     # Weather
-    _rule(_M.WEATHER, "heavy_rain", severity=_S.WARNING, priority=_P.HIGH,
-          expires_after_hours=24, action_route=_WEATHER_ROUTE),
-    _rule(_M.WEATHER, "high_wind", severity=_S.WARNING, priority=_P.MEDIUM,
-          expires_after_hours=24, action_route=_WEATHER_ROUTE),
-    _rule(_M.WEATHER, "extreme_heat", severity=_S.WARNING, priority=_P.HIGH,
-          expires_after_hours=24, action_route=_WEATHER_ROUTE),
-    _rule(_M.WEATHER, "low_temperature", severity=_S.WARNING, priority=_P.MEDIUM,
-          expires_after_hours=24, action_route=_WEATHER_ROUTE),
+    _rule(
+        _M.WEATHER,
+        "heavy_rain",
+        severity=_S.WARNING,
+        priority=_P.HIGH,
+        expires_after_hours=24,
+        action_route=_WEATHER_ROUTE,
+    ),
+    _rule(
+        _M.WEATHER,
+        "high_wind",
+        severity=_S.WARNING,
+        priority=_P.MEDIUM,
+        expires_after_hours=24,
+        action_route=_WEATHER_ROUTE,
+    ),
+    _rule(
+        _M.WEATHER,
+        "extreme_heat",
+        severity=_S.WARNING,
+        priority=_P.HIGH,
+        expires_after_hours=24,
+        action_route=_WEATHER_ROUTE,
+    ),
+    _rule(
+        _M.WEATHER,
+        "low_temperature",
+        severity=_S.WARNING,
+        priority=_P.MEDIUM,
+        expires_after_hours=24,
+        action_route=_WEATHER_ROUTE,
+    ),
+    _rule(
+        _M.WEATHER,
+        "spraying_good_window",
+        severity=_S.INFO,
+        priority=_P.MEDIUM,
+        expires_after_hours=6,
+        action_route=_WEATHER_ROUTE,
+    ),
     # Disease
-    _rule(_M.DISEASE, "high_confidence_disease", severity=_S.CRITICAL, priority=_P.CRITICAL,
-          expires_after_hours=168, action_route=_DISEASE_ROUTE),
-    _rule(_M.DISEASE, "expert_review_needed", severity=_S.WARNING, priority=_P.HIGH,
-          expires_after_hours=168, action_route=_DISEASE_ROUTE),
-    _rule(_M.DISEASE, "poor_image_quality", severity=_S.INFO, priority=_P.LOW,
-          expires_after_hours=48, action_route="/disease"),
+    _rule(
+        _M.DISEASE,
+        "high_confidence_disease",
+        severity=_S.CRITICAL,
+        priority=_P.CRITICAL,
+        expires_after_hours=168,
+        action_route=_DISEASE_ROUTE,
+    ),
+    _rule(
+        _M.DISEASE,
+        "expert_review_needed",
+        severity=_S.WARNING,
+        priority=_P.HIGH,
+        expires_after_hours=168,
+        action_route=_DISEASE_ROUTE,
+    ),
+    _rule(
+        _M.DISEASE,
+        "poor_image_quality",
+        severity=_S.INFO,
+        priority=_P.LOW,
+        expires_after_hours=48,
+        action_route="/disease",
+    ),
+    _rule(
+        _M.DISEASE,
+        "district_outbreak",
+        severity=_S.WARNING,
+        priority=_P.HIGH,
+        expires_after_hours=168,
+        action_route="/disease",
+    ),
+    _rule(
+        _M.DISEASE,
+        "disease_risk_conditions",
+        severity=_S.WARNING,
+        priority=_P.MEDIUM,
+        expires_after_hours=24,
+        action_route="/disease",
+    ),
     # Crop Calendar
-    _rule(_M.CALENDAR, "today_task", severity=_S.INFO, priority=_P.HIGH,
-          expires_after_hours=36, action_route=_CALENDAR_ROUTE),
-    _rule(_M.CALENDAR, "upcoming_task", severity=_S.INFO, priority=_P.MEDIUM,
-          expires_after_hours=96, action_route=_CALENDAR_ROUTE),
-    _rule(_M.CALENDAR, "missed_activity", severity=_S.WARNING, priority=_P.HIGH,
-          expires_after_hours=168, action_route=_CALENDAR_ROUTE),
+    _rule(
+        _M.CALENDAR,
+        "today_task",
+        severity=_S.INFO,
+        priority=_P.HIGH,
+        expires_after_hours=36,
+        action_route=_CALENDAR_ROUTE,
+    ),
+    _rule(
+        _M.CALENDAR,
+        "upcoming_task",
+        severity=_S.INFO,
+        priority=_P.MEDIUM,
+        expires_after_hours=96,
+        action_route=_CALENDAR_ROUTE,
+    ),
+    _rule(
+        _M.CALENDAR,
+        "missed_activity",
+        severity=_S.WARNING,
+        priority=_P.HIGH,
+        expires_after_hours=168,
+        action_route=_CALENDAR_ROUTE,
+    ),
     # Growth Monitor
-    _rule(_M.GROWTH, "weekly_reminder", severity=_S.INFO, priority=_P.MEDIUM,
-          expires_after_hours=168, action_route=_GROWTH_ROUTE),
-    _rule(_M.GROWTH, "growth_decline", severity=_S.WARNING, priority=_P.HIGH,
-          expires_after_hours=168, action_route=_GROWTH_ROUTE),
-    _rule(_M.GROWTH, "growth_improvement", severity=_S.INFO, priority=_P.LOW,
-          expires_after_hours=168, action_route=_GROWTH_ROUTE),
+    _rule(
+        _M.GROWTH,
+        "weekly_reminder",
+        severity=_S.INFO,
+        priority=_P.MEDIUM,
+        expires_after_hours=168,
+        action_route=_GROWTH_ROUTE,
+    ),
+    _rule(
+        _M.GROWTH,
+        "growth_decline",
+        severity=_S.WARNING,
+        priority=_P.HIGH,
+        expires_after_hours=168,
+        action_route=_GROWTH_ROUTE,
+    ),
+    _rule(
+        _M.GROWTH,
+        "growth_improvement",
+        severity=_S.INFO,
+        priority=_P.LOW,
+        expires_after_hours=168,
+        action_route=_GROWTH_ROUTE,
+    ),
     # Market
-    _rule(_M.MARKET, "price_increase", severity=_S.INFO, priority=_P.MEDIUM,
-          expires_after_hours=48, action_route=_MARKET_ROUTE),
-    _rule(_M.MARKET, "price_decrease", severity=_S.WARNING, priority=_P.MEDIUM,
-          expires_after_hours=48, action_route=_MARKET_ROUTE),
-    _rule(_M.MARKET, "favourite_crop_alert", severity=_S.INFO, priority=_P.MEDIUM,
-          expires_after_hours=48, action_route=_MARKET_ROUTE),
+    _rule(
+        _M.MARKET,
+        "price_increase",
+        severity=_S.INFO,
+        priority=_P.MEDIUM,
+        expires_after_hours=48,
+        action_route=_MARKET_ROUTE,
+    ),
+    _rule(
+        _M.MARKET,
+        "price_decrease",
+        severity=_S.WARNING,
+        priority=_P.MEDIUM,
+        expires_after_hours=48,
+        action_route=_MARKET_ROUTE,
+    ),
+    _rule(
+        _M.MARKET,
+        "favourite_crop_alert",
+        severity=_S.INFO,
+        priority=_P.MEDIUM,
+        expires_after_hours=48,
+        action_route=_MARKET_ROUTE,
+    ),
+    _rule(
+        _M.MARKET,
+        "price_peak",
+        severity=_S.INFO,
+        priority=_P.HIGH,
+        expires_after_hours=48,
+        action_route=_MARKET_ROUTE,
+    ),
     # Government Schemes
-    _rule(_M.SCHEMES, "scheme_eligible", severity=_S.INFO, priority=_P.MEDIUM,
-          expires_after_hours=336, action_route=_SCHEME_ROUTE),
-    _rule(_M.SCHEMES, "application_closing", severity=_S.WARNING, priority=_P.HIGH,
-          expires_after_hours=240, action_route=_SCHEME_ROUTE),
-    _rule(_M.SCHEMES, "new_scheme", severity=_S.INFO, priority=_P.LOW,
-          expires_after_hours=336, action_route="/schemes"),
+    _rule(
+        _M.SCHEMES,
+        "scheme_eligible",
+        severity=_S.INFO,
+        priority=_P.MEDIUM,
+        expires_after_hours=336,
+        action_route=_SCHEME_ROUTE,
+    ),
+    _rule(
+        _M.SCHEMES,
+        "application_closing",
+        severity=_S.WARNING,
+        priority=_P.HIGH,
+        expires_after_hours=240,
+        action_route=_SCHEME_ROUTE,
+    ),
+    _rule(
+        _M.SCHEMES,
+        "new_scheme",
+        severity=_S.INFO,
+        priority=_P.LOW,
+        expires_after_hours=336,
+        action_route="/schemes",
+    ),
     # Sell My Produce
-    _rule(_M.PRODUCE, "offer_submitted", severity=_S.INFO, priority=_P.MEDIUM,
-          expires_after_hours=72, action_route=_PRODUCE_ROUTE),
-    _rule(_M.PRODUCE, "harvest_approaching", severity=_S.INFO, priority=_P.HIGH,
-          expires_after_hours=336, action_route=_PRODUCE_ROUTE),
-    _rule(_M.PRODUCE, "buyer_interest", severity=_S.INFO, priority=_P.HIGH,
-          expires_after_hours=336, action_route=_PRODUCE_ROUTE),
-    _rule(_M.PRODUCE, "offer_expiring", severity=_S.WARNING, priority=_P.HIGH,
-          expires_after_hours=168, action_route=_PRODUCE_ROUTE),
+    _rule(
+        _M.PRODUCE,
+        "offer_submitted",
+        severity=_S.INFO,
+        priority=_P.MEDIUM,
+        expires_after_hours=72,
+        action_route=_PRODUCE_ROUTE,
+    ),
+    _rule(
+        _M.PRODUCE,
+        "harvest_approaching",
+        severity=_S.INFO,
+        priority=_P.HIGH,
+        expires_after_hours=336,
+        action_route=_PRODUCE_ROUTE,
+    ),
+    _rule(
+        _M.PRODUCE,
+        "buyer_interest",
+        severity=_S.INFO,
+        priority=_P.HIGH,
+        expires_after_hours=336,
+        action_route=_PRODUCE_ROUTE,
+    ),
+    _rule(
+        _M.PRODUCE,
+        "offer_expiring",
+        severity=_S.WARNING,
+        priority=_P.HIGH,
+        expires_after_hours=168,
+        action_route=_PRODUCE_ROUTE,
+    ),
     # AI
-    _rule(_M.AI, "follow_up_reminder", severity=_S.INFO, priority=_P.LOW,
-          expires_after_hours=168, action_route=_AI_ROUTE),
-    _rule(_M.AI, "conversation_reminder", severity=_S.INFO, priority=_P.LOW,
-          expires_after_hours=168, action_route=_AI_ROUTE),
+    _rule(
+        _M.AI,
+        "follow_up_reminder",
+        severity=_S.INFO,
+        priority=_P.LOW,
+        expires_after_hours=168,
+        action_route=_AI_ROUTE,
+    ),
+    _rule(
+        _M.AI,
+        "conversation_reminder",
+        severity=_S.INFO,
+        priority=_P.LOW,
+        expires_after_hours=168,
+        action_route=_AI_ROUTE,
+    ),
     # Expert Connect
-    _rule(_M.EXPERTS, "consultation_assigned", severity=_S.INFO, priority=_P.MEDIUM,
-          expires_after_hours=336, action_route=_CONSULTATION_ROUTE),
-    _rule(_M.EXPERTS, "consultation_reply", severity=_S.INFO, priority=_P.HIGH,
-          expires_after_hours=336, action_route=_CONSULTATION_ROUTE),
-    _rule(_M.EXPERTS, "consultation_resolved", severity=_S.INFO, priority=_P.MEDIUM,
-          expires_after_hours=336, action_route=_CONSULTATION_ROUTE),
+    _rule(
+        _M.EXPERTS,
+        "consultation_assigned",
+        severity=_S.INFO,
+        priority=_P.MEDIUM,
+        expires_after_hours=336,
+        action_route=_CONSULTATION_ROUTE,
+    ),
+    _rule(
+        _M.EXPERTS,
+        "consultation_reply",
+        severity=_S.INFO,
+        priority=_P.HIGH,
+        expires_after_hours=336,
+        action_route=_CONSULTATION_ROUTE,
+    ),
+    _rule(
+        _M.EXPERTS,
+        "consultation_resolved",
+        severity=_S.INFO,
+        priority=_P.MEDIUM,
+        expires_after_hours=336,
+        action_route=_CONSULTATION_ROUTE,
+    ),
     # Soil Intelligence
-    _rule(_M.SOIL, "report_processed", severity=_S.INFO, priority=_P.MEDIUM,
-          expires_after_hours=336, action_route=_SOIL_ROUTE),
-    _rule(_M.SOIL, "deficiency_alert", severity=_S.WARNING, priority=_P.HIGH,
-          expires_after_hours=336, action_route=_SOIL_ROUTE),
+    _rule(
+        _M.SOIL,
+        "report_processed",
+        severity=_S.INFO,
+        priority=_P.MEDIUM,
+        expires_after_hours=336,
+        action_route=_SOIL_ROUTE,
+    ),
+    _rule(
+        _M.SOIL,
+        "deficiency_alert",
+        severity=_S.WARNING,
+        priority=_P.HIGH,
+        expires_after_hours=336,
+        action_route=_SOIL_ROUTE,
+    ),
     # Satellite Intelligence
-    _rule(_M.SATELLITE, "vegetation_decline", severity=_S.WARNING, priority=_P.HIGH,
-          expires_after_hours=336, action_route=_SATELLITE_ROUTE),
-    _rule(_M.SATELLITE, "imagery_unavailable", severity=_S.INFO, priority=_P.LOW,
-          expires_after_hours=168, action_route=_SATELLITE_ROUTE),
+    _rule(
+        _M.SATELLITE,
+        "vegetation_decline",
+        severity=_S.WARNING,
+        priority=_P.HIGH,
+        expires_after_hours=336,
+        action_route=_SATELLITE_ROUTE,
+    ),
+    _rule(
+        _M.SATELLITE,
+        "imagery_unavailable",
+        severity=_S.INFO,
+        priority=_P.LOW,
+        expires_after_hours=168,
+        action_route=_SATELLITE_ROUTE,
+    ),
     # Nutrient Deficiency AI
-    _rule(_M.NUTRIENT, "deficiency_detected", severity=_S.WARNING, priority=_P.HIGH,
-          expires_after_hours=336, action_route=_NUTRIENT_ROUTE),
-    _rule(_M.NUTRIENT, "test_recommended", severity=_S.INFO, priority=_P.MEDIUM,
-          expires_after_hours=168, action_route=_NUTRIENT_ROUTE),
+    _rule(
+        _M.NUTRIENT,
+        "deficiency_detected",
+        severity=_S.WARNING,
+        priority=_P.HIGH,
+        expires_after_hours=336,
+        action_route=_NUTRIENT_ROUTE,
+    ),
+    _rule(
+        _M.NUTRIENT,
+        "test_recommended",
+        severity=_S.INFO,
+        priority=_P.MEDIUM,
+        expires_after_hours=168,
+        action_route=_NUTRIENT_ROUTE,
+    ),
     # Crop Intelligence Engine
-    _rule(_M.INTELLIGENCE, "critical_risk", severity=_S.CRITICAL, priority=_P.CRITICAL,
-          expires_after_hours=168, action_route=_INTELLIGENCE_ROUTE),
-    _rule(_M.INTELLIGENCE, "high_risk", severity=_S.WARNING, priority=_P.HIGH,
-          expires_after_hours=168, action_route=_INTELLIGENCE_ROUTE),
+    _rule(
+        _M.INTELLIGENCE,
+        "critical_risk",
+        severity=_S.CRITICAL,
+        priority=_P.CRITICAL,
+        expires_after_hours=168,
+        action_route=_INTELLIGENCE_ROUTE,
+    ),
+    _rule(
+        _M.INTELLIGENCE,
+        "high_risk",
+        severity=_S.WARNING,
+        priority=_P.HIGH,
+        expires_after_hours=168,
+        action_route=_INTELLIGENCE_ROUTE,
+    ),
 )
 
-RULES: dict[tuple[str, str], NotificationRule] = {
-    (r.module, r.event_type): r for r in _RULE_LIST
-}
+RULES: dict[tuple[str, str], NotificationRule] = {(r.module, r.event_type): r for r in _RULE_LIST}
 
 
 def get_rule(module: str, event_type: str) -> NotificationRule | None:
@@ -233,8 +480,28 @@ SCHEME_CLOSING_WINDOW_DAYS = 7
 HARVEST_APPROACHING_WINDOW_DAYS = 7
 OFFER_EXPIRING_WINDOW_DAYS = 3
 GROWTH_STALE_DAYS = 7
+# Growth reminder cadence by stage category. This is a general agronomic
+# heuristic (flowering/fruiting are broadly recognized as the most
+# stress-sensitive, yield-critical stages across crops) — NOT verified
+# per-crop duration data, since no reliable stage-duration dataset exists
+# for all six supported crops (paddy has a specific calendar; banana,
+# cotton, groundnut, chilli, redgram fall back to a generic schedule that
+# doesn't fit a perennial crop like banana). Do not present these numbers
+# to farmers as crop-specific science.
+GROWTH_STALE_DAYS_BY_STAGE: dict[str, int] = {
+    "germination": 7,
+    "seedling": 7,
+    "vegetative": 7,
+    "flowering": 4,
+    "fruiting": 4,
+    "maturity": 3,
+    "harvest": 3,
+    "unknown": 7,
+}
 GROWTH_HEALTH_DELTA = 5  # health-score change that is worth notifying
 DISEASE_HIGH_CONFIDENCE = 90
+OUTBREAK_WINDOW_DAYS = 14
+OUTBREAK_MIN_DISTINCT_FARMS = 3
 MARKET_PRICE_MOVE_PERCENT = 5.0
 WEATHER_LOW_TEMP_C = 15.0  # daily min at/below this → low-temperature alert
 NEW_SCHEME_RECENT_DAYS = 14  # a scheme created within N days is "new"
@@ -249,6 +516,7 @@ WEATHER_CODE_EVENTS: dict[str, str] = {
     "wind.strong": "high_wind",
     "heat_stress.extreme": "extreme_heat",
     "heat_stress.high": "extreme_heat",
+    "spraying.good_window": "spraying_good_window",
 }
 
 # Default per-module preference flags (all on — farmers opt out, never in).

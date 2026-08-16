@@ -1,0 +1,13 @@
+{
+  "typescript": "PASS",
+  "focused_jest": { "status": "PASS", "suites": 7, "tests": 55 },
+  "full_jest": { "status": "PASS", "suites": 109, "tests": 701 },
+  "expo_doctor": "PASS",
+  "release_environment_validation": "PASS_HTTPS_ENFORCED",
+  "release_apk_build": "PASS",
+  "release_apk_install": "PASS",
+  "device_login_visual": "PASS",
+  "device_language_visual": "PASS",
+  "device_otp_visual": "PENDING_OPERATOR_FIREBASE_FLOW",
+  "device_keyboard_visual": "PENDING_MANUAL_FOCUS"
+}

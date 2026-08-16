@@ -7,6 +7,7 @@ from pathlib import Path
 import app.api.probes as probes
 import pytest
 from app.core.config import Settings
+from app.crop_runtime.inventory import refresh_model_inventory
 from app.crop_runtime.readiness import ReadinessResolver
 from app.crop_runtime.registry import load_registry
 from app.restricted_crops import integrity
@@ -25,7 +26,7 @@ def test_app_env_alias_selects_production(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "crop_id", ["banana", "paddy", "cotton", "groundnut", "redgram", "chilli"]
+    "crop_id", ["banana", "redgram", "chilli"]
 )
 def test_repository_runtime_is_verified_and_loadable(crop_id: str):
     result = ReadinessResolver(load_registry(), BACKEND_ROOT).resolve(crop_id)
@@ -34,6 +35,20 @@ def test_repository_runtime_is_verified_and_loadable(crop_id: str):
     assert result.integrity_verified is True
     assert result.runtime_loadable is True
     assert result.readiness_reason == "ready"
+
+
+@pytest.mark.parametrize("crop_id", ["paddy", "cotton", "groundnut"])
+def test_legacy_joint_runtime_is_loadable_without_granting_release_authorization(
+    crop_id: str,
+):
+    result = ReadinessResolver(load_registry(), BACKEND_ROOT).resolve(crop_id)
+
+    assert result.artifact_present is True
+    assert result.integrity_verified is True
+    assert result.runtime_loadable is True
+    assert result.readiness_reason == "ready"
+    assert result.classification == "APP_INTEGRATED_TESTING_BLOCKED"
+    assert result.general_farmer_inference_authorized is False
 
 
 @pytest.mark.parametrize(
@@ -71,6 +86,7 @@ def test_public_readiness_exposes_only_sanitized_runtime_reason(monkeypatch):
     monkeypatch.setattr(probes, "_check_db", dependency_ready)
     monkeypatch.setattr(probes, "_check_redis", dependency_ready)
     monkeypatch.setattr(ReadinessResolver, "resolve", lambda self, crop_id: Result())
+    refresh_model_inventory()
 
     app = FastAPI()
     app.include_router(probes.router)
@@ -86,6 +102,7 @@ def test_public_readiness_exposes_only_sanitized_runtime_reason(monkeypatch):
     assert str(BACKEND_ROOT) not in serialized
     assert "checkpoint" not in serialized
     assert "sha256" not in serialized
+    refresh_model_inventory()
 
 
 def test_frozen_restricted_safety_policies_are_unchanged():

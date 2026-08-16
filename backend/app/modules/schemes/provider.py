@@ -10,55 +10,27 @@ or frontend. Only verified schemes are ever returned (docs/PRODUCT_RULES.md rule
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 from datetime import date
 from typing import Protocol
 
 from app.core.logging import get_logger
+from app.core.provider_policy import test_mocks_enabled
 from app.modules.schemes.constants import (
-    ANY,
+    SOURCE_CURATED,
     SOURCE_MOCK,
     FarmerCategory,
     SchemeCategory,
-    SchemeStatus,
 )
+from app.modules.schemes.curated_data import (
+    CURATED_SCHEMES,
+    LAST_VERIFIED_DATE,
+    LAST_VERIFIED_STALE_AFTER_DAYS,
+    is_curated_data_stale,
+)
+from app.modules.schemes.exceptions import SchemeDataUnavailableError
+from app.modules.schemes.provider_types import ProviderDocument, ProviderScheme
 
 logger = get_logger("schemes.provider")
-
-
-@dataclass(frozen=True)
-class ProviderDocument:
-    name: str
-    required: bool = True
-
-
-@dataclass(frozen=True)
-class ProviderScheme:
-    """A normalized, verified scheme record, independent of the upstream source."""
-
-    slug: str
-    title: str
-    category: str
-    description: str
-    benefits: str
-    eligibility_summary: str
-    application_steps: list[str]
-    departments: list[str]
-    official_url: str
-    documents: list[ProviderDocument]
-    source: str
-    state: str = "all"
-    start_date: date | None = None
-    last_date: date | None = None
-    status: str = SchemeStatus.ACTIVE.value
-    # Structured rules (["all"] means no constraint).
-    states: list[str] = field(default_factory=lambda: [ANY])
-    districts: list[str] = field(default_factory=lambda: [ANY])
-    crops: list[str] = field(default_factory=lambda: [ANY])
-    farmer_categories: list[str] = field(default_factory=lambda: [ANY])
-    min_land_hectares: float | None = None
-    max_land_hectares: float | None = None
-    max_annual_income: int | None = None
 
 
 class GovernmentSchemeProvider(Protocol):
@@ -124,6 +96,36 @@ _MOCK_SCHEMES: list[ProviderScheme] = [
         last_date=date(2026, 7, 31),
     ),
     ProviderScheme(
+        slug="rwbcis",
+        title="Restructured Weather Based Crop Insurance Scheme (RWBCIS)",
+        category=SchemeCategory.INSURANCE.value,
+        description=(
+            "Insurance payout triggered by adverse weather (rainfall, "
+            "temperature, humidity) rather than assessed crop yield loss, "
+            "covering notified crops."
+        ),
+        benefits=(
+            "Faster claims based on weather-station data instead of manual "
+            "yield assessment."
+        ),
+        eligibility_summary=(
+            "Farmers growing notified crops in areas with a Reference Weather Station."
+        ),
+        application_steps=[
+            "Apply through your bank, CSC, or the National Crop Insurance Portal "
+            "(same portal as PMFBY).",
+            "Submit land and sowing details before the cut-off date.",
+        ],
+        departments=["Ministry of Agriculture & Farmers Welfare"],
+        official_url="https://pmfby.gov.in",
+        documents=[
+            ProviderDocument("Aadhaar card"),
+            ProviderDocument("Land records / tenancy proof"),
+            ProviderDocument("Bank passbook"),
+        ],
+        source=SOURCE_MOCK,
+    ),
+    ProviderScheme(
         slug="kcc",
         title="Kisan Credit Card (KCC)",
         category=SchemeCategory.LOAN.value,
@@ -145,6 +147,43 @@ _MOCK_SCHEMES: list[ProviderScheme] = [
             ProviderDocument("Passport-size photograph"),
         ],
         source=SOURCE_MOCK,
+    ),
+    ProviderScheme(
+        slug="smam",
+        title="Sub-Mission on Agricultural Mechanization (SMAM)",
+        category=SchemeCategory.EQUIPMENT.value,
+        description=(
+            "Subsidy on farm machinery — tractors, power tillers, power weeders, "
+            "rotavators — to reduce dependence on manual labour and improve "
+            "timeliness of operations."
+        ),
+        benefits=(
+            "40-50% subsidy on eligible machinery; higher rate for small, "
+            "marginal, and women farmers."
+        ),
+        eligibility_summary=(
+            "Individual farmers, small and marginal farmers, women farmers, "
+            "and farmer groups."
+        ),
+        application_steps=[
+            "Register on the central Farm Machinery / DBT portal "
+            "(agrimachinery.nic.in) or your state agriculture subsidy portal.",
+            "Upload Aadhaar-linked bank details and submit for verification.",
+        ],
+        departments=["Ministry of Agriculture & Farmers Welfare"],
+        official_url="https://agrimachinery.nic.in",
+        documents=[
+            ProviderDocument("Aadhaar card"),
+            ProviderDocument("Land records"),
+            ProviderDocument("Bank passbook"),
+        ],
+        source=SOURCE_MOCK,
+        farmer_categories=[
+            FarmerCategory.MARGINAL.value,
+            FarmerCategory.SMALL.value,
+            FarmerCategory.SEMI_MEDIUM.value,
+            FarmerCategory.MEDIUM.value,
+        ],
     ),
     ProviderScheme(
         slug="soil-health-card",
@@ -272,6 +311,34 @@ _MOCK_SCHEMES: list[ProviderScheme] = [
         max_land_hectares=2.0,
         max_annual_income=200000,
     ),
+    ProviderScheme(
+        slug="pkvy",
+        title="Paramparagat Krishi Vikas Yojana (PKVY)",
+        category=SchemeCategory.ORGANIC.value,
+        description=(
+            "Cluster-based support for farmers transitioning to organic, "
+            "chemical-free farming, including certification and market linkage."
+        ),
+        benefits=(
+            "₹15,000 per hectare paid directly to the farmer via DBT over "
+            "3 years, plus certification and market-access support."
+        ),
+        eligibility_summary=(
+            "Farmers willing to join an organic farming cluster in their area."
+        ),
+        application_steps=[
+            "Approach your Regional Council or district agriculture office to join "
+            "an organic cluster.",
+            "Complete PGS-India organic certification enrollment.",
+        ],
+        departments=["Ministry of Agriculture & Farmers Welfare"],
+        official_url="https://www.myscheme.gov.in/schemes/pkvy",
+        documents=[
+            ProviderDocument("Aadhaar card"),
+            ProviderDocument("Land records"),
+        ],
+        source=SOURCE_MOCK,
+    ),
 ]
 
 
@@ -287,7 +354,61 @@ class MockSchemeProvider:
         return list(self._schemes)
 
 
+class CuratedSchemeProvider:
+    """Hand-curated, individually-verified real schemes (see curated_data.py).
+
+    Not a live government API -- each scheme was looked up on its own official
+    page (or a corroborating PIB/state-government factsheet) and entered by
+    hand, the same "static, reviewed-in-repository, real, dated, sourced"
+    approach already used for app/disease_recommendations/registry.py. This is
+    the default outside test/dev mock mode, unless the data has gone stale
+    (see is_curated_data_stale below), in which case the provider fails closed
+    again rather than keep serving an unreviewed snapshot.
+    """
+
+    source = SOURCE_CURATED
+
+    def __init__(self, *, schemes: list[ProviderScheme] | None = None) -> None:
+        self._schemes = schemes if schemes is not None else CURATED_SCHEMES
+
+    async def fetch_schemes(self) -> list[ProviderScheme]:
+        return list(self._schemes)
+
+
+class UnavailableSchemeProvider:
+    """Fails closed until a current verified scheme source is configured."""
+
+    source = "unavailable"
+
+    async def fetch_schemes(self) -> list[ProviderScheme]:
+        raise SchemeDataUnavailableError()
+
+
 def get_default_provider() -> GovernmentSchemeProvider:
-    """Select the configured provider (mock until a real source is wired in)."""
-    logger.info("scheme provider: mock (verified sample schemes)")
-    return MockSchemeProvider()
+    """Select the configured provider.
+
+    Explicit dev/test mock first; then the hand-curated real-scheme snapshot,
+    unless it has gone stale (nobody has re-checked it against its sources
+    within LAST_VERIFIED_STALE_AFTER_DAYS) -- in which case this fails closed
+    exactly like it did before curated_data.py existed, rather than silently
+    keep serving deadlines/subsidy rates nobody has re-verified.
+    """
+    if test_mocks_enabled():
+        logger.info("scheme provider: explicit development/test mock")
+        return MockSchemeProvider()
+    if is_curated_data_stale():
+        logger.warning(
+            "scheme provider unavailable: curated data last verified %s "
+            "(older than %s days) -- re-verify app/modules/schemes/"
+            "curated_data.py against its official sources and bump "
+            "LAST_VERIFIED_DATE before this can serve farmers again",
+            LAST_VERIFIED_DATE,
+            LAST_VERIFIED_STALE_AFTER_DAYS,
+        )
+        return UnavailableSchemeProvider()
+    logger.info(
+        "scheme provider: curated, individually-verified official schemes "
+        "(last verified %s)",
+        LAST_VERIFIED_DATE,
+    )
+    return CuratedSchemeProvider()

@@ -1,0 +1,5 @@
+{
+  "rollback_to": "crop_id_internal_v1",
+  "v2_activation": "FAIL_CLOSED_ONLY",
+  "general_farmer_release": "BLOCKED"
+}

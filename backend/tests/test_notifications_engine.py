@@ -48,6 +48,7 @@ def test_every_event_source_has_a_rule() -> None:
         ("weather", "high_wind"),
         ("weather", "extreme_heat"),
         ("weather", "low_temperature"),
+        ("weather", "spraying_good_window"),
         ("disease", "high_confidence_disease"),
         ("disease", "expert_review_needed"),
         ("disease", "poor_image_quality"),
@@ -60,6 +61,7 @@ def test_every_event_source_has_a_rule() -> None:
         ("market", "price_increase"),
         ("market", "price_decrease"),
         ("market", "favourite_crop_alert"),
+        ("market", "price_peak"),
         ("schemes", "scheme_eligible"),
         ("schemes", "application_closing"),
         ("schemes", "new_scheme"),
@@ -128,11 +130,12 @@ def test_weather_maps_insight_codes_to_events() -> None:
     assert all(e.dedup_key.endswith(str(DAY)) for e in events)
 
 
-def test_weather_ignores_unmapped_codes_and_warm_nights() -> None:
+def test_weather_maps_good_spraying_window_and_ignores_warm_nights() -> None:
     snap = WeatherSnapshot(
         farm_id="f1", insight_codes=["spraying.good_window"], daily_min_temp_c=22.0
     )
-    assert collect_weather(snap, day=DAY) == []
+    events = collect_weather(snap, day=DAY)
+    assert [event.event_type for event in events] == ["spraying_good_window"]
 
 
 # --------------------------------------------------------------------------- #
@@ -193,6 +196,22 @@ def test_growth_weekly_reminder_when_stale() -> None:
     assert events[0].payload["week"] == 4
 
 
+def test_growth_weekly_reminder_uses_stage_threshold() -> None:
+    flowering = GrowthView(
+        "s1", "f1", 3, last_image_days_ago=4, current_growth_stage="flowering"
+    )
+    vegetative = GrowthView(
+        "s2", "f2", 3, last_image_days_ago=4, current_growth_stage="vegetative"
+    )
+    unknown_stage = GrowthView(
+        "s3", "f3", 3, last_image_days_ago=7, current_growth_stage="unexpected"
+    )
+
+    assert [e.event_type for e in collect_growth(flowering)] == ["weekly_reminder"]
+    assert collect_growth(vegetative) == []
+    assert [e.event_type for e in collect_growth(unknown_stage)] == ["weekly_reminder"]
+
+
 def test_growth_decline_and_improvement() -> None:
     decline = collect_growth(
         GrowthView("s1", "f1", 3, last_image_days_ago=1,
@@ -239,6 +258,34 @@ def test_market_small_move_ignored_and_new_price_alert() -> None:
         day=DAY,
     )
     assert [e.event_type for e in fresh] == ["favourite_crop_alert"]
+
+
+def test_market_peak_can_cooccur_with_other_alerts() -> None:
+    increased = collect_market(
+        MarketMoveView(
+            "fav1",
+            "Paddy",
+            "Mandi",
+            latest_price=2200,
+            change_percent=10.0,
+            is_period_high=True,
+        ),
+        day=DAY,
+    )
+    assert [e.event_type for e in increased] == ["price_increase", "price_peak"]
+
+    fresh = collect_market(
+        MarketMoveView(
+            "fav1",
+            "Paddy",
+            "Mandi",
+            latest_price=2000,
+            change_percent=None,
+            is_period_high=True,
+        ),
+        day=DAY,
+    )
+    assert [e.event_type for e in fresh] == ["favourite_crop_alert", "price_peak"]
 
 
 # --------------------------------------------------------------------------- #

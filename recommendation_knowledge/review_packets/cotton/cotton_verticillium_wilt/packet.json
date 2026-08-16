@@ -1,0 +1,49 @@
+{
+  "crop_id": "cotton",
+  "runtime_label_exact": "cotton_verticillium_wilt",
+  "runtime_class_index": 2,
+  "candidate_canonical_disease_name": null,
+  "candidate_tamil_disease_name": null,
+  "mapping_status": "PENDING_HUMAN_REVIEW",
+  "authority_summary": {
+    "official_government": 0,
+    "official_university": 0,
+    "official_research_institute": 0,
+    "unknown_authority": 1
+  },
+  "candidate_fields": {
+    "symptoms": [
+      {
+        "text_original": "Cheng JA (2014) Genomes of the rice pest brown planthopper and its endosymbionts reveal\nfungi isolated from cotton roots for biological control against Verticillium wilt disease. Plos\ninduced cytoplasmic incompatibility as a means for insect pest population control. Proceedings",
+        "text_normalized": "Cheng JA (2014) Genomes of the rice pest brown planthopper and its endosymbionts reveal fungi isolated from cotton roots for biological control against Verticillium wilt disease. Plos induced cytoplasmic incompatibility as a means for insect pest population control. Proceedings",
+        "field_type": "symptom",
+        "source_id": "src_aa3479944e04c081",
+        "source_file_name": "Phytoplasmas_ Plant Pathogenic Bacteria - II_ Tran_240131_092344.pdf",
+        "source_authority": "UNKNOWN_AUTHORITY",
+        "page_number": 239,
+        "pdf_page_index": 238,
+        "section_heading": "Cheng JA (2014) Genomes of the rice pest brown planthopper and its endosymbionts reveal",
+        "exact_excerpt": "Cheng JA (2014) Genomes of the rice pest brown planthopper and its endosymbionts reveal\nfungi isolated from cotton roots for biological control against Verticillium wilt disease. Plos\ninduced cytoplasmic incompatibility as a means for insect pest population control. Proceedings",
+        "candidate_disease_mapping": "cotton_verticillium_wilt",
+        "mapping_confidence": "LOW",
+        "final_authority_eligible": false,
+        "verification_status": "PENDING_HUMAN_REVIEW",
+        "verification_label": "VERIFY_AGAINST_OFFICIAL_SOURCE"
+      }
+    ],
+    "immediate_actions": [],
+    "prevention": [],
+    "cultural_practices": [],
+    "biological_options": [],
+    "chemical_options": [],
+    "avoid_actions": []
+  },
+  "source_conflicts": [],
+  "missing_fields": [
+    "immediate_actions",
+    "prevention"
+  ],
+  "tamil_translation_status": "NOT_TRANSLATED",
+  "human_approval_status": "PENDING",
+  "healthy_treatment_blocked": false
+}

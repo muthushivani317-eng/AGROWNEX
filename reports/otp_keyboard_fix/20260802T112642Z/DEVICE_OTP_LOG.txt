@@ -1,0 +1,11 @@
+Sanitized evidence:
+- otp-entry-screen visible
+- numeric keyboard visible and reopenable
+- active native input connection
+- OTP length 6 (value omitted)
+- Verify enabled
+- backspace changed length 6 -> 5
+- restoration changed length 5 -> 6
+- Verify remained enabled after restoration
+- Verify was not pressed
+No OTP digits or destination number are recorded.

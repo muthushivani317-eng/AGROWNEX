@@ -1,0 +1,30 @@
+{
+  "expo_sdk": "57.0.9",
+  "react_native": "0.86.2",
+  "react": "19.2.3",
+  "expo_dev_client": "ABSENT",
+  "expo_dev_launcher": "ABSENT",
+  "expo_dev_menu": "ABSENT",
+  "nativewind": "4.2.6",
+  "react_native_css_interop": "0.2.1",
+  "tailwindcss": "3.4.17",
+  "nativewind_metro_resolution": "PASS",
+  "nativewind_babel_resolution": "PASS",
+  "expo_doctor": "20/20 PASS",
+  "firebase_config_plugin_present": true,
+  "android_package": "com.agrowai.app",
+  "npm_audit": {
+    "command": "npm audit --omit=dev --json",
+    "critical": 0,
+    "high": 2,
+    "moderate": 13,
+    "total": 15,
+    "forced_remediation_used": false,
+    "triage": {
+      "brace-expansion": "High advisory appears in Jest/build tooling paths; not embedded application logic. Track and update through compatible dependency releases.",
+      "postcss": "High source-map path traversal affects the controlled CSS build pipeline; not an on-device runtime API. Build only trusted repository inputs and update through compatible Expo/NativeWind releases.",
+      "expo_family": "Suggested npm remediation downgrades Expo across major SDK boundaries and is unsafe; no automatic remediation applied."
+    },
+    "farmer_release_blocking_review_required": true
+  }
+}

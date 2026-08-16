@@ -171,6 +171,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         auth_limit: int,
         window: int,
         auth_prefixes: tuple[str, ...],
+        trust_proxy_headers: bool = False,
     ) -> None:
         super().__init__(app)
         self.limiter = limiter
@@ -178,11 +179,16 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self.auth_limit = auth_limit
         self.window = window
         self.auth_prefixes = auth_prefixes
+        # X-Forwarded-For is only honoured when explicitly told a trusted proxy
+        # sanitizes it (settings.trust_proxy_headers) -- otherwise a client could
+        # forge the header to spread its requests across rate-limit buckets.
+        self.trust_proxy_headers = trust_proxy_headers
 
     def _client(self, request: Request) -> str:
-        forwarded = request.headers.get("x-forwarded-for")
-        if forwarded:
-            return forwarded.split(",")[0].strip()
+        if self.trust_proxy_headers:
+            forwarded = request.headers.get("x-forwarded-for")
+            if forwarded:
+                return forwarded.split(",")[0].strip()
         return request.client.host if request.client else "unknown"
 
     async def dispatch(self, request: Request, call_next):

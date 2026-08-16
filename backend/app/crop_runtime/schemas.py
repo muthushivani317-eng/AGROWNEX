@@ -61,7 +61,7 @@ class CropRegistryEntry(BaseModel):
     registry_schema_version: Literal["1.0.0"]
 
     @model_validator(mode="after")
-    def enforce_fail_closed_status(self) -> "CropRegistryEntry":
+    def enforce_fail_closed_status(self) -> CropRegistryEntry:
         if self.model_status != ModelAvailabilityStatus.FROZEN_RUNTIME_READY:
             if self.disease_detection_enabled:
                 raise ValueError("unready crop cannot enable disease detection")
@@ -84,7 +84,7 @@ class CropRegistryDocument(BaseModel):
     crops: list[CropRegistryEntry]
 
     @model_validator(mode="after")
-    def unique_ids_and_aliases(self) -> "CropRegistryDocument":
+    def unique_ids_and_aliases(self) -> CropRegistryDocument:
         ids = [entry.crop_id for entry in self.crops]
         if len(ids) != len(set(ids)):
             raise ValueError("crop_id values must be unique")
