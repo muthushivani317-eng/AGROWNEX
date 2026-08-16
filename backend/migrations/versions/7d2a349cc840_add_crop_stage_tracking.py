@@ -1,14 +1,24 @@
 """Add crop-stage state and immutable transition history.
 
 Revision ID: 7d2a349cc840
-Revises: 0b9a62c410df, 4d12a6b7c903, 8df904e2c11a
+Revises: 4d12a6b7c903, 8df904e2c11a
+
+Note: 0b9a62c410df is the common ancestor of both 4d12a6b7c903 and
+8df904e2c11a (each declares it as their own down_revision), not a
+third independent head. Listing it again here as a down_revision
+caused alembic to try to retire it a second time during `upgrade
+head`, once when 4d12a6b7c903/8df904e2c11a ran and again here,
+raising `KeyError: '0b9a62c410df'` from `_delete_version` (found
+while deploying a fresh database for the 2026-08 pre-release --
+0b9a62c410df was already removed from the live `heads` set by the
+time this merge step ran).
 """
 
 import sqlalchemy as sa
 from alembic import op
 
 revision = "7d2a349cc840"
-down_revision = ("0b9a62c410df", "4d12a6b7c903", "8df904e2c11a")
+down_revision = ("4d12a6b7c903", "8df904e2c11a")
 branch_labels = None
 depends_on = None
 
