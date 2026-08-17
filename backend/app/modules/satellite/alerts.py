@@ -95,12 +95,23 @@ def build_alerts(ctx: AlertContext) -> list[AlertDraft]:
             UnavailableReason.NO_IMAGERY.value,
             UnavailableReason.ACQUISITION_DELAY.value,
             UnavailableReason.PROVIDER_ERROR.value,
-            UnavailableReason.PROVIDER_NOT_CONFIGURED.value,
             UnavailableReason.PROVIDER_TIMEOUT.value,
             UnavailableReason.PROVIDER_RATE_LIMITED.value,
         }:
             alerts.append(_alert(_C.IMAGERY, "missing_imagery", _S.WARNING))
-        elif ctx.unavailable_reason == UnavailableReason.PROCESSING_ERROR.value:
+        elif ctx.unavailable_reason in {
+            UnavailableReason.PROCESSING_ERROR.value,
+            UnavailableReason.PROVIDER_NOT_CONFIGURED.value,
+        }:
+            # provider_not_configured is a standing operational gap (no provider
+            # credentials wired up), not a transient acquisition failure -- the
+            # dashboard's own status card already says "not configured yet"
+            # accurately. Reusing "missing_imagery" here ("We will retry on the
+            # next pass") told farmers a retry could fix it when nothing short
+            # of configuring the provider will -- two contradictory messages on
+            # one screen (reported live 2026-08-17). No alert is the honest
+            # answer: the status card already covers it, and inventing a second,
+            # differently-worded "not configured" alert would just duplicate it.
             return alerts
         return alerts  # no vegetation analysis without a usable scene
 
