@@ -4,9 +4,14 @@ import hashlib
 import json
 from datetime import date
 from enum import StrEnum
+from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+
+from app.core.logging import get_logger
+
+logger = get_logger("calendar.registry")
 
 
 class ScheduleStatus(StrEnum):
@@ -123,5 +128,47 @@ class CropStageRegistry:
         )
 
 
-# No repository schedule currently has documented expert verification.
-ACTIVE_CROP_STAGE_REGISTRY = CropStageRegistry()
+# Where real, expert-reviewed crop-stage schedules live once someone adds them
+# (see the README in that directory before adding one -- this is a safety
+# gate, not a formality). Every *.json file here is loaded at import time;
+# `*.json.example` (the template) is intentionally not picked up.
+VERIFIED_SCHEDULES_DIR = Path(__file__).resolve().parent / "data" / "verified_schedules"
+
+
+def _load_verified_schedule_entries(directory: Path = VERIFIED_SCHEDULES_DIR) -> list[dict[str, Any]]:
+    """Read every *.json file in `directory` as a raw schedule entry.
+
+    A file that isn't valid JSON is skipped with a warning rather than
+    crashing app startup -- a typo in one crop's file must not take down
+    calendar generation for every other crop. Schema/hash/status validation
+    happens later, inside CropStageRegistry's constructor, using the same
+    logic either way.
+    """
+    if not directory.is_dir():
+        return []
+    entries: list[dict[str, Any]] = []
+    for path in sorted(directory.glob("*.json")):
+        try:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            logger.warning(
+                "Skipping unreadable verified schedule file",
+                extra={"path": str(path), "error": str(exc)},
+            )
+            continue
+        if not isinstance(raw, dict):
+            logger.warning(
+                "Skipping verified schedule file: expected a JSON object",
+                extra={"path": str(path)},
+            )
+            continue
+        entries.append(raw)
+    return entries
+
+
+# No repository schedule currently has documented expert verification -- see
+# app/modules/calendar/data/verified_schedules/README.md. This loads from
+# that directory rather than being hardcoded empty, so adding a real,
+# reviewed schedule there is enough to bring a crop online; nothing in this
+# file needs to change.
+ACTIVE_CROP_STAGE_REGISTRY = CropStageRegistry(_load_verified_schedule_entries())

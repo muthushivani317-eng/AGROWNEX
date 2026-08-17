@@ -1,0 +1,67 @@
+{
+  "schema_version": "1.0",
+  "canonical_crop_id": "paddy",
+  "aliases": ["rice"],
+  "variety_or_duration_group": "REPLACE_ME e.g. short_duration_120_day",
+  "stages": [
+    {
+      "code": "establishment",
+      "label_key": "calendar.stages.establishment",
+      "start_offset": 0,
+      "end_offset": 20,
+      "activities": [
+        {
+          "code": "transplanting",
+          "activity_type": "sowing",
+          "label_key": "calendar.verified.paddy.transplanting.title",
+          "description_key": "calendar.verified.paddy.transplanting.description",
+          "day_offset": 0,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "first_top_dress",
+          "activity_type": "fertilization",
+          "label_key": "calendar.verified.paddy.first_top_dress.title",
+          "description_key": "calendar.verified.paddy.first_top_dress.description",
+          "day_offset": 15,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "tillering",
+      "label_key": "calendar.stages.tillering",
+      "start_offset": 21,
+      "end_offset": 45,
+      "activities": [
+        {
+          "code": "irrigation_check",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.paddy.irrigation_check.title",
+          "description_key": "calendar.verified.paddy.irrigation_check.description",
+          "day_offset": 30,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "irrigation"
+        }
+      ]
+    }
+  ],
+  "geographic_limitations": ["REPLACE_ME e.g. Tamil Nadu delta districts"],
+  "season_limitations": ["REPLACE_ME e.g. kharif"],
+  "source_organization": "REPLACE_ME -- real institution only, e.g. a named KVK or agricultural university",
+  "document_reference": "REPLACE_ME -- the real document/bulletin this was reviewed against",
+  "reviewer": "REPLACE_ME -- the real reviewer's name/role, not a placeholder",
+  "approval_date": "2026-01-01",
+  "review_date": "2027-01-01",
+  "version": "1.0.0",
+  "status": "UNVERIFIED",
+  "content_hash": "RUN scripts/compute_schedule_hash.py ON YOUR FILLED-IN FILE TO GENERATE THIS"
+}
