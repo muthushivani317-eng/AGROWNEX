@@ -104,16 +104,35 @@ class MarketService:
         if not rows and refresh_started:
             refresh_task = self._refresh_tasks_by_key.get(self.cache.key(query))
             if refresh_task is not None:
-                await refresh_task
-                rows, total = await self.repo.list_prices(
-                    crop=filters.crop,
-                    market=filters.market,
-                    district=filters.district,
-                    state=filters.state,
-                    on_date=on_date,
-                    limit=filters.page_size,
-                    offset=offset,
-                )
+                # Give the just-started background refresh a short chance to land
+                # real data before we respond -- but never hold the HTTP response
+                # hostage to the full external-provider retry budget (Agmarknet:
+                # up to AGMARKNET_MAX_RETRIES x AGMARKNET_TIMEOUT_SECONDS ~= 24s
+                # worst case). `_ensure_fresh`'s own docstring promises "the
+                # request never waits on the external provider" -- unconditionally
+                # awaiting the task here broke that promise for exactly the worst
+                # case (a farmer's very first request for a given filter combo),
+                # producing the ~20s blank-then-client-timeout the Market Prices
+                # screen was showing live (reported 2026-08-17: client gave up
+                # after ~19.9s with a 499, one retry later succeeded in <100ms
+                # once the background fetch had landed). `asyncio.shield` keeps
+                # the refresh running even after we stop waiting on it, so a
+                # slow provider still isn't wasted work -- the next request for
+                # this filter combo benefits once it lands.
+                try:
+                    await asyncio.wait_for(asyncio.shield(refresh_task), timeout=3.0)
+                except TimeoutError:
+                    pass
+                else:
+                    rows, total = await self.repo.list_prices(
+                        crop=filters.crop,
+                        market=filters.market,
+                        district=filters.district,
+                        state=filters.state,
+                        on_date=on_date,
+                        limit=filters.page_size,
+                        offset=offset,
+                    )
         # Mandi publications can arrive after midnight. The "Today" view should
         # remain useful on those days by showing the most recent reported market
         # date instead of incorrectly presenting an empty result.
