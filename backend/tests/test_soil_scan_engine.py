@@ -107,14 +107,19 @@ def test_weather_and_satellite_are_provenance_bearing_partial_evidence():
                     observed_at=observed,
                     freshness="current",
                     quality="usable",
-                    values={"moisture_status": "relatively_dry"},
+                    # Real MoistureStatus values (app/modules/satellite/constants.py)
+                    # are very_dry/dry/adequate/moist/wet -- "relatively_dry" here
+                    # was a stale fixture value that never matched the engine's
+                    # actual output, silently masking the SOIL_MOISTURE matching
+                    # bug fixed 2026-08-17 (see build_scan's _MOISTURE_STATUSES).
+                    values={"moisture_status": "dry"},
                     reference="scene-real-1",
                 ),
             ),
         )
     )
     moisture = next(i for i in scan.indicators if i.code is IndicatorCode.SOIL_MOISTURE)
-    assert moisture.value == "relatively_dry"
+    assert moisture.value == "dry"
     assert moisture.evidence_class is EvidenceClass.RISK_INFERRED
     assert moisture.sources == ("copernicus-sentinel-2-l2a",)
     assert moisture.observation_timestamps == (observed,)
@@ -246,6 +251,122 @@ def test_repeated_zone_requires_two_temporally_distinct_observations():
     assert item.value == "repeated_observation"
     assert item.details["zone_ids"] == ["z1"]
     assert item.details["observation_count"] == 2
+
+
+def test_acidity_uses_real_submitted_ph():
+    # 2026-08-17: ACIDITY_PH_RISK was permanently stubbed regardless of whether
+    # the farmer had ever submitted a real lab pH -- now it reuses the exact
+    # same Soil Health Card classification SoilEngine.classify_ph already
+    # applies for the dashboard, so a real measured value isn't discarded.
+    observed = datetime(2026, 8, 10, tzinfo=UTC)
+    item = _result(
+        IndicatorCode.ACIDITY_PH_RISK,
+        soil_ph=EvidenceObservation(
+            source="lab",
+            observed_at=observed,
+            freshness="reported",
+            quality="usable",
+            values={"ph": 5.0, "rating": "strongly_acidic"},
+        ),
+    )
+    assert item.status == "available"
+    assert item.evidence_class is EvidenceClass.MEASURED_FROM_REPORT
+    assert item.value == "strongly_acidic"
+    assert item.details["ph"] == 5.0
+    assert item.sources == ("lab",)
+
+
+def test_acidity_stays_insufficient_without_a_submitted_ph():
+    assert _result(IndicatorCode.ACIDITY_PH_RISK).status == "insufficient_data"
+
+
+def test_salinity_uses_real_submitted_ec():
+    observed = datetime(2026, 8, 10, tzinfo=UTC)
+    item = _result(
+        IndicatorCode.SALINITY_RISK,
+        soil_ec=EvidenceObservation(
+            source="self",
+            observed_at=observed,
+            freshness="reported",
+            quality="usable",
+            values={"ec_salinity": 2.5, "rating": "high"},
+        ),
+    )
+    assert item.status == "available"
+    assert item.evidence_class is EvidenceClass.MEASURED_FROM_REPORT
+    assert item.value == "high"
+    assert item.details["ec_salinity"] == 2.5
+
+
+def test_texture_uses_farmer_reported_soil_type():
+    # Farm-registration soil_type is USER_ENTERED, not RISK_INFERRED -- distinct
+    # from the "no data at all" stub (test_texture_is_likelihood_not_measurement).
+    item = _result(IndicatorCode.TEXTURE_LIKELIHOOD, soil_type="Sandy loam")
+    assert item.status == "available"
+    assert item.evidence_class is EvidenceClass.USER_ENTERED
+    assert item.value == "Sandy loam"
+
+
+def test_soil_cover_uses_satellite_vegetation_health():
+    observed = datetime(2026, 8, 10, tzinfo=UTC)
+    item = _result(
+        IndicatorCode.SOIL_COVER,
+        satellite=(
+            EvidenceObservation(
+                source="copernicus-sentinel-2-l2a",
+                observed_at=observed,
+                freshness="current",
+                quality="usable",
+                values={"vegetation_health": "very_low"},
+            ),
+        ),
+    )
+    assert item.status == "available"
+    assert item.evidence_class is EvidenceClass.RISK_INFERRED
+    assert item.value == "very_low"
+
+
+def test_drought_stress_available_when_satellite_shows_dry_moisture():
+    observed = datetime(2026, 8, 10, tzinfo=UTC)
+    item = _result(
+        IndicatorCode.DROUGHT_STRESS,
+        satellite=(
+            EvidenceObservation(
+                source="copernicus-sentinel-2-l2a",
+                observed_at=observed,
+                freshness="current",
+                quality="usable",
+                values={"moisture_status": "very_dry", "stress_level": "severe"},
+            ),
+        ),
+    )
+    assert item.status == "available"
+    assert item.value == "very_dry"
+    assert item.details["vegetation_stress_level"] == "severe"
+
+
+def test_drought_stress_stays_insufficient_when_moisture_is_adequate():
+    # Adequate moisture still lights up SOIL_MOISTURE (a neutral reading) but
+    # must not trigger the DROUGHT_STRESS *risk* framing.
+    observed = datetime(2026, 8, 10, tzinfo=UTC)
+    scan = build_scan(
+        ScanInputs(
+            aoi_verified=True,
+            satellite=(
+                EvidenceObservation(
+                    source="copernicus-sentinel-2-l2a",
+                    observed_at=observed,
+                    freshness="current",
+                    quality="usable",
+                    values={"moisture_status": "adequate"},
+                ),
+            ),
+        )
+    )
+    moisture = next(i for i in scan.indicators if i.code is IndicatorCode.SOIL_MOISTURE)
+    drought = next(i for i in scan.indicators if i.code is IndicatorCode.DROUGHT_STRESS)
+    assert moisture.status == "available"
+    assert drought.status == "insufficient_data"
 
 
 def test_organic_matter_direction_requires_two_measured_history_values():

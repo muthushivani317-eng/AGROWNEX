@@ -95,6 +95,17 @@ class ScanInputs:
     weather_state: str = "unavailable"
     satellite_state: str = "unavailable"
     terrain_state: str = "unavailable"
+    # Real, already-measured lab values (SoilProfile.ph / .ec_salinity, when the
+    # farmer has ever submitted one) and the farmer-registered soil type. Reusing
+    # these here -- rather than leaving ACIDITY_PH_RISK / SALINITY_RISK / TEXTURE_
+    # LIKELIHOOD permanently stubbed -- is not new inference: SoilEngine.classify_ph
+    # / classify_salinity already run these exact values through the same
+    # transparent Soil Health Card thresholds for the dashboard; the scan just
+    # hadn't been wired to them (found + fixed 2026-08-17, reported live as "the
+    # most important feature" showing "not enough data" across the board).
+    soil_ph: EvidenceObservation | None = None  # values={"ph": float, "rating": str}
+    soil_ec: EvidenceObservation | None = None  # values={"ec_salinity": float, "rating": str}
+    soil_type: str | None = None
     # Clock to stamp SoilScan.generated_at with. Defaults to None (build_scan
     # falls back to the real wall clock) so every existing caller/test that
     # doesn't care about the exact timestamp is unaffected. SoilService passes
@@ -202,12 +213,15 @@ def build_scan(inputs: ScanInputs) -> SoilScan:
             sources=("waterlogging_assessment",),
         )
     usable_satellite = [o for o in inputs.satellite if o.quality == "usable"]
+    # Bug (found 2026-08-17): this matched against {"relatively_wet",
+    # "relatively_dry", "uncertain"}, but the satellite engine's real
+    # MoistureStatus values are very_dry/dry/adequate/moist/wet/unknown
+    # (app/modules/satellite/constants.py) -- none of those strings ever
+    # matched, so Soil Moisture silently showed "not enough data" even when a
+    # usable satellite session existed for the farm.
+    _MOISTURE_STATUSES = {"very_dry", "dry", "adequate", "moist", "wet"}
     moisture = next(
-        (
-            o
-            for o in usable_satellite
-            if o.values.get("moisture_status") in {"relatively_wet", "relatively_dry", "uncertain"}
-        ),
+        (o for o in usable_satellite if o.values.get("moisture_status") in _MOISTURE_STATUSES),
         None,
     )
     if moisture is not None:
@@ -220,6 +234,91 @@ def build_scan(inputs: ScanInputs) -> SoilScan:
             {"freshness": moisture.freshness, "quality": moisture.quality},
             sources=(moisture.source,),
             observation_timestamps=(moisture.observed_at,),
+        )
+    # Drought / moisture stress: the same satellite moisture reading, but only
+    # when it's on the dry side -- a distinct "risk" framing from the neutral
+    # Soil Moisture indicator above, using the same real NDMI-derived value.
+    drought = next(
+        (o for o in usable_satellite if o.values.get("moisture_status") in {"very_dry", "dry"}),
+        None,
+    )
+    if drought is not None:
+        by_code[IndicatorCode.DROUGHT_STRESS] = ScanIndicator(
+            IndicatorCode.DROUGHT_STRESS,
+            "available",
+            EvidenceClass.RISK_INFERRED,
+            str(drought.values["moisture_status"]),
+            "soil.scan.drought_stress.satellite_context",
+            {
+                "freshness": drought.freshness,
+                "quality": drought.quality,
+                "vegetation_stress_level": drought.values.get("stress_level"),
+            },
+            sources=(drought.source,),
+            observation_timestamps=(drought.observed_at,),
+        )
+    # Bare soil / cover: standard NDVI-derived vegetation-health classification
+    # from the same satellite session (already computed and shown on the
+    # Satellite Intelligence screen) -- low/very-low/bare readings are a real,
+    # transparent signal of sparse ground cover, not a new estimate.
+    cover = next(
+        (
+            o
+            for o in usable_satellite
+            if o.values.get("vegetation_health")
+            in {"bare", "very_low", "low", "moderate", "good", "very_good"}
+        ),
+        None,
+    )
+    if cover is not None:
+        by_code[IndicatorCode.SOIL_COVER] = ScanIndicator(
+            IndicatorCode.SOIL_COVER,
+            "available",
+            EvidenceClass.RISK_INFERRED,
+            str(cover.values["vegetation_health"]),
+            "soil.scan.soil_cover.satellite_context",
+            {"freshness": cover.freshness, "quality": cover.quality},
+            sources=(cover.source,),
+            observation_timestamps=(cover.observed_at,),
+        )
+    # Acidity/pH and salinity risk: reuse the farmer's own submitted lab value
+    # (already run through SoilEngine.classify_ph / classify_salinity for the
+    # dashboard) instead of leaving these permanently stubbed regardless of
+    # whether a real measurement exists.
+    if inputs.soil_ph is not None:
+        by_code[IndicatorCode.ACIDITY_PH_RISK] = ScanIndicator(
+            IndicatorCode.ACIDITY_PH_RISK,
+            "available",
+            EvidenceClass.MEASURED_FROM_REPORT,
+            inputs.soil_ph.values.get("rating"),
+            "soil.scan.acidity_ph_risk.measured",
+            {"ph": inputs.soil_ph.values.get("ph")},
+            sources=(inputs.soil_ph.source,),
+            observation_timestamps=(inputs.soil_ph.observed_at,),
+        )
+    if inputs.soil_ec is not None:
+        by_code[IndicatorCode.SALINITY_RISK] = ScanIndicator(
+            IndicatorCode.SALINITY_RISK,
+            "available",
+            EvidenceClass.MEASURED_FROM_REPORT,
+            inputs.soil_ec.values.get("rating"),
+            "soil.scan.salinity_risk.measured",
+            {"ec_salinity": inputs.soil_ec.values.get("ec_salinity")},
+            sources=(inputs.soil_ec.source,),
+            observation_timestamps=(inputs.soil_ec.observed_at,),
+        )
+    # Texture likelihood: the farmer's own registered soil type (farm
+    # registration), not a soil-map estimate -- explicitly USER_ENTERED so it's
+    # never confused with a measured or remote-sensed value.
+    if inputs.soil_type:
+        by_code[IndicatorCode.TEXTURE_LIKELIHOOD] = ScanIndicator(
+            IndicatorCode.TEXTURE_LIKELIHOOD,
+            "available",
+            EvidenceClass.USER_ENTERED,
+            inputs.soil_type,
+            "soil.scan.texture_likelihood.farmer_reported",
+            {},
+            sources=("farmer_reported",),
         )
     usable_history = sorted(
         (item for item in inputs.history if item.quality == "usable"),

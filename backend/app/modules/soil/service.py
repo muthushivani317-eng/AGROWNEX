@@ -31,6 +31,8 @@ from app.modules.soil.engine import (
     SoilValues,
     assess,
     build_recommendations,
+    classify_ph,
+    classify_salinity,
 )
 from app.modules.soil.evidence import EvidenceType, IndicatorEvidence, derive_indicator
 from app.modules.soil.exceptions import (
@@ -433,6 +435,43 @@ class SoilService:
         aoi_verified = bool(boundary is not None and boundary.geojson)
         aoi = boundary.geojson if aoi_verified else None
 
+        # Real, already-submitted lab values feed Acidity/pH and Salinity risk
+        # directly through the same Soil Health Card thresholds SoilEngine uses
+        # for the dashboard -- not a new estimate, just wiring the scan to data
+        # that already exists when the farmer has submitted a report.
+        profile = await self.repo.get_profile(user.id, farm_id)
+        soil_ph_evidence: EvidenceObservation | None = None
+        soil_ec_evidence: EvidenceObservation | None = None
+        if profile is not None:
+            profile_observed_at = (
+                datetime.combine(profile.last_test_date, datetime.min.time(), tzinfo=UTC)
+                if profile.last_test_date
+                else (
+                    profile.updated_at
+                    if profile.updated_at.tzinfo
+                    else profile.updated_at.replace(tzinfo=UTC)
+                )
+            )
+            if profile.ph is not None:
+                soil_ph_evidence = EvidenceObservation(
+                    source=profile.source,
+                    observed_at=profile_observed_at,
+                    freshness="reported",
+                    quality="usable",
+                    values={"ph": profile.ph, "rating": classify_ph(profile.ph)},
+                )
+            if profile.ec_salinity is not None:
+                soil_ec_evidence = EvidenceObservation(
+                    source=profile.source,
+                    observed_at=profile_observed_at,
+                    freshness="reported",
+                    quality="usable",
+                    values={
+                        "ec_salinity": profile.ec_salinity,
+                        "rating": classify_salinity(profile.ec_salinity),
+                    },
+                )
+
         weather: tuple[EvidenceObservation, ...] = ()
         weather_state = "unavailable"
         try:
@@ -575,6 +614,9 @@ class SoilService:
                 weather_state=weather_state,
                 satellite_state=satellite_state,
                 terrain_state=terrain_state,
+                soil_ph=soil_ph_evidence,
+                soil_ec=soil_ec_evidence,
+                soil_type=farm.soil_type,
                 # Propagate this service's (possibly test-injected) clock so
                 # SoilScan.generated_at actually reflects it -- see the `now`
                 # field docstring on ScanInputs for why this matters for
