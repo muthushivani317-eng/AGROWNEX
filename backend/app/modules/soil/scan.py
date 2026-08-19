@@ -115,6 +115,13 @@ class ScanInputs:
     # provider into the main scan rather than only the separate /soil/remote
     # endpoint).
     soil_ph_remote: EvidenceObservation | None = None  # values={"ph": float, "rating": str}
+    # Same opt-in SoilGrids fallback, for Texture likelihood -- consulted only
+    # when the farmer has never registered a soil type on the farm profile
+    # (service.py only populates this when soil_type is falsy), so a farmer's
+    # own answer always wins. Also AI_ESTIMATED, never USER_ENTERED, so a
+    # global compiled model is never mistaken for what the farmer told us
+    # (added 2026-08-19, alongside the pH fallback above).
+    soil_texture_remote: EvidenceObservation | None = None  # values={"texture_class": str, "clay_pct"/"sand_pct"/"silt_pct": float}
     soil_type: str | None = None
     # Clock to stamp SoilScan.generated_at with. Defaults to None (build_scan
     # falls back to the real wall clock) so every existing caller/test that
@@ -340,6 +347,21 @@ def build_scan(inputs: ScanInputs) -> SoilScan:
             "soil.scan.texture_likelihood.farmer_reported",
             {},
             sources=("farmer_reported",),
+        )
+    elif inputs.soil_texture_remote is not None:
+        by_code[IndicatorCode.TEXTURE_LIKELIHOOD] = ScanIndicator(
+            IndicatorCode.TEXTURE_LIKELIHOOD,
+            "available",
+            EvidenceClass.AI_ESTIMATED,
+            inputs.soil_texture_remote.values.get("texture_class"),
+            "soil.scan.texture_likelihood.remote_estimate",
+            {
+                "clay_pct": inputs.soil_texture_remote.values.get("clay_pct"),
+                "sand_pct": inputs.soil_texture_remote.values.get("sand_pct"),
+                "silt_pct": inputs.soil_texture_remote.values.get("silt_pct"),
+            },
+            sources=(inputs.soil_texture_remote.source,),
+            observation_timestamps=(inputs.soil_texture_remote.observed_at,),
         )
     usable_history = sorted(
         (item for item in inputs.history if item.quality == "usable"),

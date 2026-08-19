@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from app.modules.farms.constants import SoilType
 from app.modules.soil.constants import (
     EC_HIGH,
     EC_NORMAL,
@@ -144,6 +145,39 @@ def classify_salinity(ec: float | None) -> str:
     if ec < EC_HIGH:
         return _R.MEDIUM.value
     return _R.HIGH.value
+
+
+def classify_texture_bucket(
+    clay_pct: float | None, sand_pct: float | None, silt_pct: float | None
+) -> str | None:
+    """Coarse texture bucket from a clay/sand/silt composition (e.g. SoilGrids'
+    remote estimate), returned in this app's own farmer-registered ``SoilType``
+    vocabulary (sandy / clay / loamy / silt --
+    app.modules.farms.constants.SoilType) rather than a separate 12-class USDA
+    soil-texture-triangle taxonomy, so a remote estimate and a farmer's own
+    registered soil type are always directly comparable.
+
+    Deliberately conservative: the standard USDA texture triangle has
+    non-linear class boundaries this function does not attempt to reproduce
+    precisely (unlike the simple numeric bands used for pH/EC above). Instead
+    it only classifies into a "pure" bucket when the composition sits well
+    inside that corner of the triangle -- clay >= 40% for Clay, silt >= 80%
+    (with low clay) for Silt, sand >= 70% (with low clay) for Sand, all comfortably
+    inside the true boundary regardless of small uncertainty in the exact
+    edges. Every blended composition, and any case this function is unsure
+    about, falls to "loamy" (the broad majority bucket the loam-family classes
+    genuinely occupy) rather than risk a wrong extreme label. Returns ``None``
+    (never invented) when any input is missing.
+    """
+    if clay_pct is None or sand_pct is None or silt_pct is None:
+        return None
+    if clay_pct >= 40:
+        return SoilType.CLAY.value
+    if silt_pct >= 80 and clay_pct < 12:
+        return SoilType.SILT.value
+    if sand_pct >= 70 and clay_pct < 15:
+        return SoilType.SANDY.value
+    return SoilType.LOAMY.value
 
 
 def deficient_micronutrients(values: dict[str, float] | None) -> tuple[str, ...]:

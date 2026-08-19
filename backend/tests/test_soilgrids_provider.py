@@ -79,6 +79,41 @@ async def test_real_contract_produces_ph_and_organic_carbon_estimates() -> None:
     assert oc.unit == "%"
 
 
+def _texture_layer(name: str, mean: float) -> dict:
+    return {
+        "name": name,
+        "unit_measure": {"d_factor": 10, "mapped_units": "dg/kg", "target_units": "g/kg"},
+        "depths": [{"label": "0-5cm", "values": {"mean": mean, "Q0.05": mean - 10, "Q0.95": mean + 10}}],
+    }
+
+
+async def test_texture_composition_produces_three_percentage_estimates() -> None:
+    """clay/sand/silt (2026-08-19, feeds the Soil Scan texture fallback) use
+    the same g/kg -> % conversion already verified for organic carbon above."""
+    client = AsyncMock()
+    payload = {
+        "properties": {
+            "layers": [
+                _texture_layer("clay", 320),  # 32.0%
+                _texture_layer("sand", 410),  # 41.0%
+                _texture_layer("silt", 270),  # 27.0%
+            ]
+        }
+    }
+    client.get.return_value = httpx.Response(
+        200, json=payload, request=httpx.Request("GET", "https://example.test")
+    )
+    outcome = await SoilGridsProvider(client=client).fetch_remote_estimates(POLYGON)
+
+    assert outcome.status == "available"
+    by_indicator = {e.indicator: e for e in outcome.estimates}
+    assert set(by_indicator) == {"clay_pct", "sand_pct", "silt_pct"}
+    assert by_indicator["clay_pct"].value == 32.0
+    assert by_indicator["sand_pct"].value == 41.0
+    assert by_indicator["silt_pct"].value == 27.0
+    assert by_indicator["clay_pct"].unit == "%"
+
+
 async def test_masked_location_reports_no_data_never_fabricates() -> None:
     """SoilGrids returns a null mean for cells it can't estimate (e.g. open
     water) -- that must surface as an honest unavailable state, never a
@@ -131,14 +166,16 @@ async def test_malformed_response_fails_closed_not_crash() -> None:
 
 
 async def test_unknown_property_in_response_is_ignored_not_invented() -> None:
-    """A future ISRIC property this provider doesn't map (e.g. clay/sand) must
-    be skipped, not coerced into one of our two known indicators."""
+    """An ISRIC property this provider doesn't map (e.g. bulk density) must be
+    skipped, not coerced into one of our known indicators. (clay/sand/silt
+    used to be the example here -- they're mapped now, see
+    test_texture_composition_produces_three_percentage_estimates below.)"""
     client = AsyncMock()
     payload = {
         "properties": {
             "layers": [
                 {
-                    "name": "clay",
+                    "name": "bdod",
                     "unit_measure": {"d_factor": 10},
                     "depths": [{"label": "0-5cm", "values": {"mean": 300}}],
                 }

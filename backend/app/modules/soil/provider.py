@@ -147,9 +147,17 @@ _SOILGRIDS_MODEL_VERSION = "ISRIC SoilGrids v2.0 (Poggio et al. 2021)"
 class SoilGridsProvider:
     """Real remote soil-property estimates from ISRIC SoilGrids (see module docs
     above). Only properties that map cleanly onto this app's existing parameter
-    set are used: pH (``phh2o``) and organic carbon (``soc``, g/kg -> %).
-    SoilGrids does not publish phosphorus, potassium, or EC/salinity at all, so
-    those are never estimated -- absence stays absence, never invented.
+    set are used: pH (``phh2o``), organic carbon (``soc``, g/kg -> %), and
+    particle-size composition (``clay``/``sand``/``silt``, g/kg -> %, added
+    2026-08-19 to feed a coarse texture estimate -- see
+    ``classify_texture_bucket`` below). Confirmed against ISRIC's own published
+    OpenAPI spec for /properties/query (the full valid ``property`` enum is
+    bdod, cec, cfvo, clay, nitrogen, ocd, ocs, phh2o, sand, silt, soc, wv0010,
+    wv0033, wv1500) -- SoilGrids does not publish phosphorus, potassium, or
+    EC/salinity at all, so those are never estimated here: absence stays
+    absence, never invented. (A free global soil-salinity layer does exist --
+    "Global Soil Salinity Maps 1986-2016" -- but only via Google Earth Engine,
+    a separate credentialed service this app doesn't integrate; not wired up.)
     """
 
     name = "soilgrids"
@@ -157,12 +165,21 @@ class SoilGridsProvider:
     DEPTH_LABEL = "0-5cm"  # topsoil, closest to a Soil Health Card sample depth
     # SoilGrids property name -> (our indicator name, extra factor applied
     # *after* the response's own unit_measure.d_factor, unit label).
-    # soc's conventional unit is g/kg (per ISRIC's parameter table); percent by
-    # mass is g per 100 g, i.e. g/kg / 10 -- a plain unit conversion, not a
-    # derived/estimated quantity.
+    # Confirmed against ISRIC's published units/conversion-factor table
+    # (docs.isric.org SoilGrids FAQ) -- the two properties here do NOT share
+    # the same conventional unit after dividing by d_factor:
+    #   - soc: mapped g/kg, d_factor 10 -> conventional unit is g/kg (NOT
+    #     percent yet), so we apply one more / 10 (extra_factor 0.1) to get %.
+    #   - clay/sand/silt: mapped g/kg, d_factor 10 -> conventional unit is
+    #     ALREADY g/100g (i.e. percent). No further conversion -- extra_factor
+    #     must stay 1.0, or values silently come out 10x too small (caught by
+    #     test_texture_composition_produces_three_percentage_estimates).
     _PROPERTIES: dict[str, tuple[str, float, str]] = {
         "phh2o": ("ph", 1.0, "pH"),
         "soc": ("organic_carbon", 0.1, "%"),
+        "clay": ("clay_pct", 1.0, "%"),
+        "sand": ("sand_pct", 1.0, "%"),
+        "silt": ("silt_pct", 1.0, "%"),
     }
 
     def __init__(self, client: httpx.AsyncClient | None = None) -> None:

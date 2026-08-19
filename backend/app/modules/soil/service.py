@@ -33,6 +33,7 @@ from app.modules.soil.engine import (
     build_recommendations,
     classify_ph,
     classify_salinity,
+    classify_texture_bucket,
 )
 from app.modules.soil.evidence import EvidenceType, IndicatorEvidence, derive_indicator
 from app.modules.soil.exceptions import (
@@ -472,20 +473,29 @@ class SoilService:
                     },
                 )
 
-        # Opt-in global soil-map fallback for pH (SoilGridsProvider, only live
-        # when SOIL_PROVIDER=soilgrids) -- only consulted when the farmer has no
-        # real lab pH, so a real measurement always wins and this never
-        # overrides one. self.provider is UnavailableSoilProvider/MockSoilProvider
-        # in every other configuration, which both return the unavailable/empty
-        # outcome synchronously with no network call, so this is a no-op there.
+        # Opt-in global soil-map fallback for pH and Texture (SoilGridsProvider,
+        # only live when SOIL_PROVIDER=soilgrids) -- one shared fetch feeds
+        # both, since SoilGrids charges the same fair-use quota (5 req/min)
+        # per call regardless of how many properties are requested in it
+        # (provider.py's _PROPERTIES already asks for phh2o/soc/clay/sand/silt
+        # together). Each is only consulted when the farmer has no better
+        # source of its own -- a real lab pH always wins over the pH estimate,
+        # a farmer-registered soil type always wins over the texture estimate
+        # -- so this is only fetched at all when at least one of them could
+        # actually use it. self.provider is UnavailableSoilProvider/
+        # MockSoilProvider in every other configuration, which both return the
+        # unavailable/empty outcome synchronously with no network call, so
+        # this stays a no-op everywhere SoilGrids isn't explicitly turned on.
         soil_ph_remote_evidence: EvidenceObservation | None = None
-        if soil_ph_evidence is None and aoi is not None:
+        soil_texture_remote_evidence: EvidenceObservation | None = None
+        needs_remote_ph = soil_ph_evidence is None
+        needs_remote_texture = not farm.soil_type
+        if (needs_remote_ph or needs_remote_texture) and aoi is not None:
             try:
                 remote_outcome = await self.provider.fetch_remote_estimates(aoi)
                 if remote_outcome.status == "available":
-                    ph_estimate = next(
-                        (e for e in remote_outcome.estimates if e.indicator == "ph"), None
-                    )
+                    by_indicator = {e.indicator: e for e in remote_outcome.estimates}
+                    ph_estimate = by_indicator.get("ph") if needs_remote_ph else None
                     if ph_estimate is not None:
                         soil_ph_remote_evidence = EvidenceObservation(
                             source=ph_estimate.provider,
@@ -500,8 +510,37 @@ class SoilService:
                             },
                             reference=ph_estimate.scene_id,
                         )
+                    if needs_remote_texture:
+                        clay_estimate = by_indicator.get("clay_pct")
+                        sand_estimate = by_indicator.get("sand_pct")
+                        silt_estimate = by_indicator.get("silt_pct")
+                        texture_class = classify_texture_bucket(
+                            clay_estimate.value if clay_estimate else None,
+                            sand_estimate.value if sand_estimate else None,
+                            silt_estimate.value if silt_estimate else None,
+                        )
+                        # All three particle-size fractions come from the same
+                        # SoilGrids response, so any one of them present means
+                        # they all are -- use it as the reference/capture point.
+                        anchor = clay_estimate or sand_estimate or silt_estimate
+                        if texture_class is not None and anchor is not None:
+                            soil_texture_remote_evidence = EvidenceObservation(
+                                source=anchor.provider,
+                                observed_at=datetime.combine(
+                                    anchor.capture_date, datetime.min.time(), tzinfo=UTC
+                                ),
+                                freshness="model_estimate",
+                                quality="usable",
+                                values={
+                                    "texture_class": texture_class,
+                                    "clay_pct": clay_estimate.value if clay_estimate else None,
+                                    "sand_pct": sand_estimate.value if sand_estimate else None,
+                                    "silt_pct": silt_estimate.value if silt_estimate else None,
+                                },
+                                reference=anchor.scene_id,
+                            )
             except Exception as exc:  # provider failure is a partial state, not fatal
-                logger.info("soil_scan_remote_ph_unavailable", reason=type(exc).__name__)
+                logger.info("soil_scan_remote_estimate_unavailable", reason=type(exc).__name__)
 
         weather: tuple[EvidenceObservation, ...] = ()
         weather_state = "unavailable"
@@ -648,6 +687,7 @@ class SoilService:
                 soil_ph=soil_ph_evidence,
                 soil_ec=soil_ec_evidence,
                 soil_ph_remote=soil_ph_remote_evidence,
+                soil_texture_remote=soil_texture_remote_evidence,
                 soil_type=farm.soil_type,
                 # Propagate this service's (possibly test-injected) clock so
                 # SoilScan.generated_at actually reflects it -- see the `now`
