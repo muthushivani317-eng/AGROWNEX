@@ -172,3 +172,11 @@ CLOUD_USABLE_MAX = 40.0  # above this the scene is unusable → unavailable
 
 # How far back the provider looks for a recent pass (days).
 ACQUISITION_LOOKBACK_DAYS = 14
+
+# --------------------------------------------------------------------------- #
+# Rendered imagery (docs: farmers see an actual picture of their field, not
+# just numbers -- rendered via Copernicus's Process API and stored in R2,
+# same object-storage pattern as disease/growth/nutrient photos).
+# --------------------------------------------------------------------------- #
+SATELLITE_IMAGE_PREFIX = "satellite"
+RENDERED_IMAGE_SIZE_PX = 512

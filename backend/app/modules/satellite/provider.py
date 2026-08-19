@@ -9,9 +9,17 @@ from typing import Any, Protocol
 import httpx
 
 from app.core.logging import get_logger
+from app.modules.disease.storage import ObjectStorage, get_default_storage
 from app.modules.satellite.constants import (
     ACQUISITION_LOOKBACK_DAYS,
     CLOUD_USABLE_MAX,
+    NDVI_BARE,
+    NDVI_GOOD,
+    NDVI_LOW,
+    NDVI_MODERATE,
+    NDVI_VERY_LOW,
+    RENDERED_IMAGE_SIZE_PX,
+    SATELLITE_IMAGE_PREFIX,
     SATELLITE_PROVIDER,
     SatelliteProviderName,
     UnavailableReason,
@@ -20,6 +28,43 @@ from app.modules.satellite.engine import BandReflectance, IndexValues
 from app.modules.satellite.waterlogging import WaterloggingEvidence
 
 logger = get_logger("satellite.provider")
+
+# Standard Sentinel-2 "true colour" render (the well-known 2.5x-gain RGB
+# combination used across Sentinel Hub's public custom-script gallery) --
+# not a fabricated visualization, just the display-corrected version of the
+# same B02/B03/B04 bands the app already reads.
+_TRUE_COLOR_EVALSCRIPT = """
+//VERSION=3
+function setup() {
+  return { input: [{ bands: ["B02", "B03", "B04", "dataMask"] }], output: { bands: 4 } };
+}
+function evaluatePixel(s) {
+  return [2.5 * s.B04, 2.5 * s.B03, 2.5 * s.B02, s.dataMask];
+}
+"""
+
+# NDVI rendered as a colour map using the EXACT same six health thresholds the
+# numeric dashboard badge already uses (NDVI_BARE/VERY_LOW/LOW/MODERATE/GOOD in
+# constants.py) -- so the picture a farmer sees can never disagree with the
+# health label shown next to it.
+_NDVI_COLOR_EVALSCRIPT = f"""
+//VERSION=3
+function setup() {{
+  return {{ input: [{{ bands: ["B04", "B08", "dataMask"] }}], output: {{ bands: 4 }} }};
+}}
+function evaluatePixel(s) {{
+  if (s.dataMask === 0) return [0, 0, 0, 0];
+  var ndvi = (s.B08 - s.B04) / (s.B08 + s.B04 + 0.000001);
+  var r, g, b;
+  if (ndvi < {NDVI_BARE}) {{ r = 0.60; g = 0.40; b = 0.20; }}
+  else if (ndvi < {NDVI_VERY_LOW}) {{ r = 0.85; g = 0.70; b = 0.30; }}
+  else if (ndvi < {NDVI_LOW}) {{ r = 0.95; g = 0.85; b = 0.20; }}
+  else if (ndvi < {NDVI_MODERATE}) {{ r = 0.75; g = 0.85; b = 0.15; }}
+  else if (ndvi < {NDVI_GOOD}) {{ r = 0.35; g = 0.70; b = 0.15; }}
+  else {{ r = 0.05; g = 0.45; b = 0.10; }}
+  return [r, g, b, s.dataMask];
+}}
+"""
 
 
 @dataclass(frozen=True)
@@ -66,6 +111,7 @@ class CopernicusProvider:
     )
     STAC_URL = "https://stac.dataspace.copernicus.eu/v1/search"
     STATISTICS_URL = "https://sh.dataspace.copernicus.eu/api/v1/statistics"
+    PROCESS_URL = "https://sh.dataspace.copernicus.eu/api/v1/process"
 
     def __init__(
         self,
@@ -74,6 +120,7 @@ class CopernicusProvider:
         client_secret: str | None = None,
         timeout: float = 30.0,
         client: Any | None = None,
+        storage: ObjectStorage | None = None,
     ) -> None:
         self.client_id = (
             client_id if client_id is not None else os.getenv("COPERNICUS_CLIENT_ID", "")
@@ -85,6 +132,7 @@ class CopernicusProvider:
         )
         self.timeout = timeout
         self._client = client
+        self.storage = storage or get_default_storage()
 
     async def _post(self, url: str, **kwargs: Any) -> httpx.Response:
         if self._client is not None:
@@ -168,6 +216,9 @@ class CopernicusProvider:
             bands = self._parse_band_means(stats_response.json())
             if bands is None:
                 return FetchOutcome(None, UnavailableReason.PROCESSING_ERROR.value)
+            images, thumbnail_url = await self._fetch_and_store_images(
+                token, polygon, capture_date, scene_id
+            )
             return FetchOutcome(
                 ProviderScene(
                     capture_date=capture_date,
@@ -175,6 +226,8 @@ class CopernicusProvider:
                     cloud_cover=float(cloud),
                     resolution_m=10.0,
                     bands=bands,
+                    images=images,
+                    thumbnail_url=thumbnail_url,
                     metadata={
                         "scene_id": scene_id,
                         "collection": "sentinel-2-l2a",
@@ -217,6 +270,85 @@ class CopernicusProvider:
                 "evalscript": evalscript,
             },
         }
+
+    @staticmethod
+    def _process_request(polygon: dict, capture_date: date, evalscript: str) -> dict[str, Any]:
+        period = {
+            "from": f"{capture_date.isoformat()}T00:00:00Z",
+            "to": f"{capture_date.isoformat()}T23:59:59Z",
+        }
+        return {
+            "input": {
+                "bounds": {"geometry": polygon},
+                "data": [{"type": "sentinel-2-l2a", "dataFilter": {"timeRange": period}}],
+            },
+            "output": {
+                "width": RENDERED_IMAGE_SIZE_PX,
+                "height": RENDERED_IMAGE_SIZE_PX,
+                "responses": [{"identifier": "default", "format": {"type": "image/png"}}],
+            },
+            "evalscript": evalscript,
+        }
+
+    async def _fetch_rendered_image(
+        self, token: str, polygon: dict, capture_date: date, evalscript: str
+    ) -> bytes | None:
+        """Render one PNG layer via the Process API. Best-effort: a failure here
+        never blocks the numeric pipeline -- it just means no picture this pass,
+        same honest-degradation pattern as the rest of the app's image storage."""
+        try:
+            response = await self._post(
+                self.PROCESS_URL,
+                headers={"Authorization": f"Bearer {token}"},
+                json=self._process_request(polygon, capture_date, evalscript),
+                timeout=self.timeout,
+            )
+            if response.status_code != 200:
+                logger.warning("satellite image render failed: status=%s", response.status_code)
+                return None
+            return response.content
+        except httpx.HTTPError:
+            logger.warning("satellite image render request failed", exc_info=True)
+            return None
+
+    async def _fetch_and_store_images(
+        self, token: str, polygon: dict, capture_date: date, scene_id: str
+    ) -> tuple[dict[str, str], str | None]:
+        """True-colour + NDVI-colour renders, uploaded to object storage. Never
+        raises: any render or storage failure just means fewer/no images for this
+        scene, not a failed refresh -- the numeric indices remain the source of
+        truth regardless of whether a picture could be produced."""
+        images: dict[str, str] = {}
+        thumbnail_url: str | None = None
+        try:
+            true_color = await self._fetch_rendered_image(
+                token, polygon, capture_date, _TRUE_COLOR_EVALSCRIPT
+            )
+            if true_color:
+                url = await self.storage.put(
+                    key=f"{SATELLITE_IMAGE_PREFIX}/{scene_id}/true_color.png",
+                    data=true_color,
+                    content_type="image/png",
+                )
+                images["true_color"] = url
+                thumbnail_url = url
+            ndvi_image = await self._fetch_rendered_image(
+                token, polygon, capture_date, _NDVI_COLOR_EVALSCRIPT
+            )
+            if ndvi_image:
+                url = await self.storage.put(
+                    key=f"{SATELLITE_IMAGE_PREFIX}/{scene_id}/ndvi.png",
+                    data=ndvi_image,
+                    content_type="image/png",
+                )
+                images["ndvi"] = url
+                thumbnail_url = thumbnail_url or url
+        except Exception:
+            logger.warning(
+                "satellite image rendering/storage failed; continuing without imagery",
+                exc_info=True,
+            )
+        return images, thumbnail_url
 
     @staticmethod
     def _parse_band_means(payload: Any) -> BandReflectance | None:

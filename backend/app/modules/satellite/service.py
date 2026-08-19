@@ -442,6 +442,7 @@ class SatelliteService:
                     band=band,
                     image_url=url,
                     thumbnail_url=scene.thumbnail_url,
+                    mime_type="image/png",
                     resolution_m=scene.resolution_m,
                 )
             )
