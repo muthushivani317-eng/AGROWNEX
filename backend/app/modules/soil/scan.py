@@ -105,6 +105,16 @@ class ScanInputs:
     # most important feature" showing "not enough data" across the board).
     soil_ph: EvidenceObservation | None = None  # values={"ph": float, "rating": str}
     soil_ec: EvidenceObservation | None = None  # values={"ec_salinity": float, "rating": str}
+    # Opt-in global soil-map fallback (SoilGridsProvider, SOIL_PROVIDER=soilgrids)
+    # for when the farmer has never submitted a real lab pH. Precedence 2: a real
+    # measured `soil_ph` above always wins and this is never consulted when one
+    # exists (service.py only populates this when soil_ph is None). Kept as its
+    # own field, evidence-tagged AI_ESTIMATED rather than MEASURED_FROM_REPORT,
+    # so a farmer can never mistake a decades-old compiled global model for their
+    # own field's lab result (added 2026-08-19, wiring the standalone SoilGrids
+    # provider into the main scan rather than only the separate /soil/remote
+    # endpoint).
+    soil_ph_remote: EvidenceObservation | None = None  # values={"ph": float, "rating": str}
     soil_type: str | None = None
     # Clock to stamp SoilScan.generated_at with. Defaults to None (build_scan
     # falls back to the real wall clock) so every existing caller/test that
@@ -295,6 +305,17 @@ def build_scan(inputs: ScanInputs) -> SoilScan:
             {"ph": inputs.soil_ph.values.get("ph")},
             sources=(inputs.soil_ph.source,),
             observation_timestamps=(inputs.soil_ph.observed_at,),
+        )
+    elif inputs.soil_ph_remote is not None:
+        by_code[IndicatorCode.ACIDITY_PH_RISK] = ScanIndicator(
+            IndicatorCode.ACIDITY_PH_RISK,
+            "available",
+            EvidenceClass.AI_ESTIMATED,
+            inputs.soil_ph_remote.values.get("rating"),
+            "soil.scan.acidity_ph_risk.remote_estimate",
+            {"ph": inputs.soil_ph_remote.values.get("ph")},
+            sources=(inputs.soil_ph_remote.source,),
+            observation_timestamps=(inputs.soil_ph_remote.observed_at,),
         )
     if inputs.soil_ec is not None:
         by_code[IndicatorCode.SALINITY_RISK] = ScanIndicator(

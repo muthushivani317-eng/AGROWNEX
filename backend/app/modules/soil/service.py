@@ -472,6 +472,37 @@ class SoilService:
                     },
                 )
 
+        # Opt-in global soil-map fallback for pH (SoilGridsProvider, only live
+        # when SOIL_PROVIDER=soilgrids) -- only consulted when the farmer has no
+        # real lab pH, so a real measurement always wins and this never
+        # overrides one. self.provider is UnavailableSoilProvider/MockSoilProvider
+        # in every other configuration, which both return the unavailable/empty
+        # outcome synchronously with no network call, so this is a no-op there.
+        soil_ph_remote_evidence: EvidenceObservation | None = None
+        if soil_ph_evidence is None and aoi is not None:
+            try:
+                remote_outcome = await self.provider.fetch_remote_estimates(aoi)
+                if remote_outcome.status == "available":
+                    ph_estimate = next(
+                        (e for e in remote_outcome.estimates if e.indicator == "ph"), None
+                    )
+                    if ph_estimate is not None:
+                        soil_ph_remote_evidence = EvidenceObservation(
+                            source=ph_estimate.provider,
+                            observed_at=datetime.combine(
+                                ph_estimate.capture_date, datetime.min.time(), tzinfo=UTC
+                            ),
+                            freshness="model_estimate",
+                            quality="usable",
+                            values={
+                                "ph": ph_estimate.value,
+                                "rating": classify_ph(ph_estimate.value),
+                            },
+                            reference=ph_estimate.scene_id,
+                        )
+            except Exception as exc:  # provider failure is a partial state, not fatal
+                logger.info("soil_scan_remote_ph_unavailable", reason=type(exc).__name__)
+
         weather: tuple[EvidenceObservation, ...] = ()
         weather_state = "unavailable"
         try:
@@ -616,6 +647,7 @@ class SoilService:
                 terrain_state=terrain_state,
                 soil_ph=soil_ph_evidence,
                 soil_ec=soil_ec_evidence,
+                soil_ph_remote=soil_ph_remote_evidence,
                 soil_type=farm.soil_type,
                 # Propagate this service's (possibly test-injected) clock so
                 # SoilScan.generated_at actually reflects it -- see the `now`
