@@ -104,8 +104,8 @@ class MarketService:
         if not rows and refresh_started:
             refresh_task = self._refresh_tasks_by_key.get(self.cache.key(query))
             if refresh_task is not None:
-                # Give the just-started background refresh a short chance to land
-                # real data before we respond -- but never hold the HTTP response
+                # Give the just-started background refresh a chance to land real
+                # data before we respond -- but never hold the HTTP response
                 # hostage to the full external-provider retry budget (Agmarknet:
                 # up to AGMARKNET_MAX_RETRIES x AGMARKNET_TIMEOUT_SECONDS ~= 24s
                 # worst case). `_ensure_fresh`'s own docstring promises "the
@@ -115,12 +115,27 @@ class MarketService:
                 # producing the ~20s blank-then-client-timeout the Market Prices
                 # screen was showing live (reported 2026-08-17: client gave up
                 # after ~19.9s with a 499, one retry later succeeded in <100ms
-                # once the background fetch had landed). `asyncio.shield` keeps
-                # the refresh running even after we stop waiting on it, so a
-                # slow provider still isn't wasted work -- the next request for
-                # this filter combo benefits once it lands.
+                # once the background fetch had landed).
+                #
+                # The first fix capped this wait at 3s, which avoided that timeout
+                # but traded it for a *more common* problem (reported 2026-08-19):
+                # a single successful Agmarknet call routinely takes close to the
+                # full AGMARKNET_TIMEOUT_SECONDS (8s), so any first-time filter
+                # combo not already warmed by the 2-hour favourites cron (e.g. a
+                # farmer's own district on the "Nearby" tab, or a crop nobody has
+                # favourited yet) would almost always still be empty at the 3s
+                # mark -- the farmer saw a "not found" empty state on a totally
+                # ordinary, successful fetch that just hadn't landed yet. 8.5s
+                # covers one full Agmarknet attempt (plus its JSON parse) with
+                # margin, while staying well inside the mobile client's 20s
+                # request timeout (``EXPO_PUBLIC_API_TIMEOUT_MS``) even after
+                # response transit and serialization overhead. `asyncio.shield`
+                # keeps the refresh running even after we stop waiting on it, so
+                # a genuinely slow/down provider still isn't wasted work -- the
+                # next request (or a manual pull-to-refresh) for this filter
+                # combo benefits once it lands.
                 try:
-                    await asyncio.wait_for(asyncio.shield(refresh_task), timeout=3.0)
+                    await asyncio.wait_for(asyncio.shield(refresh_task), timeout=8.5)
                 except TimeoutError:
                     pass
                 else:
