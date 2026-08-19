@@ -11,7 +11,6 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.api.errors import register_exception_handlers
 from app.api.probes import router as probes_router
@@ -25,6 +24,7 @@ from app.core.middleware import (
     RateLimitMiddleware,
     RequestIDMiddleware,
     SecurityHeadersMiddleware,
+    TrustedHostExceptProbesMiddleware,
     build_rate_limiter,
 )
 from app.legacy_joint import get_legacy_joint_runtime
@@ -109,7 +109,10 @@ def create_app() -> FastAPI:
     )
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(MetricsMiddleware)
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.trusted_hosts)
+    # /health, /healthz, /readyz, /ready are exempt from host validation -- Railway's
+    # own healthcheck probes them over private networking with a Host header that
+    # never matches the public domain allowlist (see TrustedHostExceptProbesMiddleware).
+    app.add_middleware(TrustedHostExceptProbesMiddleware, allowed_hosts=settings.trusted_hosts)
     app.add_middleware(RequestIDMiddleware)
 
     register_exception_handlers(app)

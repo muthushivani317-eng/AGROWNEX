@@ -12,7 +12,7 @@ import time
 import uuid
 from typing import Protocol
 
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.types import ASGIApp
@@ -206,4 +206,39 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             )
             response.headers["Retry-After"] = str(retry_after)
             return response
+        return await call_next(request)
+
+
+# Health/readiness probe paths (app/api/probes.py) that orchestrators reach over
+# private/internal networking -- never through the public custom domain.
+_HOST_CHECK_EXEMPT_PATHS = frozenset({"/health", "/healthz", "/readyz", "/ready"})
+
+
+class TrustedHostExceptProbesMiddleware(BaseHTTPMiddleware):
+    """Same host-header allowlisting as Starlette's TrustedHostMiddleware, except
+    orchestrator health/readiness probes are always let through regardless of
+    Host header.
+
+    Railway's own healthcheck hits the container over private networking (an
+    internal 100.64.0.0/10 address) using a Host header that will never match a
+    real public domain like api.agrowai.in. Wrapping the whole app in the plain
+    TrustedHostMiddleware once TRUSTED_HOSTS was tightened to the real
+    production domains made Railway's own /health probe get rejected with 400,
+    which fails the deploy's healthcheck and triggers an automatic rollback --
+    discovered 2026-08-19 when the api.agrowai.in TRUSTED_HOSTS deploy failed
+    with "1/1 replicas never became healthy!" even though the app itself had
+    started up fine.
+    """
+
+    def __init__(self, app: ASGIApp, allowed_hosts: list[str]) -> None:
+        super().__init__(app)
+        self._allowed_hosts = set(allowed_hosts)
+        self._allow_any = "*" in self._allowed_hosts
+
+    async def dispatch(self, request: Request, call_next):
+        if request.url.path in _HOST_CHECK_EXEMPT_PATHS:
+            return await call_next(request)
+        host = (request.headers.get("host") or "").split(":")[0]
+        if not self._allow_any and host not in self._allowed_hosts:
+            return PlainTextResponse("Invalid host header", status_code=400)
         return await call_next(request)
