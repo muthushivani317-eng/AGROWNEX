@@ -167,6 +167,16 @@ async def test_real_contract_produces_provenance_bound_scene() -> None:
     assert outcome.scene.metadata["processing_version"] == "cdse-statistics-v1"
 
 
+def test_statistics_request_uses_wgs84_resolution_and_data_mask() -> None:
+    request = CopernicusProvider._statistics_request(POLYGON, date(2026, 7, 11))
+
+    assert request["input"]["bounds"]["properties"]["crs"].endswith("/4326")
+    assert request["aggregation"]["resx"] == pytest.approx(0.0001)
+    assert request["aggregation"]["resy"] == pytest.approx(0.0001)
+    assert 'id:"dataMask"' in request["aggregation"]["evalscript"]
+    assert "dataMask:[v?1:0]" in request["aggregation"]["evalscript"]
+
+
 def _stats_response() -> httpx.Response:
     stats = {
         "data": [

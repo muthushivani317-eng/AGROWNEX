@@ -274,10 +274,11 @@ class CopernicusProvider:
         evalscript = (
             "//VERSION=3\nfunction setup(){return {input:[{bands:"
             '["B02","B04","B05","B08","B11","SCL","dataMask"]}],'
-            'output:[{id:"bands",bands:5,sampleType:"FLOAT32"}]};}\n'
+            'output:[{id:"bands",bands:5,sampleType:"FLOAT32"},'
+            '{id:"dataMask",bands:1}]};}\n'
             "function evaluatePixel(s){let v=s.dataMask&&"
-            "![1,3,7,8,9,10].includes(s.SCL);return {bands:v?"
-            "[s.B02,s.B04,s.B05,s.B08,s.B11]:[NaN,NaN,NaN,NaN,NaN]};}"
+            "![1,3,7,8,9,10].includes(s.SCL);return {bands:"
+            "[s.B02,s.B04,s.B05,s.B08,s.B11],dataMask:[v?1:0]};}"
         )
         period = {
             "from": f"{capture_date.isoformat()}T00:00:00Z",
@@ -285,14 +286,20 @@ class CopernicusProvider:
         }
         return {
             "input": {
-                "bounds": {"geometry": polygon},
+                "bounds": {
+                    "geometry": polygon,
+                    "properties": {"crs": "http://www.opengis.net/def/crs/EPSG/0/4326"},
+                },
                 "data": [{"type": "sentinel-2-l2a", "dataFilter": {"timeRange": period}}],
             },
             "aggregation": {
                 "timeRange": period,
                 "aggregationInterval": {"of": "P1D"},
-                "resx": 10,
-                "resy": 10,
+                # Resolution is expressed in the AOI CRS units. The polygon is
+                # WGS84 degrees, so 10 here meant a 10-degree pixel and yielded
+                # an empty statistical result. 0.0001 degrees is about 11 m.
+                "resx": 0.0001,
+                "resy": 0.0001,
                 "evalscript": evalscript,
             },
         }
