@@ -280,9 +280,13 @@ class CopernicusProvider:
             "![1,3,7,8,9,10].includes(s.SCL);return {bands:"
             "[s.B02,s.B04,s.B05,s.B08,s.B11],dataMask:[v?1:0]};}"
         )
+        # Statistical API defaults to SKIP for an incomplete final aggregation
+        # interval. Ending at 23:59:59 made this one second shorter than P1D,
+        # so a valid HTTP 200 response contained an empty `data` list.
+        next_day = capture_date + timedelta(days=1)
         period = {
             "from": f"{capture_date.isoformat()}T00:00:00Z",
-            "to": f"{capture_date.isoformat()}T23:59:59Z",
+            "to": f"{next_day.isoformat()}T00:00:00Z",
         }
         return {
             "input": {

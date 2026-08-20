@@ -170,6 +170,11 @@ async def test_real_contract_produces_provenance_bound_scene() -> None:
 def test_statistics_request_uses_wgs84_resolution_and_data_mask() -> None:
     request = CopernicusProvider._statistics_request(POLYGON, date(2026, 7, 11))
 
+    assert request["aggregation"]["timeRange"] == {
+        "from": "2026-07-11T00:00:00Z",
+        "to": "2026-07-12T00:00:00Z",
+    }
+    assert request["aggregation"]["aggregationInterval"] == {"of": "P1D"}
     assert request["input"]["bounds"]["properties"]["crs"].endswith("/4326")
     assert request["aggregation"]["resx"] == pytest.approx(0.0001)
     assert request["aggregation"]["resy"] == pytest.approx(0.0001)
