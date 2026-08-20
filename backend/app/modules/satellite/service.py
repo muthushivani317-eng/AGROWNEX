@@ -134,6 +134,15 @@ class SatelliteService:
                 and latest.session_metadata
                 and latest.session_metadata.get("scene_id") == scene_id
             ):
+                # The scene may be unchanged while the provider has enriched
+                # it with newly introduced metadata (for example real sub-AOI
+                # NDVI/NDMI variability zones). Preserve append-only session
+                # semantics, but merge that evidence into the existing scene
+                # instead of silently discarding it as a duplicate.
+                incoming = scene.metadata or {}
+                if incoming != latest.session_metadata:
+                    latest.session_metadata = {**latest.session_metadata, **incoming}
+                    await self.session.flush()
                 return latest
         if scene.cloud_cover is not None and scene.cloud_cover > CLOUD_USABLE_MAX:
             return await self._store_unavailable(

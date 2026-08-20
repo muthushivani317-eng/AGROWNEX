@@ -189,6 +189,48 @@ async def test_refresh_is_idempotent_for_same_provider_scene(db_session) -> None
     assert page.total == 1
 
 
+async def test_duplicate_scene_merges_new_real_variability_metadata(db_session) -> None:
+    user = await _make_user(db_session, uid="metadata-enrichment")
+    farm = await _make_farm(db_session, user)
+    base = _scene(red=0.15, nir=0.45)
+    first_scene = ProviderScene(
+        **{**base.__dict__, "metadata": {"scene_id": "S2-enriched"}}
+    )
+    zones = [
+        {
+            "zone_id": "sat-zone-1",
+            "quality": "usable",
+            "observation_class": "poor_performing",
+        }
+    ]
+    enriched_scene = ProviderScene(
+        **{
+            **base.__dict__,
+            "metadata": {
+                "scene_id": "S2-enriched",
+                "spatial_variability_zones": zones,
+            },
+        }
+    )
+
+    class EnrichingProvider(FakeProvider):
+        def __init__(self) -> None:
+            self.calls = 0
+
+        async def fetch_scene(self, polygon, *, capture_before) -> FetchOutcome:
+            self.calls += 1
+            return FetchOutcome(first_scene if self.calls == 1 else enriched_scene)
+
+    service = _service(db_session, EnrichingProvider())
+    first = await service.refresh(user, farm.id)
+    second = await service.refresh(user, farm.id)
+
+    assert second.id == first.id
+    assert second.session_metadata["spatial_variability_zones"] == zones
+    page = await service.history(user, farm.id, page=1, page_size=10)
+    assert page.total == 1
+
+
 async def test_requires_owned_farm(db_session) -> None:
     owner = await _make_user(db_session, uid="owner")
     other = await _make_user(db_session, uid="other")

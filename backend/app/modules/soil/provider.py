@@ -249,7 +249,10 @@ class SoilGridsProvider:
             # The mobile request budget is 20 seconds. All candidate cells are
             # fetched concurrently with a bounded provider timeout, rather than
             # serially consuming up to 75 seconds.
-            client = httpx.AsyncClient(timeout=8.0)
+            # Four fallback cells in production commonly need 8-10 seconds.
+            # They run concurrently, so 14 seconds still leaves room inside
+            # the mobile client's 20-second request budget for terrain + DB.
+            client = httpx.AsyncClient(timeout=14.0)
         try:
             results = await asyncio.gather(
                 *(self._fetch_payload(client, lat=lat, lon=lon) for lat, lon in candidates),
