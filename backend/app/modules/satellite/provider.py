@@ -103,6 +103,10 @@ class SatelliteProvider(Protocol):
         self, polygon: dict, *, capture_before: date
     ) -> WaterEvidenceOutcome: ...
 
+    async def render_scene_images(
+        self, polygon: dict, *, capture_date: date, scene_id: str
+    ) -> tuple[dict[str, str], str | None]: ...
+
 
 class CopernicusProvider:
     name = SatelliteProviderName.COPERNICUS.value
@@ -140,6 +144,25 @@ class CopernicusProvider:
         async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=False) as client:
             return await client.post(url, **kwargs)
 
+    async def _access_token(self) -> tuple[str | None, str]:
+        if not self.client_id or not self.client_secret:
+            return None, UnavailableReason.PROVIDER_NOT_CONFIGURED.value
+        token_response = await self._post(
+            self.TOKEN_URL,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+            },
+            timeout=self.timeout,
+        )
+        if reason := self._failure(token_response):
+            return None, reason
+        token = token_response.json().get("access_token")
+        if not isinstance(token, str) or not token:
+            return None, UnavailableReason.PROVIDER_ERROR.value
+        return token, UnavailableReason.NONE.value
+
     @staticmethod
     def _failure(response: httpx.Response) -> str | None:
         if response.status_code == 429:
@@ -152,20 +175,9 @@ class CopernicusProvider:
         if not self.client_id or not self.client_secret:
             return FetchOutcome(None, UnavailableReason.PROVIDER_NOT_CONFIGURED.value)
         try:
-            token_response = await self._post(
-                self.TOKEN_URL,
-                data={
-                    "grant_type": "client_credentials",
-                    "client_id": self.client_id,
-                    "client_secret": self.client_secret,
-                },
-                timeout=self.timeout,
-            )
-            if reason := self._failure(token_response):
+            token, reason = await self._access_token()
+            if token is None:
                 return FetchOutcome(None, reason)
-            token = token_response.json().get("access_token")
-            if not isinstance(token, str) or not token:
-                return FetchOutcome(None, UnavailableReason.PROVIDER_ERROR.value)
             start = capture_before - timedelta(days=ACQUISITION_LOOKBACK_DAYS)
             search_response = await self._post(
                 self.STAC_URL,
@@ -216,9 +228,6 @@ class CopernicusProvider:
             bands = self._parse_band_means(stats_response.json())
             if bands is None:
                 return FetchOutcome(None, UnavailableReason.PROCESSING_ERROR.value)
-            images, thumbnail_url = await self._fetch_and_store_images(
-                token, polygon, capture_date, scene_id
-            )
             return FetchOutcome(
                 ProviderScene(
                     capture_date=capture_date,
@@ -226,8 +235,6 @@ class CopernicusProvider:
                     cloud_cover=float(cloud),
                     resolution_m=10.0,
                     bands=bands,
-                    images=images,
-                    thumbnail_url=thumbnail_url,
                     metadata={
                         "scene_id": scene_id,
                         "collection": "sentinel-2-l2a",
@@ -242,6 +249,25 @@ class CopernicusProvider:
         except (httpx.HTTPError, ValueError, TypeError, KeyError):
             logger.warning("copernicus request failed", exc_info=True)
             return FetchOutcome(None, UnavailableReason.PROVIDER_ERROR.value)
+
+    async def render_scene_images(
+        self, polygon: dict, *, capture_date: date, scene_id: str
+    ) -> tuple[dict[str, str], str | None]:
+        """Best-effort image enrichment, deliberately separate from indices.
+
+        The refresh request only waits for scene discovery and statistics. Image
+        rendering and object-storage uploads happen after that numeric session is
+        committed, so a slow Process API or storage provider cannot hide NDVI.
+        """
+        try:
+            token, reason = await self._access_token()
+            if token is None:
+                logger.warning("satellite background image auth unavailable: %s", reason)
+                return {}, None
+            return await self._fetch_and_store_images(token, polygon, capture_date, scene_id)
+        except (httpx.HTTPError, ValueError, TypeError, KeyError):
+            logger.warning("satellite background image rendering failed", exc_info=True)
+            return {}, None
 
     @staticmethod
     def _statistics_request(polygon: dict, capture_date: date) -> dict[str, Any]:
@@ -467,6 +493,11 @@ class MockSatelliteProvider:
         self, polygon: dict, *, capture_before: date
     ) -> WaterEvidenceOutcome:
         return WaterEvidenceOutcome(None, UnavailableReason.NO_IMAGERY.value)
+
+    async def render_scene_images(
+        self, polygon: dict, *, capture_date: date, scene_id: str
+    ) -> tuple[dict[str, str], str | None]:
+        return {}, None
 
 
 def get_default_provider() -> SatelliteProvider:

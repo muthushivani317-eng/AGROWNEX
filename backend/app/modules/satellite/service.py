@@ -398,6 +398,47 @@ class SatelliteService:
         await self.session.refresh(session)
         return session
 
+    async def render_images(self, user_id: uuid.UUID, session_id: uuid.UUID) -> int:
+        """Render and attach images to an already-available numeric session."""
+        satellite_session = await self.repo.get_session(session_id, user_id)
+        if satellite_session is None or satellite_session.status != SessionStatus.AVAILABLE.value:
+            return 0
+        if satellite_session.images:
+            return len(satellite_session.images)
+        metadata = satellite_session.session_metadata or {}
+        scene_id = metadata.get("scene_id")
+        if not isinstance(scene_id, str) or not scene_id or satellite_session.capture_date is None:
+            return 0
+        farm = await self.farms.get_for_user(satellite_session.farm_id, user_id)
+        if farm is None:
+            return 0
+        polygon = self._polygon(farm)
+        if polygon is None:
+            return 0
+        try:
+            normalized = normalize_aoi(polygon)
+        except AoiValidationError:
+            return 0
+        render = getattr(self.provider, "render_scene_images", None)
+        if render is None:
+            return 0
+        images, thumbnail_url = await render(
+            normalized,
+            capture_date=satellite_session.capture_date,
+            scene_id=scene_id,
+        )
+        scene = ProviderScene(
+            capture_date=satellite_session.capture_date,
+            provider=satellite_session.provider,
+            cloud_cover=satellite_session.cloud_cover or 0.0,
+            resolution_m=satellite_session.resolution_m or 10.0,
+            images=images,
+            thumbnail_url=thumbnail_url,
+        )
+        await self._persist_images(satellite_session.farm_id, satellite_session, scene)
+        await self.session.flush()
+        return len(images)
+
     async def _persist_indices(
         self,
         farm_id: uuid.UUID,

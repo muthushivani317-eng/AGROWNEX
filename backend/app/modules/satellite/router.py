@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, BackgroundTasks, Query, status
 
 from app.modules.satellite.constants import TIMELINE_MONTHLY, TIMELINE_WEEKLY
 from app.modules.satellite.dependencies import CurrentUser, SatelliteServiceDep
@@ -158,12 +158,22 @@ async def get_alerts(
     status_code=status.HTTP_201_CREATED,
 )
 async def refresh(
+    background_tasks: BackgroundTasks,
     current_user: CurrentUser,
     service: SatelliteServiceDep,
     farm_id: uuid.UUID = Query(...),
 ):
     """Request a new acquisition pass (honest 'Not Available' if none / no polygon)."""
     session = await service.refresh(current_user, farm_id)
+    if (
+        session.status == "available"
+        and session.session_metadata
+        and session.session_metadata.get("scene_id")
+        and not session.images
+    ):
+        from app.modules.satellite.jobs import render_satellite_images
+
+        background_tasks.add_task(render_satellite_images, session.id, current_user.id)
     return success(SatelliteSessionOut.from_session(session), message="Satellite refresh complete")
 
 

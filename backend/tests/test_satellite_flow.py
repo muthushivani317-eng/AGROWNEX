@@ -53,6 +53,19 @@ class WaterProvider(FakeProvider):
         return self.water_outcome
 
 
+class RenderingProvider(FakeProvider):
+    def __init__(self, outcome: FetchOutcome) -> None:
+        super().__init__(outcome)
+        self.render_calls = 0
+
+    async def render_scene_images(self, polygon, *, capture_date, scene_id):
+        self.render_calls += 1
+        return {
+            "true_color": f"https://images.test/{scene_id}/true_color.png",
+            "ndvi": f"https://images.test/{scene_id}/ndvi.png",
+        }, f"https://images.test/{scene_id}/true_color.png"
+
+
 def _scene(*, red: float, nir: float, cloud: float = 5.0, std: float = 0.05) -> ProviderScene:
     ndvi = round((nir - red) / (nir + red), 4)
     return ProviderScene(
@@ -137,6 +150,28 @@ async def test_refresh_available_scene_computes_indices(db_session) -> None:
     assert {i.index_name for i in indices} >= {"ndvi", "ndmi", "ndre"}
     page = await service.history(user, farm.id, page=1, page_size=10)
     assert page.total == 1
+
+
+async def test_refresh_is_numeric_first_then_images_are_attached_separately(db_session) -> None:
+    user = await _make_user(db_session, uid="numeric-first")
+    farm = await _make_farm(db_session, user)
+    base = _scene(red=0.15, nir=0.45)
+    scene = ProviderScene(**{**base.__dict__, "metadata": {"scene_id": "S2-background"}})
+    provider = RenderingProvider(FetchOutcome(scene))
+    service = _service(db_session, provider)
+
+    session = await service.refresh(user, farm.id)
+
+    assert session.ndvi == 0.5
+    assert session.images == []
+    assert provider.render_calls == 0
+
+    attached = await service.render_images(user.id, session.id)
+    await db_session.refresh(session, ["images"])
+
+    assert attached == 2
+    assert provider.render_calls == 1
+    assert {image.band for image in session.images} == {"true_color", "ndvi"}
 
 
 async def test_refresh_is_idempotent_for_same_provider_scene(db_session) -> None:

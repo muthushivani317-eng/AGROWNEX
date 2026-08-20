@@ -209,26 +209,42 @@ def _token_response() -> httpx.Response:
     )
 
 
-async def test_available_scene_renders_and_stores_true_color_and_ndvi_images() -> None:
+async def test_available_scene_returns_numeric_data_before_image_rendering() -> None:
     client = AsyncMock()
     client.post.side_effect = [
         _token_response(),
         _scene_search_response(),
         _stats_response(),
+    ]
+    provider = CopernicusProvider(
+        client_id="id", client_secret="secret", client=client, storage=MockStorage()
+    )
+    outcome = await provider.fetch_scene(POLYGON, capture_before=date(2026, 7, 12))
+    assert outcome.scene is not None
+    assert outcome.scene.images == {}
+    assert outcome.scene.thumbnail_url is None
+    assert outcome.scene.bands and outcome.scene.bands.nir == 0.45
+    assert client.post.await_count == 3
+
+
+async def test_background_render_stores_true_color_and_ndvi_images() -> None:
+    client = AsyncMock()
+    client.post.side_effect = [
+        _token_response(),
         httpx.Response(200, content=b"PNGDATA-truecolor", request=httpx.Request("POST", "x")),
         httpx.Response(200, content=b"PNGDATA-ndvi", request=httpx.Request("POST", "x")),
     ]
-    outcome = await CopernicusProvider(
+    provider = CopernicusProvider(
         client_id="id", client_secret="secret", client=client, storage=MockStorage()
-    ).fetch_scene(POLYGON, capture_before=date(2026, 7, 12))
-    assert outcome.scene is not None
-    assert outcome.scene.images == {
+    )
+    images, thumbnail = await provider.render_scene_images(
+        POLYGON, capture_date=date(2026, 7, 11), scene_id="S2-scene"
+    )
+    assert images == {
         "true_color": "https://r2.mock.local/satellite/S2-scene/true_color.png",
         "ndvi": "https://r2.mock.local/satellite/S2-scene/ndvi.png",
     }
-    assert outcome.scene.thumbnail_url == "https://r2.mock.local/satellite/S2-scene/true_color.png"
-    # the numeric pipeline is unaffected by (successful) image rendering
-    assert outcome.scene.bands and outcome.scene.bands.nir == 0.45
+    assert thumbnail == "https://r2.mock.local/satellite/S2-scene/true_color.png"
 
 
 async def test_image_storage_failure_never_blocks_the_numeric_scene() -> None:
@@ -237,32 +253,25 @@ async def test_image_storage_failure_never_blocks_the_numeric_scene() -> None:
     client = AsyncMock()
     client.post.side_effect = [
         _token_response(),
-        _scene_search_response(),
-        _stats_response(),
         httpx.Response(200, content=b"PNGDATA-truecolor", request=httpx.Request("POST", "x")),
         httpx.Response(200, content=b"PNGDATA-ndvi", request=httpx.Request("POST", "x")),
     ]
-    outcome = await CopernicusProvider(
+    images, thumbnail = await CopernicusProvider(
         client_id="id", client_secret="secret", client=client, storage=UnavailableStorage()
-    ).fetch_scene(POLYGON, capture_before=date(2026, 7, 12))
-    assert outcome.scene is not None
-    assert outcome.scene.images == {}
-    assert outcome.scene.thumbnail_url is None
-    assert outcome.scene.bands and outcome.scene.bands.nir == 0.45
+    ).render_scene_images(POLYGON, capture_date=date(2026, 7, 11), scene_id="S2-scene")
+    assert images == {}
+    assert thumbnail is None
 
 
 async def test_image_render_http_failure_never_blocks_the_numeric_scene() -> None:
     client = AsyncMock()
     client.post.side_effect = [
         _token_response(),
-        _scene_search_response(),
-        _stats_response(),
         httpx.Response(500, request=httpx.Request("POST", "x")),
         httpx.Response(500, request=httpx.Request("POST", "x")),
     ]
-    outcome = await CopernicusProvider(
+    images, thumbnail = await CopernicusProvider(
         client_id="id", client_secret="secret", client=client, storage=MockStorage()
-    ).fetch_scene(POLYGON, capture_before=date(2026, 7, 12))
-    assert outcome.scene is not None
-    assert outcome.scene.images == {}
-    assert outcome.scene.bands and outcome.scene.bands.nir == 0.45
+    ).render_scene_images(POLYGON, capture_date=date(2026, 7, 11), scene_id="S2-scene")
+    assert images == {}
+    assert thumbnail is None
