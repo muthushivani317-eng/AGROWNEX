@@ -382,7 +382,15 @@ class CopernicusProvider:
             bands = payload["data"][0]["outputs"]["bands"]["bands"]
             values: list[float] = []
             for index in range(5):
-                entry = bands[str(index)] if isinstance(bands, dict) else bands[index]
+                if isinstance(bands, dict):
+                    # Sentinel Hub's Statistical API names unnamed output bands
+                    # B0, B1, ... . Keep the legacy numeric-key fallback for
+                    # previously recorded fixtures/provider-compatible payloads.
+                    entry = bands.get(f"B{index}", bands.get(str(index)))
+                    if entry is None:
+                        return None
+                else:
+                    entry = bands[index]
                 value = entry["stats"]["mean"]
                 if isinstance(value, bool) or not isinstance(value, int | float):
                     return None

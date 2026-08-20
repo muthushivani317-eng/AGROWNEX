@@ -125,11 +125,11 @@ async def test_real_contract_produces_provenance_bound_scene() -> None:
                 "outputs": {
                     "bands": {
                         "bands": {
-                            "0": {"stats": {"mean": 0.06}},
-                            "1": {"stats": {"mean": 0.15}},
-                            "2": {"stats": {"mean": 0.30}},
-                            "3": {"stats": {"mean": 0.45}},
-                            "4": {"stats": {"mean": 0.25}},
+                            "B0": {"stats": {"mean": 0.06}},
+                            "B1": {"stats": {"mean": 0.15}},
+                            "B2": {"stats": {"mean": 0.30}},
+                            "B3": {"stats": {"mean": 0.45}},
+                            "B4": {"stats": {"mean": 0.25}},
                         }
                     }
                 }
@@ -174,11 +174,11 @@ def _stats_response() -> httpx.Response:
                 "outputs": {
                     "bands": {
                         "bands": {
-                            "0": {"stats": {"mean": 0.06}},
-                            "1": {"stats": {"mean": 0.15}},
-                            "2": {"stats": {"mean": 0.30}},
-                            "3": {"stats": {"mean": 0.45}},
-                            "4": {"stats": {"mean": 0.25}},
+                            "B0": {"stats": {"mean": 0.06}},
+                            "B1": {"stats": {"mean": 0.15}},
+                            "B2": {"stats": {"mean": 0.30}},
+                            "B3": {"stats": {"mean": 0.45}},
+                            "B4": {"stats": {"mean": 0.25}},
                         }
                     }
                 }
