@@ -79,6 +79,20 @@ async def test_real_contract_produces_ph_and_organic_carbon_estimates() -> None:
     assert oc.unit == "%"
 
 
+async def test_successful_payload_is_reused_without_another_provider_round() -> None:
+    client = AsyncMock()
+    client.get.return_value = _soilgrids_response()
+    provider = SoilGridsProvider(client=client)
+
+    first = await provider.fetch_remote_estimates(POLYGON)
+    first_round_calls = client.get.await_count
+    second = await provider.fetch_remote_estimates(POLYGON)
+
+    assert first.status == second.status == "available"
+    assert first_round_calls == 5
+    assert client.get.await_count == first_round_calls
+
+
 def _texture_layer(name: str, mean: float) -> dict:
     return {
         "name": name,
@@ -139,7 +153,8 @@ async def test_masked_centroid_falls_back_to_an_interior_field_point() -> None:
     outcome = await SoilGridsProvider(client=client).fetch_remote_estimates(POLYGON)
 
     assert outcome.status == "available"
-    assert client.get.await_count == 2
+    # Centroid and four interior candidates share one bounded concurrent round.
+    assert client.get.await_count == 5
     assert all(estimate.scene_id != "soilgrids:10.7500,79.1500" for estimate in outcome.estimates)
 
 

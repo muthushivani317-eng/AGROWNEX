@@ -11,14 +11,17 @@ selected in ``get_default_provider`` with no change to the rest of the module.
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 from dataclasses import dataclass, field
 from datetime import date
+from functools import lru_cache
 from typing import Any, Protocol
 
 import httpx
 
+from app.core.cache import Cache, InMemoryTTLCache, build_cache
 from app.core.logging import get_logger
 from app.modules.farms.geo import InvalidPolygonError, centroid, extract_ring, validate_ring
 
@@ -142,6 +145,12 @@ class UnavailableSoilProvider:
 # labelled beta, so failures are treated as ordinary and never fatal.
 _SOILGRIDS_RELEASE_DATE = date(2021, 6, 14)  # Poggio et al. 2021 publication date
 _SOILGRIDS_MODEL_VERSION = "ISRIC SoilGrids v2.0 (Poggio et al. 2021)"
+_SOILGRIDS_CACHE_TTL_SECONDS = 7 * 24 * 60 * 60
+
+
+@lru_cache(maxsize=1)
+def _shared_soilgrids_cache() -> Cache:
+    return build_cache(namespace="soilgrids", ttl_seconds=_SOILGRIDS_CACHE_TTL_SECONDS)
 
 
 class SoilGridsProvider:
@@ -182,8 +191,20 @@ class SoilGridsProvider:
         "silt": ("silt_pct", 1.0, "%"),
     }
 
-    def __init__(self, client: httpx.AsyncClient | None = None) -> None:
+    def __init__(
+        self,
+        client: httpx.AsyncClient | None = None,
+        *,
+        cache: Cache | None = None,
+    ) -> None:
         self._client = client
+        # Tests/custom clients remain isolated. Production instances share the
+        # Redis-backed cache selected by CACHE_BACKEND.
+        self._cache = cache or (
+            InMemoryTTLCache(namespace="soilgrids-test", ttl_seconds=60)
+            if client is not None
+            else _shared_soilgrids_cache()
+        )
 
     async def fetch_location_soil(
         self, latitude: float, longitude: float
@@ -225,50 +246,84 @@ class SoilGridsProvider:
         client = self._client
         owns_client = client is None
         if owns_client:
-            client = httpx.AsyncClient(timeout=15.0)
+            # The mobile request budget is 20 seconds. All candidate cells are
+            # fetched concurrently with a bounded provider timeout, rather than
+            # serially consuming up to 75 seconds.
+            client = httpx.AsyncClient(timeout=8.0)
         try:
-            for lat, lon in candidates:
-                params = [("lon", lon), ("lat", lat)]
-                params += [("property", name) for name in self._PROPERTIES]
-                params += [("depth", self.DEPTH_LABEL)]
-                params += [("value", value) for value in ("mean", "Q0.05", "Q0.95")]
-                response = await client.get(self.BASE_URL, params=params)
-                if response.status_code == 429:
-                    return RemoteSoilOutcome(
-                        status="remote_estimation_unavailable", reason="provider_rate_limited"
-                    )
-                if response.status_code != 200:
-                    logger.warning("soilgrids returned status %s", response.status_code)
-                    return RemoteSoilOutcome(
-                        status="remote_estimation_unavailable", reason="provider_error"
-                    )
+            results = await asyncio.gather(
+                *(self._fetch_payload(client, lat=lat, lon=lon) for lat, lon in candidates),
+                return_exceptions=True,
+            )
+            reasons: list[str] = []
+            for (lat, lon), result in zip(candidates, results, strict=True):
+                if isinstance(result, BaseException):
+                    reasons.append("provider_error")
+                    continue
+                payload, reason = result
+                if reason is not None:
+                    reasons.append(reason)
+                    continue
                 try:
-                    estimates = self._parse_response(response.json(), lat=lat, lon=lon, aoi=aoi)
+                    estimates = self._parse_response(payload, lat=lat, lon=lon, aoi=aoi)
                 except Exception:  # never let a schema surprise fabricate or crash
                     logger.warning("soilgrids response could not be parsed", exc_info=True)
-                    return RemoteSoilOutcome(
-                        status="remote_estimation_unavailable", reason="provider_error"
-                    )
+                    reasons.append("provider_error")
+                    continue
                 if estimates:
                     return RemoteSoilOutcome(
                         estimates=tuple(estimates), status="available", reason="none"
                     )
-        except httpx.TimeoutException:
-            logger.warning("soilgrids request timed out")
-            return RemoteSoilOutcome(
-                status="remote_estimation_unavailable", reason="provider_timeout"
-            )
-        except httpx.HTTPError:
-            logger.warning("soilgrids request failed", exc_info=True)
-            return RemoteSoilOutcome(
-                status="remote_estimation_unavailable", reason="provider_error"
-            )
+            if reasons and len(reasons) == len(candidates):
+                reason = (
+                    "provider_rate_limited"
+                    if "provider_rate_limited" in reasons
+                    else "provider_timeout"
+                    if "provider_timeout" in reasons
+                    else "provider_error"
+                )
+                return RemoteSoilOutcome(
+                    status="remote_estimation_unavailable", reason=reason
+                )
         finally:
             if owns_client:
                 await client.aclose()
         return RemoteSoilOutcome(
             status="remote_estimation_unavailable", reason="no_data_for_location"
         )
+
+    async def _fetch_payload(
+        self, client: httpx.AsyncClient, *, lat: float, lon: float
+    ) -> tuple[Any | None, str | None]:
+        cache_key = f"v1:{lat:.7f}:{lon:.7f}"
+        cached = self._cache.get(cache_key)
+        if isinstance(cached, dict):
+            return cached, None
+        params = [("lon", lon), ("lat", lat)]
+        params += [("property", name) for name in self._PROPERTIES]
+        params += [("depth", self.DEPTH_LABEL)]
+        params += [("value", value) for value in ("mean", "Q0.05", "Q0.95")]
+        try:
+            response = await client.get(self.BASE_URL, params=params)
+        except httpx.TimeoutException:
+            logger.warning("soilgrids request timed out")
+            return None, "provider_timeout"
+        except httpx.HTTPError:
+            logger.warning("soilgrids request failed", exc_info=True)
+            return None, "provider_error"
+        if response.status_code == 429:
+            return None, "provider_rate_limited"
+        if response.status_code != 200:
+            logger.warning("soilgrids returned status %s", response.status_code)
+            return None, "provider_error"
+        try:
+            payload = response.json()
+        except ValueError:
+            return None, "provider_error"
+        if not isinstance(payload, dict):
+            return None, "provider_error"
+        self._cache.set(cache_key, payload)
+        return payload, None
 
     def _parse_response(
         self, payload: Any, *, lat: float, lon: float, aoi: dict
