@@ -129,6 +129,20 @@ async def test_masked_location_reports_no_data_never_fabricates() -> None:
     assert outcome.reason == "no_data_for_location"
 
 
+async def test_masked_centroid_falls_back_to_an_interior_field_point() -> None:
+    client = AsyncMock()
+    masked = _soilgrids_response(
+        ph_mean=None, ph_low=None, ph_high=None, soc_mean=None, soc_low=None, soc_high=None
+    )
+    client.get.side_effect = [masked, _soilgrids_response()]
+
+    outcome = await SoilGridsProvider(client=client).fetch_remote_estimates(POLYGON)
+
+    assert outcome.status == "available"
+    assert client.get.await_count == 2
+    assert all(estimate.scene_id != "soilgrids:10.7500,79.1500" for estimate in outcome.estimates)
+
+
 async def test_invalid_aoi_fails_closed_without_a_request() -> None:
     client = AsyncMock()
     outcome = await SoilGridsProvider(client=client).fetch_remote_estimates(

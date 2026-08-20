@@ -24,7 +24,7 @@ from app.modules.satellite.constants import (
     SatelliteProviderName,
     UnavailableReason,
 )
-from app.modules.satellite.engine import BandReflectance, IndexValues
+from app.modules.satellite.engine import BandReflectance, IndexValues, compute_indices
 from app.modules.satellite.waterlogging import WaterloggingEvidence
 
 logger = get_logger("satellite.provider")
@@ -228,6 +228,10 @@ class CopernicusProvider:
             bands = self._parse_band_means(stats_response.json())
             if bands is None:
                 return FetchOutcome(None, UnavailableReason.PROCESSING_ERROR.value)
+            field_indices = compute_indices(bands)
+            spatial_zones = await self._fetch_spatial_zones(
+                token, polygon, capture_date, field_indices
+            )
             return FetchOutcome(
                 ProviderScene(
                     capture_date=capture_date,
@@ -241,6 +245,7 @@ class CopernicusProvider:
                         "acquired_at": captured,
                         "processing_version": "cdse-statistics-v1",
                         "quality": "cloud_masked_l2a",
+                        "spatial_variability_zones": spatial_zones,
                     },
                 )
             )
@@ -249,6 +254,89 @@ class CopernicusProvider:
         except (httpx.HTTPError, ValueError, TypeError, KeyError):
             logger.warning("copernicus request failed", exc_info=True)
             return FetchOutcome(None, UnavailableReason.PROVIDER_ERROR.value)
+
+    async def _fetch_spatial_zones(
+        self,
+        token: str,
+        polygon: dict,
+        capture_date: date,
+        field_indices: IndexValues,
+    ) -> list[dict[str, Any]]:
+        """Measure several real interior sub-AOIs for variability guidance.
+
+        A failed sub-zone is simply omitted; it never downgrades the already
+        valid field-wide numeric scan. Only zones materially different from the
+        field mean are returned, so sampling points are not manufactured for a
+        homogeneous field.
+        """
+        try:
+            coordinates = polygon["coordinates"][0]
+            core = coordinates[:-1] if coordinates[0] == coordinates[-1] else coordinates
+            center_lon = sum(point[0] for point in core) / len(core)
+            center_lat = sum(point[1] for point in core) / len(core)
+            span_lon = max(point[0] for point in core) - min(point[0] for point in core)
+            span_lat = max(point[1] for point in core) - min(point[1] for point in core)
+        except (KeyError, IndexError, TypeError, ZeroDivisionError):
+            return []
+        zones: list[dict[str, Any]] = []
+        for index, vertex in enumerate(core[:4], start=1):
+            lon = (center_lon + float(vertex[0])) / 2
+            lat = (center_lat + float(vertex[1])) / 2
+            half_lon = max(span_lon / 40, 0.00005)
+            half_lat = max(span_lat / 40, 0.00005)
+            geometry = {
+                "type": "Polygon",
+                "coordinates": [[
+                    [lon - half_lon, lat - half_lat],
+                    [lon + half_lon, lat - half_lat],
+                    [lon + half_lon, lat + half_lat],
+                    [lon - half_lon, lat + half_lat],
+                    [lon - half_lon, lat - half_lat],
+                ]],
+            }
+            try:
+                response = await self._post(
+                    self.STATISTICS_URL,
+                    headers={"Authorization": f"Bearer {token}"},
+                    json=self._statistics_request(geometry, capture_date),
+                    timeout=self.timeout,
+                )
+                if response.status_code != 200:
+                    continue
+                zone_bands = self._parse_band_means(response.json())
+                if zone_bands is None:
+                    continue
+                zone_indices = compute_indices(zone_bands)
+            except StopAsyncIteration:
+                break  # exhausted test/client stream; field-wide scan remains valid
+            except (httpx.HTTPError, ValueError, TypeError, KeyError):
+                continue
+            ndvi_delta = self._difference(zone_indices.ndvi, field_indices.ndvi)
+            ndmi_delta = self._difference(zone_indices.ndmi, field_indices.ndmi)
+            if max(abs(ndvi_delta), abs(ndmi_delta)) < 0.03:
+                continue
+            poor = ndvi_delta <= -0.03 or ndmi_delta <= -0.03
+            zones.append(
+                {
+                    "zone_id": f"sat-zone-{index}",
+                    "geometry": geometry,
+                    "variability_class": "lower_vigor_or_moisture" if poor else "higher_vigor_or_moisture",
+                    "observation_class": "poor_performing" if poor else "variable",
+                    "quality": "usable",
+                    "is_sample": False,
+                    "ndvi": zone_indices.ndvi,
+                    "ndmi": zone_indices.ndmi,
+                    "ndvi_delta": round(ndvi_delta, 3),
+                    "ndmi_delta": round(ndmi_delta, 3),
+                }
+            )
+        return zones
+
+    @staticmethod
+    def _difference(value: float | None, baseline: float | None) -> float:
+        if value is None or baseline is None:
+            return 0.0
+        return value - baseline
 
     async def render_scene_images(
         self, polygon: dict, *, capture_date: date, scene_id: str

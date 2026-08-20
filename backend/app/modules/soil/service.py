@@ -488,9 +488,11 @@ class SoilService:
         # this stays a no-op everywhere SoilGrids isn't explicitly turned on.
         soil_ph_remote_evidence: EvidenceObservation | None = None
         soil_texture_remote_evidence: EvidenceObservation | None = None
+        soil_organic_carbon_remote_evidence: EvidenceObservation | None = None
         needs_remote_ph = soil_ph_evidence is None
         needs_remote_texture = not farm.soil_type
-        if (needs_remote_ph or needs_remote_texture) and aoi is not None:
+        needs_remote_carbon = profile is None or profile.organic_carbon is None
+        if (needs_remote_ph or needs_remote_texture or needs_remote_carbon) and aoi is not None:
             try:
                 remote_outcome = await self.provider.fetch_remote_estimates(aoi)
                 if remote_outcome.status == "available":
@@ -509,6 +511,23 @@ class SoilService:
                                 "rating": classify_ph(ph_estimate.value),
                             },
                             reference=ph_estimate.scene_id,
+                        )
+                    carbon_estimate = by_indicator.get("organic_carbon")
+                    if carbon_estimate is not None and needs_remote_carbon:
+                        soil_organic_carbon_remote_evidence = EvidenceObservation(
+                            source=carbon_estimate.provider,
+                            observed_at=datetime.combine(
+                                carbon_estimate.capture_date, datetime.min.time(), tzinfo=UTC
+                            ),
+                            freshness="model_estimate",
+                            quality="usable",
+                            values={
+                                "organic_carbon": carbon_estimate.value,
+                                "uncertainty_low": carbon_estimate.uncertainty_low,
+                                "uncertainty_high": carbon_estimate.uncertainty_high,
+                                "resolution_m": carbon_estimate.resolution_m,
+                            },
+                            reference=carbon_estimate.scene_id,
                         )
                     if needs_remote_texture:
                         clay_estimate = by_indicator.get("clay_pct")
@@ -667,9 +686,26 @@ class SoilService:
 
         waterlogging = await self.satellite.latest_waterlogging_assessment(user.id, farm_id)
         terrain_state = "unavailable"
+        terrain: tuple[EvidenceObservation, ...] = ()
         if aoi is not None:
             try:
-                terrain_state = (await self.terrain_provider.fetch(aoi)).state
+                terrain_outcome = await self.terrain_provider.fetch(aoi)
+                terrain_state = terrain_outcome.state
+                terrain = tuple(
+                    EvidenceObservation(
+                        source=item.source,
+                        observed_at=item.observed_at,
+                        freshness="mapped_elevation",
+                        quality="usable" if item.quality == "screening" else item.quality,
+                        values={
+                            "slope_class": item.slope_class,
+                            "mean_slope_degrees": item.mean_slope_degrees,
+                            "elevation_range_m": item.elevation_range_m,
+                        },
+                        reference=item.reference,
+                    )
+                    for item in terrain_outcome.observations
+                )
             except Exception as exc:
                 logger.info("soil_scan_terrain_unavailable", reason=type(exc).__name__)
         scan = build_scan(
@@ -680,6 +716,7 @@ class SoilService:
                 spatial_zones=spatial_zones,
                 weather=weather,
                 satellite=satellite,
+                terrain=terrain,
                 history=tuple(history_evidence),
                 weather_state=weather_state,
                 satellite_state=satellite_state,
@@ -688,6 +725,7 @@ class SoilService:
                 soil_ec=soil_ec_evidence,
                 soil_ph_remote=soil_ph_remote_evidence,
                 soil_texture_remote=soil_texture_remote_evidence,
+                soil_organic_carbon_remote=soil_organic_carbon_remote_evidence,
                 soil_type=farm.soil_type,
                 # Propagate this service's (possibly test-injected) clock so
                 # SoilScan.generated_at actually reflects it -- see the `now`
@@ -724,7 +762,7 @@ class SoilService:
             provenance={
                 "weather": [self._observation_payload(item) for item in weather],
                 "satellite": [self._observation_payload(item) for item in satellite],
-                "terrain": [],
+                "terrain": [self._observation_payload(item) for item in terrain],
                 "production_mock_used": False,
             },
         )

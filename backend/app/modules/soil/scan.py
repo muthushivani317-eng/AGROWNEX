@@ -29,6 +29,7 @@ class IndicatorCode(str, Enum):
     TEXTURE_LIKELIHOOD = "texture_likelihood"
     SALINITY_RISK = "salinity_risk"
     ORGANIC_MATTER_TREND = "organic_matter_trend"
+    ORGANIC_CARBON_ESTIMATE = "organic_carbon_estimate"
     ACIDITY_PH_RISK = "acidity_ph_risk"
     SMART_SAMPLING_NAVIGATOR = "smart_sampling_navigator"
 
@@ -121,7 +122,9 @@ class ScanInputs:
     # own answer always wins. Also AI_ESTIMATED, never USER_ENTERED, so a
     # global compiled model is never mistaken for what the farmer told us
     # (added 2026-08-19, alongside the pH fallback above).
-    soil_texture_remote: EvidenceObservation | None = None  # values={"texture_class": str, "clay_pct"/"sand_pct"/"silt_pct": float}
+    # values={"texture_class": str, "clay_pct"/"sand_pct"/"silt_pct": float}
+    soil_texture_remote: EvidenceObservation | None = None
+    soil_organic_carbon_remote: EvidenceObservation | None = None
     soil_type: str | None = None
     # Clock to stamp SoilScan.generated_at with. Defaults to None (build_scan
     # falls back to the real wall clock) so every existing caller/test that
@@ -298,6 +301,62 @@ def build_scan(inputs: ScanInputs) -> SoilScan:
             sources=(cover.source,),
             observation_timestamps=(cover.observed_at,),
         )
+    # Erosion/runoff is a screening result from mapped slope, current ground
+    # cover, and recent rainfall. It is deliberately RISK_INFERRED: no claim is
+    # made about measured soil loss or a surveyed drainage path.
+    terrain = next(
+        (
+            item
+            for item in inputs.terrain
+            if item.quality == "usable" and item.values.get("slope_class")
+        ),
+        None,
+    )
+    if terrain is not None:
+        slope_class = str(terrain.values["slope_class"])
+        cover_class = str(cover.values.get("vegetation_health")) if cover is not None else None
+        precipitation = next(
+            (
+                float(item.values["precipitation_mm"])
+                for item in inputs.weather
+                if item.quality == "usable"
+                and isinstance(item.values.get("precipitation_mm"), int | float)
+                and not isinstance(item.values.get("precipitation_mm"), bool)
+            ),
+            None,
+        )
+        sparse_cover = cover_class in {"bare", "very_low", "low"}
+        heavy_rain = precipitation is not None and precipitation >= 10
+        if slope_class == "steep" or (slope_class == "moderate" and (sparse_cover or heavy_rain)):
+            erosion_value = "higher_attention"
+        elif slope_class == "moderate" or sparse_cover or heavy_rain:
+            erosion_value = "moderate_attention"
+        else:
+            erosion_value = "lower_attention"
+        observations = [terrain]
+        if cover is not None:
+            observations.append(cover)
+        weather_observation = next(
+            (item for item in inputs.weather if item.quality == "usable"), None
+        )
+        if weather_observation is not None:
+            observations.append(weather_observation)
+        by_code[IndicatorCode.EROSION_RUNOFF] = ScanIndicator(
+            IndicatorCode.EROSION_RUNOFF,
+            "available",
+            EvidenceClass.RISK_INFERRED,
+            erosion_value,
+            "soil.scan.erosion_runoff.terrain_screening",
+            {
+                "slope_class": slope_class,
+                "mean_slope_degrees": terrain.values.get("mean_slope_degrees"),
+                "elevation_range_m": terrain.values.get("elevation_range_m"),
+                "cover_class": cover_class,
+                "precipitation_mm": precipitation,
+            },
+            sources=tuple(dict.fromkeys(item.source for item in observations)),
+            observation_timestamps=tuple(item.observed_at for item in observations),
+        )
     # Acidity/pH and salinity risk: reuse the farmer's own submitted lab value
     # (already run through SoilEngine.classify_ph / classify_salinity for the
     # dashboard) instead of leaving these permanently stubbed regardless of
@@ -362,6 +421,23 @@ def build_scan(inputs: ScanInputs) -> SoilScan:
             },
             sources=(inputs.soil_texture_remote.source,),
             observation_timestamps=(inputs.soil_texture_remote.observed_at,),
+        )
+    if inputs.soil_organic_carbon_remote is not None:
+        remote_carbon = inputs.soil_organic_carbon_remote
+        by_code[IndicatorCode.ORGANIC_CARBON_ESTIMATE] = ScanIndicator(
+            IndicatorCode.ORGANIC_CARBON_ESTIMATE,
+            "available",
+            EvidenceClass.AI_ESTIMATED,
+            remote_carbon.values.get("organic_carbon"),
+            "soil.scan.organic_carbon_estimate.remote_estimate",
+            {
+                "unit": "%",
+                "uncertainty_low": remote_carbon.values.get("uncertainty_low"),
+                "uncertainty_high": remote_carbon.values.get("uncertainty_high"),
+                "resolution_m": remote_carbon.values.get("resolution_m"),
+            },
+            sources=(remote_carbon.source,),
+            observation_timestamps=(remote_carbon.observed_at,),
         )
     usable_history = sorted(
         (item for item in inputs.history if item.quality == "usable"),

@@ -7,6 +7,7 @@ import httpx
 import pytest
 from app.modules.disease.storage import MockStorage, UnavailableStorage
 from app.modules.satellite.aoi import AoiValidationError, normalize_aoi
+from app.modules.satellite.engine import BandReflectance, compute_indices
 from app.modules.satellite.provider import CopernicusProvider
 
 POLYGON = {
@@ -182,7 +183,7 @@ def test_statistics_request_uses_wgs84_resolution_and_data_mask() -> None:
     assert "dataMask:[v?1:0]" in request["aggregation"]["evalscript"]
 
 
-def _stats_response() -> httpx.Response:
+def _stats_response(*, nir: float = 0.45, swir: float = 0.25) -> httpx.Response:
     stats = {
         "data": [
             {
@@ -192,8 +193,8 @@ def _stats_response() -> httpx.Response:
                             "B0": {"stats": {"mean": 0.06}},
                             "B1": {"stats": {"mean": 0.15}},
                             "B2": {"stats": {"mean": 0.30}},
-                            "B3": {"stats": {"mean": 0.45}},
-                            "B4": {"stats": {"mean": 0.25}},
+                            "B3": {"stats": {"mean": nir}},
+                            "B4": {"stats": {"mean": swir}},
                         }
                     }
                 }
@@ -239,7 +240,32 @@ async def test_available_scene_returns_numeric_data_before_image_rendering() -> 
     assert outcome.scene.images == {}
     assert outcome.scene.thumbnail_url is None
     assert outcome.scene.bands and outcome.scene.bands.nir == 0.45
-    assert client.post.await_count == 3
+    # One best-effort sub-AOI request follows the field-wide statistics call;
+    # this fixture intentionally provides no sub-zone response.
+    assert client.post.await_count == 4
+
+
+async def test_real_sub_aoi_variation_creates_sampling_zone_metadata() -> None:
+    client = AsyncMock()
+    client.post.side_effect = [
+        _stats_response(nir=0.20, swir=0.35),
+        _stats_response(),
+        _stats_response(),
+        _stats_response(),
+    ]
+    provider = CopernicusProvider(client_id="id", client_secret="secret", client=client)
+    field_indices = compute_indices(
+        BandReflectance(blue=0.06, red=0.15, red_edge=0.30, nir=0.45, swir=0.25)
+    )
+
+    zones = await provider._fetch_spatial_zones(
+        "token", POLYGON, date(2026, 7, 11), field_indices
+    )
+
+    assert zones
+    assert zones[0]["zone_id"] == "sat-zone-1"
+    assert zones[0]["observation_class"] == "poor_performing"
+    assert zones[0]["quality"] == "usable"
 
 
 async def test_background_render_stores_true_color_and_ndvi_images() -> None:

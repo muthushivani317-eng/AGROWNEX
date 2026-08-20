@@ -199,21 +199,60 @@ class SoilGridsProvider:
 
     async def fetch_remote_estimates(self, aoi: dict) -> RemoteSoilOutcome:
         try:
-            lat, lon = centroid(validate_ring(extract_ring(aoi)))
+            ring = validate_ring(extract_ring(aoi))
+            center_lat, center_lon = centroid(ring)
         except (InvalidPolygonError, TypeError, ValueError):
             return RemoteSoilOutcome(status="remote_estimation_unavailable", reason="invalid_aoi")
 
-        params = [("lon", lon), ("lat", lat)]
-        params += [("property", name) for name in self._PROPERTIES]
-        params += [("depth", self.DEPTH_LABEL)]
-        params += [("value", value) for value in ("mean", "Q0.05", "Q0.95")]
+        # SoilGrids is a raster and a valid field can have a masked centroid
+        # (water, nodata, or a boundary cell). Try the centroid first, then a
+        # maximum of four points halfway toward distinct field vertices. The
+        # halfway construction keeps fallback points inside ordinary farm
+        # polygons and avoids pretending that one neighbouring cell represents
+        # the whole farm. We stop at the first usable cell to respect ISRIC's
+        # five-requests-per-minute fair-use guidance.
+        candidates = [(center_lat, center_lon)]
+        for lon, lat in ring:
+            candidate = (
+                round((center_lat + lat) / 2, 7),
+                round((center_lon + lon) / 2, 7),
+            )
+            if candidate not in candidates:
+                candidates.append(candidate)
+            if len(candidates) == 5:
+                break
 
         client = self._client
         owns_client = client is None
         if owns_client:
             client = httpx.AsyncClient(timeout=15.0)
         try:
-            response = await client.get(self.BASE_URL, params=params)
+            for lat, lon in candidates:
+                params = [("lon", lon), ("lat", lat)]
+                params += [("property", name) for name in self._PROPERTIES]
+                params += [("depth", self.DEPTH_LABEL)]
+                params += [("value", value) for value in ("mean", "Q0.05", "Q0.95")]
+                response = await client.get(self.BASE_URL, params=params)
+                if response.status_code == 429:
+                    return RemoteSoilOutcome(
+                        status="remote_estimation_unavailable", reason="provider_rate_limited"
+                    )
+                if response.status_code != 200:
+                    logger.warning("soilgrids returned status %s", response.status_code)
+                    return RemoteSoilOutcome(
+                        status="remote_estimation_unavailable", reason="provider_error"
+                    )
+                try:
+                    estimates = self._parse_response(response.json(), lat=lat, lon=lon, aoi=aoi)
+                except Exception:  # never let a schema surprise fabricate or crash
+                    logger.warning("soilgrids response could not be parsed", exc_info=True)
+                    return RemoteSoilOutcome(
+                        status="remote_estimation_unavailable", reason="provider_error"
+                    )
+                if estimates:
+                    return RemoteSoilOutcome(
+                        estimates=tuple(estimates), status="available", reason="none"
+                    )
         except httpx.TimeoutException:
             logger.warning("soilgrids request timed out")
             return RemoteSoilOutcome(
@@ -221,30 +260,15 @@ class SoilGridsProvider:
             )
         except httpx.HTTPError:
             logger.warning("soilgrids request failed", exc_info=True)
-            return RemoteSoilOutcome(status="remote_estimation_unavailable", reason="provider_error")
+            return RemoteSoilOutcome(
+                status="remote_estimation_unavailable", reason="provider_error"
+            )
         finally:
             if owns_client:
                 await client.aclose()
-
-        if response.status_code == 429:
-            return RemoteSoilOutcome(
-                status="remote_estimation_unavailable", reason="provider_rate_limited"
-            )
-        if response.status_code != 200:
-            logger.warning("soilgrids returned status %s", response.status_code)
-            return RemoteSoilOutcome(status="remote_estimation_unavailable", reason="provider_error")
-
-        try:
-            estimates = self._parse_response(response.json(), lat=lat, lon=lon, aoi=aoi)
-        except Exception:  # never let a schema surprise fabricate or crash
-            logger.warning("soilgrids response could not be parsed", exc_info=True)
-            return RemoteSoilOutcome(status="remote_estimation_unavailable", reason="provider_error")
-
-        if not estimates:
-            return RemoteSoilOutcome(
-                status="remote_estimation_unavailable", reason="no_data_for_location"
-            )
-        return RemoteSoilOutcome(estimates=tuple(estimates), status="available", reason="none")
+        return RemoteSoilOutcome(
+            status="remote_estimation_unavailable", reason="no_data_for_location"
+        )
 
     def _parse_response(
         self, payload: Any, *, lat: float, lon: float, aoi: dict
@@ -283,10 +307,14 @@ class SoilGridsProvider:
             low = values.get("Q0.05")
             high = values.get("Q0.95")
 
-            def convert(raw: Any) -> float | None:
+            def convert(
+                raw: Any,
+                divisor: float = float(d_factor),
+                factor: float = extra_factor,
+            ) -> float | None:
                 if not isinstance(raw, int | float):
                     return None
-                return round((raw / d_factor) * extra_factor, 3)
+                return round((raw / divisor) * factor, 3)
 
             estimates.append(
                 RemoteSoilEstimate(

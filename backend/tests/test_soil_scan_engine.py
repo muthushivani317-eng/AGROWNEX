@@ -15,9 +15,9 @@ def _result(code: IndicatorCode, **kwargs):
     return next(item for item in scan.indicators if item.code is code)
 
 
-def test_scan_always_returns_all_eleven_outputs():
+def test_scan_always_returns_all_twelve_outputs():
     scan = build_scan(ScanInputs(aoi_verified=False))
-    assert len(scan.indicators) == 11
+    assert len(scan.indicators) == 12
     assert {item.code for item in scan.indicators} == set(IndicatorCode)
 
 
@@ -37,6 +37,44 @@ def test_drought_stress_is_safe_without_verified_rule():
 
 def test_erosion_is_unavailable_without_terrain():
     assert _result(IndicatorCode.EROSION_RUNOFF).status == "unavailable"
+
+
+def test_erosion_screening_combines_real_terrain_cover_and_rainfall() -> None:
+    observed = datetime(2026, 8, 20, tzinfo=UTC)
+    item = _result(
+        IndicatorCode.EROSION_RUNOFF,
+        terrain=(
+            EvidenceObservation(
+                "open_meteo_elevation",
+                observed,
+                "mapped_elevation",
+                "usable",
+                {"slope_class": "moderate", "mean_slope_degrees": 7.1, "elevation_range_m": 18},
+            ),
+        ),
+        satellite=(
+            EvidenceObservation(
+                "copernicus",
+                observed,
+                "current",
+                "usable",
+                {"vegetation_health": "bare"},
+            ),
+        ),
+        weather=(
+            EvidenceObservation(
+                "open_meteo",
+                observed,
+                "current",
+                "usable",
+                {"precipitation_mm": 12.0},
+            ),
+        ),
+    )
+    assert item.status == "available"
+    assert item.value == "higher_attention"
+    assert item.evidence_class is EvidenceClass.RISK_INFERRED
+    assert item.details["mean_slope_degrees"] == 7.1
 
 
 def test_poor_zones_require_history():
@@ -59,6 +97,28 @@ def test_salinity_never_returns_remote_ec():
 
 def test_organic_matter_trend_requires_repeated_observations():
     assert _result(IndicatorCode.ORGANIC_MATTER_TREND).status == "insufficient_data"
+
+
+def test_remote_organic_carbon_is_estimated_not_measured() -> None:
+    observed = datetime(2021, 6, 14, tzinfo=UTC)
+    item = _result(
+        IndicatorCode.ORGANIC_CARBON_ESTIMATE,
+        soil_organic_carbon_remote=EvidenceObservation(
+            "soilgrids",
+            observed,
+            "model_estimate",
+            "usable",
+            {
+                "organic_carbon": 1.8,
+                "uncertainty_low": 0.8,
+                "uncertainty_high": 3.1,
+                "resolution_m": 250.0,
+            },
+        ),
+    )
+    assert item.value == 1.8
+    assert item.evidence_class is EvidenceClass.AI_ESTIMATED
+    assert item.details["unit"] == "%"
 
 
 def test_acidity_is_risk_only_and_has_no_numeric_ph():
@@ -134,7 +194,7 @@ def test_weather_unavailable_does_not_fail_whole_scan():
             satellite_state="available",
         )
     )
-    assert len(scan.indicators) == 11
+    assert len(scan.indicators) == 12
     assert scan.provider_states["weather"] == "unavailable"
 
 
