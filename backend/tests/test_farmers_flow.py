@@ -10,6 +10,7 @@ from app.modules.auth.exceptions import ProfileNotFoundError
 from app.modules.auth.models import User
 from app.modules.farmers.schemas import (
     FarmerLanguageIn,
+    FarmerMeOut,
     FarmerMeUpdate,
     LanguagesUpdate,
     PreferencesUpdate,
@@ -87,6 +88,11 @@ async def test_update_me_is_idempotent_single_row(db_session):
     assert second.full_name == "Muthu K"
     assert second.language == "en"
     assert second.primary_crop is None
+
+    # Updating expires the server-generated updated_at column.  The service
+    # must reload it before the synchronous response mapper reads the model.
+    response = FarmerMeOut.from_profile(second, user)
+    assert response.updated_at is not None
 
 
 async def test_update_preferences_is_partial(db_session):

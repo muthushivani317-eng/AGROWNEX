@@ -75,6 +75,10 @@ class FarmerService:
         await self.session.flush()
 
         await self._ensure_defaults(profile)
+        # SQLAlchemy expires server-generated/on-update timestamp columns after
+        # a flush.  Refresh while we are still in an awaited service method so
+        # response serialization cannot trigger implicit async database I/O.
+        await self.session.refresh(profile)
         logger.info("Profile saved for user_id=%s", user.id)
         return profile
 
