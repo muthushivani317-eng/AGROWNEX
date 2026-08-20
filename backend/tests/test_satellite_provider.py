@@ -49,26 +49,105 @@ async def test_missing_credentials_fails_closed() -> None:
     assert water.reason == "provider_not_configured"
 
 
-async def test_sentinel_one_discovery_never_fabricates_water_measurement() -> None:
-    client = AsyncMock()
-    client.post.return_value = httpx.Response(
+def _water_stats(mean: float, *, samples: int = 100, no_data: int = 10) -> httpx.Response:
+    return httpx.Response(
         200,
         json={
-            "features": [
-                {"id": "S1-new", "properties": {"datetime": "2026-07-11T05:00:00Z"}},
-                {"id": "S1-old", "properties": {"datetime": "2026-07-01T05:00:00Z"}},
+            "data": [
+                {
+                    "outputs": {
+                        "water": {
+                            "bands": {
+                                "B0": {
+                                    "stats": {
+                                        "mean": mean,
+                                        "sampleCount": samples,
+                                        "noDataCount": no_data,
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             ]
         },
         request=httpx.Request("POST", "https://example.test"),
     )
+
+
+async def test_sentinel_one_comparison_returns_real_screening_evidence() -> None:
+    client = AsyncMock()
+    client.post.side_effect = [
+        _token_response(),
+        httpx.Response(
+            200,
+            json={
+                "features": [
+                    {
+                        "id": "S1-new",
+                        "properties": {
+                            "datetime": "2026-07-11T05:00:00Z",
+                            "sat:relative_orbit": 42,
+                        },
+                    },
+                    {
+                        "id": "S1-old",
+                        "properties": {
+                            "datetime": "2026-07-01T05:00:00Z",
+                            "sat:relative_orbit": 42,
+                        },
+                    },
+                ]
+            },
+            request=httpx.Request("POST", "https://example.test"),
+        ),
+        _water_stats(0.14),
+        _water_stats(0.04),
+    ]
     outcome = await CopernicusProvider(
         client_id="id", client_secret="secret", client=client
     ).fetch_water_evidence(POLYGON, capture_before=date(2026, 7, 12))
     assert outcome.evidence is not None
     assert outcome.evidence.scene_id == "S1-new"
     assert outcome.evidence.baseline_scene_id == "S1-old"
-    assert outcome.evidence.surface_water_change is None
+    assert outcome.evidence.surface_water_change == "increase"
+    assert outcome.evidence.coverage_pct == 90.0
+    assert outcome.evidence.quality_usable is True
     assert outcome.evidence.policy_verified is False
+
+
+def test_water_statistics_request_uses_real_sar_bands_and_terrain_correction() -> None:
+    request = CopernicusProvider._water_statistics_request(POLYGON, "2026-07-11T05:00:00Z")
+    data = request["input"]["data"][0]
+    assert data["type"] == "sentinel-1-grd"
+    assert data["processing"]["orthorectify"] is True
+    assert data["processing"]["backCoeff"] == "GAMMA0_TERRAIN"
+    assert 'bands:["VV","VH","dataMask"]' in request["aggregation"]["evalscript"]
+
+
+async def test_sentinel_one_low_coverage_fails_closed() -> None:
+    client = AsyncMock()
+    client.post.side_effect = [
+        _token_response(),
+        httpx.Response(
+            200,
+            json={
+                "features": [
+                    {"id": "new", "properties": {"datetime": "2026-07-11T05:00:00Z"}},
+                    {"id": "old", "properties": {"datetime": "2026-07-01T05:00:00Z"}},
+                ]
+            },
+            request=httpx.Request("POST", "https://example.test"),
+        ),
+        _water_stats(0.2, samples=100, no_data=60),
+        _water_stats(0.0, samples=100, no_data=60),
+    ]
+    outcome = await CopernicusProvider(
+        client_id="id", client_secret="secret", client=client
+    ).fetch_water_evidence(POLYGON, capture_before=date(2026, 7, 12))
+    assert outcome.evidence is not None
+    assert outcome.evidence.quality_usable is False
+    assert "usable_coverage" in outcome.evidence.evidence_missing
 
 
 async def test_timeout_and_rate_limit_are_stable() -> None:
@@ -258,9 +337,7 @@ async def test_real_sub_aoi_variation_creates_sampling_zone_metadata() -> None:
         BandReflectance(blue=0.06, red=0.15, red_edge=0.30, nir=0.45, swir=0.25)
     )
 
-    zones = await provider._fetch_spatial_zones(
-        "token", POLYGON, date(2026, 7, 11), field_indices
-    )
+    zones = await provider._fetch_spatial_zones("token", POLYGON, date(2026, 7, 11), field_indices)
 
     assert zones
     assert zones[0]["zone_id"] == "sat-zone-1"

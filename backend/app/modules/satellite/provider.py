@@ -185,7 +185,7 @@ class CopernicusProvider:
                     "collections": ["sentinel-2-l2a"],
                     "intersects": polygon,
                     "datetime": (
-                        f"{start.isoformat()}T00:00:00Z/" f"{capture_before.isoformat()}T23:59:59Z"
+                        f"{start.isoformat()}T00:00:00Z/{capture_before.isoformat()}T23:59:59Z"
                     ),
                     "query": {"eo:cloud_cover": {"lte": CLOUD_USABLE_MAX}},
                     "sortby": [{"field": "properties.datetime", "direction": "desc"}],
@@ -286,13 +286,15 @@ class CopernicusProvider:
             half_lat = max(span_lat / 40, 0.00005)
             geometry = {
                 "type": "Polygon",
-                "coordinates": [[
-                    [lon - half_lon, lat - half_lat],
-                    [lon + half_lon, lat - half_lat],
-                    [lon + half_lon, lat + half_lat],
-                    [lon - half_lon, lat + half_lat],
-                    [lon - half_lon, lat - half_lat],
-                ]],
+                "coordinates": [
+                    [
+                        [lon - half_lon, lat - half_lat],
+                        [lon + half_lon, lat - half_lat],
+                        [lon + half_lon, lat + half_lat],
+                        [lon - half_lon, lat + half_lat],
+                        [lon - half_lon, lat - half_lat],
+                    ]
+                ],
             }
             try:
                 response = await self._post(
@@ -320,7 +322,9 @@ class CopernicusProvider:
                 {
                     "zone_id": f"sat-zone-{index}",
                     "geometry": geometry,
-                    "variability_class": "lower_vigor_or_moisture" if poor else "higher_vigor_or_moisture",
+                    "variability_class": "lower_vigor_or_moisture"
+                    if poor
+                    else "higher_vigor_or_moisture",
                     "observation_class": "poor_performing" if poor else "variable",
                     "quality": "usable",
                     "is_sample": False,
@@ -503,14 +507,17 @@ class CopernicusProvider:
     async def fetch_water_evidence(
         self, polygon: dict, *, capture_before: date
     ) -> WaterEvidenceOutcome:
-        """Discover compatible Sentinel-1 scenes without inventing a water metric.
+        """Compare real Sentinel-1 low-backscatter coverage across two acquisitions.
 
-        Surface-water derivation stays disabled until a versioned, expert-reviewed
-        policy is configured; discovery alone is evidence for review, not flooding.
+        This is a cautious screening signal, not a flood-depth measurement or field
+        safety decision. The assessment layer therefore still requires review.
         """
         if not self.client_id or not self.client_secret:
             return WaterEvidenceOutcome(None, UnavailableReason.PROVIDER_NOT_CONFIGURED.value)
         try:
+            token, reason = await self._access_token()
+            if token is None:
+                return WaterEvidenceOutcome(None, reason)
             start = capture_before - timedelta(days=ACQUISITION_LOOKBACK_DAYS * 2)
             response = await self._post(
                 self.STAC_URL,
@@ -518,10 +525,10 @@ class CopernicusProvider:
                     "collections": ["sentinel-1-grd"],
                     "intersects": polygon,
                     "datetime": (
-                        f"{start.isoformat()}T00:00:00Z/" f"{capture_before.isoformat()}T23:59:59Z"
+                        f"{start.isoformat()}T00:00:00Z/{capture_before.isoformat()}T23:59:59Z"
                     ),
                     "sortby": [{"field": "properties.datetime", "direction": "desc"}],
-                    "limit": 2,
+                    "limit": 20,
                 },
                 timeout=self.timeout,
             )
@@ -532,16 +539,47 @@ class CopernicusProvider:
                 return WaterEvidenceOutcome(None, UnavailableReason.PROVIDER_ERROR.value)
             if not features:
                 return WaterEvidenceOutcome(None, UnavailableReason.NO_IMAGERY.value)
-            current = features[0]
+            current, baseline = self._compatible_water_scenes(features)
+            if current is None:
+                return WaterEvidenceOutcome(None, UnavailableReason.PROVIDER_ERROR.value)
             scene_id = current.get("id")
             captured = current.get("properties", {}).get("datetime")
             if not isinstance(scene_id, str) or not isinstance(captured, str):
                 return WaterEvidenceOutcome(None, UnavailableReason.PROVIDER_ERROR.value)
-            baseline = features[1].get("id") if len(features) > 1 else None
-            baseline_id = baseline if isinstance(baseline, str) else None
-            missing = ["verified_surface_water_change", "usable_coverage"]
+            baseline_id = baseline.get("id") if baseline else None
+            baseline_id = baseline_id if isinstance(baseline_id, str) else None
+            missing: list[str] = []
             if baseline_id is None:
                 missing.append("baseline_scene")
+                return WaterEvidenceOutcome(
+                    WaterloggingEvidence(
+                        observed_at=datetime.fromisoformat(
+                            captured.replace("Z", "+00:00")
+                        ).astimezone(UTC),
+                        source="copernicus_sentinel_1",
+                        scene_id=scene_id,
+                        baseline_scene_id=None,
+                        coverage_pct=None,
+                        evidence_present=["current_sar_scene"],
+                        evidence_missing=missing,
+                    )
+                )
+            baseline_captured = baseline.get("properties", {}).get("datetime")
+            if not isinstance(baseline_captured, str):
+                return WaterEvidenceOutcome(None, UnavailableReason.PROVIDER_ERROR.value)
+            current_stats = await self._water_statistics(token, polygon, captured)
+            baseline_stats = await self._water_statistics(token, polygon, baseline_captured)
+            if current_stats is None or baseline_stats is None:
+                return WaterEvidenceOutcome(None, UnavailableReason.PROCESSING_ERROR.value)
+            current_fraction, current_coverage = current_stats
+            baseline_fraction, baseline_coverage = baseline_stats
+            usable_coverage = min(current_coverage, baseline_coverage)
+            quality_usable = usable_coverage >= 60.0
+            if not quality_usable:
+                missing.append("usable_coverage")
+            # Five percentage points avoids interpreting ordinary SAR speckle as
+            # a field-scale water change. It remains an unverified screening rule.
+            change = "increase" if current_fraction - baseline_fraction >= 0.05 else "none"
             return WaterEvidenceOutcome(
                 WaterloggingEvidence(
                     observed_at=datetime.fromisoformat(captured.replace("Z", "+00:00")).astimezone(
@@ -550,11 +588,16 @@ class CopernicusProvider:
                     source="copernicus_sentinel_1",
                     scene_id=scene_id,
                     baseline_scene_id=baseline_id,
-                    coverage_pct=None,
-                    evidence_present=["current_sar_scene"]
-                    + (["baseline_sar_scene"] if baseline_id else []),
+                    coverage_pct=round(usable_coverage, 1),
+                    evidence_present=[
+                        "current_sar_scene",
+                        "baseline_sar_scene",
+                        "surface_water_change",
+                        "compatible_baseline",
+                    ],
                     evidence_missing=missing,
-                    quality_usable=False,
+                    surface_water_change=change,
+                    quality_usable=quality_usable,
                     policy_verified=False,
                 )
             )
@@ -563,6 +606,131 @@ class CopernicusProvider:
         except (httpx.HTTPError, ValueError, TypeError, KeyError):
             logger.warning("copernicus water evidence request failed", exc_info=True)
             return WaterEvidenceOutcome(None, UnavailableReason.PROVIDER_ERROR.value)
+
+    @staticmethod
+    def _compatible_water_scenes(features: list[Any]) -> tuple[dict | None, dict | None]:
+        valid = [
+            item
+            for item in features
+            if isinstance(item, dict)
+            and isinstance(item.get("id"), str)
+            and isinstance(item.get("properties", {}).get("datetime"), str)
+        ]
+        if not valid:
+            return None, None
+        current = valid[0]
+        properties = current["properties"]
+        compatibility_keys = (
+            "sat:relative_orbit",
+            "sat:orbit_state",
+            "sar:instrument_mode",
+            "sar:polarizations",
+        )
+        baseline = next(
+            (
+                item
+                for item in valid[1:]
+                if all(
+                    properties.get(key) is None
+                    or item["properties"].get(key) == properties.get(key)
+                    for key in compatibility_keys
+                )
+            ),
+            None,
+        )
+        return current, baseline
+
+    @staticmethod
+    def _water_statistics_request(polygon: dict, captured: str) -> dict[str, Any]:
+        captured_date = datetime.fromisoformat(captured.replace("Z", "+00:00")).date()
+        next_day = captured_date + timedelta(days=1)
+        period = {
+            "from": f"{captured_date.isoformat()}T00:00:00Z",
+            "to": f"{next_day.isoformat()}T00:00:00Z",
+        }
+        evalscript = """
+//VERSION=3
+function setup(){
+  return {
+    input:[{bands:["VV","VH","dataMask"]}],
+    output:[
+      {id:"water",bands:1,sampleType:"FLOAT32"},
+      {id:"dataMask",bands:1}
+    ]
+  };
+}
+function evaluatePixel(s){
+  let vv=10*Math.log(s.VV+0.000001)/Math.LN10;
+  let vh=10*Math.log(s.VH+0.000001)/Math.LN10;
+  let water=vv<-15&&vh<-20?1:0;
+  return {water:[water],dataMask:[s.dataMask]};
+}
+"""
+        return {
+            "input": {
+                "bounds": {
+                    "geometry": polygon,
+                    "properties": {"crs": "http://www.opengis.net/def/crs/EPSG/0/4326"},
+                },
+                "data": [
+                    {
+                        "type": "sentinel-1-grd",
+                        "dataFilter": {
+                            "timeRange": period,
+                            "acquisitionMode": "IW",
+                            "polarization": "DV",
+                            "resolution": "HIGH",
+                        },
+                        "processing": {
+                            "orthorectify": True,
+                            "demInstance": "COPERNICUS_30",
+                            "backCoeff": "GAMMA0_TERRAIN",
+                            "speckleFilter": {
+                                "type": "LEE",
+                                "windowSizeX": 5,
+                                "windowSizeY": 5,
+                            },
+                        },
+                    }
+                ],
+            },
+            "aggregation": {
+                "timeRange": period,
+                "aggregationInterval": {"of": "P1D"},
+                "resx": 0.0001,
+                "resy": 0.0001,
+                "evalscript": evalscript,
+            },
+        }
+
+    async def _water_statistics(
+        self, token: str, polygon: dict, captured: str
+    ) -> tuple[float, float] | None:
+        response = await self._post(
+            self.STATISTICS_URL,
+            headers={"Authorization": f"Bearer {token}"},
+            json=self._water_statistics_request(polygon, captured),
+            timeout=self.timeout,
+        )
+        if self._failure(response):
+            return None
+        try:
+            stats = response.json()["data"][0]["outputs"]["water"]["bands"]["B0"]["stats"]
+            mean = stats["mean"]
+            samples = stats["sampleCount"]
+            no_data = stats["noDataCount"]
+            if any(
+                isinstance(value, bool) or not isinstance(value, int | float)
+                for value in (mean, samples, no_data)
+            ):
+                return None
+            total = float(samples)
+            valid = total - float(no_data)
+            if total <= 0 or valid < 0:
+                return None
+            return float(mean), 100.0 * valid / total
+        except (KeyError, IndexError, TypeError, ZeroDivisionError):
+            return None
 
 
 SentinelProvider = CopernicusProvider
