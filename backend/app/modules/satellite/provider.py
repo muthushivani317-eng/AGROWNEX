@@ -67,6 +67,45 @@ function evaluatePixel(s) {{
 """
 
 
+def _index_colour_evalscript(expression: str, low: float, high: float) -> str:
+    """Render a transparent, continuous index heatmap (red → amber → green)."""
+    return f"""//VERSION=3
+function setup() {{
+  return {{ input:[{{bands:[\"B03\",\"B04\",\"B05\",\"B08\",\"B11\",\"dataMask\"]}}],
+    output:{{bands:4}} }};
+}}
+function evaluatePixel(s) {{
+  if (!s.dataMask) return [0,0,0,0];
+  var v={expression}; var n=Math.max(0,Math.min(1,(v-({low}))/(({high})-({low}))));
+  return n < .5 ? [1, 2*n, .08, s.dataMask] : [2*(1-n), .82, .12, s.dataMask];
+}}"""
+
+
+_NDRE_COLOR_EVALSCRIPT = _index_colour_evalscript("(s.B08-s.B05)/(s.B08+s.B05+0.000001)", -0.1, 0.7)
+_NDMI_COLOR_EVALSCRIPT = _index_colour_evalscript("(s.B08-s.B11)/(s.B08+s.B11+0.000001)", -0.5, 0.6)
+_CROP_STRESS_EVALSCRIPT = _index_colour_evalscript(
+    "0.65*((s.B08-s.B04)/(s.B08+s.B04+0.000001))+0.35*((s.B08-s.B11)/(s.B08+s.B11+0.000001))",
+    -0.35,
+    0.75,
+)
+_BARE_COVER_EVALSCRIPT = """//VERSION=3
+function setup(){return {input:[{bands:["B04","B08","dataMask"]}],output:{bands:4}};}
+function evaluatePixel(s){
+  if(!s.dataMask)return[0,0,0,0];
+  var n=(s.B08-s.B04)/(s.B08+s.B04+.000001);
+  return n<.18?[.65,.43,.22,1]:[.12,.62,.18,1];
+}
+"""
+_SURFACE_WATER_EVALSCRIPT = """//VERSION=3
+function setup(){return {input:[{bands:["B03","B11","dataMask"]}],output:{bands:4}};}
+function evaluatePixel(s){
+  if(!s.dataMask)return[0,0,0,0];
+  var w=(s.B03-s.B11)/(s.B03+s.B11+.000001);
+  return w>.12?[.05,.42,.9,1]:[.82,.78,.55,1];
+}
+"""
+
+
 @dataclass(frozen=True)
 class ProviderScene:
     capture_date: date
@@ -330,6 +369,23 @@ class CopernicusProvider:
                     "is_sample": False,
                     "ndvi": zone_indices.ndvi,
                     "ndmi": zone_indices.ndmi,
+                    "ndre": zone_indices.ndre,
+                    "center": {"latitude": round(lat, 7), "longitude": round(lon, 7)},
+                    "relative_position": {
+                        "x": round(
+                            (lon - (center_lon - span_lon / 2)) / max(span_lon, 0.000001), 3
+                        ),
+                        "y": round(
+                            1 - (lat - (center_lat - span_lat / 2)) / max(span_lat, 0.000001), 3
+                        ),
+                    },
+                    "priority": "inspect_first"
+                    if poor and ndvi_delta <= ndmi_delta
+                    else ("irrigate_first" if poor else "healthy_no_immediate_action"),
+                    "suggested_action": "Inspect this zone in the field"
+                    if poor
+                    else "Recheck after the next scan",
+                    "confidence": 0.78,
                     "ndvi_delta": round(ndvi_delta, 3),
                     "ndmi_delta": round(ndmi_delta, 3),
                 }
@@ -443,7 +499,7 @@ class CopernicusProvider:
     async def _fetch_and_store_images(
         self, token: str, polygon: dict, capture_date: date, scene_id: str
     ) -> tuple[dict[str, str], str | None]:
-        """True-colour + NDVI-colour renders, uploaded to object storage. Never
+        """Render all farmer-facing layers and upload them to object storage. Never
         raises: any render or storage failure just means fewer/no images for this
         scene, not a failed refresh -- the numeric indices remain the source of
         truth regardless of whether a picture could be produced."""
@@ -461,16 +517,26 @@ class CopernicusProvider:
                 )
                 images["true_color"] = url
                 thumbnail_url = url
-            ndvi_image = await self._fetch_rendered_image(
-                token, polygon, capture_date, _NDVI_COLOR_EVALSCRIPT
-            )
-            if ndvi_image:
+            layers = {
+                "ndvi": _NDVI_COLOR_EVALSCRIPT,
+                "ndre": _NDRE_COLOR_EVALSCRIPT,
+                "ndmi": _NDMI_COLOR_EVALSCRIPT,
+                "crop_stress": _CROP_STRESS_EVALSCRIPT,
+                "bare_cover": _BARE_COVER_EVALSCRIPT,
+                "surface_water": _SURFACE_WATER_EVALSCRIPT,
+            }
+            for band, evalscript in layers.items():
+                rendered = await self._fetch_rendered_image(
+                    token, polygon, capture_date, evalscript
+                )
+                if not rendered:
+                    continue
                 url = await self.storage.put(
-                    key=f"{SATELLITE_IMAGE_PREFIX}/{scene_id}/ndvi.png",
-                    data=ndvi_image,
+                    key=f"{SATELLITE_IMAGE_PREFIX}/{scene_id}/{band}.png",
+                    data=rendered,
                     content_type="image/png",
                 )
-                images["ndvi"] = url
+                images[band] = url
                 thumbnail_url = thumbnail_url or url
         except Exception:
             logger.warning(

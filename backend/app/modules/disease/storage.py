@@ -152,9 +152,22 @@ class R2Client:
 
 
 def get_default_storage() -> ObjectStorage:
-    if R2_ACCOUNT_ID and R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY:
+    has_r2_credentials = bool(
+        R2_ACCOUNT_ID and R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY
+    )
+    has_public_url = R2_PUBLIC_BASE_URL.startswith("https://")
+    if has_r2_credentials and has_public_url:
         logger.info("object storage: Cloudflare R2")
         return R2Client()
+    if has_r2_credentials and not has_public_url:
+        # The S3-compatible cloudflarestorage.com endpoint accepts authenticated
+        # uploads but is not a public object URL. Returning it made Android render
+        # an empty image frame. Fail closed until an R2 custom domain or r2.dev
+        # public base URL is configured.
+        logger.warning(
+            "object storage unavailable: R2_PUBLIC_BASE_URL must be a public HTTPS URL"
+        )
+        return UnavailableStorage()
     if test_mocks_enabled():
         logger.info("object storage: explicit development/test mock")
         return MockStorage()

@@ -5,6 +5,7 @@ from app.modules.disease import storage as storage_module
 from app.modules.disease.controlled_test_reports import persist_controlled_test_report
 from app.modules.disease.storage import (
     MockStorage,
+    R2Client,
     StorageUnavailableError,
     UnavailableStorage,
     get_default_storage,
@@ -37,6 +38,31 @@ def test_mock_storage_requires_explicit_test_opt_in(monkeypatch: pytest.MonkeyPa
     monkeypatch.setenv("AGROWAI_ENABLE_TEST_MOCKS", "true")
 
     assert isinstance(get_default_storage(), MockStorage)
+
+
+def test_r2_credentials_without_public_base_url_fail_closed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(storage_module, "R2_ACCOUNT_ID", "account")
+    monkeypatch.setattr(storage_module, "R2_ACCESS_KEY_ID", "access")
+    monkeypatch.setattr(storage_module, "R2_SECRET_ACCESS_KEY", "secret")
+    monkeypatch.setattr(storage_module, "R2_PUBLIC_BASE_URL", "")
+    monkeypatch.setenv("APP_ENV", "production")
+
+    assert isinstance(get_default_storage(), UnavailableStorage)
+
+
+def test_r2_client_normalizes_public_base_url() -> None:
+    client = R2Client(
+        account_id="account",
+        access_key="access",
+        secret_key="secret",
+        bucket="agrowai",
+        public_base_url="https://public.example/",
+    )
+
+    assert client.bucket == "agrowai"
+    assert client.public_base_url == "https://public.example"
 
 
 @pytest.mark.asyncio

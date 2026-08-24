@@ -103,6 +103,9 @@ class SatelliteBand(StrEnum):
     NDRE = "ndre"
     NDMI = "ndmi"
     MOISTURE = "moisture"
+    CROP_STRESS = "crop_stress"
+    BARE_COVER = "bare_cover"
+    SURFACE_WATER = "surface_water"
 
 
 class AlertCategory(StrEnum):

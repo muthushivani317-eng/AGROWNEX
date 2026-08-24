@@ -345,12 +345,27 @@ async def test_real_sub_aoi_variation_creates_sampling_zone_metadata() -> None:
     assert zones[0]["quality"] == "usable"
 
 
-async def test_background_render_stores_true_color_and_ndvi_images() -> None:
+async def test_background_render_stores_all_supported_satellite_layers() -> None:
     client = AsyncMock()
+    layer_names = [
+        "true_color",
+        "ndvi",
+        "ndre",
+        "ndmi",
+        "crop_stress",
+        "bare_cover",
+        "surface_water",
+    ]
     client.post.side_effect = [
         _token_response(),
-        httpx.Response(200, content=b"PNGDATA-truecolor", request=httpx.Request("POST", "x")),
-        httpx.Response(200, content=b"PNGDATA-ndvi", request=httpx.Request("POST", "x")),
+        *[
+            httpx.Response(
+                200,
+                content=f"PNGDATA-{layer}".encode(),
+                request=httpx.Request("POST", "x"),
+            )
+            for layer in layer_names
+        ],
     ]
     provider = CopernicusProvider(
         client_id="id", client_secret="secret", client=client, storage=MockStorage()
@@ -359,8 +374,7 @@ async def test_background_render_stores_true_color_and_ndvi_images() -> None:
         POLYGON, capture_date=date(2026, 7, 11), scene_id="S2-scene"
     )
     assert images == {
-        "true_color": "https://r2.mock.local/satellite/S2-scene/true_color.png",
-        "ndvi": "https://r2.mock.local/satellite/S2-scene/ndvi.png",
+        layer: f"https://r2.mock.local/satellite/S2-scene/{layer}.png" for layer in layer_names
     }
     assert thumbnail == "https://r2.mock.local/satellite/S2-scene/true_color.png"
 

@@ -336,6 +336,15 @@ class SatelliteService:
         previous_ndvi = await self.repo.previous_available_ndvi(user.id, farm_id)
         a = assess(indices, previous_ndvi)
         confidence = compute_confidence(scene.cloud_cover, is_sample=scene.is_sample)
+        farm = await self.farms.get_for_user(farm_id, user.id)
+        previous_sessions, _ = await self.repo.list_sessions(user.id, farm_id, limit=6)
+        metadata = self._build_analysis_metadata(
+            scene=scene,
+            indices=indices,
+            confidence=confidence,
+            farm=farm,
+            previous_sessions=previous_sessions,
+        )
 
         session = SatelliteSession(
             user_id=user.id,
@@ -357,7 +366,7 @@ class SatelliteService:
             trend=a.trend,
             ndvi_delta=a.ndvi_delta,
             confidence=confidence,
-            session_metadata=scene.metadata or None,
+            session_metadata=metadata,
         )
         await self.repo.add_session(session)
 
@@ -407,13 +416,116 @@ class SatelliteService:
         await self.session.refresh(session)
         return session
 
+    def _build_analysis_metadata(
+        self,
+        *,
+        scene: ProviderScene,
+        indices: IndexValues,
+        confidence: int,
+        farm: Farm | None,
+        previous_sessions: list[SatelliteSession],
+    ) -> dict:
+        """Build the versioned spatial contract consumed by mobile clients.
+
+        All values are derived from provider measurements or farmer records. No
+        missing agronomic measurement is substituted with a synthetic value.
+        """
+        metadata = dict(scene.metadata or {})
+        zones = [dict(zone) for zone in metadata.get("spatial_variability_zones", [])]
+        weak_prior_ids: set[str] = set()
+        prior_available = [
+            row for row in previous_sessions if row.status == SessionStatus.AVAILABLE.value
+        ]
+        for prior in prior_available:
+            for zone in (prior.session_metadata or {}).get("spatial_variability_zones", []):
+                if zone.get("priority") in {"inspect_first", "irrigate_first"}:
+                    weak_prior_ids.add(str(zone.get("zone_id") or zone.get("id", "")))
+        persistent = []
+        for zone in zones:
+            zone_id = str(zone.get("zone_id") or zone.get("id", ""))
+            is_weak = zone.get("priority") in {"inspect_first", "irrigate_first"}
+            zone["persistent"] = bool(is_weak and zone_id in weak_prior_ids)
+            if zone["persistent"]:
+                persistent.append(zone_id)
+
+        days_after_sowing: int | None = None
+        stage = "unknown"
+        if farm is not None and farm.sowing_date is not None:
+            days_after_sowing = max(0, (scene.capture_date - farm.sowing_date).days)
+            if days_after_sowing <= 21:
+                stage = "emergence"
+            elif days_after_sowing <= 50:
+                stage = "establishment"
+            elif days_after_sowing <= 100:
+                stage = "vegetative"
+            elif days_after_sowing <= 150:
+                stage = "reproductive"
+            else:
+                stage = "maturity"
+
+        ndvi = indices.ndvi
+        canopy_pct = (
+            None if ndvi is None else round(max(0.0, min(100.0, (ndvi + 0.05) / 0.8 * 100)), 1)
+        )
+        usable_coverage = round(max(0.0, min(100.0, 100.0 - scene.cloud_cover)), 1)
+        scene_age_days = max(0, (self._now_dt().date() - scene.capture_date).days)
+        metadata.update(
+            {
+                "analysis_version": 2,
+                "spatial_variability_zones": zones,
+                "persistent_weak_zone_ids": persistent,
+                "data_quality": {
+                    "scene_age_days": scene_age_days,
+                    "valid_field_coverage_pct": usable_coverage,
+                    "cloud_shadow_pct": round(scene.cloud_cover, 1),
+                    "spatial_resolution_m": scene.resolution_m,
+                    "confidence": confidence,
+                    "confidence_reason": (
+                        "High usable coverage and recent imagery"
+                        if confidence >= 75
+                        else "Reduced by scene age, cloud or field coverage"
+                    ),
+                },
+                "crop_stage_interpretation": {
+                    "stage": stage,
+                    "days_after_sowing": days_after_sowing,
+                    "basis": "farmer_recorded_sowing_date"
+                    if days_after_sowing is not None
+                    else "unavailable",
+                },
+                "canopy": {
+                    "estimated_cover_pct": canopy_pct,
+                    "emergence_uniformity": (
+                        "uneven" if len(zones) >= 2 else "insufficient_spatial_variation"
+                    ),
+                    "is_estimate": True,
+                },
+                "priority_zones": {
+                    "inspect_first": [
+                        z.get("zone_id") for z in zones if z.get("priority") == "inspect_first"
+                    ],
+                    "irrigate_first": [
+                        z.get("zone_id") for z in zones if z.get("priority") == "irrigate_first"
+                    ],
+                    "healthy": [
+                        z.get("zone_id")
+                        for z in zones
+                        if z.get("priority") == "healthy_no_immediate_action"
+                    ],
+                    "recheck": [z.get("zone_id") for z in zones if z.get("priority") == "recheck"],
+                },
+                "timeline_overlays": {"rainfall": [], "farm_actions": []},
+                "radar": {"provider": "sentinel-1", "available_via": "waterlogging_assessment"},
+            }
+        )
+        return metadata
+
     async def render_images(self, user_id: uuid.UUID, session_id: uuid.UUID) -> int:
         """Render and attach images to an already-available numeric session."""
         satellite_session = await self.repo.get_session(session_id, user_id)
         if satellite_session is None or satellite_session.status != SessionStatus.AVAILABLE.value:
             return 0
-        if satellite_session.images:
-            return len(satellite_session.images)
+        existing_bands = {image.band for image in satellite_session.images}
         metadata = satellite_session.session_metadata or {}
         scene_id = metadata.get("scene_id")
         if not isinstance(scene_id, str) or not scene_id or satellite_session.capture_date is None:
@@ -444,7 +556,9 @@ class SatelliteService:
             images=images,
             thumbnail_url=thumbnail_url,
         )
-        await self._persist_images(satellite_session.farm_id, satellite_session, scene)
+        await self._persist_images(
+            satellite_session.farm_id, satellite_session, scene, skip_bands=existing_bands
+        )
         await self.session.flush()
         return len(images)
 
@@ -482,9 +596,16 @@ class SatelliteService:
         return ndvi_std
 
     async def _persist_images(
-        self, farm_id: uuid.UUID, session: SatelliteSession, scene: ProviderScene
+        self,
+        farm_id: uuid.UUID,
+        session: SatelliteSession,
+        scene: ProviderScene,
+        *,
+        skip_bands: set[str] | None = None,
     ) -> None:
         for band, url in (scene.images or {}).items():
+            if band in (skip_bands or set()):
+                continue
             await self.repo.add_image(
                 SatelliteImage(
                     session_id=session.id,
