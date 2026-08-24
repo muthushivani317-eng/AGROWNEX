@@ -10,6 +10,9 @@ from __future__ import annotations
 
 import uuid
 
+from arq.connections import RedisSettings, create_pool
+
+from app.core.config import settings
 from app.core.database import SessionLocal
 from app.core.logging import get_logger
 from app.modules.satellite.service import SatelliteService
@@ -17,7 +20,12 @@ from app.modules.satellite.service import SatelliteService
 logger = get_logger("satellite.jobs")
 
 
-async def render_satellite_images(session_id: uuid.UUID, user_id: uuid.UUID) -> None:
+async def render_satellite_images(
+    session_id: uuid.UUID,
+    user_id: uuid.UUID,
+    *,
+    raise_on_error: bool = False,
+) -> None:
     async with SessionLocal() as session:
         try:
             attached = await SatelliteService(session).render_images(user_id, session_id)
@@ -27,6 +35,35 @@ async def render_satellite_images(session_id: uuid.UUID, user_id: uuid.UUID) -> 
                 session_id,
                 attached,
             )
-        except Exception:  # best effort: numeric session is already durable
+        except Exception:  # numeric session is already durable
             await session.rollback()
             logger.exception("satellite image enrichment failed: session=%s", session_id)
+            if raise_on_error:
+                raise
+
+
+async def enqueue_satellite_image_render(session_id: uuid.UUID, user_id: uuid.UUID) -> bool:
+    """Persist an image-render job in Redis for the dedicated ARQ worker.
+
+    UUIDs are serialized as strings so the Redis payload remains portable across
+    deployments.  ``False`` lets the API retain its best-effort local fallback
+    during a short Redis outage without hiding the failure from logs.
+    """
+    redis = None
+    try:
+        redis = await create_pool(RedisSettings.from_dsn(settings.redis_url))
+        job = await redis.enqueue_job(
+            "render_satellite_images_job",
+            str(session_id),
+            str(user_id),
+            _job_id=f"satellite-images:{session_id}",
+        )
+        if job is None:
+            logger.info("satellite image job already queued: session=%s", session_id)
+        return True
+    except Exception:
+        logger.exception("could not enqueue satellite image job: session=%s", session_id)
+        return False
+    finally:
+        if redis is not None:
+            await redis.close()

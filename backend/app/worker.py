@@ -32,6 +32,7 @@ from app.modules.notifications.jobs import (
     retry_failed_notifications as _retry_failed_notifications,
 )
 from app.modules.produce.jobs import expire_stale_offers as _expire_stale_offers
+from app.modules.satellite.jobs import render_satellite_images as _render_satellite_images
 
 logger = get_logger("worker")
 
@@ -64,6 +65,18 @@ async def expire_stale_offers(ctx: dict[str, Any]) -> dict:
     return await _run(_expire_stale_offers)
 
 
+async def render_satellite_images_job(
+    ctx: dict[str, Any], session_id: str, user_id: str
+) -> dict[str, Any]:
+    """Render and publish satellite layers outside the API process."""
+    import uuid
+
+    await _render_satellite_images(
+        uuid.UUID(session_id), uuid.UUID(user_id), raise_on_error=True
+    )
+    return {"session_id": session_id, "rendered": True}
+
+
 class WorkerSettings:
     redis_settings = RedisSettings.from_dsn(settings.redis_url)
     functions = [
@@ -71,6 +84,7 @@ class WorkerSettings:
         evaluate_weather_alerts,
         retry_failed_notifications,
         expire_stale_offers,
+        render_satellite_images_job,
     ]
     cron_jobs = [
         cron(refresh_market_prices, hour=set(range(0, 24, 2)), minute=0),

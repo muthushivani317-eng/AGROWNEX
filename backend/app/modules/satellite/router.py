@@ -171,9 +171,14 @@ async def refresh(
         and session.session_metadata.get("scene_id")
         and not session.images
     ):
-        from app.modules.satellite.jobs import render_satellite_images
+        from app.modules.satellite.jobs import (
+            enqueue_satellite_image_render,
+            render_satellite_images,
+        )
 
-        background_tasks.add_task(render_satellite_images, session.id, current_user.id)
+        queued = await enqueue_satellite_image_render(session.id, current_user.id)
+        if not queued:
+            background_tasks.add_task(render_satellite_images, session.id, current_user.id)
     return success(SatelliteSessionOut.from_session(session), message="Satellite refresh complete")
 
 
