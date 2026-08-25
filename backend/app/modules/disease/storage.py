@@ -4,6 +4,7 @@
 with a dependency-free SigV4 signer. Missing credentials fail closed. The mock
 remains available only through explicit test/development opt-in.
 """
+
 from __future__ import annotations
 
 import datetime as _dt
@@ -103,8 +104,7 @@ class R2Client:
         )
         signed_headers = "content-type;host;x-amz-content-sha256;x-amz-date"
         canonical_request = (
-            f"PUT\n{canonical_uri}\n\n{canonical_headers}\n"
-            f"{signed_headers}\n{payload_hash}"
+            f"PUT\n{canonical_uri}\n\n{canonical_headers}\n" f"{signed_headers}\n{payload_hash}"
         )
         scope = f"{stamp}/{self.region}/{self.service}/aws4_request"
         string_to_sign = (
@@ -116,9 +116,7 @@ class R2Client:
         k_region = _sign(k_date, self.region)
         k_service = _sign(k_region, self.service)
         k_signing = _sign(k_service, "aws4_request")
-        signature = hmac.new(
-            k_signing, string_to_sign.encode(), hashlib.sha256
-        ).hexdigest()
+        signature = hmac.new(k_signing, string_to_sign.encode(), hashlib.sha256).hexdigest()
         return (
             f"AWS4-HMAC-SHA256 Credential={self.access_key}/{scope}, "
             f"SignedHeaders={signed_headers}, Signature={signature}"
@@ -134,27 +132,33 @@ class R2Client:
             "Host": self.host,
             "x-amz-content-sha256": payload_hash,
             "x-amz-date": amz_date,
-            "Authorization": self._authorization(
-                key, data, content_type, amz_date, stamp
-            ),
+            "Authorization": self._authorization(key, data, content_type, amz_date, stamp),
         }
         url = f"https://{self.host}/{quote(f'{self.bucket}/{key}', safe='/')}"
+        public_base = self.public_base_url or f"https://{self.host}/{self.bucket}"
+        public_url = f"{public_base}/{key}"
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 response = await client.put(url, content=data, headers=headers)
                 response.raise_for_status()
+                # An authenticated PUT can succeed while the configured public
+                # domain is wrong/private. Never persist an URL the app cannot read.
+                public_response = await client.get(
+                    public_url, headers={"Range": "bytes=0-0"}, follow_redirects=True
+                )
+                if public_response.status_code not in {200, 206}:
+                    raise StorageError()
+                public_type = public_response.headers.get("content-type", "")
+                if public_type and not public_type.startswith("image/"):
+                    raise StorageError()
         except httpx.HTTPError as exc:
             logger.warning("R2 upload failed: %s", exc)
             raise StorageError() from exc
-
-        base = self.public_base_url or f"https://{self.host}/{self.bucket}"
-        return f"{base}/{key}"
+        return public_url
 
 
 def get_default_storage() -> ObjectStorage:
-    has_r2_credentials = bool(
-        R2_ACCOUNT_ID and R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY
-    )
+    has_r2_credentials = bool(R2_ACCOUNT_ID and R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY)
     has_public_url = R2_PUBLIC_BASE_URL.startswith("https://")
     if has_r2_credentials and has_public_url:
         logger.info("object storage: Cloudflare R2")
@@ -164,9 +168,7 @@ def get_default_storage() -> ObjectStorage:
         # uploads but is not a public object URL. Returning it made Android render
         # an empty image frame. Fail closed until an R2 custom domain or r2.dev
         # public base URL is configured.
-        logger.warning(
-            "object storage unavailable: R2_PUBLIC_BASE_URL must be a public HTTPS URL"
-        )
+        logger.warning("object storage unavailable: R2_PUBLIC_BASE_URL must be a public HTTPS URL")
         return UnavailableStorage()
     if test_mocks_enabled():
         logger.info("object storage: explicit development/test mock")

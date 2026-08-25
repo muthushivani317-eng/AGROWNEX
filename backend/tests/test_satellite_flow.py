@@ -58,12 +58,15 @@ class RenderingProvider(FakeProvider):
         super().__init__(outcome)
         self.render_calls = 0
 
-    async def render_scene_images(self, polygon, *, capture_date, scene_id):
+    async def render_scene_images(self, polygon, *, capture_date, scene_id, storage_namespace):
         self.render_calls += 1
+        self.storage_namespaces = getattr(self, "storage_namespaces", [])
+        self.storage_namespaces.append(storage_namespace)
+        version = f"render-{self.render_calls}"
         return {
-            "true_color": f"https://images.test/{scene_id}/true_color.png",
-            "ndvi": f"https://images.test/{scene_id}/ndvi.png",
-        }, f"https://images.test/{scene_id}/true_color.png"
+            "true_color": f"https://images.test/{scene_id}/{version}/true_color.png",
+            "ndvi": f"https://images.test/{scene_id}/{version}/ndvi.png",
+        }, f"https://images.test/{scene_id}/{version}/true_color.png"
 
 
 def _scene(*, red: float, nir: float, cloud: float = 5.0, std: float = 0.05) -> ProviderScene:
@@ -171,7 +174,29 @@ async def test_refresh_is_numeric_first_then_images_are_attached_separately(db_s
 
     assert attached == 2
     assert provider.render_calls == 1
+    assert provider.storage_namespaces == [str(session.id)]
     assert {image.band for image in session.images} == {"true_color", "ndvi"}
+
+
+async def test_forced_image_render_replaces_existing_broken_urls(db_session) -> None:
+    user = await _make_user(db_session, uid="image-repair")
+    farm = await _make_farm(db_session, user)
+    base = _scene(red=0.15, nir=0.45)
+    scene = ProviderScene(**{**base.__dict__, "metadata": {"scene_id": "S2-repair"}})
+    provider = RenderingProvider(FetchOutcome(scene))
+    service = _service(db_session, provider)
+    session = await service.refresh(user, farm.id)
+
+    await service.render_images(user.id, session.id)
+    await db_session.refresh(session, ["images"])
+    first_ids = {image.band: image.id for image in session.images}
+    assert all("render-1" in image.image_url for image in session.images)
+
+    await service.render_images(user.id, session.id, force=True)
+    await db_session.refresh(session, ["images"])
+
+    assert {image.band: image.id for image in session.images} == first_ids
+    assert all("render-2" in image.image_url for image in session.images)
 
 
 async def test_refresh_is_idempotent_for_same_provider_scene(db_session) -> None:
@@ -193,9 +218,7 @@ async def test_duplicate_scene_merges_new_real_variability_metadata(db_session) 
     user = await _make_user(db_session, uid="metadata-enrichment")
     farm = await _make_farm(db_session, user)
     base = _scene(red=0.15, nir=0.45)
-    first_scene = ProviderScene(
-        **{**base.__dict__, "metadata": {"scene_id": "S2-enriched"}}
-    )
+    first_scene = ProviderScene(**{**base.__dict__, "metadata": {"scene_id": "S2-enriched"}})
     zones = [
         {
             "zone_id": "sat-zone-1",
@@ -409,9 +432,7 @@ async def test_waterlogging_reuses_weather_provenance_without_inventing_measurem
             insights=[SimpleNamespace(category="heavy_rain")],
         )
 
-    monkeypatch.setattr(
-        "app.modules.weather.service.WeatherService.get_by_farm", fake_weather
-    )
+    monkeypatch.setattr("app.modules.weather.service.WeatherService.get_by_farm", fake_weather)
     service = SatelliteService(
         db_session,
         provider=WaterProvider(WaterEvidenceOutcome(None, "no_imagery")),
@@ -434,9 +455,7 @@ async def test_waterlogging_missing_boundary_stays_insufficient_even_with_weathe
     async def should_not_fetch(*_args, **_kwargs):
         raise AssertionError("weather must not replace a verified farm boundary")
 
-    monkeypatch.setattr(
-        "app.modules.weather.service.WeatherService.get_by_farm", should_not_fetch
-    )
+    monkeypatch.setattr("app.modules.weather.service.WeatherService.get_by_farm", should_not_fetch)
     service = SatelliteService(
         db_session,
         provider=WaterProvider(WaterEvidenceOutcome(None, "no_imagery")),

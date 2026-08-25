@@ -182,6 +182,37 @@ async def refresh(
     return success(SatelliteSessionOut.from_session(session), message="Satellite refresh complete")
 
 
+@router.post(
+    "/images/repair",
+    response_model=SuccessResponse[SatelliteSessionOut],
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def repair_images(
+    background_tasks: BackgroundTasks,
+    current_user: CurrentUser,
+    service: SatelliteServiceDep,
+    farm_id: uuid.UUID = Query(...),
+):
+    """Re-render the latest scene and replace stale or broken public image URLs."""
+    session = await service.latest(current_user, farm_id)
+    from app.modules.satellite.jobs import (
+        enqueue_satellite_image_render,
+        render_satellite_images,
+    )
+
+    queued = await enqueue_satellite_image_render(
+        session.id, current_user.id, force=True
+    )
+    if not queued:
+        background_tasks.add_task(
+            render_satellite_images, session.id, current_user.id, force=True
+        )
+    return success(
+        SatelliteSessionOut.from_session(session),
+        message="Satellite image repair queued",
+    )
+
+
 @router.get("/waterlogging", response_model=SuccessResponse[WaterloggingAssessmentOut | None])
 async def get_waterlogging(
     current_user: CurrentUser,

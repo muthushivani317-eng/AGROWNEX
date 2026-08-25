@@ -31,7 +31,11 @@ from app.modules.calendar.exceptions import (
 )
 from app.modules.calendar.generator import derive_season, generate_verified_events
 from app.modules.calendar.models import CalendarEvent
-from app.modules.calendar.registry import ACTIVE_CROP_STAGE_REGISTRY, CropStageRegistry
+from app.modules.calendar.registry import (
+    ACTIVE_CROP_STAGE_REGISTRY,
+    CropStageRegistry,
+    ScheduleStatus,
+)
 from app.modules.calendar.repositories import CalendarEventRepository
 from app.modules.calendar.schemas import (
     CalendarSummaryOut,
@@ -297,7 +301,8 @@ class CalendarService:
         schedule = self.stage_registry.resolve(event.crop)
         return bool(
             schedule
-            and event.registry_verification_status == "VERIFIED"
+            and event.registry_verification_status
+            in {ScheduleStatus.VERIFIED.value, ScheduleStatus.SOURCED_PUBLIC_REFERENCE.value}
             and event.registry_version == schedule.version
             and event.registry_content_hash == schedule.content_hash
         )

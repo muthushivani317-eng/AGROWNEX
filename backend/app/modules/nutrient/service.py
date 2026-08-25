@@ -25,7 +25,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.exceptions import QuotaExceededError
 from app.core.logging import get_logger
-from app.crop_runtime.registry import load_registry
 from app.modules.ai.context import build_farm_memory
 from app.modules.ai.repositories import TokenUsageRepository
 from app.modules.ai.usage_ledger import record_usage_durable
@@ -41,6 +40,10 @@ from app.modules.nutrient.constants import (
     DEFAULT_LANGUAGE,
     NUTRIENT_IMAGE_PREFIX,
     ReportStatus,
+)
+from app.modules.nutrient.crops import (
+    normalize_nutrient_crop,
+    normalize_observed_nutrient_crop,
 )
 from app.modules.nutrient.engine import (
     NutrientAssessment,
@@ -137,14 +140,16 @@ class NutrientService:
     # ----------------------------------------------------------------- #
     async def analyze(self, user: User, req: AnalyzeNutrientRequest) -> NutrientReport:
         farm = await self._require_farm(user, req.farm_id)
-        if req.crop and farm.crop and req.crop.strip().casefold() != farm.crop.strip().casefold():
+        try:
+            requested_crop = normalize_nutrient_crop(req.crop) if req.crop else None
+            farm_crop = normalize_nutrient_crop(farm.crop) if farm.crop else None
+        except ValueError as exc:
+            raise NutrientUnsupportedCropError() from exc
+        if requested_crop and farm_crop and requested_crop != farm_crop:
             raise NutrientCropMismatchError()
-        selected_crop = req.crop or farm.crop
-        if selected_crop:
-            try:
-                load_registry().normalize(selected_crop)
-            except KeyError as exc:
-                raise NutrientUnsupportedCropError() from exc
+        # Pass a bounded canonical value, never raw user-controlled spelling,
+        # into the model prompt.
+        selected_crop = requested_crop or farm_crop
 
         # STEP 1 — decode + deterministic quality gate (never call the model on junk).
         try:
@@ -172,7 +177,7 @@ class NutrientService:
             AnalysisInput(
                 image_base64=req.image_base64,
                 mime_type=req.mime_type,
-                crop=req.crop,
+                crop=selected_crop,
                 language=language,
                 farm_context=farm_context,
             )
@@ -193,9 +198,9 @@ class NutrientService:
             raise NoPlantDetectedError(observation.reject_reason)
         if selected_crop and observation.crop not in {"unknown", None}:
             try:
-                observed_crop = load_registry().normalize(observation.crop)
-                expected_crop = load_registry().normalize(selected_crop)
-            except KeyError as exc:
+                observed_crop = normalize_observed_nutrient_crop(observation.crop)
+                expected_crop = normalize_nutrient_crop(selected_crop)
+            except ValueError as exc:
                 raise NutrientUnsupportedCropError() from exc
             if observed_crop != expected_crop:
                 raise NutrientCropMismatchError()

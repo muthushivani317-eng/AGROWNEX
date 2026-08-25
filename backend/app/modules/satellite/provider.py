@@ -143,7 +143,12 @@ class SatelliteProvider(Protocol):
     ) -> WaterEvidenceOutcome: ...
 
     async def render_scene_images(
-        self, polygon: dict, *, capture_date: date, scene_id: str
+        self,
+        polygon: dict,
+        *,
+        capture_date: date,
+        scene_id: str,
+        storage_namespace: str,
     ) -> tuple[dict[str, str], str | None]: ...
 
 
@@ -399,7 +404,12 @@ class CopernicusProvider:
         return value - baseline
 
     async def render_scene_images(
-        self, polygon: dict, *, capture_date: date, scene_id: str
+        self,
+        polygon: dict,
+        *,
+        capture_date: date,
+        scene_id: str,
+        storage_namespace: str,
     ) -> tuple[dict[str, str], str | None]:
         """Best-effort image enrichment, deliberately separate from indices.
 
@@ -412,7 +422,9 @@ class CopernicusProvider:
             if token is None:
                 logger.warning("satellite background image auth unavailable: %s", reason)
                 return {}, None
-            return await self._fetch_and_store_images(token, polygon, capture_date, scene_id)
+            return await self._fetch_and_store_images(
+                token, polygon, capture_date, scene_id, storage_namespace
+            )
         except (httpx.HTTPError, ValueError, TypeError, KeyError):
             logger.warning("satellite background image rendering failed", exc_info=True)
             return {}, None
@@ -497,7 +509,12 @@ class CopernicusProvider:
             return None
 
     async def _fetch_and_store_images(
-        self, token: str, polygon: dict, capture_date: date, scene_id: str
+        self,
+        token: str,
+        polygon: dict,
+        capture_date: date,
+        scene_id: str,
+        storage_namespace: str,
     ) -> tuple[dict[str, str], str | None]:
         """Render all farmer-facing layers and upload them to object storage. Never
         raises: any render or storage failure just means fewer/no images for this
@@ -511,7 +528,10 @@ class CopernicusProvider:
             )
             if true_color:
                 url = await self.storage.put(
-                    key=f"{SATELLITE_IMAGE_PREFIX}/{scene_id}/true_color.png",
+                    key=(
+                        f"{SATELLITE_IMAGE_PREFIX}/{storage_namespace}/"
+                        f"{scene_id}/true_color.png"
+                    ),
                     data=true_color,
                     content_type="image/png",
                 )
@@ -532,7 +552,7 @@ class CopernicusProvider:
                 if not rendered:
                     continue
                 url = await self.storage.put(
-                    key=f"{SATELLITE_IMAGE_PREFIX}/{scene_id}/{band}.png",
+                    key=(f"{SATELLITE_IMAGE_PREFIX}/{storage_namespace}/" f"{scene_id}/{band}.png"),
                     data=rendered,
                     content_type="image/png",
                 )
@@ -836,7 +856,12 @@ class MockSatelliteProvider:
         return WaterEvidenceOutcome(None, UnavailableReason.NO_IMAGERY.value)
 
     async def render_scene_images(
-        self, polygon: dict, *, capture_date: date, scene_id: str
+        self,
+        polygon: dict,
+        *,
+        capture_date: date,
+        scene_id: str,
+        storage_namespace: str,
     ) -> tuple[dict[str, str], str | None]:
         return {}, None
 

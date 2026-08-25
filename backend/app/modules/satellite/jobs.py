@@ -8,6 +8,7 @@ refresh request.
 
 from __future__ import annotations
 
+import time
 import uuid
 
 from arq.connections import RedisSettings, create_pool
@@ -25,10 +26,13 @@ async def render_satellite_images(
     user_id: uuid.UUID,
     *,
     raise_on_error: bool = False,
+    force: bool = False,
 ) -> None:
     async with SessionLocal() as session:
         try:
-            attached = await SatelliteService(session).render_images(user_id, session_id)
+            attached = await SatelliteService(session).render_images(
+                user_id, session_id, force=force
+            )
             await session.commit()
             logger.info(
                 "satellite image enrichment complete: session=%s images=%s",
@@ -42,7 +46,9 @@ async def render_satellite_images(
                 raise
 
 
-async def enqueue_satellite_image_render(session_id: uuid.UUID, user_id: uuid.UUID) -> bool:
+async def enqueue_satellite_image_render(
+    session_id: uuid.UUID, user_id: uuid.UUID, *, force: bool = False
+) -> bool:
     """Persist an image-render job in Redis for the dedicated ARQ worker.
 
     UUIDs are serialized as strings so the Redis payload remains portable across
@@ -56,7 +62,15 @@ async def enqueue_satellite_image_render(session_id: uuid.UUID, user_id: uuid.UU
             "render_satellite_images_job",
             str(session_id),
             str(user_id),
-            _job_id=f"satellite-images:{session_id}",
+            force,
+            # A one-minute bucket is a distributed cooldown: repeated taps cannot
+            # fan out costly renders, while a completed/failed job is retryable in
+            # the next window instead of being blocked by ARQ result retention.
+            _job_id=(
+                f"satellite-images-repair:{session_id}:{int(time.time() // 60)}"
+                if force
+                else f"satellite-images:{session_id}"
+            ),
         )
         if job is None:
             logger.info("satellite image job already queued: session=%s", session_id)

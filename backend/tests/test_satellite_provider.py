@@ -371,12 +371,16 @@ async def test_background_render_stores_all_supported_satellite_layers() -> None
         client_id="id", client_secret="secret", client=client, storage=MockStorage()
     )
     images, thumbnail = await provider.render_scene_images(
-        POLYGON, capture_date=date(2026, 7, 11), scene_id="S2-scene"
+        POLYGON,
+        capture_date=date(2026, 7, 11),
+        scene_id="S2-scene",
+        storage_namespace="session-a",
     )
     assert images == {
-        layer: f"https://r2.mock.local/satellite/S2-scene/{layer}.png" for layer in layer_names
+        layer: f"https://r2.mock.local/satellite/session-a/S2-scene/{layer}.png"
+        for layer in layer_names
     }
-    assert thumbnail == "https://r2.mock.local/satellite/S2-scene/true_color.png"
+    assert thumbnail == "https://r2.mock.local/satellite/session-a/S2-scene/true_color.png"
 
 
 async def test_image_storage_failure_never_blocks_the_numeric_scene() -> None:
@@ -390,7 +394,12 @@ async def test_image_storage_failure_never_blocks_the_numeric_scene() -> None:
     ]
     images, thumbnail = await CopernicusProvider(
         client_id="id", client_secret="secret", client=client, storage=UnavailableStorage()
-    ).render_scene_images(POLYGON, capture_date=date(2026, 7, 11), scene_id="S2-scene")
+    ).render_scene_images(
+        POLYGON,
+        capture_date=date(2026, 7, 11),
+        scene_id="S2-scene",
+        storage_namespace="session-a",
+    )
     assert images == {}
     assert thumbnail is None
 
@@ -404,6 +413,11 @@ async def test_image_render_http_failure_never_blocks_the_numeric_scene() -> Non
     ]
     images, thumbnail = await CopernicusProvider(
         client_id="id", client_secret="secret", client=client, storage=MockStorage()
-    ).render_scene_images(POLYGON, capture_date=date(2026, 7, 11), scene_id="S2-scene")
+    ).render_scene_images(
+        POLYGON,
+        capture_date=date(2026, 7, 11),
+        scene_id="S2-scene",
+        storage_namespace="session-a",
+    )
     assert images == {}
     assert thumbnail is None

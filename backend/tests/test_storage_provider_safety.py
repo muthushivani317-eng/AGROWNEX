@@ -1,11 +1,13 @@
 import uuid
 
+import httpx
 import pytest
 from app.modules.disease import storage as storage_module
 from app.modules.disease.controlled_test_reports import persist_controlled_test_report
 from app.modules.disease.storage import (
     MockStorage,
     R2Client,
+    StorageError,
     StorageUnavailableError,
     UnavailableStorage,
     get_default_storage,
@@ -66,6 +68,36 @@ def test_r2_client_normalizes_public_base_url() -> None:
 
 
 @pytest.mark.asyncio
+async def test_r2_upload_rejects_an_unreachable_public_url(monkeypatch) -> None:
+    class FakeHttpClient:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *_args):
+            return None
+
+        async def put(self, url, **_kwargs):
+            return httpx.Response(200, request=httpx.Request("PUT", url))
+
+        async def get(self, url, **_kwargs):
+            return httpx.Response(404, request=httpx.Request("GET", url))
+
+    monkeypatch.setattr(storage_module.httpx, "AsyncClient", lambda **_kwargs: FakeHttpClient())
+    client = R2Client(
+        account_id="account",
+        access_key="access",
+        secret_key="secret",
+        bucket="agrowai",
+        public_base_url="https://public.example",
+    )
+
+    with pytest.raises(StorageError):
+        await client.put(
+            key="satellite/session/scene/ndvi.png", data=b"png", content_type="image/png"
+        )
+
+
+@pytest.mark.asyncio
 async def test_unavailable_storage_never_returns_an_object_url() -> None:
     with pytest.raises(StorageUnavailableError) as raised:
         await UnavailableStorage().put(
@@ -79,9 +111,7 @@ async def test_unavailable_storage_never_returns_an_object_url() -> None:
 
 @pytest.mark.asyncio
 async def test_explicit_mock_storage_remains_injectable_for_tests() -> None:
-    url = await MockStorage().put(
-        key="tests/image.jpg", data=b"image", content_type="image/jpeg"
-    )
+    url = await MockStorage().put(key="tests/image.jpg", data=b"image", content_type="image/jpeg")
 
     assert url == "https://r2.mock.local/tests/image.jpg"
 

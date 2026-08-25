@@ -520,7 +520,9 @@ class SatelliteService:
         )
         return metadata
 
-    async def render_images(self, user_id: uuid.UUID, session_id: uuid.UUID) -> int:
+    async def render_images(
+        self, user_id: uuid.UUID, session_id: uuid.UUID, *, force: bool = False
+    ) -> int:
         """Render and attach images to an already-available numeric session."""
         satellite_session = await self.repo.get_session(session_id, user_id)
         if satellite_session is None or satellite_session.status != SessionStatus.AVAILABLE.value:
@@ -547,6 +549,7 @@ class SatelliteService:
             normalized,
             capture_date=satellite_session.capture_date,
             scene_id=scene_id,
+            storage_namespace=str(satellite_session.id),
         )
         scene = ProviderScene(
             capture_date=satellite_session.capture_date,
@@ -557,7 +560,11 @@ class SatelliteService:
             thumbnail_url=thumbnail_url,
         )
         await self._persist_images(
-            satellite_session.farm_id, satellite_session, scene, skip_bands=existing_bands
+            satellite_session.farm_id,
+            satellite_session,
+            scene,
+            skip_bands=set() if force else existing_bands,
+            replace_existing=force,
         )
         await self.session.flush()
         return len(images)
@@ -602,9 +609,22 @@ class SatelliteService:
         scene: ProviderScene,
         *,
         skip_bands: set[str] | None = None,
+        replace_existing: bool = False,
     ) -> None:
+        existing = (
+            {image.band: image for image in session.images}
+            if replace_existing
+            else {}
+        )
         for band, url in (scene.images or {}).items():
             if band in (skip_bands or set()):
+                continue
+            if replace_existing and band in existing:
+                image = existing[band]
+                image.image_url = url
+                image.thumbnail_url = scene.thumbnail_url
+                image.mime_type = "image/png"
+                image.resolution_m = scene.resolution_m
                 continue
             await self.repo.add_image(
                 SatelliteImage(

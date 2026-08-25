@@ -66,14 +66,18 @@ async def expire_stale_offers(ctx: dict[str, Any]) -> dict:
 
 
 async def render_satellite_images_job(
-    ctx: dict[str, Any], session_id: str, user_id: str
+    ctx: dict[str, Any], session_id: str, user_id: str, force: bool = False
 ) -> dict[str, Any]:
     """Render and publish satellite layers outside the API process."""
     import uuid
 
-    await _render_satellite_images(
-        uuid.UUID(session_id), uuid.UUID(user_id), raise_on_error=True
-    )
+    identifiers = (uuid.UUID(session_id), uuid.UUID(user_id))
+    if force:
+        await _render_satellite_images(
+            *identifiers, raise_on_error=True, force=True
+        )
+    else:
+        await _render_satellite_images(*identifiers, raise_on_error=True)
     return {"session_id": session_id, "rendered": True}
 
 

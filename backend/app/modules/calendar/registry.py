@@ -18,9 +18,26 @@ class ScheduleStatus(StrEnum):
     UNVERIFIED = "UNVERIFIED"
     EXPERT_REVIEW_PENDING = "EXPERT_REVIEW_PENDING"
     VERIFIED = "VERIFIED"
+    # Compiled from a real, cited public agricultural source (TNAU Agritech
+    # Portal, ICAR crop production guide, a state Dept. of Agriculture
+    # bulletin, etc.) but not yet personally reviewed by an independent
+    # agronomist for AgrowAI specifically -- distinct from VERIFIED so the
+    # farmer-facing UI can honestly label the difference rather than implying
+    # a review that hasn't happened (product decision, 2026-08-17: show real,
+    # cited public-source content rather than nothing, but never blur it with
+    # an actual expert sign-off). `source_organization`/`document_reference`
+    # must still be the genuine publisher and document -- this status does
+    # NOT relax the "no fabricated provenance" rule, only the "who reviewed
+    # it" claim.
+    SOURCED_PUBLIC_REFERENCE = "SOURCED_PUBLIC_REFERENCE"
     SUSPENDED = "SUSPENDED"
     DISABLED = "DISABLED"
     REJECTED = "REJECTED"
+
+
+# Statuses that make a schedule live/resolvable for a farmer (as opposed to
+# draft/rejected/suspended states that are tracked but never surfaced).
+_LIVE_STATUSES = frozenset({ScheduleStatus.VERIFIED, ScheduleStatus.SOURCED_PUBLIC_REFERENCE})
 
 
 class VerifiedActivity(BaseModel):
@@ -74,8 +91,8 @@ class CropStageSchedule(BaseModel):
 
     @model_validator(mode="after")
     def active_evidence(self) -> CropStageSchedule:
-        if self.status == ScheduleStatus.VERIFIED and self.review_date < date.today():
-            raise ValueError("verified schedule review date has expired")
+        if self.status in _LIVE_STATUSES and self.review_date < date.today():
+            raise ValueError("live schedule review date has expired")
         return self
 
 
@@ -96,7 +113,7 @@ class CropStageRegistry:
                 entry = CropStageSchedule.model_validate(raw)
             except ValidationError:
                 continue
-            if entry.content_hash != schedule_hash(raw) or entry.status != ScheduleStatus.VERIFIED:
+            if entry.content_hash != schedule_hash(raw) or entry.status not in _LIVE_STATUSES:
                 continue
             canonical = entry.canonical_crop_id
             self._active[canonical] = entry
@@ -135,7 +152,9 @@ class CropStageRegistry:
 VERIFIED_SCHEDULES_DIR = Path(__file__).resolve().parent / "data" / "verified_schedules"
 
 
-def _load_verified_schedule_entries(directory: Path = VERIFIED_SCHEDULES_DIR) -> list[dict[str, Any]]:
+def _load_verified_schedule_entries(
+    directory: Path = VERIFIED_SCHEDULES_DIR,
+) -> list[dict[str, Any]]:
     """Read every *.json file in `directory` as a raw schedule entry.
 
     A file that isn't valid JSON is skipped with a warning rather than

@@ -1,0 +1,242 @@
+{
+  "schema_version": "1.0",
+  "canonical_crop_id": "sugarcane",
+  "aliases": [
+    "karumbu"
+  ],
+  "variety_or_duration_group": "mid_late_duration_300_365_day (plant crop, sugar-mill/jaggery varieties of 10-12 months duration, e.g. COC 779, TNAU SC Si7, CO Si(Sc)6)",
+  "stages": [
+    {
+      "code": "planting_and_establishment",
+      "label_key": "calendar.stages.planting_and_establishment",
+      "start_offset": 0,
+      "end_offset": 29,
+      "activities": [
+        {
+          "code": "form_ridges_furrows_apply_basal_manure",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.sugarcane.form_ridges_furrows_apply_basal_manure.title",
+          "description_key": "calendar.verified.sugarcane.form_ridges_furrows_apply_basal_manure.description",
+          "day_offset": -10,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "sett_selection_and_treatment",
+          "activity_type": "seed_treatment",
+          "label_key": "calendar.verified.sugarcane.sett_selection_and_treatment.title",
+          "description_key": "calendar.verified.sugarcane.sett_selection_and_treatment.description",
+          "day_offset": -1,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "plant_setts_and_basal_phosphorus",
+          "activity_type": "sowing",
+          "label_key": "calendar.verified.sugarcane.plant_setts_and_basal_phosphorus.title",
+          "description_key": "calendar.verified.sugarcane.plant_setts_and_basal_phosphorus.description",
+          "day_offset": 0,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "germination_phase_irrigation",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.sugarcane.germination_phase_irrigation.title",
+          "description_key": "calendar.verified.sugarcane.germination_phase_irrigation.description",
+          "day_offset": 15,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "gap_filling",
+          "activity_type": "sowing",
+          "label_key": "calendar.verified.sugarcane.gap_filling.title",
+          "description_key": "calendar.verified.sugarcane.gap_filling.description",
+          "day_offset": 25,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "tillering_and_early_growth",
+      "label_key": "calendar.stages.tillering_and_early_growth",
+      "start_offset": 30,
+      "end_offset": 100,
+      "activities": [
+        {
+          "code": "first_n_k_topdressing",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.sugarcane.first_n_k_topdressing.title",
+          "description_key": "calendar.verified.sugarcane.first_n_k_topdressing.description",
+          "day_offset": 30,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "first_earthing_up_and_weeding",
+          "activity_type": "weed_management",
+          "label_key": "calendar.verified.sugarcane.first_earthing_up_and_weeding.title",
+          "description_key": "calendar.verified.sugarcane.first_earthing_up_and_weeding.description",
+          "day_offset": 45,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "second_n_k_topdressing",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.sugarcane.second_n_k_topdressing.title",
+          "description_key": "calendar.verified.sugarcane.second_n_k_topdressing.description",
+          "day_offset": 60,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "third_topdressing_and_final_earthing",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.sugarcane.third_topdressing_and_final_earthing.title",
+          "description_key": "calendar.verified.sugarcane.third_topdressing_and_final_earthing.description",
+          "day_offset": 90,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "grand_growth",
+      "label_key": "calendar.stages.grand_growth",
+      "start_offset": 101,
+      "end_offset": 270,
+      "activities": [
+        {
+          "code": "grand_growth_irrigation",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.sugarcane.grand_growth_irrigation.title",
+          "description_key": "calendar.verified.sugarcane.grand_growth_irrigation.description",
+          "day_offset": 120,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "detrashing_and_borer_scouting",
+          "activity_type": "pest_monitoring",
+          "label_key": "calendar.verified.sugarcane.detrashing_and_borer_scouting.title",
+          "description_key": "calendar.verified.sugarcane.detrashing_and_borer_scouting.description",
+          "day_offset": 150,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "disease_scouting",
+          "activity_type": "disease_inspection",
+          "label_key": "calendar.verified.sugarcane.disease_scouting.title",
+          "description_key": "calendar.verified.sugarcane.disease_scouting.description",
+          "day_offset": 180,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "propping_and_second_detrashing",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.sugarcane.propping_and_second_detrashing.title",
+          "description_key": "calendar.verified.sugarcane.propping_and_second_detrashing.description",
+          "day_offset": 210,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "maturity_and_ripening",
+      "label_key": "calendar.stages.maturity_and_ripening",
+      "start_offset": 271,
+      "end_offset": 320,
+      "activities": [
+        {
+          "code": "reduce_irrigation_at_maturity",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.sugarcane.reduce_irrigation_at_maturity.title",
+          "description_key": "calendar.verified.sugarcane.reduce_irrigation_at_maturity.description",
+          "day_offset": 280,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "maturity_brix_check",
+          "activity_type": "harvest_preparation",
+          "label_key": "calendar.verified.sugarcane.maturity_brix_check.title",
+          "description_key": "calendar.verified.sugarcane.maturity_brix_check.description",
+          "day_offset": 300,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "harvest",
+      "label_key": "calendar.stages.harvest",
+      "start_offset": 321,
+      "end_offset": 365,
+      "activities": [
+        {
+          "code": "harvest_cane",
+          "activity_type": "harvest",
+          "label_key": "calendar.verified.sugarcane.harvest_cane.title",
+          "description_key": "calendar.verified.sugarcane.harvest_cane.description",
+          "day_offset": 335,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        }
+      ]
+    }
+  ],
+  "geographic_limitations": [
+    "Tamil Nadu"
+  ],
+  "season_limitations": [
+    "kharif",
+    "rabi",
+    "summer"
+  ],
+  "source_organization": "Tamil Nadu Agricultural University (TNAU)",
+  "document_reference": "TNAU Agritech Portal -- 'Agriculture :: Crop Production :: Sugarcane' (https://agritech.tnau.ac.in/agriculture/sugarcrops_sugarcane.html), with supporting figures from 'Nutrient Management :: Sugarcane' (https://agritech.tnau.ac.in/agriculture/agri_nutrientmgt_sugarcane.html), 'Irrigation Management :: Sugarcane' (https://agritech.tnau.ac.in/agriculture/agri_irrigationmgt_sugarcane.html), and 'Season and Varieties :: Sugarcane' (https://agritech.tnau.ac.in/agriculture/agri_seasonandvarieties_sugarcane.html)",
+  "reviewer": "AgrowAI content team -- compiled from cited public source, not independently agronomist-reviewed",
+  "approval_date": "2026-08-18",
+  "review_date": "2027-08-18",
+  "version": "1.0.0",
+  "status": "SOURCED_PUBLIC_REFERENCE",
+  "content_hash": "0ac62eae73a839733454d996a8490ff43fad429cd1dd2991adb42e444c378deb"
+}

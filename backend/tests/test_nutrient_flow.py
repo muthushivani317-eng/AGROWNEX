@@ -19,6 +19,7 @@ from app.modules.nutrient import service as service_module
 from app.modules.nutrient.exceptions import (
     FarmNotOwnedError,
     NoPlantDetectedError,
+    NutrientCropMismatchError,
     NutrientDataUnavailableError,
     NutrientReportNotFoundError,
     PoorImageQualityError,
@@ -93,6 +94,13 @@ async def _make_farm(db_session, user: User) -> Farm:
     return farm
 
 
+async def _make_crop_farm(db_session, user: User, crop: str) -> Farm:
+    farm = await _make_farm(db_session, user)
+    farm.crop = crop
+    await db_session.flush()
+    return farm
+
+
 def _request(farm_id, size: int = 64) -> AnalyzeNutrientRequest:
     return AnalyzeNutrientRequest(
         image_base64=_b64(size), mime_type="image/jpeg", farm_id=farm_id
@@ -125,6 +133,38 @@ async def test_analyze_saves_report_with_analysis(
     usage_rows = (await db_session.execute(select(TokenUsage))).scalars().all()
     assert len(usage_rows) == 1
     assert usage_rows[0].module == "nutrient"
+
+
+async def test_sugarcane_analysis_is_not_limited_by_disease_registry(
+    db_session, session_factory, monkeypatch
+) -> None:
+    monkeypatch.setattr("app.modules.ai.usage_ledger.SessionLocal", session_factory)
+    _accept_quality(monkeypatch)
+    observation = make_observation()
+    observation.crop = "sugar cane"
+    provider = FakeProvider(observation)
+    service = _service(db_session, provider)
+    user = await _make_user(db_session)
+    farm = await _make_crop_farm(db_session, user, "sugarcane")
+
+    report = await service.analyze(user, _request(farm.id))
+
+    assert provider.calls == 1
+    assert report.analysis is not None
+    assert report.crop == "sugar cane"
+
+
+async def test_observed_crop_mismatch_is_still_rejected(db_session, monkeypatch) -> None:
+    _accept_quality(monkeypatch)
+    provider = FakeProvider(make_observation())  # provider observes paddy
+    service = _service(db_session, provider)
+    user = await _make_user(db_session)
+    farm = await _make_crop_farm(db_session, user, "sugarcane")
+
+    with pytest.raises(NutrientCropMismatchError):
+        await service.analyze(user, _request(farm.id))
+
+    assert provider.calls == 1
 
 
 async def test_soil_low_nitrogen_confirms(db_session, monkeypatch) -> None:

@@ -108,7 +108,6 @@ def assess_waterlogging(
         )
     if (
         evidence.conflicting
-        or not evidence.policy_verified
         or evidence.surface_water_change
         not in {
             "increase",
@@ -145,5 +144,7 @@ def assess_waterlogging(
             else "No surface-water increase was observed in the usable comparison."
         ),
         surface_water_change=evidence.surface_water_change,
-        alert="possible_waterlogging" if possible else None,
+        # An unverified threshold may be shown as a cautious screening result,
+        # but must never create an operational farmer alert.
+        alert="possible_waterlogging" if possible and evidence.policy_verified else None,
     )

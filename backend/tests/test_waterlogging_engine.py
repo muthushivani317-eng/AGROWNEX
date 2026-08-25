@@ -41,7 +41,16 @@ def test_verified_no_surface_water_change_is_clear() -> None:
 
 def test_unverified_rule_never_turns_observation_into_alert() -> None:
     result = assess_waterlogging(evidence(policy_verified=False))
-    assert result.decision == WaterloggingDecision.REVIEW_REQUIRED
+    assert result.decision == WaterloggingDecision.POSSIBLE_WATERLOGGING
+    assert result.alert is None
+
+
+def test_unverified_consistent_no_change_is_a_cautious_clear_screening() -> None:
+    result = assess_waterlogging(
+        evidence(policy_verified=False, surface_water_change="none")
+    )
+    assert result.decision == WaterloggingDecision.CLEAR
+    assert result.alert is None
 
 
 def test_conflict_requires_review() -> None:

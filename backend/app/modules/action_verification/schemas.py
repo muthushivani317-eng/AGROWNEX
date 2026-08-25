@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import AliasChoices, BaseModel, Field, model_validator
 
 from .models import ActionAuditEvent, ActionWorkflow
 
@@ -55,7 +55,13 @@ class ActionOut(BaseModel):
     id: uuid.UUID
     farm_id: uuid.UUID
     crop_cycle_id: str | None
-    source_feature: str
+    # The persistence model deliberately keeps the existing ``source_module``
+    # column name. Accept that ORM attribute while exposing the public API's
+    # ``source_feature`` contract; changing the database column would require
+    # an unrelated migration and would break existing rows.
+    source_feature: str = Field(
+        validation_alias=AliasChoices("source_feature", "source_module")
+    )
     source_record_id: str
     source_version: str
     action_code: str
