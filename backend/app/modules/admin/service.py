@@ -185,6 +185,9 @@ class AdminService:
         detail = await self.queries.farmer_detail(user_id)
         if detail is None:
             raise FarmerNotFoundError()
+        from app.modules.consents.service import ConsentService
+
+        detail["consents"] = await ConsentService(self.session).current(user_id)
         await self._audit(
             ctx, AuditAction.VIEW_FARMER_DETAIL, target="farmer", target_id=str(user_id)
         )

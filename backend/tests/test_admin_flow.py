@@ -21,10 +21,12 @@ from app.modules.admin.exceptions import (
     PermissionDeniedError,
 )
 from app.modules.admin.provider import MockBroadcastProvider
+from app.modules.admin.schemas import FarmerDetailOut
 from app.modules.admin.seed import ensure_admin
 from app.modules.admin.service import AdminService
 from app.modules.auth.models import User
 from app.modules.auth.profile_models import FarmerProfile
+from app.modules.consents.service import ConsentService
 from app.modules.farms.models import Farm
 from app.modules.produce.models import ProduceOffer
 
@@ -211,6 +213,29 @@ async def test_farmer_directory_search_and_detail(db_session):
     assert detail["profile"].full_name == "Raja Selvam"
     assert len(detail["farms"]) == 1
     assert "disease" in detail["counts"]
+
+
+@pytest.mark.asyncio
+async def test_farmer_detail_exposes_current_consent_state_without_raw_metadata(db_session):
+    service = _service(db_session)
+    farmer = await _farmer(db_session, "fb-consent-admin", name="Consent Farmer")
+    await ConsentService(db_session).record(
+        farmer.id,
+        purpose="buyer_contact_sharing",
+        granted=True,
+        idempotency_key="admin-consent-1",
+        locale="en",
+        notice_version="2026-08-v1",
+    )
+    ctx = await _admin_ctx(db_session, service)
+    detail = await service.farmer_detail(ctx, farmer.id)
+    consent = next(item for item in detail["consents"] if item.purpose == "buyer_contact_sharing")
+    assert consent.granted is True
+    assert consent.policy_version == "2026-08-v1"
+    assert not hasattr(consent, "metadata")
+    payload = FarmerDetailOut.from_detail(farmer.id, detail).model_dump()
+    assert any(item["purpose"] == "buyer_contact_sharing" for item in payload["consents"])
+    assert all("metadata" not in item for item in payload["consents"])
 
 
 # --------------------------------------------------------------------------- #

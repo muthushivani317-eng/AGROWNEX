@@ -23,6 +23,7 @@ from app.modules.ai.router import router as ai_router
 from app.modules.auth.router import router as auth_router
 from app.modules.calendar.router import router as calendar_router
 from app.modules.community.router import router as community_router
+from app.modules.consents.router import router as consents_router
 from app.modules.crop_recommendation.router import router as crop_recommendation_router
 from app.modules.disease.router import router as disease_router
 from app.modules.disease_comparison.router import router as disease_comparison_router
@@ -55,6 +56,7 @@ api_router = APIRouter()
 api_router.include_router(action_verification_router)
 api_router.include_router(health_router)
 api_router.include_router(auth_router)
+api_router.include_router(consents_router)
 api_router.include_router(farmers_router)
 api_router.include_router(farms_router)
 api_router.include_router(farm_team_router)

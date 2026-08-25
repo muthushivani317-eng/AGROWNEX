@@ -1,0 +1,1 @@
+"""Versioned farmer consent ledger."""

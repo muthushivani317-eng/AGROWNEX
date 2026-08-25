@@ -88,6 +88,7 @@ class FarmerDetailOut(BaseModel):
     language: str | None
     farms: list[FarmSummaryOut]
     counts: dict[str, int]
+    consents: list[ConsentSummaryOut]
 
     @classmethod
     def from_detail(cls, user_id: uuid.UUID, detail: dict) -> FarmerDetailOut:
@@ -114,7 +115,19 @@ class FarmerDetailOut(BaseModel):
                 for f in detail["farms"]
             ],
             counts=detail["counts"],
+            consents=[ConsentSummaryOut(**item.__dict__) for item in detail["consents"]],
         )
+
+
+class ConsentSummaryOut(BaseModel):
+    purpose: str
+    granted: bool
+    version: int
+    policy_version: str | None
+    notice_hash: str | None
+    channel: str | None
+    locale: str | None
+    decided_at: datetime | None
 
 
 # --------------------------------------------------------------------------- #
