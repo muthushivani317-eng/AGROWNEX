@@ -13,6 +13,7 @@ Thin routes — validation, ownership, the snapshot, the Procurement Engine and
 provider routing all live in ``ProduceService``. Static routes are declared
 before ``/{offer_id}``. All endpoints are authenticated.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -22,6 +23,8 @@ from fastapi import APIRouter, Query, status
 from app.modules.produce.constants import ProduceStatus
 from app.modules.produce.dependencies import CurrentUser, ProduceServiceDep
 from app.modules.produce.schemas import (
+    FarmerOfferDecisionIn,
+    FrozenBuyerOfferOut,
     ProduceImageIn,
     ProduceListFilters,
     ProduceOfferCreate,
@@ -37,8 +40,7 @@ router = APIRouter(prefix="/produce", tags=["produce"])
 def _page_out(page, insights) -> PaginatedData[ProduceOfferSummaryOut]:
     return PaginatedData(
         items=[
-            ProduceOfferSummaryOut.from_offer(o, insight=insights.get(o.id))
-            for o in page.items
+            ProduceOfferSummaryOut.from_offer(o, insight=insights.get(o.id)) for o in page.items
         ],
         page=page.page,
         page_size=page.page_size,
@@ -101,9 +103,7 @@ async def upcoming_harvests(
     page_size: int = Query(20, ge=1, le=100),
 ):
     """Still-relevant harvests due today or later, soonest first."""
-    page_data, insights = await service.upcoming(
-        current_user, page=page, page_size=page_size
-    )
+    page_data, insights = await service.upcoming(current_user, page=page, page_size=page_size)
     return success(_page_out(page_data, insights))
 
 
@@ -118,9 +118,7 @@ async def produce_history(
     page_size: int = Query(20, ge=1, le=100),
 ):
     """Concluded offers (harvested / fulfilled / withdrawn / expired)."""
-    page_data, insights = await service.history(
-        current_user, page=page, page_size=page_size
-    )
+    page_data, insights = await service.history(current_user, page=page, page_size=page_size)
     return success(_page_out(page_data, insights))
 
 
@@ -133,6 +131,40 @@ async def get_produce(
     """Full offer detail with the deterministic procurement insight."""
     offer, insight = await service.get_offer(current_user, offer_id)
     return success(ProduceOfferDetailOut.from_offer_detail(offer, insight=insight))
+
+
+def _frozen_offer_out(case, decision=None) -> FrozenBuyerOfferOut:
+    return FrozenBuyerOfferOut(
+        offer_id=case.offer_id,
+        case_id=case.id,
+        status=case.status,
+        terms_hash=case.frozen_terms_hash,
+        frozen_at=case.frozen_at,
+        terms=case.frozen_terms,
+        decision=getattr(decision, "decision", None),
+        decided_at=getattr(decision, "decided_at", None),
+    )
+
+
+@router.get("/{offer_id}/buyer-offer", response_model=SuccessResponse[FrozenBuyerOfferOut])
+async def get_frozen_buyer_offer(
+    offer_id: uuid.UUID, current_user: CurrentUser, service: ProduceServiceDep
+):
+    case, decision = await service.frozen_buyer_offer(current_user, offer_id)
+    return success(_frozen_offer_out(case, decision))
+
+
+@router.post(
+    "/{offer_id}/buyer-offer/decision", response_model=SuccessResponse[FrozenBuyerOfferOut]
+)
+async def decide_frozen_buyer_offer(
+    offer_id: uuid.UUID,
+    payload: FarmerOfferDecisionIn,
+    current_user: CurrentUser,
+    service: ProduceServiceDep,
+):
+    case, decision = await service.decide_buyer_offer(current_user, offer_id, payload)
+    return success(_frozen_offer_out(case, decision), message="Farmer decision recorded")
 
 
 @router.put("/{offer_id}", response_model=SuccessResponse[ProduceOfferDetailOut])

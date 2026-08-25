@@ -32,6 +32,8 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    event,
+    func,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -157,7 +159,8 @@ class ProcurementCase(UUIDMixin, TimestampMixin, Base):
         ),
         CheckConstraint(
             "status IN ('new','under_review','farmer_contacted','finding_buyers',"
-            "'buyer_interested','offer_received','farmer_approval_pending','cancelled')",
+            "'buyer_interested','offer_received','farmer_approval_pending',"
+            "'farmer_accepted','farmer_rejected','cancelled')",
             name="ck_procurement_phase1_status",
         ),
     )
@@ -179,11 +182,155 @@ class ProcurementCase(UUIDMixin, TimestampMixin, Base):
     currency: Mapped[str] = mapped_column(String(3), default="INR", nullable=False)
     price_unit: Mapped[str | None] = mapped_column(String(16))
     negotiation_notes: Mapped[str | None] = mapped_column(Text)
+    frozen_terms: Mapped[dict | None] = mapped_column(JSON)
+    frozen_terms_hash: Mapped[str | None] = mapped_column(String(64), unique=True)
+    frozen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     @property
     def earned_commission(self) -> None:
         """Commercial inputs are projections until a separate sale ledger exists."""
         return None
+
+
+def _reject_ledger_mutation(*_args, **_kwargs) -> None:
+    raise ValueError("Financial and acceptance ledgers are append-only")
+
+
+class FarmerOfferDecision(UUIDMixin, Base):
+    """Immutable farmer acceptance/rejection of one frozen buyer offer."""
+
+    __tablename__ = "farmer_offer_decisions"
+    __table_args__ = (
+        UniqueConstraint("case_id", name="uq_farmer_offer_decision_case"),
+        UniqueConstraint("farmer_id", "idempotency_key", name="uq_farmer_decision_idempotency"),
+        CheckConstraint("decision IN ('accepted','rejected')", name="ck_farmer_offer_decision"),
+    )
+
+    case_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("procurement_cases.id"), nullable=False, index=True
+    )
+    offer_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("produce_offers.id"), nullable=False, index=True
+    )
+    farmer_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("users.id"), nullable=False, index=True
+    )
+    decision: Mapped[str] = mapped_column(String(16), nullable=False)
+    terms_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    terms_snapshot: Mapped[dict] = mapped_column(JSON, nullable=False)
+    idempotency_key: Mapped[str] = mapped_column(String(64), nullable=False)
+    reason: Mapped[str | None] = mapped_column(Text)
+    decided_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class PickupLedgerEntry(UUIDMixin, Base):
+    __tablename__ = "pickup_ledger"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('scheduled','completed','failed','cancelled')",
+            name="ck_pickup_ledger_status",
+        ),
+    )
+    case_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("procurement_cases.id"), nullable=False, index=True
+    )
+    status: Mapped[str] = mapped_column(String(16), nullable=False)
+    scheduled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    occurred_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    location: Mapped[str | None] = mapped_column(String(255))
+    note: Mapped[str | None] = mapped_column(Text)
+    recorded_by_admin_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("admin_users.id"), nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class ProcurementTransaction(UUIDMixin, Base):
+    __tablename__ = "procurement_transactions"
+    __table_args__ = (
+        UniqueConstraint("case_id", name="uq_procurement_transaction_case"),
+        CheckConstraint("gross_amount > 0", name="ck_procurement_transaction_gross"),
+    )
+    case_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("procurement_cases.id"), nullable=False, index=True
+    )
+    quantity: Mapped[float] = mapped_column(Float, nullable=False)
+    unit_price: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
+    gross_amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False)
+    terms_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    recorded_by_admin_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("admin_users.id"), nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class PaymentLedgerEntry(UUIDMixin, Base):
+    __tablename__ = "payment_ledger"
+    __table_args__ = (
+        CheckConstraint("amount > 0", name="ck_payment_ledger_amount"),
+        CheckConstraint(
+            "entry_type IN ('buyer_receipt','farmer_payout','refund')",
+            name="ck_payment_ledger_type",
+        ),
+    )
+    transaction_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("procurement_transactions.id"), nullable=False, index=True
+    )
+    entry_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False)
+    reference: Mapped[str | None] = mapped_column(String(160))
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    recorded_by_admin_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("admin_users.id"), nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class CommissionLedgerEntry(UUIDMixin, Base):
+    __tablename__ = "commission_ledger"
+    __table_args__ = (
+        CheckConstraint("amount >= 0", name="ck_commission_ledger_amount"),
+        CheckConstraint(
+            "entry_type IN ('earned','reversed','paid')", name="ck_commission_ledger_type"
+        ),
+    )
+    transaction_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("procurement_transactions.id"), nullable=False, index=True
+    )
+    entry_type: Mapped[str] = mapped_column(String(16), nullable=False)
+    base_amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
+    rate: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)
+    amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    recorded_by_admin_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("admin_users.id"), nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+for _ledger_model in (
+    FarmerOfferDecision,
+    PickupLedgerEntry,
+    ProcurementTransaction,
+    PaymentLedgerEntry,
+    CommissionLedgerEntry,
+):
+    event.listen(_ledger_model, "before_update", _reject_ledger_mutation)
+    event.listen(_ledger_model, "before_delete", _reject_ledger_mutation)
 
 
 class DashboardWidget(UUIDMixin, TimestampMixin, Base):

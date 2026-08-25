@@ -38,15 +38,19 @@ from app.modules.admin.schemas import (
     AuditRowOut,
     BroadcastIn,
     BroadcastOut,
+    CommissionLedgerIn,
     CostBucketOut,
     DashboardOut,
     FarmerDetailOut,
     FarmerRowOut,
     OverviewCardOut,
+    PaymentLedgerIn,
+    PickupLedgerIn,
     ProcurementAnalyticsOut,
     ProcurementCaseUpdateIn,
     ProcurementRowOut,
     ProcurementStatusIn,
+    TransactionIn,
 )
 from app.schemas.response import PaginatedData, SuccessResponse, success
 
@@ -155,6 +159,11 @@ async def get_analytics(ctx: AdminContextDep, service: AdminServiceDep):
     return success(AnalyticsOut(**data))
 
 
+@router.get("/business-dashboard", response_model=SuccessResponse[dict])
+async def get_business_dashboard(ctx: AdminContextDep, service: AdminServiceDep):
+    return success(await service.business_dashboard(ctx))
+
+
 # --------------------------------------------------------------------------- #
 # Procurement
 # --------------------------------------------------------------------------- #
@@ -227,6 +236,74 @@ async def update_procurement_case(
 async def reveal_buyer_contact(offer_id: uuid.UUID, ctx: AdminContextDep, service: AdminServiceDep):
     contact = await service.reveal_buyer_contact(ctx, offer_id)
     return success(BuyerContactOut(offer_id=offer_id, buyer_contact=contact))
+
+
+@router.post("/procurement/{offer_id}/pickup", response_model=SuccessResponse[dict])
+async def record_pickup(
+    offer_id: uuid.UUID, payload: PickupLedgerIn, ctx: AdminContextDep, service: AdminServiceDep
+):
+    entry = await service.record_pickup(ctx, offer_id, payload)
+    return success({"id": str(entry.id), "status": entry.status, "created_at": entry.created_at})
+
+
+@router.get("/procurement/{offer_id}/ledger", response_model=SuccessResponse[dict])
+async def get_commerce_ledger(offer_id: uuid.UUID, ctx: AdminContextDep, service: AdminServiceDep):
+    return success(await service.commerce_summary(ctx, offer_id))
+
+
+@router.post("/procurement/{offer_id}/transaction", response_model=SuccessResponse[dict])
+async def record_transaction(
+    offer_id: uuid.UUID, payload: TransactionIn, ctx: AdminContextDep, service: AdminServiceDep
+):
+    row = await service.record_transaction(ctx, offer_id, payload)
+    return success(
+        {
+            "id": str(row.id),
+            "gross_amount": str(row.gross_amount),
+            "currency": row.currency,
+            "created_at": row.created_at,
+        }
+    )
+
+
+@router.post(
+    "/procurement/transactions/{transaction_id}/payments", response_model=SuccessResponse[dict]
+)
+async def record_payment(
+    transaction_id: uuid.UUID,
+    payload: PaymentLedgerIn,
+    ctx: AdminContextDep,
+    service: AdminServiceDep,
+):
+    row = await service.record_payment(ctx, transaction_id, payload)
+    return success(
+        {
+            "id": str(row.id),
+            "entry_type": row.entry_type,
+            "amount": str(row.amount),
+            "created_at": row.created_at,
+        }
+    )
+
+
+@router.post(
+    "/procurement/transactions/{transaction_id}/commissions", response_model=SuccessResponse[dict]
+)
+async def record_commission(
+    transaction_id: uuid.UUID,
+    payload: CommissionLedgerIn,
+    ctx: AdminContextDep,
+    service: AdminServiceDep,
+):
+    row = await service.record_commission(ctx, transaction_id, payload)
+    return success(
+        {
+            "id": str(row.id),
+            "entry_type": row.entry_type,
+            "amount": str(row.amount),
+            "created_at": row.created_at,
+        }
+    )
 
 
 # --------------------------------------------------------------------------- #

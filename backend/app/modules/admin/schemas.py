@@ -9,6 +9,7 @@ from __future__ import annotations
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -395,6 +396,31 @@ class ProcurementCaseUpdateIn(BaseModel):
     currency: str | None = Field(default=None, min_length=3, max_length=3)
     price_unit: str | None = Field(default=None, min_length=1, max_length=16)
     negotiation_notes: str | None = Field(default=None, max_length=4000)
+
+
+class PickupLedgerIn(BaseModel):
+    status: Literal["scheduled", "completed", "failed", "cancelled"]
+    scheduled_at: datetime | None = None
+    occurred_at: datetime | None = None
+    location: str | None = Field(default=None, max_length=255)
+    note: str | None = Field(default=None, max_length=2000)
+
+
+class TransactionIn(BaseModel):
+    occurred_at: datetime
+
+
+class PaymentLedgerIn(BaseModel):
+    entry_type: Literal["buyer_receipt", "farmer_payout", "refund"]
+    amount: Decimal = Field(gt=0, le=100_000_000, max_digits=14, decimal_places=2)
+    currency: str = Field(default="INR", min_length=3, max_length=3)
+    reference: str | None = Field(default=None, max_length=160)
+    occurred_at: datetime
+
+
+class CommissionLedgerIn(BaseModel):
+    entry_type: Literal["earned", "reversed", "paid"] = "earned"
+    occurred_at: datetime
 
 
 # --------------------------------------------------------------------------- #

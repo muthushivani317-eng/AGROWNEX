@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -93,6 +93,23 @@ class ProduceOfferUpdate(BaseModel):
     longitude: float | None = Field(default=None, ge=-180, le=180)
     notes: str | None = Field(default=None, max_length=2000)
     status: ProduceStatus | None = None
+
+
+class FarmerOfferDecisionIn(BaseModel):
+    decision: Literal["accepted", "rejected"]
+    idempotency_key: str = Field(min_length=8, max_length=64)
+    reason: str | None = Field(default=None, max_length=2000)
+
+
+class FrozenBuyerOfferOut(BaseModel):
+    offer_id: uuid.UUID
+    case_id: uuid.UUID
+    status: str
+    terms_hash: str
+    frozen_at: datetime
+    terms: dict[str, Any]
+    decision: str | None = None
+    decided_at: datetime | None = None
 
 
 class ProduceListFilters(BaseModel):

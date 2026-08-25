@@ -9,14 +9,24 @@ from app.modules.admin.constants import AdminRole, AuditAction, ProcurementStatu
 from app.modules.admin.exceptions import InvalidProcurementStatusError, PermissionDeniedError
 from app.modules.admin.models import AuditLog
 from app.modules.admin.repository import AdminRepository
-from app.modules.admin.schemas import ProcurementCaseUpdateIn
+from app.modules.admin.schemas import (
+    CommissionLedgerIn,
+    PaymentLedgerIn,
+    PickupLedgerIn,
+    ProcurementCaseUpdateIn,
+    TransactionIn,
+)
 from app.modules.admin.seed import ensure_admin
 from app.modules.admin.service import AdminService
 from app.modules.auth.models import User
 from app.modules.farms.models import Farm
 from app.modules.produce.constants import QuantityProvenance
 from app.modules.produce.provider import MockProduceProvider
-from app.modules.produce.schemas import ProduceOfferCreate, ProduceOfferDetailOut
+from app.modules.produce.schemas import (
+    FarmerOfferDecisionIn,
+    ProduceOfferCreate,
+    ProduceOfferDetailOut,
+)
 from app.modules.produce.service import ProduceService
 from pydantic import ValidationError
 
@@ -155,7 +165,7 @@ async def test_procurement_case_rejects_invalid_status_transition(db_session):
         await service.update_procurement_case(ctx, offer.id, ProcurementCaseUpdateIn(status="sold"))
 
 
-def test_phase_one_does_not_expose_sale_or_payment_statuses():
+def test_procurement_statuses_include_farmer_decision_states_but_not_fake_sale_states():
     values = {status.value for status in ProcurementStatus}
     assert values == {
         "new",
@@ -165,10 +175,98 @@ def test_phase_one_does_not_expose_sale_or_payment_statuses():
         "buyer_interested",
         "offer_received",
         "farmer_approval_pending",
+        "farmer_accepted",
+        "farmer_rejected",
         "cancelled",
     }
     assert "farmer_accepted_at" not in ProcurementCaseUpdateIn.model_fields
     assert "pickup_at" not in ProcurementCaseUpdateIn.model_fields
+
+
+@pytest.mark.asyncio
+async def test_frozen_farmer_acceptance_transaction_payment_and_commission_ledgers(db_session):
+    farmer = await _user(db_session, "farmer-full-commerce")
+    farm = await _farm(db_session, farmer)
+    produce = ProduceService(db_session, provider=MockProduceProvider(), today=TODAY)
+    offer = await produce.create_offer(
+        farmer, _payload(farm.id, expected_total_quantity=20, available_quantity=10)
+    )
+    admin = AdminService(db_session, now=datetime(2026, 8, 25, 12, tzinfo=UTC))
+    ctx = await _admin_ctx(db_session, admin, role=AdminRole.PROCUREMENT_MANAGER.value)
+    for status in (
+        ProcurementStatus.FARMER_CONTACTED,
+        ProcurementStatus.FINDING_BUYERS,
+    ):
+        await admin.update_procurement_case(ctx, offer.id, ProcurementCaseUpdateIn(status=status))
+    await admin.update_procurement_case(
+        ctx,
+        offer.id,
+        ProcurementCaseUpdateIn(status=ProcurementStatus.BUYER_INTERESTED, buyer_name="Buyer Ltd"),
+    )
+    await admin.update_procurement_case(
+        ctx,
+        offer.id,
+        ProcurementCaseUpdateIn(
+            status=ProcurementStatus.OFFER_RECEIVED,
+            buyer_offer_quantity=10,
+            buyer_offer_price=Decimal("2200.00"),
+            transport_cost=Decimal("500.00"),
+            commission_rate=Decimal("2.50"),
+            currency="INR",
+            price_unit="quintal",
+        ),
+    )
+    case = await admin.update_procurement_case(
+        ctx,
+        offer.id,
+        ProcurementCaseUpdateIn(status=ProcurementStatus.FARMER_APPROVAL_PENDING),
+    )
+    assert case.frozen_terms_hash and case.frozen_terms["quantity"] == "10.0"
+    frozen, decision = await produce.frozen_buyer_offer(farmer, offer.id)
+    assert decision is None and frozen.id == case.id
+    case, decision = await produce.decide_buyer_offer(
+        farmer,
+        offer.id,
+        FarmerOfferDecisionIn(decision="accepted", idempotency_key="accept-offer-0001"),
+    )
+    assert case.status == ProcurementStatus.FARMER_ACCEPTED.value
+    assert decision.terms_hash == case.frozen_terms_hash
+    same_case, same_decision = await produce.decide_buyer_offer(
+        farmer,
+        offer.id,
+        FarmerOfferDecisionIn(decision="accepted", idempotency_key="accept-offer-0001"),
+    )
+    assert same_case.id == case.id and same_decision.id == decision.id
+    pickup = await admin.record_pickup(
+        ctx,
+        offer.id,
+        PickupLedgerIn(status="completed", occurred_at=datetime(2026, 8, 26, tzinfo=UTC)),
+    )
+    assert pickup.status == "completed"
+    transaction = await admin.record_transaction(
+        ctx, offer.id, TransactionIn(occurred_at=datetime(2026, 8, 26, tzinfo=UTC))
+    )
+    assert transaction.gross_amount == Decimal("22000.00")
+    await admin.record_payment(
+        ctx,
+        transaction.id,
+        PaymentLedgerIn(
+            entry_type="buyer_receipt",
+            amount=Decimal("22000.00"),
+            occurred_at=datetime(2026, 8, 26, tzinfo=UTC),
+        ),
+    )
+    commission = await admin.record_commission(
+        ctx,
+        transaction.id,
+        CommissionLedgerIn(entry_type="earned", occurred_at=datetime(2026, 8, 26, tzinfo=UTC)),
+    )
+    assert commission.amount == Decimal("550.00")
+    summary = await admin.commerce_summary(ctx, offer.id)
+    assert summary["transaction"]["id"] == str(transaction.id)
+    assert summary["pickups"][0]["status"] == "completed"
+    assert summary["payments"][0]["entry_type"] == "buyer_receipt"
+    assert summary["commissions"][0]["amount"] == "550.00"
 
 
 @pytest.mark.parametrize("legacy", ["confirmed", "collected"])

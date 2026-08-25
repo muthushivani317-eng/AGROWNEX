@@ -12,10 +12,13 @@ from __future__ import annotations
 import uuid
 from datetime import date
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.core.timezone import today_ist
+from app.modules.admin.constants import ProcurementStatus
+from app.modules.admin.models import FarmerOfferDecision, ProcurementCase
 from app.modules.auth.models import User
 from app.modules.farms.repositories import FarmRepository
 from app.modules.market.repository import MarketRepository
@@ -44,6 +47,7 @@ from app.modules.produce.models import (
 from app.modules.produce.provider import OfferRef, ProduceProvider, get_default_provider
 from app.modules.produce.repository import ProduceRepository
 from app.modules.produce.schemas import (
+    FarmerOfferDecisionIn,
     ProduceImageIn,
     ProduceListFilters,
     ProduceOfferCreate,
@@ -73,6 +77,84 @@ class ProduceService:
         # India Standard Time, not UTC (docs: app.core.timezone) -- this is a
         # "what day is it for the farmer" boundary, not an event timestamp.
         return self._today or today_ist()
+
+    async def frozen_buyer_offer(self, user: User, offer_id: uuid.UUID):
+        await self._require_offer(user, offer_id)
+        case = (
+            await self.session.execute(
+                select(ProcurementCase).where(ProcurementCase.offer_id == offer_id)
+            )
+        ).scalar_one_or_none()
+        if (
+            case is None
+            or not case.frozen_terms
+            or not case.frozen_terms_hash
+            or not case.frozen_at
+        ):
+            raise ProduceOfferNotFoundError("No buyer offer is awaiting your approval.")
+        decision = (
+            await self.session.execute(
+                select(FarmerOfferDecision).where(FarmerOfferDecision.case_id == case.id)
+            )
+        ).scalar_one_or_none()
+        return case, decision
+
+    async def decide_buyer_offer(
+        self, user: User, offer_id: uuid.UUID, payload: FarmerOfferDecisionIn
+    ):
+        await self._require_offer(user, offer_id)
+        existing_key = (
+            await self.session.execute(
+                select(FarmerOfferDecision).where(
+                    FarmerOfferDecision.farmer_id == user.id,
+                    FarmerOfferDecision.idempotency_key == payload.idempotency_key,
+                )
+            )
+        ).scalar_one_or_none()
+        if existing_key is not None:
+            if existing_key.offer_id != offer_id or existing_key.decision != payload.decision:
+                raise InvalidProduceError("Idempotency key was already used for another decision.")
+            case = await self.session.get(ProcurementCase, existing_key.case_id)
+            return case, existing_key
+        case = (
+            await self.session.execute(
+                select(ProcurementCase)
+                .where(ProcurementCase.offer_id == offer_id)
+                .with_for_update()
+            )
+        ).scalar_one_or_none()
+        if (
+            case is None
+            or case.status != ProcurementStatus.FARMER_APPROVAL_PENDING.value
+            or not case.frozen_terms
+            or not case.frozen_terms_hash
+        ):
+            raise InvalidProduceError("This buyer offer is not awaiting approval.")
+        prior = (
+            await self.session.execute(
+                select(FarmerOfferDecision).where(FarmerOfferDecision.case_id == case.id)
+            )
+        ).scalar_one_or_none()
+        if prior is not None:
+            raise InvalidProduceError("A final decision has already been recorded.")
+        event = FarmerOfferDecision(
+            case_id=case.id,
+            offer_id=offer_id,
+            farmer_id=user.id,
+            decision=payload.decision,
+            terms_hash=case.frozen_terms_hash,
+            terms_snapshot=dict(case.frozen_terms),
+            idempotency_key=payload.idempotency_key,
+            reason=payload.reason,
+        )
+        self.session.add(event)
+        case.status = (
+            ProcurementStatus.FARMER_ACCEPTED.value
+            if payload.decision == "accepted"
+            else ProcurementStatus.FARMER_REJECTED.value
+        )
+        await self.session.flush()
+        return case, event
 
     # ----------------------------------------------------------------- #
     # Validation

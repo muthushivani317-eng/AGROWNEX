@@ -95,6 +95,10 @@ class AuditAction(StrEnum):
     VIEW_PROCUREMENT = "view_procurement"
     PROCUREMENT_STATUS_CHANGED = "procurement_status_changed"
     BUYER_CONTACT_REVEALED = "buyer_contact_revealed"
+    PICKUP_LEDGER_RECORDED = "pickup_ledger_recorded"
+    TRANSACTION_RECORDED = "transaction_recorded"
+    PAYMENT_LEDGER_RECORDED = "payment_ledger_recorded"
+    COMMISSION_LEDGER_RECORDED = "commission_ledger_recorded"
     VIEW_AI = "view_ai"
     VIEW_NOTIFICATIONS = "view_notifications"
     BROADCAST_SENT = "broadcast_sent"
@@ -112,6 +116,8 @@ class ProcurementStatus(StrEnum):
     BUYER_INTERESTED = "buyer_interested"
     OFFER_RECEIVED = "offer_received"
     FARMER_APPROVAL_PENDING = "farmer_approval_pending"
+    FARMER_ACCEPTED = "farmer_accepted"
+    FARMER_REJECTED = "farmer_rejected"
     CANCELLED = "cancelled"
 
     # Source-compatible names for callers on the previous admin contract.
@@ -127,6 +133,7 @@ PROCUREMENT_OPEN = (
     ProcurementStatus.BUYER_INTERESTED.value,
     ProcurementStatus.OFFER_RECEIVED.value,
     ProcurementStatus.FARMER_APPROVAL_PENDING.value,
+    ProcurementStatus.FARMER_ACCEPTED.value,
 )
 
 

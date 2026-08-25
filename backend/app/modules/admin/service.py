@@ -9,10 +9,14 @@ lives here; routes stay thin.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
+from decimal import Decimal
 
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -41,13 +45,23 @@ from app.modules.admin.models import (
     AdminUser,
     AuditLog,
     BroadcastMessage,
+    CommissionLedgerEntry,
+    PaymentLedgerEntry,
+    PickupLedgerEntry,
     ProcurementCase,
+    ProcurementTransaction,
     SystemAnnouncement,
 )
 from app.modules.admin.provider import BroadcastProvider, get_default_broadcast_provider
 from app.modules.admin.queries import AdminQueries
 from app.modules.admin.repository import AdminRepository, normalize_procurement_status
-from app.modules.admin.schemas import ProcurementCaseUpdateIn
+from app.modules.admin.schemas import (
+    CommissionLedgerIn,
+    PaymentLedgerIn,
+    PickupLedgerIn,
+    ProcurementCaseUpdateIn,
+    TransactionIn,
+)
 from app.modules.ai.repositories import CostRow, TokenUsageRepository
 from app.modules.auth.models import User
 from app.modules.produce.models import ProduceOffer
@@ -161,6 +175,86 @@ class AdminService:
             "counts": counts,
             "procurement_status_counts": procurement_counts,
             "generated_at": self._now_dt(),
+        }
+
+    async def business_dashboard(self, ctx: AdminContext) -> dict:
+        """Real daily funnel and assisted-sales ledger metrics; never inferred."""
+        self._require(ctx, AdminPermission.VIEW_DASHBOARD)
+        day_start = self._now_dt().replace(hour=0, minute=0, second=0, microsecond=0)
+        users = select(func.count(User.id)).where(User.is_deleted.is_(False))
+
+        async def count(stmt):
+            return int((await self.session.scalar(stmt)) or 0)
+
+        total_farmers = await count(users)
+        new_today = await count(users.where(User.created_at >= day_start))
+        active_today = await count(users.where(User.last_login >= day_start))
+        active_7d = await count(users.where(User.last_login >= self._now_dt() - timedelta(days=7)))
+        active_30d = await count(
+            users.where(User.last_login >= self._now_dt() - timedelta(days=30))
+        )
+        listings_today = await count(
+            select(func.count(ProduceOffer.id)).where(
+                ProduceOffer.created_at >= day_start, ProduceOffer.is_deleted.is_(False)
+            )
+        )
+        status_rows = (
+            await self.session.execute(
+                select(ProcurementCase.status, func.count(ProcurementCase.id)).group_by(
+                    ProcurementCase.status
+                )
+            )
+        ).all()
+        transaction_count = await count(select(func.count(ProcurementTransaction.id)))
+        gmv = Decimal(
+            str(
+                (
+                    await self.session.scalar(
+                        select(func.coalesce(func.sum(ProcurementTransaction.gross_amount), 0))
+                    )
+                )
+                or 0
+            )
+        )
+        earned_commission = Decimal(
+            str(
+                (
+                    await self.session.scalar(
+                        select(func.coalesce(func.sum(CommissionLedgerEntry.amount), 0)).where(
+                            CommissionLedgerEntry.entry_type == "earned"
+                        )
+                    )
+                )
+                or 0
+            )
+        )
+        buyer_receipts = Decimal(
+            str(
+                (
+                    await self.session.scalar(
+                        select(func.coalesce(func.sum(PaymentLedgerEntry.amount), 0)).where(
+                            PaymentLedgerEntry.entry_type == "buyer_receipt"
+                        )
+                    )
+                )
+                or 0
+            )
+        )
+        return {
+            "generated_at": self._now_dt(),
+            "total_farmers": total_farmers,
+            "new_farmers_today": new_today,
+            "active_farmers_today": active_today,
+            "active_farmers_7d": active_7d,
+            "active_farmers_30d": active_30d,
+            "produce_listings_today": listings_today,
+            "procurement_status_counts": {status: int(value) for status, value in status_rows},
+            "transactions": transaction_count,
+            "gmv": str(gmv),
+            "buyer_receipts": str(buyer_receipts),
+            "payment_outstanding": str(max(Decimal("0"), gmv - buyer_receipts)),
+            "earned_commission": str(earned_commission),
+            "currency": "INR",
         }
 
     # ----------------------------------------------------------------- #
@@ -289,6 +383,18 @@ class AdminService:
                 ProcurementCase(offer_id=offer_id, status=initial_status)
             )
         fields = data.model_dump(exclude_unset=True)
+        commercial_fields = {
+            "buyer_name",
+            "buyer_contact",
+            "buyer_offer_quantity",
+            "buyer_offer_price",
+            "transport_cost",
+            "commission_rate",
+            "currency",
+            "price_unit",
+        }
+        if case.frozen_at is not None and commercial_fields.intersection(fields):
+            raise InvalidProcurementStatusError("Frozen buyer offer terms cannot be edited.")
         assignee_id = fields.get("assigned_admin_id")
         if assignee_id is not None:
             assignee = await self.session.get(AdminUser, assignee_id)
@@ -333,6 +439,11 @@ class AdminService:
                     ProcurementStatus.FINDING_BUYERS.value,
                     ProcurementStatus.CANCELLED.value,
                 },
+                ProcurementStatus.FARMER_ACCEPTED.value: set(),
+                ProcurementStatus.FARMER_REJECTED.value: {
+                    ProcurementStatus.FINDING_BUYERS.value,
+                    ProcurementStatus.CANCELLED.value,
+                },
             }
             if requested != current_status and requested not in allowed.get(current_status, set()):
                 raise InvalidProcurementStatusError(
@@ -367,6 +478,25 @@ class AdminService:
                 )
         if requested == ProcurementStatus.FARMER_APPROVAL_PENDING.value and not commercial:
             raise InvalidProcurementStatusError("Farmer approval requires a commercial offer.")
+        if requested == ProcurementStatus.FARMER_APPROVAL_PENDING.value:
+            snapshot = {
+                "offer_id": str(offer_id),
+                "buyer_name": str(proposed("buyer_name")),
+                "quantity": str(proposed("buyer_offer_quantity")),
+                "unit_price": str(proposed("buyer_offer_price")),
+                "currency": str(proposed("currency")),
+                "price_unit": str(proposed("price_unit")),
+                "transport_cost": str(proposed("transport_cost") or 0),
+                "commission_rate": str(proposed("commission_rate") or 0),
+            }
+            canonical = json.dumps(snapshot, sort_keys=True, separators=(",", ":"))
+            case.frozen_terms = snapshot
+            case.frozen_terms_hash = hashlib.sha256(canonical.encode()).hexdigest()
+            case.frozen_at = self._now_dt()
+        elif requested == ProcurementStatus.FINDING_BUYERS.value and case.frozen_at is not None:
+            case.frozen_terms = None
+            case.frozen_terms_hash = None
+            case.frozen_at = None
         for key, value in fields.items():
             setattr(case, key, value)
         if requested is not None:
@@ -396,6 +526,247 @@ class AdminService:
         )
         await self.session.flush()
         return case.buyer_contact
+
+    async def record_pickup(self, ctx: AdminContext, offer_id: uuid.UUID, data: PickupLedgerIn):
+        self._require(ctx, AdminPermission.MANAGE_PROCUREMENT)
+        case = await self.repo.procurement_case_of(offer_id)
+        if case is None or case.status != ProcurementStatus.FARMER_ACCEPTED.value:
+            raise InvalidProcurementStatusError("Pickup requires an accepted farmer offer.")
+        if data.status == "completed" and data.occurred_at is None:
+            raise InvalidProcurementStatusError("Completed pickup requires occurred_at.")
+        entry = PickupLedgerEntry(
+            case_id=case.id, recorded_by_admin_id=ctx.admin.id, **data.model_dump()
+        )
+        self.session.add(entry)
+        await self._audit(
+            ctx,
+            AuditAction.PICKUP_LEDGER_RECORDED,
+            target="pickup_ledger",
+            target_id=str(offer_id),
+            meta={"status": data.status},
+        )
+        await self.session.flush()
+        return entry
+
+    async def record_transaction(self, ctx: AdminContext, offer_id: uuid.UUID, data: TransactionIn):
+        self._require(ctx, AdminPermission.MANAGE_PROCUREMENT)
+        case = await self.repo.procurement_case_of(offer_id)
+        if (
+            case is None
+            or case.status != ProcurementStatus.FARMER_ACCEPTED.value
+            or not case.frozen_terms
+        ):
+            raise InvalidProcurementStatusError("Transaction requires an accepted frozen offer.")
+        existing = (
+            await self.session.execute(
+                select(ProcurementTransaction).where(ProcurementTransaction.case_id == case.id)
+            )
+        ).scalar_one_or_none()
+        if existing is not None:
+            return existing
+        quantity = Decimal(str(case.frozen_terms["quantity"]))
+        price = Decimal(str(case.frozen_terms["unit_price"]))
+        transaction = ProcurementTransaction(
+            case_id=case.id,
+            quantity=float(quantity),
+            unit_price=price,
+            gross_amount=quantity * price,
+            currency=str(case.frozen_terms["currency"]),
+            terms_hash=case.frozen_terms_hash,
+            occurred_at=data.occurred_at,
+            recorded_by_admin_id=ctx.admin.id,
+        )
+        self.session.add(transaction)
+        await self._audit(
+            ctx,
+            AuditAction.TRANSACTION_RECORDED,
+            target="procurement_transaction",
+            target_id=str(offer_id),
+            meta={"terms_hash": case.frozen_terms_hash},
+        )
+        await self.session.flush()
+        return transaction
+
+    async def record_payment(
+        self, ctx: AdminContext, transaction_id: uuid.UUID, data: PaymentLedgerIn
+    ):
+        self._require(ctx, AdminPermission.MANAGE_PROCUREMENT)
+        transaction = await self.session.get(ProcurementTransaction, transaction_id)
+        if transaction is None:
+            raise OfferNotFoundError()
+        entry = PaymentLedgerEntry(
+            transaction_id=transaction_id,
+            recorded_by_admin_id=ctx.admin.id,
+            **data.model_dump(),
+        )
+        self.session.add(entry)
+        await self._audit(
+            ctx,
+            AuditAction.PAYMENT_LEDGER_RECORDED,
+            target="payment_ledger",
+            target_id=str(transaction_id),
+            meta={"entry_type": data.entry_type, "amount": str(data.amount)},
+        )
+        await self.session.flush()
+        return entry
+
+    async def record_commission(
+        self, ctx: AdminContext, transaction_id: uuid.UUID, data: CommissionLedgerIn
+    ):
+        self._require(ctx, AdminPermission.MANAGE_PROCUREMENT)
+        transaction = await self.session.get(ProcurementTransaction, transaction_id)
+        if transaction is None:
+            raise OfferNotFoundError()
+        case = await self.session.get(ProcurementCase, transaction.case_id)
+        if case is None or not case.frozen_terms:
+            raise InvalidProcurementStatusError("Frozen terms are unavailable.")
+        if data.entry_type == "earned":
+            received = await self.session.scalar(
+                select(func.coalesce(func.sum(PaymentLedgerEntry.amount), 0)).where(
+                    PaymentLedgerEntry.transaction_id == transaction_id,
+                    PaymentLedgerEntry.entry_type == "buyer_receipt",
+                )
+            )
+            if Decimal(str(received)) < transaction.gross_amount:
+                raise InvalidProcurementStatusError(
+                    "Commission is earned only after full buyer receipt."
+                )
+            prior = (
+                await self.session.execute(
+                    select(CommissionLedgerEntry).where(
+                        CommissionLedgerEntry.transaction_id == transaction_id,
+                        CommissionLedgerEntry.entry_type == "earned",
+                    )
+                )
+            ).scalar_one_or_none()
+            if prior is not None:
+                return prior
+        rate = Decimal(str(case.frozen_terms.get("commission_rate") or 0))
+        amount = (transaction.gross_amount * rate / Decimal("100")).quantize(Decimal("0.01"))
+        entry = CommissionLedgerEntry(
+            transaction_id=transaction_id,
+            entry_type=data.entry_type,
+            base_amount=transaction.gross_amount,
+            rate=rate,
+            amount=amount,
+            currency=transaction.currency,
+            occurred_at=data.occurred_at,
+            recorded_by_admin_id=ctx.admin.id,
+        )
+        self.session.add(entry)
+        await self._audit(
+            ctx,
+            AuditAction.COMMISSION_LEDGER_RECORDED,
+            target="commission_ledger",
+            target_id=str(transaction_id),
+            meta={"entry_type": data.entry_type, "amount": str(amount)},
+        )
+        await self.session.flush()
+        return entry
+
+    async def commerce_summary(self, ctx: AdminContext, offer_id: uuid.UUID) -> dict:
+        self._require(ctx, AdminPermission.MANAGE_PROCUREMENT)
+        case = await self.repo.procurement_case_of(offer_id)
+        if case is None:
+            raise OfferNotFoundError()
+        transaction = (
+            await self.session.execute(
+                select(ProcurementTransaction).where(ProcurementTransaction.case_id == case.id)
+            )
+        ).scalar_one_or_none()
+        pickups = (
+            (
+                await self.session.execute(
+                    select(PickupLedgerEntry)
+                    .where(PickupLedgerEntry.case_id == case.id)
+                    .order_by(PickupLedgerEntry.created_at)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        payments = []
+        commissions = []
+        if transaction is not None:
+            payments = (
+                (
+                    await self.session.execute(
+                        select(PaymentLedgerEntry)
+                        .where(PaymentLedgerEntry.transaction_id == transaction.id)
+                        .order_by(PaymentLedgerEntry.created_at)
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            commissions = (
+                (
+                    await self.session.execute(
+                        select(CommissionLedgerEntry)
+                        .where(CommissionLedgerEntry.transaction_id == transaction.id)
+                        .order_by(CommissionLedgerEntry.created_at)
+                    )
+                )
+                .scalars()
+                .all()
+            )
+        await self._audit(
+            ctx,
+            AuditAction.VIEW_PROCUREMENT,
+            target="commerce_ledger",
+            target_id=str(offer_id),
+        )
+        return {
+            "offer_id": str(offer_id),
+            "case_status": case.status,
+            "transaction": (
+                {
+                    "id": str(transaction.id),
+                    "quantity": transaction.quantity,
+                    "unit_price": str(transaction.unit_price),
+                    "gross_amount": str(transaction.gross_amount),
+                    "currency": transaction.currency,
+                    "occurred_at": transaction.occurred_at,
+                }
+                if transaction
+                else None
+            ),
+            "pickups": [
+                {
+                    "id": str(item.id),
+                    "status": item.status,
+                    "scheduled_at": item.scheduled_at,
+                    "occurred_at": item.occurred_at,
+                    "location": item.location,
+                    "note": item.note,
+                    "created_at": item.created_at,
+                }
+                for item in pickups
+            ],
+            "payments": [
+                {
+                    "id": str(item.id),
+                    "entry_type": item.entry_type,
+                    "amount": str(item.amount),
+                    "currency": item.currency,
+                    "reference": item.reference,
+                    "occurred_at": item.occurred_at,
+                }
+                for item in payments
+            ],
+            "commissions": [
+                {
+                    "id": str(item.id),
+                    "entry_type": item.entry_type,
+                    "base_amount": str(item.base_amount),
+                    "rate": str(item.rate),
+                    "amount": str(item.amount),
+                    "currency": item.currency,
+                    "occurred_at": item.occurred_at,
+                }
+                for item in commissions
+            ],
+        }
 
     async def procurement_item(self, ctx: AdminContext, offer_id: uuid.UUID) -> dict:
         self._require(ctx, AdminPermission.MANAGE_PROCUREMENT)
