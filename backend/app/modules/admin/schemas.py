@@ -3,13 +3,16 @@
 Labels travel as data (localization codes handled by the client). Untracked metrics are
 ``None`` — surfaced honestly, never fabricated (docs/PRODUCT_RULES.md).
 """
+
 from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
+from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
+from app.modules.admin.constants import ProcurementStatus
 from app.modules.admin.engine import OverviewCard
 from app.modules.admin.metrics import FarmerRow, ProcurementRow
 from app.modules.admin.models import (
@@ -164,10 +167,26 @@ class ProcurementRowOut(BaseModel):
     farmer_name: str | None
     offer_status: str
     admin_status: str
+    assigned_admin_id: uuid.UUID | None = None
+    follow_up_at: datetime | None = None
+    buyer_name: str | None = None
+    buyer_contact: str | None = None
+    buyer_contact_masked: bool = False
+    cultivated_area_hectares: float | None = None
+    expected_total_quantity: float | None = None
+    available_quantity: float | None = None
+    quantity_provenance: str | None = None
+    quality_notes: str | None = None
+    buyer_offer_quantity: float | None = None
+    buyer_offer_price: float | None = None
+    transport_cost: float | None = None
+    commission_rate: float | None = None
+    negotiation_notes: str | None = None
 
     @classmethod
     def from_item(cls, item: dict) -> ProcurementRowOut:
         row: ProcurementRow = item["row"]
+        case = item.get("case")
         return cls(
             offer_id=row.offer_id,
             crop=row.crop,
@@ -181,6 +200,21 @@ class ProcurementRowOut(BaseModel):
             farmer_name=row.farmer_name,
             offer_status=row.offer_status,
             admin_status=item["admin_status"],
+            assigned_admin_id=getattr(case, "assigned_admin_id", None),
+            follow_up_at=getattr(case, "follow_up_at", None),
+            buyer_name=getattr(case, "buyer_name", None),
+            buyer_contact=None,
+            buyer_contact_masked=bool(getattr(case, "buyer_contact", None)),
+            cultivated_area_hectares=row.cultivated_area_hectares,
+            expected_total_quantity=row.expected_total_quantity,
+            available_quantity=row.available_quantity,
+            quantity_provenance=row.quantity_provenance,
+            quality_notes=row.quality_notes,
+            buyer_offer_quantity=getattr(case, "buyer_offer_quantity", None),
+            buyer_offer_price=getattr(case, "buyer_offer_price", None),
+            transport_cost=getattr(case, "transport_cost", None),
+            commission_rate=getattr(case, "commission_rate", None),
+            negotiation_notes=getattr(case, "negotiation_notes", None),
         )
 
 
@@ -340,6 +374,27 @@ class AnnouncementIn(BaseModel):
 class ProcurementStatusIn(BaseModel):
     status: str
     note: str | None = None
+
+
+class ProcurementCaseUpdateIn(BaseModel):
+    status: ProcurementStatus | None = None
+    assigned_admin_id: uuid.UUID | None = None
+    follow_up_at: datetime | None = None
+    buyer_name: str | None = Field(default=None, max_length=160)
+    buyer_contact: str | None = Field(default=None, max_length=160)
+    buyer_offer_quantity: float | None = Field(default=None, gt=0, le=1_000_000)
+    buyer_offer_price: Decimal | None = Field(
+        default=None, gt=0, le=10_000_000, max_digits=14, decimal_places=2
+    )
+    transport_cost: Decimal | None = Field(
+        default=None, ge=0, le=10_000_000, max_digits=14, decimal_places=2
+    )
+    commission_rate: Decimal | None = Field(
+        default=None, ge=0, le=100, max_digits=5, decimal_places=2
+    )
+    currency: str | None = Field(default=None, min_length=3, max_length=3)
+    price_unit: str | None = Field(default=None, min_length=1, max_length=16)
+    negotiation_notes: str | None = Field(default=None, max_length=4000)
 
 
 # --------------------------------------------------------------------------- #

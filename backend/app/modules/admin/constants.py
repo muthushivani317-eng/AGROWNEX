@@ -5,6 +5,7 @@ dashboard. Adding a new admin role or permission is a data change here — no re
 (docs: future Super Admin / District Managers / Procurement Managers / Agriculture
 Officers / Customer Support / Enterprise / Export dashboards).
 """
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -38,6 +39,7 @@ class AdminPermission(StrEnum):
     SEND_BROADCAST = "send_broadcast"
     VIEW_AUDIT = "view_audit"
     MANAGE_ADMINS = "manage_admins"
+    REVEAL_BUYER_CONTACT = "reveal_buyer_contact"
 
 
 _ALL = tuple(AdminPermission)
@@ -49,7 +51,6 @@ ROLE_PERMISSIONS: dict[str, tuple[AdminPermission, ...]] = {
         AdminPermission.VIEW_DASHBOARD,
         AdminPermission.VIEW_ANALYTICS,
         AdminPermission.MANAGE_FARMERS,
-        AdminPermission.MANAGE_PROCUREMENT,
         AdminPermission.SEND_BROADCAST,
         AdminPermission.VIEW_AUDIT,
     ),
@@ -57,6 +58,7 @@ ROLE_PERMISSIONS: dict[str, tuple[AdminPermission, ...]] = {
         AdminPermission.VIEW_DASHBOARD,
         AdminPermission.VIEW_ANALYTICS,
         AdminPermission.MANAGE_PROCUREMENT,
+        AdminPermission.REVEAL_BUYER_CONTACT,
     ),
     AdminRole.AGRICULTURE_OFFICER.value: (
         AdminPermission.VIEW_DASHBOARD,
@@ -92,6 +94,7 @@ class AuditAction(StrEnum):
     VIEW_ANALYTICS = "view_analytics"
     VIEW_PROCUREMENT = "view_procurement"
     PROCUREMENT_STATUS_CHANGED = "procurement_status_changed"
+    BUYER_CONTACT_REVEALED = "buyer_contact_revealed"
     VIEW_AI = "view_ai"
     VIEW_NOTIFICATIONS = "view_notifications"
     BROADCAST_SENT = "broadcast_sent"
@@ -103,19 +106,27 @@ class ProcurementStatus(StrEnum):
     """Internal procurement pipeline (NOT a marketplace; overlays farmer offers)."""
 
     NEW = "new"
-    CONTACTED = "contacted"
-    NEGOTIATING = "negotiating"
-    CONFIRMED = "confirmed"
-    COLLECTED = "collected"
-    SOLD = "sold"
+    UNDER_REVIEW = "under_review"
+    FARMER_CONTACTED = "farmer_contacted"
+    FINDING_BUYERS = "finding_buyers"
+    BUYER_INTERESTED = "buyer_interested"
+    OFFER_RECEIVED = "offer_received"
+    FARMER_APPROVAL_PENDING = "farmer_approval_pending"
     CANCELLED = "cancelled"
+
+    # Source-compatible names for callers on the previous admin contract.
+    CONTACTED = "farmer_contacted"
+    NEGOTIATING = "finding_buyers"
 
 
 PROCUREMENT_OPEN = (
     ProcurementStatus.NEW.value,
-    ProcurementStatus.CONTACTED.value,
-    ProcurementStatus.NEGOTIATING.value,
-    ProcurementStatus.CONFIRMED.value,
+    ProcurementStatus.UNDER_REVIEW.value,
+    ProcurementStatus.FARMER_CONTACTED.value,
+    ProcurementStatus.FINDING_BUYERS.value,
+    ProcurementStatus.BUYER_INTERESTED.value,
+    ProcurementStatus.OFFER_RECEIVED.value,
+    ProcurementStatus.FARMER_APPROVAL_PENDING.value,
 )
 
 

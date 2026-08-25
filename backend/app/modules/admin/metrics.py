@@ -5,6 +5,7 @@ read-only (docs: no direct farmer data modification) and guarded, so one module 
 never breaks the dashboard. Counts and group-bys are real — nothing is fabricated
 (docs/PRODUCT_RULES.md → uncertainty is surfaced, e.g. untracked metrics stay ``None``).
 """
+
 from __future__ import annotations
 
 import uuid
@@ -48,6 +49,11 @@ class ProcurementRow:
     farmer_name: str | None
     farmer_phone: str | None
     offer_status: str
+    cultivated_area_hectares: float | None
+    expected_total_quantity: float | None
+    available_quantity: float | None
+    quantity_provenance: str | None
+    quality_notes: str | None
 
 
 @dataclass
@@ -114,9 +120,7 @@ class AdminMetrics:
             ),
             "intelligence_reports": await self._count(
                 "intelligence_reports",
-                select(CropIntelligenceReport).where(
-                    CropIntelligenceReport.is_deleted.is_(False)
-                ),
+                select(CropIntelligenceReport).where(CropIntelligenceReport.is_deleted.is_(False)),
             ),
             "scheme_saves": await self._count(
                 "scheme_saves",
@@ -166,9 +170,7 @@ class AdminMetrics:
             ),
             "intelligence_reports": await self._count(
                 "ai_intel",
-                select(CropIntelligenceReport).where(
-                    CropIntelligenceReport.is_deleted.is_(False)
-                ),
+                select(CropIntelligenceReport).where(CropIntelligenceReport.is_deleted.is_(False)),
             ),
             "average_confidence": avg_conf,
             "daily_requests": daily,
@@ -235,14 +237,9 @@ class AdminMetrics:
     async def _group(self, name: str, column, stmt) -> list[dict]:  # noqa: ANN001
         try:
             rows = (
-                await self.session.execute(
-                    stmt.group_by(column).order_by(func.count().desc())
-                )
+                await self.session.execute(stmt.group_by(column).order_by(func.count().desc()))
             ).all()
-            return [
-                {"label": (label or "unknown"), "count": int(count)}
-                for label, count in rows
-            ]
+            return [{"label": (label or "unknown"), "count": int(count)} for label, count in rows]
         except Exception:  # noqa: BLE001
             logger.exception("admin distribution '%s' failed", name)
             return []

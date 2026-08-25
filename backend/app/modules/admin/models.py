@@ -13,17 +13,22 @@ Normalized tables for the AgrowAI team platform:
 * ``dashboard_widgets``    — the master list of available dashboard widgets.
 * ``dashboard_preferences``— a per-admin widget layout (enabled + position).
 """
+
 from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from decimal import Decimal
 
 from sqlalchemy import (
     JSON,
     Boolean,
+    CheckConstraint,
     DateTime,
+    Float,
     ForeignKey,
     Integer,
+    Numeric,
     String,
     Text,
     UniqueConstraint,
@@ -83,9 +88,7 @@ class BroadcastMessage(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     )
     title: Mapped[str] = mapped_column(String(160), nullable=False)
     body: Mapped[str] = mapped_column(Text, nullable=False)
-    language: Mapped[str] = mapped_column(
-        String(8), default=DEFAULT_LANGUAGE, nullable=False
-    )
+    language: Mapped[str] = mapped_column(String(8), default=DEFAULT_LANGUAGE, nullable=False)
     target_type: Mapped[str] = mapped_column(String(16), nullable=False)
     target_value: Mapped[str | None] = mapped_column(String(120))
     schedule_type: Mapped[str] = mapped_column(String(12), nullable=False)
@@ -106,9 +109,7 @@ class SystemAnnouncement(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     )
     title: Mapped[str] = mapped_column(String(160), nullable=False)
     body: Mapped[str] = mapped_column(Text, nullable=False)
-    language: Mapped[str] = mapped_column(
-        String(8), default=DEFAULT_LANGUAGE, nullable=False
-    )
+    language: Mapped[str] = mapped_column(String(8), default=DEFAULT_LANGUAGE, nullable=False)
     category: Mapped[str | None] = mapped_column(String(40))
     audience: Mapped[str] = mapped_column(String(12), default="all", nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)
@@ -132,6 +133,59 @@ class AuditLog(UUIDMixin, TimestampMixin, Base):
     meta: Mapped[dict | None] = mapped_column(JSON)
 
 
+class ProcurementCase(UUIDMixin, TimestampMixin, Base):
+    """Internal sales-team workspace; never serialized by farmer-facing APIs."""
+
+    __tablename__ = "procurement_cases"
+    __table_args__ = (
+        UniqueConstraint("offer_id", name="uq_procurement_case_offer"),
+        CheckConstraint(
+            "buyer_offer_quantity IS NULL OR buyer_offer_quantity > 0",
+            name="ck_procurement_offer_qty_positive",
+        ),
+        CheckConstraint(
+            "buyer_offer_price IS NULL OR buyer_offer_price > 0",
+            name="ck_procurement_offer_price_positive",
+        ),
+        CheckConstraint(
+            "transport_cost IS NULL OR transport_cost >= 0",
+            name="ck_procurement_transport_nonnegative",
+        ),
+        CheckConstraint(
+            "commission_rate IS NULL OR (commission_rate >= 0 AND commission_rate <= 100)",
+            name="ck_procurement_commission_rate",
+        ),
+        CheckConstraint(
+            "status IN ('new','under_review','farmer_contacted','finding_buyers',"
+            "'buyer_interested','offer_received','farmer_approval_pending','cancelled')",
+            name="ck_procurement_phase1_status",
+        ),
+    )
+
+    offer_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("produce_offers.id"), index=True, nullable=False
+    )
+    status: Mapped[str] = mapped_column(String(32), default="new", index=True, nullable=False)
+    assigned_admin_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID(), ForeignKey("admin_users.id"), index=True
+    )
+    follow_up_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    buyer_name: Mapped[str | None] = mapped_column(String(160))
+    buyer_contact: Mapped[str | None] = mapped_column(String(160))
+    buyer_offer_quantity: Mapped[float | None] = mapped_column(Float)
+    buyer_offer_price: Mapped[Decimal | None] = mapped_column(Numeric(14, 2))
+    transport_cost: Mapped[Decimal | None] = mapped_column(Numeric(14, 2))
+    commission_rate: Mapped[Decimal | None] = mapped_column(Numeric(5, 2))
+    currency: Mapped[str] = mapped_column(String(3), default="INR", nullable=False)
+    price_unit: Mapped[str | None] = mapped_column(String(16))
+    negotiation_notes: Mapped[str | None] = mapped_column(Text)
+
+    @property
+    def earned_commission(self) -> None:
+        """Commercial inputs are projections until a separate sale ledger exists."""
+        return None
+
+
 class DashboardWidget(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "dashboard_widgets"
 
@@ -144,9 +198,7 @@ class DashboardWidget(UUIDMixin, TimestampMixin, Base):
 
 class DashboardPreference(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "dashboard_preferences"
-    __table_args__ = (
-        UniqueConstraint("admin_id", "widget_key", name="uq_dashboard_pref"),
-    )
+    __table_args__ = (UniqueConstraint("admin_id", "widget_key", name="uq_dashboard_pref"),)
 
     admin_id: Mapped[uuid.UUID] = mapped_column(
         GUID(), ForeignKey("admin_users.id"), index=True, nullable=False

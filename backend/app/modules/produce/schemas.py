@@ -1,16 +1,19 @@
 """Produce request/response schemas (docs/API_CONTRACT.md → PRODUCE)."""
+
 from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.modules.produce.constants import (
     DEFAULT_CURRENCY,
     ProduceGrade,
     ProduceStatus,
     ProduceUnit,
+    QuantityProvenance,
 )
 from app.modules.produce.engine import PriceReference, ProcurementInsight
 from app.modules.produce.models import (
@@ -35,6 +38,11 @@ class ProduceOfferCreate(BaseModel):
     variety: str | None = Field(default=None, max_length=80)
     quantity: float = Field(gt=0, le=1_000_000)
     unit: ProduceUnit = ProduceUnit.QUINTAL
+    cultivated_area_hectares: float | None = Field(default=None, gt=0, le=1_000_000)
+    expected_total_quantity: float | None = Field(default=None, gt=0, le=1_000_000)
+    available_quantity: float | None = Field(default=None, gt=0, le=1_000_000)
+    quantity_provenance: Literal[QuantityProvenance.FARMER_REPORTED] | None = None
+    quality_notes: str | None = Field(default=None, max_length=2000)
     expected_harvest_date: date
     expected_grade: ProduceGrade | None = None
     asking_price: float | None = Field(default=None, ge=0, le=10_000_000)
@@ -50,6 +58,16 @@ class ProduceOfferCreate(BaseModel):
     status: ProduceStatus = ProduceStatus.SUBMITTED
     images: list[ProduceImageIn] = Field(default_factory=list)
 
+    @model_validator(mode="after")
+    def validate_quantities(self):
+        if (
+            self.available_quantity is not None
+            and self.expected_total_quantity is not None
+            and self.available_quantity > self.expected_total_quantity
+        ):
+            raise ValueError("available_quantity must not exceed expected_total_quantity")
+        return self
+
 
 class ProduceOfferUpdate(BaseModel):
     """Partial update — only provided fields change."""
@@ -58,6 +76,11 @@ class ProduceOfferUpdate(BaseModel):
     variety: str | None = Field(default=None, max_length=80)
     quantity: float | None = Field(default=None, gt=0, le=1_000_000)
     unit: ProduceUnit | None = None
+    cultivated_area_hectares: float | None = Field(default=None, gt=0, le=1_000_000)
+    expected_total_quantity: float | None = Field(default=None, gt=0, le=1_000_000)
+    available_quantity: float | None = Field(default=None, gt=0, le=1_000_000)
+    quantity_provenance: Literal[QuantityProvenance.FARMER_REPORTED] | None = None
+    quality_notes: str | None = Field(default=None, max_length=2000)
     expected_harvest_date: date | None = None
     expected_grade: ProduceGrade | None = None
     asking_price: float | None = Field(default=None, ge=0, le=10_000_000)
@@ -163,6 +186,11 @@ class ProduceOfferSummaryOut(BaseModel):
     variety: str | None
     quantity: float
     unit: str
+    cultivated_area_hectares: float | None
+    expected_total_quantity: float | None
+    available_quantity: float | None
+    quantity_provenance: str | None
+    quality_notes: str | None
     expected_harvest_date: date
     expected_grade: str | None
     asking_price: float | None
@@ -191,6 +219,11 @@ class ProduceOfferSummaryOut(BaseModel):
             variety=offer.variety,
             quantity=offer.quantity,
             unit=offer.unit,
+            cultivated_area_hectares=offer.cultivated_area_hectares,
+            expected_total_quantity=offer.expected_total_quantity,
+            available_quantity=offer.available_quantity,
+            quantity_provenance=offer.quantity_provenance,
+            quality_notes=offer.quality_notes,
             expected_harvest_date=offer.expected_harvest_date,
             expected_grade=offer.expected_grade,
             asking_price=offer.asking_price,
@@ -200,9 +233,7 @@ class ProduceOfferSummaryOut(BaseModel):
             status=offer.status,
             thumbnail_url=(images[0].thumbnail_url or images[0].image_url) if images else None,
             image_count=len(images),
-            insight=(
-                ProcurementInsightOut.from_insight(insight) if insight else None
-            ),
+            insight=(ProcurementInsightOut.from_insight(insight) if insight else None),
             created_at=offer.created_at,
             updated_at=offer.updated_at,
         )

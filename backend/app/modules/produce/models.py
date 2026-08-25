@@ -25,6 +25,7 @@ from datetime import date, datetime
 from sqlalchemy import (
     JSON,
     Boolean,
+    CheckConstraint,
     Date,
     DateTime,
     Float,
@@ -50,6 +51,31 @@ from app.shared.base_model import (
 
 class ProduceOffer(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     __tablename__ = "produce_offers"
+    __table_args__ = (
+        CheckConstraint("quantity > 0", name="ck_produce_quantity_positive"),
+        CheckConstraint(
+            "cultivated_area_hectares IS NULL OR cultivated_area_hectares > 0",
+            name="ck_produce_area_positive",
+        ),
+        CheckConstraint(
+            "expected_total_quantity IS NULL OR expected_total_quantity > 0",
+            name="ck_produce_expected_quantity_positive",
+        ),
+        CheckConstraint(
+            "available_quantity IS NULL OR available_quantity > 0",
+            name="ck_produce_available_quantity_positive",
+        ),
+        CheckConstraint(
+            "available_quantity IS NULL OR expected_total_quantity IS NULL OR "
+            "available_quantity <= expected_total_quantity",
+            name="ck_produce_available_within_expected",
+        ),
+        CheckConstraint(
+            "quantity_provenance IS NULL OR quantity_provenance IN "
+            "('farmer_reported','system_estimated','verified')",
+            name="ck_produce_quantity_provenance",
+        ),
+    )
 
     user_id: Mapped[uuid.UUID] = mapped_column(
         GUID(), ForeignKey("users.id"), index=True, nullable=False
@@ -64,6 +90,11 @@ class ProduceOffer(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     variety: Mapped[str | None] = mapped_column(String(80))
     quantity: Mapped[float] = mapped_column(Float, nullable=False)
     unit: Mapped[str] = mapped_column(String(12), nullable=False)
+    cultivated_area_hectares: Mapped[float | None] = mapped_column(Float)
+    expected_total_quantity: Mapped[float | None] = mapped_column(Float)
+    available_quantity: Mapped[float | None] = mapped_column(Float)
+    quantity_provenance: Mapped[str | None] = mapped_column(String(24))
+    quality_notes: Mapped[str | None] = mapped_column(Text)
     expected_harvest_date: Mapped[date] = mapped_column(Date, index=True, nullable=False)
     expected_grade: Mapped[str | None] = mapped_column(String(12))
 

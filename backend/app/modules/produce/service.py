@@ -6,6 +6,7 @@ deterministic Procurement Engine to enrich each offer, routes submissions throug
 the injectable ``ProduceProvider`` and tracks the lifecycle. Business logic lives
 here; routes stay thin.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -98,9 +99,7 @@ class ProduceService:
     async def _fetch_price_reference(
         self, crop: str, district: str | None
     ) -> PriceReference | None:
-        rows, _ = await self.market.list_prices(
-            crop=crop, district=district, limit=1, offset=0
-        )
+        rows, _ = await self.market.list_prices(crop=crop, district=district, limit=1, offset=0)
         if not rows:
             # Retry without the district constraint (still verified data).
             rows, _ = await self.market.list_prices(crop=crop, limit=1, offset=0)
@@ -190,11 +189,15 @@ class ProduceService:
         district = data.district or (farm.location.district if farm.location else None)
         block = data.block or (farm.location.block if farm.location else None)
         village = data.village or (farm.location.village if farm.location else None)
-        latitude = data.latitude if data.latitude is not None else (
-            farm.location.latitude if farm.location else None
+        latitude = (
+            data.latitude
+            if data.latitude is not None
+            else (farm.location.latitude if farm.location else None)
         )
-        longitude = data.longitude if data.longitude is not None else (
-            farm.location.longitude if farm.location else None
+        longitude = (
+            data.longitude
+            if data.longitude is not None
+            else (farm.location.longitude if farm.location else None)
         )
 
         offer = ProduceOffer(
@@ -204,6 +207,13 @@ class ProduceService:
             variety=data.variety,
             quantity=data.quantity,
             unit=data.unit.value,
+            cultivated_area_hectares=data.cultivated_area_hectares,
+            expected_total_quantity=data.expected_total_quantity,
+            available_quantity=data.available_quantity,
+            quantity_provenance=(
+                data.quantity_provenance.value if data.quantity_provenance else None
+            ),
+            quality_notes=data.quality_notes,
             expected_harvest_date=data.expected_harvest_date,
             expected_grade=data.expected_grade.value if data.expected_grade else None,
             asking_price=data.asking_price,
@@ -375,10 +385,14 @@ class ProduceService:
             self._validate_harvest_date(fields["expected_harvest_date"])
 
         status_change = fields.pop("status", None)
+        expected = fields.get("expected_total_quantity", offer.expected_total_quantity)
+        available = fields.get("available_quantity", offer.available_quantity)
+        if expected is not None and available is not None and available > expected:
+            raise InvalidProduceError("available_quantity must not exceed expected_total_quantity")
         crop_or_district_changed = False
 
         for key, value in fields.items():
-            if key in {"unit", "expected_grade"} and value is not None:
+            if key in {"unit", "expected_grade", "quantity_provenance"} and value is not None:
                 value = value.value if hasattr(value, "value") else value
             if key in {"crop_name", "district"} and value != getattr(offer, key):
                 crop_or_district_changed = True
@@ -400,9 +414,7 @@ class ProduceService:
         if new == offer.status:
             return
         if new not in FARMER_SETTABLE_STATUSES:
-            raise InvalidStatusTransitionError(
-                f"'{new}' is not a status a farmer can set."
-            )
+            raise InvalidStatusTransitionError(f"'{new}' is not a status a farmer can set.")
         old = offer.status
         offer.status = new
         await self._record_status(offer, old=old, new=new, by=user.id)

@@ -4,6 +4,7 @@ The procurement lifecycle is deliberately *not* a marketplace lifecycle: there i
 no "Sold" or "Reserved" transactional state. Offers move through a data-collection
 lifecycle so verified harvest information can be planned for procurement.
 """
+
 from __future__ import annotations
 
 import os
@@ -52,6 +53,12 @@ class ProduceGrade(StrEnum):
     UNGRADED = "ungraded"
 
 
+class QuantityProvenance(StrEnum):
+    FARMER_REPORTED = "farmer_reported"
+    SYSTEM_ESTIMATED = "system_estimated"
+    VERIFIED = "verified"
+
+
 class ProduceStatus(StrEnum):
     """Procurement data-collection lifecycle (never a transactional/sale state)."""
 
@@ -66,8 +73,12 @@ class ProduceStatus(StrEnum):
 
 # Statuses a farmer may set directly (the rest are system/provider driven).
 FARMER_SETTABLE_STATUSES: frozenset[str] = frozenset(
-    {ProduceStatus.DRAFT.value, ProduceStatus.SUBMITTED.value,
-     ProduceStatus.HARVESTED.value, ProduceStatus.WITHDRAWN.value}
+    {
+        ProduceStatus.DRAFT.value,
+        ProduceStatus.SUBMITTED.value,
+        ProduceStatus.HARVESTED.value,
+        ProduceStatus.WITHDRAWN.value,
+    }
 )
 
 

@@ -6,6 +6,7 @@ reusing the Notification engine. Farmer data is never modified here; the only wr
 admin-domain rows (audit, broadcast, announcement, admin status changes). Business logic
 lives here; routes stay thin.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -40,13 +41,16 @@ from app.modules.admin.models import (
     AdminUser,
     AuditLog,
     BroadcastMessage,
+    ProcurementCase,
     SystemAnnouncement,
 )
 from app.modules.admin.provider import BroadcastProvider, get_default_broadcast_provider
 from app.modules.admin.queries import AdminQueries
-from app.modules.admin.repository import AdminRepository
+from app.modules.admin.repository import AdminRepository, normalize_procurement_status
+from app.modules.admin.schemas import ProcurementCaseUpdateIn
 from app.modules.ai.repositories import CostRow, TokenUsageRepository
 from app.modules.auth.models import User
+from app.modules.produce.models import ProduceOffer
 from app.schemas.response import PaginatedData
 
 logger = get_logger("admin.service")
@@ -221,11 +225,20 @@ class AdminService:
             crop=crop, village=village, district=district, limit=page_size, offset=offset
         )
         status_map = await self.repo.procurement_status_map([r.offer_id for r in rows])
+        case_map = await self.repo.procurement_case_map([r.offer_id for r in rows])
         facts = await self.queries.procurement_facts()
         analytics = procurement_analytics(facts)
         await self._audit(ctx, AuditAction.VIEW_PROCUREMENT)
         items = [
-            {"row": r, "admin_status": status_map.get(str(r.offer_id), ProcurementStatus.NEW.value)}
+            {
+                "row": r,
+                "case": case_map.get(str(r.offer_id)),
+                "admin_status": (
+                    case_map[str(r.offer_id)].status
+                    if str(r.offer_id) in case_map
+                    else status_map.get(str(r.offer_id), ProcurementStatus.NEW.value)
+                ),
+            }
             for r in rows
         ]
         return {
@@ -242,23 +255,159 @@ class AdminService:
         note: str | None = None,
     ) -> str:
         self._require(ctx, AdminPermission.MANAGE_PROCUREMENT)
-        if status not in {s.value for s in ProcurementStatus}:
-            raise InvalidProcurementStatusError()
+        if status in {"confirmed", "collected"}:
+            raise InvalidProcurementStatusError(
+                f"Legacy procurement transition '{status}' is retired."
+            )
+        normalized = normalize_procurement_status(status)
+        try:
+            payload = ProcurementCaseUpdateIn(status=normalized)
+        except Exception as exc:
+            raise InvalidProcurementStatusError() from exc
+        case = await self.update_procurement_case(ctx, offer_id, payload)
+        return case.status
+
+    async def update_procurement_case(
+        self,
+        ctx: AdminContext,
+        offer_id: uuid.UUID,
+        data: ProcurementCaseUpdateIn,
+    ) -> ProcurementCase:
+        """Create/update the internal assisted-sales case for a farmer offer."""
+        self._require(ctx, AdminPermission.MANAGE_PROCUREMENT)
         if not await self.queries.offer_exists(offer_id):
             raise OfferNotFoundError()
-        previous = await self.repo.procurement_status_of(offer_id)
+        case = await self.repo.procurement_case_of(offer_id)
+        if case is None:
+            legacy_status = await self.repo.procurement_status_of(offer_id)
+            initial_status = (
+                legacy_status
+                if legacy_status in {status.value for status in ProcurementStatus}
+                else ProcurementStatus.NEW.value
+            )
+            case = await self.repo.add_procurement_case(
+                ProcurementCase(offer_id=offer_id, status=initial_status)
+            )
+        fields = data.model_dump(exclude_unset=True)
+        assignee_id = fields.get("assigned_admin_id")
+        if assignee_id is not None:
+            assignee = await self.session.get(AdminUser, assignee_id)
+            if (
+                assignee is None
+                or assignee.status != AdminUserStatus.ACTIVE.value
+                or AdminPermission.MANAGE_PROCUREMENT.value not in permissions_for(assignee.role)
+            ):
+                raise PermissionDeniedError("Assignee must be an active procurement admin.")
+        requested = fields.pop("status", None)
+        if requested is not None:
+            requested = requested.value if hasattr(requested, "value") else requested
+            requested = normalize_procurement_status(requested)
+            current_status = normalize_procurement_status(case.status)
+            allowed = {
+                ProcurementStatus.NEW.value: {
+                    ProcurementStatus.UNDER_REVIEW.value,
+                    ProcurementStatus.FARMER_CONTACTED.value,
+                    ProcurementStatus.CANCELLED.value,
+                },
+                ProcurementStatus.UNDER_REVIEW.value: {
+                    ProcurementStatus.FARMER_CONTACTED.value,
+                    ProcurementStatus.CANCELLED.value,
+                },
+                ProcurementStatus.FARMER_CONTACTED.value: {
+                    ProcurementStatus.FINDING_BUYERS.value,
+                    ProcurementStatus.CANCELLED.value,
+                },
+                ProcurementStatus.FINDING_BUYERS.value: {
+                    ProcurementStatus.BUYER_INTERESTED.value,
+                    ProcurementStatus.CANCELLED.value,
+                },
+                ProcurementStatus.BUYER_INTERESTED.value: {
+                    ProcurementStatus.OFFER_RECEIVED.value,
+                    ProcurementStatus.CANCELLED.value,
+                },
+                ProcurementStatus.OFFER_RECEIVED.value: {
+                    ProcurementStatus.FARMER_APPROVAL_PENDING.value,
+                    ProcurementStatus.CANCELLED.value,
+                },
+                ProcurementStatus.FARMER_APPROVAL_PENDING.value: {
+                    ProcurementStatus.FINDING_BUYERS.value,
+                    ProcurementStatus.CANCELLED.value,
+                },
+            }
+            if requested != current_status and requested not in allowed.get(current_status, set()):
+                raise InvalidProcurementStatusError(
+                    f"Invalid procurement status transition: {current_status} -> {requested}"
+                )
+        offer = await self.session.get(ProduceOffer, offer_id)
+        proposed = lambda name: fields.get(name, getattr(case, name))  # noqa: E731
+        if requested == ProcurementStatus.BUYER_INTERESTED.value and not proposed("buyer_name"):
+            raise InvalidProcurementStatusError("Buyer interested requires buyer identity.")
+        commercial = (
+            bool(proposed("buyer_name"))
+            and proposed("buyer_offer_quantity") is not None
+            and proposed("buyer_offer_quantity") > 0
+            and proposed("buyer_offer_price") is not None
+            and proposed("buyer_offer_price") > 0
+            and bool(proposed("currency"))
+            and bool(proposed("price_unit"))
+        )
+        if requested == ProcurementStatus.OFFER_RECEIVED.value:
+            if (
+                offer
+                and offer.available_quantity is not None
+                and proposed("buyer_offer_quantity")
+                and proposed("buyer_offer_quantity") > offer.available_quantity
+            ):
+                raise InvalidProcurementStatusError(
+                    "Buyer offer quantity exceeds available quantity."
+                )
+            if not commercial:
+                raise InvalidProcurementStatusError(
+                    "Offer received requires a complete commercial offer."
+                )
+        if requested == ProcurementStatus.FARMER_APPROVAL_PENDING.value and not commercial:
+            raise InvalidProcurementStatusError("Farmer approval requires a commercial offer.")
+        for key, value in fields.items():
+            setattr(case, key, value)
+        if requested is not None:
+            case.status = requested
         await self._audit(
             ctx,
             AuditAction.PROCUREMENT_STATUS_CHANGED,
-            target="procurement",
+            target="procurement_case",
             target_id=str(offer_id),
-            meta={"status": status, "previous": previous, "note": note},
+            meta={"status": case.status, "changed_fields": sorted(data.model_fields_set)},
         )
         await self.session.flush()
-        logger.info(
-            "procurement %s: %s → %s by admin=%s", offer_id, previous, status, ctx.admin.id
+        return case
+
+    async def reveal_buyer_contact(self, ctx: AdminContext, offer_id: uuid.UUID) -> str:
+        """Reveal one buyer contact with explicit permission and record-level audit."""
+        self._require(ctx, AdminPermission.REVEAL_BUYER_CONTACT)
+        case = await self.repo.procurement_case_of(offer_id)
+        if case is None or not case.buyer_contact:
+            raise OfferNotFoundError()
+        await self._audit(
+            ctx,
+            AuditAction.BUYER_CONTACT_REVEALED,
+            target="procurement_case",
+            target_id=str(offer_id),
+            meta={"record_level": True},
         )
-        return status
+        await self.session.flush()
+        return case.buyer_contact
+
+    async def procurement_item(self, ctx: AdminContext, offer_id: uuid.UUID) -> dict:
+        self._require(ctx, AdminPermission.MANAGE_PROCUREMENT)
+        row = await self.queries.procurement_offer(offer_id)
+        if row is None:
+            raise OfferNotFoundError()
+        case = await self.repo.procurement_case_of(offer_id)
+        return {
+            "row": row,
+            "case": case,
+            "admin_status": case.status if case else ProcurementStatus.NEW.value,
+        }
 
     # ----------------------------------------------------------------- #
     # AI monitoring
@@ -296,9 +445,7 @@ class AdminService:
     # ----------------------------------------------------------------- #
     # Notification management
     # ----------------------------------------------------------------- #
-    async def notifications_overview(
-        self, ctx: AdminContext, *, page: int, page_size: int
-    ) -> dict:
+    async def notifications_overview(self, ctx: AdminContext, *, page: int, page_size: int) -> dict:
         self._require(ctx, AdminPermission.SEND_BROADCAST)
         offset = (page - 1) * page_size
         rows, total = await self.repo.list_broadcasts(limit=page_size, offset=offset)
@@ -347,9 +494,7 @@ class AdminService:
         await self.repo.add_broadcast(broadcast)
 
         if immediate:
-            delivered = await self.broadcast_provider.deliver(
-                self.session, broadcast, recipients
-            )
+            delivered = await self.broadcast_provider.deliver(self.session, broadcast, recipients)
             broadcast.delivered_count = delivered
             broadcast.sent_at = self._now_dt()
 
@@ -403,9 +548,7 @@ class AdminService:
         await self.session.flush()
         return announcement
 
-    async def announcements(
-        self, ctx: AdminContext, *, page: int, page_size: int
-    ) -> PaginatedData:
+    async def announcements(self, ctx: AdminContext, *, page: int, page_size: int) -> PaginatedData:
         self._require(ctx, AdminPermission.VIEW_DASHBOARD)
         offset = (page - 1) * page_size
         rows, total = await self.repo.list_announcements(limit=page_size, offset=offset)

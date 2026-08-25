@@ -5,6 +5,7 @@ announcements, audit_logs, dashboard widgets/preferences). The current procureme
 status of an offer is derived from the immutable ``audit_logs`` (the last
 ``procurement_status_changed`` entry) — no farmer table is mutated.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -20,8 +21,18 @@ from app.modules.admin.models import (
     AdminUser,
     AuditLog,
     BroadcastMessage,
+    ProcurementCase,
     SystemAnnouncement,
 )
+
+_LEGACY_PROCUREMENT_STATUSES = {
+    "contacted": ProcurementStatus.FARMER_CONTACTED.value,
+    "negotiating": ProcurementStatus.FINDING_BUYERS.value,
+}
+
+
+def normalize_procurement_status(value: str) -> str:
+    return _LEGACY_PROCUREMENT_STATUSES.get(value, value)
 
 
 class AdminRepository:
@@ -33,9 +44,7 @@ class AdminRepository:
     # ----------------------------------------------------------------- #
     async def get_admin_by_user(self, user_id: uuid.UUID) -> AdminUser | None:
         res = await self.session.execute(
-            select(AdminUser).where(
-                AdminUser.user_id == user_id, AdminUser.is_deleted.is_(False)
-            )
+            select(AdminUser).where(AdminUser.user_id == user_id, AdminUser.is_deleted.is_(False))
         )
         return res.scalar_one_or_none()
 
@@ -74,38 +83,44 @@ class AdminRepository:
             ).scalar_one()
         )
         rows = (
-            await self.session.execute(
-                base.order_by(AuditLog.created_at.desc()).limit(limit).offset(offset)
+            (
+                await self.session.execute(
+                    base.order_by(AuditLog.created_at.desc()).limit(limit).offset(offset)
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         return list(rows), total
 
     # ----------------------------------------------------------------- #
     # Procurement status (derived from the audit trail — never fabricated)
     # ----------------------------------------------------------------- #
-    async def procurement_status_map(
-        self, offer_ids: list[uuid.UUID]
-    ) -> dict[str, str]:
+    async def procurement_status_map(self, offer_ids: list[uuid.UUID]) -> dict[str, str]:
         """The latest admin procurement status per offer id (default ``new``)."""
         if not offer_ids:
             return {}
         ids = [str(i) for i in offer_ids]
         rows = (
-            await self.session.execute(
-                select(AuditLog)
-                .where(
-                    AuditLog.action == AuditAction.PROCUREMENT_STATUS_CHANGED.value,
-                    AuditLog.target == "procurement",
-                    AuditLog.target_id.in_(ids),
+            (
+                await self.session.execute(
+                    select(AuditLog)
+                    .where(
+                        AuditLog.action == AuditAction.PROCUREMENT_STATUS_CHANGED.value,
+                        AuditLog.target == "procurement",
+                        AuditLog.target_id.in_(ids),
+                    )
+                    .order_by(AuditLog.created_at.asc())
                 )
-                .order_by(AuditLog.created_at.asc())
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         out: dict[str, str] = {}
         for row in rows:  # ascending → the last write wins
             status = (row.meta or {}).get("status")
             if status:
-                out[row.target_id or ""] = status
+                out[row.target_id or ""] = normalize_procurement_status(status)
         return {oid: out.get(oid, ProcurementStatus.NEW.value) for oid in ids}
 
     async def procurement_status_of(self, offer_id: uuid.UUID) -> str:
@@ -113,27 +128,66 @@ class AdminRepository:
             str(offer_id), ProcurementStatus.NEW.value
         )
 
-    async def procurement_status_counts(self) -> dict[str, int]:
-        """Count offers currently in each admin procurement status (from the trail)."""
-        rows = (
+    async def procurement_case_of(self, offer_id: uuid.UUID) -> ProcurementCase | None:
+        return (
             await self.session.execute(
-                select(AuditLog)
-                .where(
-                    AuditLog.action == AuditAction.PROCUREMENT_STATUS_CHANGED.value,
-                    AuditLog.target == "procurement",
-                )
-                .order_by(AuditLog.created_at.asc())
+                select(ProcurementCase).where(ProcurementCase.offer_id == offer_id)
             )
-        ).scalars().all()
+        ).scalar_one_or_none()
+
+    async def procurement_case_map(self, offer_ids: list[uuid.UUID]) -> dict[str, ProcurementCase]:
+        if not offer_ids:
+            return {}
+        cases = (
+            (
+                await self.session.execute(
+                    select(ProcurementCase).where(ProcurementCase.offer_id.in_(offer_ids))
+                )
+            )
+            .scalars()
+            .all()
+        )
+        return {str(case.offer_id): case for case in cases}
+
+    async def add_procurement_case(self, case: ProcurementCase) -> ProcurementCase:
+        self.session.add(case)
+        await self.session.flush()
+        return case
+
+    async def procurement_status_counts(self) -> dict[str, int]:
+        """Count cases, falling back to legacy audit state when no case exists."""
+        cases = (await self.session.execute(select(ProcurementCase))).scalars().all()
+        case_offer_ids = {str(case.offer_id) for case in cases}
+        latest = await self._legacy_procurement_statuses()
+        counts: dict[str, int] = {}
+        for raw_status in [case.status for case in cases] + [
+            status for offer_id, status in latest.items() if offer_id not in case_offer_ids
+        ]:
+            status = normalize_procurement_status(raw_status)
+            counts[status] = counts.get(status, 0) + 1
+        return counts
+
+    async def _legacy_procurement_statuses(self) -> dict[str, str]:
+        rows = (
+            (
+                await self.session.execute(
+                    select(AuditLog)
+                    .where(
+                        AuditLog.action == AuditAction.PROCUREMENT_STATUS_CHANGED.value,
+                        AuditLog.target == "procurement",
+                    )
+                    .order_by(AuditLog.created_at.asc())
+                )
+            )
+            .scalars()
+            .all()
+        )
         latest: dict[str, str] = {}
         for row in rows:
             status = (row.meta or {}).get("status")
             if status and row.target_id:
                 latest[row.target_id] = status
-        counts: dict[str, int] = {}
-        for status in latest.values():
-            counts[status] = counts.get(status, 0) + 1
-        return counts
+        return latest
 
     # ----------------------------------------------------------------- #
     # Broadcasts
@@ -153,10 +207,14 @@ class AdminRepository:
             ).scalar_one()
         )
         rows = (
-            await self.session.execute(
-                base.order_by(BroadcastMessage.created_at.desc()).limit(limit).offset(offset)
+            (
+                await self.session.execute(
+                    base.order_by(BroadcastMessage.created_at.desc()).limit(limit).offset(offset)
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         return list(rows), total
 
     # ----------------------------------------------------------------- #
@@ -179,8 +237,12 @@ class AdminRepository:
             ).scalar_one()
         )
         rows = (
-            await self.session.execute(
-                base.order_by(SystemAnnouncement.created_at.desc()).limit(limit).offset(offset)
+            (
+                await self.session.execute(
+                    base.order_by(SystemAnnouncement.created_at.desc()).limit(limit).offset(offset)
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         return list(rows), total

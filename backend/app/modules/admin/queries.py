@@ -3,6 +3,7 @@
 Kept separate from ``metrics.py`` (aggregates) so each file stays small
 (docs/CODING_STANDARDS.md). Every query is read-only; farmer data is never modified.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -118,12 +119,16 @@ class AdminQueries:
             return None
 
         farms = (
-            await self.session.execute(
-                select(Farm)
-                .where(Farm.user_id == user_id, Farm.is_deleted.is_(False))
-                .order_by(Farm.created_at.desc())
+            (
+                await self.session.execute(
+                    select(Farm)
+                    .where(Farm.user_id == user_id, Farm.is_deleted.is_(False))
+                    .order_by(Farm.created_at.desc())
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
 
         async def _count(stmt) -> int:  # noqa: ANN001
             return int(
@@ -182,19 +187,29 @@ class AdminQueries:
             ).scalar_one()
         )
         offers = (
-            await self.session.execute(
-                base.order_by(ProduceOffer.expected_harvest_date.asc()).limit(limit).offset(offset)
+            (
+                await self.session.execute(
+                    base.order_by(ProduceOffer.expected_harvest_date.asc())
+                    .limit(limit)
+                    .offset(offset)
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
 
         user_ids = [o.user_id for o in offers]
         profiles: dict[uuid.UUID, object] = {}
         if user_ids:
             prows = (
-                await self.session.execute(
-                    select(FarmerProfile).where(FarmerProfile.user_id.in_(user_ids))
+                (
+                    await self.session.execute(
+                        select(FarmerProfile).where(FarmerProfile.user_id.in_(user_ids))
+                    )
                 )
-            ).scalars().all()
+                .scalars()
+                .all()
+            )
             profiles = {p.user_id: p for p in prows}
 
         rows = [
@@ -212,10 +227,49 @@ class AdminQueries:
                 farmer_name=getattr(profiles.get(o.user_id), "full_name", None),
                 farmer_phone=None,
                 offer_status=o.status,
+                cultivated_area_hectares=o.cultivated_area_hectares,
+                expected_total_quantity=o.expected_total_quantity,
+                available_quantity=o.available_quantity,
+                quantity_provenance=o.quantity_provenance,
+                quality_notes=o.quality_notes,
             )
             for o in offers
         ]
         return rows, total
+
+    async def procurement_offer(self, offer_id: uuid.UUID) -> ProcurementRow | None:
+        """Load the updated target directly; avoids scanning a paginated queue."""
+        from app.modules.auth.profile_models import FarmerProfile
+        from app.modules.produce.models import ProduceOffer
+
+        offer = await self.session.get(ProduceOffer, offer_id)
+        if offer is None or offer.is_deleted:
+            return None
+        profile = (
+            await self.session.execute(
+                select(FarmerProfile).where(FarmerProfile.user_id == offer.user_id)
+            )
+        ).scalar_one_or_none()
+        return ProcurementRow(
+            offer_id=offer.id,
+            user_id=offer.user_id,
+            crop=offer.crop_name,
+            variety=offer.variety,
+            quantity=offer.quantity,
+            unit=offer.unit,
+            expected_grade=offer.expected_grade,
+            harvest_date=_as_dt(offer.expected_harvest_date),
+            village=offer.village,
+            district=offer.district,
+            farmer_name=getattr(profile, "full_name", None),
+            farmer_phone=None,
+            offer_status=offer.status,
+            cultivated_area_hectares=offer.cultivated_area_hectares,
+            expected_total_quantity=offer.expected_total_quantity,
+            available_quantity=offer.available_quantity,
+            quantity_provenance=offer.quantity_provenance,
+            quality_notes=offer.quality_notes,
+        )
 
     async def procurement_facts(self):  # noqa: ANN201
         """All offers as minimal analytics facts (village/crop/harvest/quantity)."""
@@ -253,9 +307,7 @@ class AdminQueries:
     # ----------------------------------------------------------------- #
     # Broadcast targeting
     # ----------------------------------------------------------------- #
-    async def recipient_ids(
-        self, target_type: str, target_value: str | None
-    ) -> list[uuid.UUID]:
+    async def recipient_ids(self, target_type: str, target_value: str | None) -> list[uuid.UUID]:
         """Farmer user_ids matching a broadcast target (village/district/crop/language/all)."""
         from app.modules.auth.profile_models import FarmerProfile
 

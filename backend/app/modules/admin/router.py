@@ -18,6 +18,7 @@ Thin routes — RBAC, auditing, aggregation and delivery all live in ``AdminServ
 Every endpoint is authenticated, resolves an active admin context, and is permission
 checked inside the service. Static routes precede the dynamic ``/{...}`` segments.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -43,6 +44,7 @@ from app.modules.admin.schemas import (
     FarmerRowOut,
     OverviewCardOut,
     ProcurementAnalyticsOut,
+    ProcurementCaseUpdateIn,
     ProcurementRowOut,
     ProcurementStatusIn,
 )
@@ -67,6 +69,11 @@ class NotificationsOverviewOut(BaseModel):
 class ProcurementStatusOut(BaseModel):
     offer_id: uuid.UUID
     status: str
+
+
+class BuyerContactOut(BaseModel):
+    offer_id: uuid.UUID
+    buyer_contact: str
 
 
 # --------------------------------------------------------------------------- #
@@ -132,9 +139,7 @@ async def get_farmers(
 
 
 @router.get("/farmers/{user_id}", response_model=SuccessResponse[FarmerDetailOut])
-async def get_farmer_detail(
-    user_id: uuid.UUID, ctx: AdminContextDep, service: AdminServiceDep
-):
+async def get_farmer_detail(user_id: uuid.UUID, ctx: AdminContextDep, service: AdminServiceDep):
     """One farmer's full profile, farms and cross-module activity counts."""
     detail = await service.farmer_detail(ctx, user_id)
     return success(FarmerDetailOut.from_detail(user_id, detail))
@@ -202,6 +207,28 @@ async def update_procurement_status(
     )
 
 
+@router.put("/procurement/{offer_id}/case", response_model=SuccessResponse[ProcurementRowOut])
+async def update_procurement_case(
+    offer_id: uuid.UUID,
+    payload: ProcurementCaseUpdateIn,
+    ctx: AdminContextDep,
+    service: AdminServiceDep,
+):
+    """Update internal buyer-search details; inaccessible to farmer APIs."""
+    await service.update_procurement_case(ctx, offer_id, payload)
+    item = await service.procurement_item(ctx, offer_id)
+    return success(ProcurementRowOut.from_item(item), message="Procurement case updated")
+
+
+@router.post(
+    "/procurement/{offer_id}/buyer-contact/reveal",
+    response_model=SuccessResponse[BuyerContactOut],
+)
+async def reveal_buyer_contact(offer_id: uuid.UUID, ctx: AdminContextDep, service: AdminServiceDep):
+    contact = await service.reveal_buyer_contact(ctx, offer_id)
+    return success(BuyerContactOut(offer_id=offer_id, buyer_contact=contact))
+
+
 # --------------------------------------------------------------------------- #
 # AI monitoring
 # --------------------------------------------------------------------------- #
@@ -254,9 +281,7 @@ async def get_ai_costs(
 # --------------------------------------------------------------------------- #
 # Notifications / broadcast
 # --------------------------------------------------------------------------- #
-@router.get(
-    "/notifications", response_model=SuccessResponse[NotificationsOverviewOut]
-)
+@router.get("/notifications", response_model=SuccessResponse[NotificationsOverviewOut])
 async def get_notifications(
     ctx: AdminContextDep,
     service: AdminServiceDep,
@@ -285,9 +310,7 @@ async def get_notifications(
     response_model=SuccessResponse[BroadcastOut],
     status_code=status.HTTP_201_CREATED,
 )
-async def send_broadcast(
-    payload: BroadcastIn, ctx: AdminContextDep, service: AdminServiceDep
-):
+async def send_broadcast(payload: BroadcastIn, ctx: AdminContextDep, service: AdminServiceDep):
     """Send or schedule a broadcast (delivered via the Notification engine)."""
     broadcast = await service.broadcast(
         ctx,
@@ -305,9 +328,7 @@ async def send_broadcast(
 # --------------------------------------------------------------------------- #
 # Content management (announcements)
 # --------------------------------------------------------------------------- #
-@router.get(
-    "/announcements", response_model=SuccessResponse[PaginatedData[AnnouncementOut]]
-)
+@router.get("/announcements", response_model=SuccessResponse[PaginatedData[AnnouncementOut]])
 async def get_announcements(
     ctx: AdminContextDep,
     service: AdminServiceDep,
