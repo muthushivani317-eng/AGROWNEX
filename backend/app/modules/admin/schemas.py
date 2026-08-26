@@ -155,6 +155,61 @@ class AnalyticsOut(BaseModel):
     produce_by_crop: list[DistributionItem]
 
 
+class CropIntelligenceFiltersOut(BaseModel):
+    crop: str | None
+    district: str | None
+    village: str | None
+    harvest_days: int
+
+
+class CropIntelligenceSummaryOut(BaseModel):
+    farmer_count: int
+    farm_count: int
+    known_area_hectares: float
+    farms_with_area: int
+    farms_without_area: int
+    recorded_stage_farms: int
+    sale_listing_count: int
+    harvest_window_farmer_count: int
+    harvest_window_listing_count: int
+
+
+class CropIntelligenceGroupOut(BaseModel):
+    label: str
+    farm_count: int
+    farmer_count: int
+    known_area_hectares: float
+    farms_with_area: int
+
+
+class CropStageCountOut(BaseModel):
+    label: str
+    farm_count: int
+
+
+class OfferedQuantityOut(BaseModel):
+    unit: str
+    quantity: float
+
+
+class HarvestWindowOut(BaseModel):
+    from_date: date
+    to_date: date
+    farmer_count: int
+    listing_count: int
+
+
+class CropIntelligenceOut(BaseModel):
+    generated_at: datetime
+    filters: CropIntelligenceFiltersOut
+    summary: CropIntelligenceSummaryOut
+    by_crop: list[CropIntelligenceGroupOut]
+    by_location: list[CropIntelligenceGroupOut]
+    crop_stages: list[CropStageCountOut]
+    offered_quantities: list[OfferedQuantityOut]
+    harvest_window: HarvestWindowOut
+
+
 # --------------------------------------------------------------------------- #
 # Procurement
 # --------------------------------------------------------------------------- #

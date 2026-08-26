@@ -72,6 +72,14 @@ class Settings(BaseSettings):
     firebase_credentials_json: str = Field(default="")
     firebase_auth_emulator_host: str = Field(default="")
 
+    # Separate Admin Web/PWA session. The cookie carries a Firebase session
+    # cookie and is never readable by browser JavaScript.
+    admin_web_origins: list[str] = Field(default_factory=list)
+    admin_session_cookie_name: str = "agrowai_admin_session"
+    admin_session_ttl_hours: int = Field(default=8, ge=1, le=24 * 14)
+    admin_require_mfa: bool = False
+    admin_sensitive_reauth_minutes: int = Field(default=15, ge=5, le=60)
+
     # Server-side pepper for hashing refresh tokens / OTP fingerprints. MUST be
     # overridden in production via env; never commit a real secret.
     session_secret: str = Field(default=DEV_SESSION_SECRET)
@@ -185,6 +193,14 @@ class Settings(BaseSettings):
             problems.append("SESSION_SECRET must be overridden (still the dev default).")
         if not self.cors_origins or "*" in self.cors_origins:
             problems.append("CORS_ORIGINS must be an explicit list (no '*').")
+        if not self.admin_web_origins or any(
+            not origin.startswith("https://") for origin in self.admin_web_origins
+        ):
+            problems.append("ADMIN_WEB_ORIGINS must contain explicit HTTPS origins.")
+        if not self.admin_session_cookie_name.startswith("__Host-"):
+            problems.append("ADMIN_SESSION_COOKIE_NAME must use the __Host- prefix.")
+        if not self.admin_require_mfa:
+            problems.append("ADMIN_REQUIRE_MFA must be true in production.")
         if self.debug:
             problems.append("DEBUG must be false in production.")
         if not self.public_api_url.startswith("https://"):
@@ -204,6 +220,11 @@ class Settings(BaseSettings):
             problems.append("Firebase Auth Emulator is forbidden in production.")
         if self.otp_provider == "mock":
             problems.append("OTP_PROVIDER=mock is forbidden in production.")
+        if self.otp_provider == "msg91":
+            problems.append(
+                "OTP_PROVIDER=msg91 is not connected to the production auth flow; "
+                "use Firebase Phone Auth."
+            )
         if problems:
             raise ProductionConfigError("Refusing to boot production: " + " ".join(problems))
 

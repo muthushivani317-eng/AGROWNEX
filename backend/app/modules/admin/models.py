@@ -80,6 +80,24 @@ class AdminUser(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
         String(16), default=AdminUserStatus.ACTIVE.value, nullable=False, index=True
     )
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    district_scope: Mapped[str | None] = mapped_column(String(120), index=True)
+
+
+class AdminInvitation(UUIDMixin, TimestampMixin, Base):
+    """Single-use owner-issued invitation; only its SHA-256 token hash is stored."""
+
+    __tablename__ = "admin_invitations"
+
+    email: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
+    role: Mapped[str] = mapped_column(String(40), nullable=False)
+    district_scope: Mapped[str | None] = mapped_column(String(120))
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    invited_by_admin_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("admin_users.id"), nullable=False, index=True
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    accepted_user_id: Mapped[uuid.UUID | None] = mapped_column(GUID(), ForeignKey("users.id"))
 
 
 class BroadcastMessage(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
@@ -192,8 +210,8 @@ class ProcurementCase(UUIDMixin, TimestampMixin, Base):
         return None
 
 
-def _reject_ledger_mutation(*_args, **_kwargs) -> None:
-    raise ValueError("Financial and acceptance ledgers are append-only")
+def _reject_append_only_mutation(*_args, **_kwargs) -> None:
+    raise ValueError("Audit, financial, and acceptance ledgers are append-only")
 
 
 class FarmerOfferDecision(UUIDMixin, Base):
@@ -323,14 +341,15 @@ class CommissionLedgerEntry(UUIDMixin, Base):
 
 
 for _ledger_model in (
+    AuditLog,
     FarmerOfferDecision,
     PickupLedgerEntry,
     ProcurementTransaction,
     PaymentLedgerEntry,
     CommissionLedgerEntry,
 ):
-    event.listen(_ledger_model, "before_update", _reject_ledger_mutation)
-    event.listen(_ledger_model, "before_delete", _reject_ledger_mutation)
+    event.listen(_ledger_model, "before_update", _reject_append_only_mutation)
+    event.listen(_ledger_model, "before_delete", _reject_append_only_mutation)
 
 
 class DashboardWidget(UUIDMixin, TimestampMixin, Base):

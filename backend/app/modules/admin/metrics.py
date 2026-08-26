@@ -296,6 +296,196 @@ class AdminMetrics:
             "produce_by_crop": produce_by_crop,
         }
 
+    async def crop_intelligence(
+        self,
+        *,
+        crop: str | None = None,
+        district: str | None = None,
+        village: str | None = None,
+        harvest_days: int = 30,
+    ) -> dict:
+        """Live, recorded crop supply facts for commercial planning.
+
+        Acreage is summed only where a farmer supplied it. Harvest-window counts
+        require a dated submitted/planned produce offer; no crop calendar estimate
+        is presented as farmer inventory.
+        """
+        from app.modules.farms.models import Farm, FarmLocation
+        from app.modules.growth.models import CropGrowthSession, CropStageState
+        from app.modules.produce.constants import ProduceStatus
+        from app.modules.produce.models import ProduceOffer
+
+        filters = [Farm.is_deleted.is_(False)]
+        if crop:
+            filters.append(func.lower(Farm.crop) == crop.strip().lower())
+        if district:
+            filters.append(func.lower(FarmLocation.district) == district.strip().lower())
+        if village:
+            filters.append(func.lower(FarmLocation.village) == village.strip().lower())
+
+        farm_rows = (
+            await self.session.execute(
+                select(Farm, FarmLocation)
+                .outerjoin(FarmLocation, FarmLocation.farm_id == Farm.id)
+                .where(*filters)
+            )
+        ).all()
+        farms = [row[0] for row in farm_rows]
+        locations = {row[0].id: row[1] for row in farm_rows}
+        farm_ids = [farm.id for farm in farms]
+
+        def group_rows(key_fn) -> list[dict]:  # noqa: ANN001
+            grouped: dict[str, dict] = {}
+            for farm in farms:
+                key = key_fn(farm) or "Unknown"
+                item = grouped.setdefault(
+                    key,
+                    {
+                        "label": key,
+                        "farm_ids": set(),
+                        "farmer_ids": set(),
+                        "known_area_hectares": 0.0,
+                        "farms_with_area": 0,
+                    },
+                )
+                item["farm_ids"].add(farm.id)
+                item["farmer_ids"].add(farm.user_id)
+                if farm.area_hectares is not None:
+                    item["known_area_hectares"] += float(farm.area_hectares)
+                    item["farms_with_area"] += 1
+            return [
+                {
+                    "label": item["label"],
+                    "farm_count": len(item["farm_ids"]),
+                    "farmer_count": len(item["farmer_ids"]),
+                    "known_area_hectares": round(item["known_area_hectares"], 2),
+                    "farms_with_area": item["farms_with_area"],
+                }
+                for item in sorted(
+                    grouped.values(),
+                    key=lambda value: len(value["farm_ids"]),
+                    reverse=True,
+                )
+            ]
+
+        by_crop = group_rows(lambda farm: farm.crop)
+        by_location = group_rows(
+            lambda farm: " / ".join(
+                part
+                for part in (
+                    getattr(locations.get(farm.id), "district", None),
+                    getattr(locations.get(farm.id), "village", None),
+                )
+                if part
+            )
+            or None
+        )
+
+        stage_by_farm: dict[uuid.UUID, str] = {}
+        if farm_ids:
+            sessions = (
+                await self.session.execute(
+                    select(CropGrowthSession)
+                    .where(
+                        CropGrowthSession.farm_id.in_(farm_ids),
+                        CropGrowthSession.is_deleted.is_(False),
+                    )
+                    .order_by(CropGrowthSession.updated_at)
+                )
+            ).scalars()
+            for session in sessions:
+                if session.current_growth_stage and session.current_growth_stage != "unknown":
+                    stage_by_farm[session.farm_id] = session.current_growth_stage
+            states = (
+                await self.session.execute(
+                    select(CropStageState)
+                    .where(
+                        CropStageState.farm_id.in_(farm_ids),
+                        CropStageState.is_deleted.is_(False),
+                    )
+                    .order_by(CropStageState.updated_at)
+                )
+            ).scalars()
+            for state in states:
+                recorded = state.confirmed_stage or state.suggested_stage
+                if recorded:
+                    stage_by_farm[state.farm_id] = recorded
+        stage_counts: dict[str, int] = {}
+        for stage in stage_by_farm.values():
+            stage_counts[stage] = stage_counts.get(stage, 0) + 1
+
+        start = self.now.date()
+        end = start + timedelta(days=harvest_days)
+        offers = []
+        if farm_ids:
+            offers = list(
+                (
+                    await self.session.execute(
+                        select(ProduceOffer).where(
+                            ProduceOffer.farm_id.in_(farm_ids),
+                            ProduceOffer.is_deleted.is_(False),
+                            ProduceOffer.status.in_(
+                                [ProduceStatus.SUBMITTED.value, ProduceStatus.PLANNED.value]
+                            ),
+                        )
+                    )
+                ).scalars()
+            )
+        window_offers = [offer for offer in offers if start <= offer.expected_harvest_date <= end]
+        quantities: dict[str, float] = {}
+        for offer in offers:
+            amount = (
+                offer.available_quantity
+                if offer.available_quantity is not None
+                else offer.quantity
+            )
+            quantities[offer.unit] = quantities.get(offer.unit, 0.0) + float(amount)
+
+        known_area = sum(
+            float(farm.area_hectares)
+            for farm in farms
+            if farm.area_hectares is not None
+        )
+        farms_with_area = sum(farm.area_hectares is not None for farm in farms)
+        return {
+            "generated_at": self.now,
+            "filters": {
+                "crop": crop,
+                "district": district,
+                "village": village,
+                "harvest_days": harvest_days,
+            },
+            "summary": {
+                "farmer_count": len({farm.user_id for farm in farms}),
+                "farm_count": len(farms),
+                "known_area_hectares": round(known_area, 2),
+                "farms_with_area": farms_with_area,
+                "farms_without_area": len(farms) - farms_with_area,
+                "recorded_stage_farms": len(stage_by_farm),
+                "sale_listing_count": len(offers),
+                "harvest_window_farmer_count": len({offer.user_id for offer in window_offers}),
+                "harvest_window_listing_count": len(window_offers),
+            },
+            "by_crop": by_crop,
+            "by_location": by_location,
+            "crop_stages": [
+                {"label": label, "farm_count": count}
+                for label, count in sorted(
+                    stage_counts.items(), key=lambda item: item[1], reverse=True
+                )
+            ],
+            "offered_quantities": [
+                {"unit": unit, "quantity": round(quantity, 2)}
+                for unit, quantity in sorted(quantities.items())
+            ],
+            "harvest_window": {
+                "from_date": start,
+                "to_date": end,
+                "farmer_count": len({offer.user_id for offer in window_offers}),
+                "listing_count": len(window_offers),
+            },
+        }
+
     async def _farmer_growth(self, *, months: int) -> list[dict]:
         from app.modules.auth.profile_models import FarmerProfile
 

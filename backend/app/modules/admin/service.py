@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import secrets
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
@@ -21,7 +22,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.modules.admin.constants import (
+    ROLE_PERMISSIONS,
     AdminPermission,
+    AdminRole,
     AdminUserStatus,
     AuditAction,
     BroadcastScheduleType,
@@ -42,6 +45,7 @@ from app.modules.admin.exceptions import (
 )
 from app.modules.admin.metrics import AdminMetrics
 from app.modules.admin.models import (
+    AdminInvitation,
     AdminUser,
     AuditLog,
     BroadcastMessage,
@@ -136,6 +140,117 @@ class AdminService:
         perms = frozenset(permissions_for(admin.role))
         return AdminContext(admin=admin, permissions=perms, ip_address=ip_address)
 
+    async def invite_admin(
+        self, ctx: AdminContext, *, email: str, role: str,
+        district_scope: str | None = None, expires_in_hours: int = 48
+    ) -> tuple[AdminInvitation, str]:
+        """Create an expiring one-time invitation; only the owner can grant access."""
+        self._require(ctx, AdminPermission.MANAGE_ADMINS)
+        if ctx.admin.role != AdminRole.OWNER.value:
+            raise PermissionDeniedError()
+        if role not in ROLE_PERMISSIONS or role == AdminRole.OWNER.value:
+            raise PermissionDeniedError()
+        if role == AdminRole.DISTRICT_MANAGER.value and not district_scope:
+            raise PermissionDeniedError()
+        raw_token = secrets.token_urlsafe(32)
+        invitation = AdminInvitation(
+            email=email.strip().lower(),
+            role=role,
+            district_scope=district_scope.strip() if district_scope else None,
+            token_hash=hashlib.sha256(raw_token.encode()).hexdigest(),
+            invited_by_admin_id=ctx.admin.id,
+            expires_at=self._now_dt() + timedelta(hours=expires_in_hours),
+        )
+        self.session.add(invitation)
+        await self.session.flush()
+        await self._audit(
+            ctx,
+            AuditAction.ADMIN_INVITED,
+            target="admin_invitation",
+            target_id=str(invitation.id),
+            meta={"role": role},
+        )
+        await self.session.commit()
+        return invitation, raw_token
+
+    async def accept_admin_invitation(self, user: User, token: str) -> AdminUser:
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        invitation = (
+            await self.session.execute(
+                select(AdminInvitation).where(AdminInvitation.token_hash == token_hash)
+            )
+        ).scalar_one_or_none()
+        now = self._now_dt()
+        if (
+            invitation is None
+            or invitation.accepted_at is not None
+            or invitation.expires_at <= now
+            or not user.email
+            or not user.is_email_verified
+            or user.email.strip().lower() != invitation.email
+            or await self.repo.get_admin_by_user(user.id)
+        ):
+            raise PermissionDeniedError()
+        admin = await self.repo.add_admin(
+            AdminUser(
+                user_id=user.id,
+                role=invitation.role,
+                email=user.email,
+                full_name=None,
+                status=AdminUserStatus.ACTIVE.value,
+                district_scope=invitation.district_scope,
+            )
+        )
+        invitation.accepted_at = now
+        invitation.accepted_user_id = user.id
+        await self.repo.add_audit(
+            AuditLog(
+                admin_id=admin.id,
+                role=admin.role,
+                action=AuditAction.ADMIN_INVITATION_ACCEPTED.value,
+                target="admin_invitation",
+                target_id=str(invitation.id),
+                meta={"role": admin.role},
+            )
+        )
+        await self.session.commit()
+        return admin
+
+    async def set_admin_status(
+        self, ctx: AdminContext, admin_id: uuid.UUID, status: str
+    ) -> AdminUser:
+        self._require(ctx, AdminPermission.MANAGE_ADMINS)
+        if ctx.admin.role != AdminRole.OWNER.value or admin_id == ctx.admin.id:
+            raise PermissionDeniedError()
+        admin = await self.session.get(AdminUser, admin_id)
+        if admin is None or admin.role == AdminRole.OWNER.value:
+            raise PermissionDeniedError()
+        if status not in {AdminUserStatus.ACTIVE.value, AdminUserStatus.SUSPENDED.value}:
+            raise PermissionDeniedError()
+        admin.status = status
+        await self._audit(
+            ctx,
+            AuditAction.ADMIN_STATUS_CHANGED,
+            target="admin",
+            target_id=str(admin.id),
+            meta={"status": status},
+        )
+        await self.session.commit()
+        return admin
+
+    async def list_admins(self, ctx: AdminContext) -> list[AdminUser]:
+        self._require(ctx, AdminPermission.MANAGE_ADMINS)
+        if ctx.admin.role != AdminRole.OWNER.value:
+            raise PermissionDeniedError()
+        rows = (
+            await self.session.execute(
+                select(AdminUser)
+                .where(AdminUser.is_deleted.is_(False))
+                .order_by(AdminUser.created_at.desc())
+            )
+        ).scalars().all()
+        return list(rows)
+
     def _require(self, ctx: AdminContext, permission: AdminPermission) -> None:
         if permission.value not in ctx.permissions:
             raise PermissionDeniedError()
@@ -179,7 +294,7 @@ class AdminService:
 
     async def business_dashboard(self, ctx: AdminContext) -> dict:
         """Real daily funnel and assisted-sales ledger metrics; never inferred."""
-        self._require(ctx, AdminPermission.VIEW_DASHBOARD)
+        self._require(ctx, AdminPermission.VIEW_REVENUE)
         day_start = self._now_dt().replace(hour=0, minute=0, second=0, microsecond=0)
         users = select(func.count(User.id)).where(User.is_deleted.is_(False))
 
@@ -271,17 +386,24 @@ class AdminService:
         page_size: int,
     ) -> PaginatedData:
         self._require(ctx, AdminPermission.MANAGE_FARMERS)
+        if ctx.admin.role == AdminRole.DISTRICT_MANAGER.value:
+            district = ctx.admin.district_scope
         offset = (page - 1) * page_size
         rows, total = await self.queries.farmers(
             search=search, district=district, crop=crop, limit=page_size, offset=offset
         )
-        await self._audit(ctx, AuditAction.VIEW_FARMERS, meta={"search": search})
+        await self._audit(ctx, AuditAction.VIEW_FARMERS, meta={"search_used": bool(search)})
         return _paginate(rows, page, page_size, total)
 
     async def farmer_detail(self, ctx: AdminContext, user_id: uuid.UUID) -> dict:
         self._require(ctx, AdminPermission.MANAGE_FARMERS)
         detail = await self.queries.farmer_detail(user_id)
         if detail is None:
+            raise FarmerNotFoundError()
+        if (
+            ctx.admin.role == AdminRole.DISTRICT_MANAGER.value
+            and detail.get("district") != ctx.admin.district_scope
+        ):
             raise FarmerNotFoundError()
         from app.modules.consents.service import ConsentService
 
@@ -298,6 +420,32 @@ class AdminService:
         self._require(ctx, AdminPermission.VIEW_ANALYTICS)
         data = await self.metrics.analytics()
         await self._audit(ctx, AuditAction.VIEW_ANALYTICS)
+        return data
+
+    async def crop_intelligence(
+        self,
+        ctx: AdminContext,
+        *,
+        crop: str | None,
+        district: str | None,
+        village: str | None,
+        harvest_days: int,
+    ) -> dict:
+        self._require(ctx, AdminPermission.VIEW_CROP_INTELLIGENCE)
+        if ctx.admin.role == AdminRole.DISTRICT_MANAGER.value:
+            district = ctx.admin.district_scope
+        data = await self.metrics.crop_intelligence(
+            crop=crop,
+            district=district,
+            village=village,
+            harvest_days=harvest_days,
+        )
+        await self._audit(
+            ctx,
+            AuditAction.VIEW_ANALYTICS,
+            target="crop_intelligence",
+            meta=data["filters"],
+        )
         return data
 
     # ----------------------------------------------------------------- #
@@ -801,7 +949,7 @@ class AdminService:
         Daily/weekly series and per-model/per-module totals are computed from the
         ``token_usage`` ledger. Nothing is fabricated: unknown token counts cost 0.
         """
-        self._require(ctx, AdminPermission.VIEW_AI)
+        self._require(ctx, AdminPermission.VIEW_AI_COSTS)
         repo = TokenUsageRepository(self.session)
         since = self._now_dt() - timedelta(days=window_days)
         by_model = await repo.by_model(since=since)

@@ -23,9 +23,12 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, Query, Request, Response, status
 from pydantic import BaseModel
 
+from app.core.config import settings
+from app.core.exceptions import UnauthorizedError
+from app.core.security import create_session_cookie, verify_id_token
 from app.modules.admin.constants import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
 from app.modules.admin.dependencies import AdminContextDep, AdminServiceDep
 from app.modules.admin.schemas import (
@@ -40,6 +43,7 @@ from app.modules.admin.schemas import (
     BroadcastOut,
     CommissionLedgerIn,
     CostBucketOut,
+    CropIntelligenceOut,
     DashboardOut,
     FarmerDetailOut,
     FarmerRowOut,
@@ -52,6 +56,8 @@ from app.modules.admin.schemas import (
     ProcurementStatusIn,
     TransactionIn,
 )
+from app.modules.admin.web_security import InvalidAdminOriginError, require_admin_origin
+from app.modules.auth.dependencies import CurrentUser
 from app.schemas.response import PaginatedData, SuccessResponse, success
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -78,6 +84,136 @@ class ProcurementStatusOut(BaseModel):
 class BuyerContactOut(BaseModel):
     offer_id: uuid.UUID
     buyer_contact: str
+
+
+class AdminInvitationIn(BaseModel):
+    email: str
+    role: str
+    district_scope: str | None = None
+    expires_in_hours: int = 48
+
+
+class AdminInvitationAcceptIn(BaseModel):
+    token: str
+
+
+class AdminStatusIn(BaseModel):
+    status: str
+
+
+@router.post("/invitations", response_model=SuccessResponse[dict], status_code=201)
+async def invite_admin(
+    payload: AdminInvitationIn, ctx: AdminContextDep, service: AdminServiceDep
+):
+    invitation, token = await service.invite_admin(
+        ctx,
+        email=payload.email,
+        role=payload.role,
+        district_scope=payload.district_scope,
+        expires_in_hours=payload.expires_in_hours,
+    )
+    # The raw token is returned once to the owner; the database retains only its hash.
+    return success(
+        {"id": str(invitation.id), "token": token, "expires_at": invitation.expires_at},
+        message="Admin invitation created",
+    )
+
+
+@router.post("/invitations/accept", response_model=SuccessResponse[dict])
+async def accept_admin_invitation(
+    payload: AdminInvitationAcceptIn,
+    request: Request,
+    current_user: CurrentUser,
+    service: AdminServiceDep,
+):
+    authorization = request.headers.get("authorization", "")
+    claims = verify_id_token(authorization[7:]) if authorization.startswith("Bearer ") else {}
+    if not claims.get("email_verified"):
+        raise UnauthorizedError(
+            "A verified work email is required.", error_code="admin_email_unverified"
+        )
+    admin = await service.accept_admin_invitation(current_user, payload.token)
+    return success({"admin_id": str(admin.id), "role": admin.role})
+
+
+@router.put("/team/{admin_id}/status", response_model=SuccessResponse[dict])
+async def set_admin_status(
+    admin_id: uuid.UUID,
+    payload: AdminStatusIn,
+    ctx: AdminContextDep,
+    service: AdminServiceDep,
+):
+    admin = await service.set_admin_status(ctx, admin_id, payload.status)
+    return success({"admin_id": str(admin.id), "status": admin.status})
+
+
+@router.get("/team", response_model=SuccessResponse[list[dict]])
+async def list_admin_team(ctx: AdminContextDep, service: AdminServiceDep):
+    admins = await service.list_admins(ctx)
+    return success([
+        {
+            "id": str(admin.id), "full_name": admin.full_name, "email": admin.email,
+            "role": admin.role, "status": admin.status, "created_at": admin.created_at,
+            "district_scope": admin.district_scope,
+        }
+        for admin in admins
+    ])
+
+
+@router.post("/web-session", response_model=SuccessResponse[dict])
+async def create_admin_web_session(
+    request: Request,
+    response: Response,
+    current_user: CurrentUser,
+    service: AdminServiceDep,
+):
+    """Exchange a Firebase ID token for an HttpOnly cookie, but only for an admin."""
+    try:
+        require_admin_origin(request, settings.admin_web_origins)
+    except InvalidAdminOriginError as exc:
+        raise UnauthorizedError(
+            "Admin portal origin is not allowed.", error_code="admin_origin_invalid"
+        ) from exc
+    # This is the critical farmer-denial check: no active AdminUser, no cookie.
+    await service.resolve_admin(current_user)
+    authorization = request.headers.get("authorization", "")
+    if not authorization.startswith("Bearer "):
+        raise UnauthorizedError("Firebase authentication is required.")
+    claims = verify_id_token(authorization[7:])
+    if settings.admin_require_mfa and not (claims.get("firebase") or {}).get(
+        "sign_in_second_factor"
+    ):
+        raise UnauthorizedError(
+            "Multi-factor authentication is required for Admin access.",
+            error_code="admin_mfa_required",
+        )
+    max_age = settings.admin_session_ttl_hours * 60 * 60
+    cookie = create_session_cookie(authorization[7:], expires_in_seconds=max_age)
+    response.set_cookie(
+        settings.admin_session_cookie_name,
+        cookie,
+        max_age=max_age,
+        secure=settings.is_production,
+        httponly=True,
+        samesite="strict",
+        path="/",
+    )
+    response.headers["Cache-Control"] = "private, no-store"
+    return success({"expires_in": max_age}, message="Secure admin session created")
+
+
+@router.delete("/web-session", response_model=SuccessResponse[dict])
+async def delete_admin_web_session(response: Response, ctx: AdminContextDep):
+    """End the current browser session. CSRF/origin checks run in AdminContextDep."""
+    response.delete_cookie(
+        settings.admin_session_cookie_name,
+        secure=settings.is_production,
+        httponly=True,
+        samesite="strict",
+        path="/",
+    )
+    response.headers["Cache-Control"] = "private, no-store"
+    return success({"signed_out": True})
 
 
 # --------------------------------------------------------------------------- #
@@ -162,6 +298,29 @@ async def get_analytics(ctx: AdminContextDep, service: AdminServiceDep):
 @router.get("/business-dashboard", response_model=SuccessResponse[dict])
 async def get_business_dashboard(ctx: AdminContextDep, service: AdminServiceDep):
     return success(await service.business_dashboard(ctx))
+
+
+@router.get("/crop-intelligence", response_model=SuccessResponse[CropIntelligenceOut])
+async def get_crop_intelligence(
+    ctx: AdminContextDep,
+    service: AdminServiceDep,
+    crop: str | None = Query(None, max_length=80),
+    district: str | None = Query(None, max_length=80),
+    village: str | None = Query(None, max_length=80),
+    harvest_days: int = Query(30, ge=1, le=365),
+):
+    """Recorded crop, acreage, stage, harvest and sale-supply intelligence."""
+    return success(
+        CropIntelligenceOut(
+            **await service.crop_intelligence(
+                ctx,
+                crop=crop,
+                district=district,
+                village=village,
+                harvest_days=harvest_days,
+            )
+        )
+    )
 
 
 # --------------------------------------------------------------------------- #

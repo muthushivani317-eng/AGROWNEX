@@ -11,13 +11,16 @@ def _prod(**overrides) -> Settings:
         debug=False,
         session_secret="a-real-production-secret",
         cors_origins=["https://app.agrowai.in"],
+        admin_web_origins=["https://admin.agrowai.in"],
+        admin_session_cookie_name="__Host-agrowai_admin",
+        admin_require_mfa=True,
         public_api_url="https://api.agrowai.in",
         trusted_hosts=["api.agrowai.in"],
         database_url="postgresql+asyncpg://app:secret@db.internal:5432/agrowai",
         redis_url="redis://redis.internal:6379/0",
         firebase_project_id="agrowai-production",
         firebase_credentials_json='{"type":"service_account"}',
-        otp_provider="msg91",
+        otp_provider="firebase",
     )
     base.update(overrides)
     return Settings(**base)
@@ -44,6 +47,12 @@ def test_rejects_wildcard_cors_in_production():
 def test_rejects_empty_cors_in_production():
     with pytest.raises(ProductionConfigError):
         _prod(cors_origins=[]).validate_production()
+
+
+@pytest.mark.parametrize("origins", [[], ["http://admin.agrowai.in"]])
+def test_rejects_missing_or_insecure_admin_origin(origins):
+    with pytest.raises(ProductionConfigError):
+        _prod(admin_web_origins=origins).validate_production()
 
 
 def test_rejects_debug_in_production():

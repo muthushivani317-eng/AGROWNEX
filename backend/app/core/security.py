@@ -114,3 +114,41 @@ def verify_id_token(token: str) -> dict[str, Any]:
             message = "Invalid authentication token."
         logger.info("Token verification failed: %s", type(exc).__name__)
         raise UnauthorizedError(message, error_code=code) from exc
+
+
+def create_session_cookie(id_token: str, *, expires_in_seconds: int) -> str:
+    """Exchange a verified Firebase ID token for a revocable browser session."""
+    app = _get_firebase_app()
+    if app is None:
+        raise UnauthorizedError("Authentication is not configured on the server.")
+    try:
+        from firebase_admin import auth as firebase_auth
+
+        return firebase_auth.create_session_cookie(
+            id_token,
+            expires_in=expires_in_seconds,
+            app=app,
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.info("Session-cookie creation failed: %s", type(exc).__name__)
+        raise UnauthorizedError(
+            "Secure admin session could not be created.",
+            error_code="AUTHENTICATION_INVALID",
+        ) from exc
+
+
+def verify_session_cookie(cookie: str) -> dict[str, Any]:
+    """Verify a Firebase browser session including server-side revocation."""
+    app = _get_firebase_app()
+    if app is None:
+        raise UnauthorizedError("Authentication is not configured on the server.")
+    try:
+        from firebase_admin import auth as firebase_auth
+
+        return firebase_auth.verify_session_cookie(cookie, check_revoked=True, app=app)
+    except Exception as exc:  # noqa: BLE001
+        logger.info("Admin session verification failed: %s", type(exc).__name__)
+        raise UnauthorizedError(
+            "Admin session is invalid or expired.",
+            error_code="AUTHENTICATION_INVALID",
+        ) from exc

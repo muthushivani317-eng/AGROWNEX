@@ -43,10 +43,33 @@ services:
         sync: false
       - key: CORS_ORIGINS
         sync: false
+      - key: ADMIN_WEB_ORIGINS
+        sync: false
+      - key: ADMIN_SESSION_COOKIE_NAME
+        value: __Host-agrowai_admin
       - key: PUBLIC_BASE_URL
         sync: false
       - key: SECRET_KEY
         generateValue: true
+
+  - type: web
+    name: agrowai-admin-web
+    runtime: static
+    rootDir: admin-web
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    autoDeployTrigger: commit
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false
+      - key: VITE_FIREBASE_API_KEY
+        sync: false
+      - key: VITE_FIREBASE_AUTH_DOMAIN
+        sync: false
+      - key: VITE_FIREBASE_PROJECT_ID
+        sync: false
+      - key: VITE_FIREBASE_APP_ID
+        sync: false
 
   - type: keyvalue
     name: agrowai-kvk-pilot-cache

@@ -20,6 +20,7 @@ MAX_PAGE_SIZE = 100
 class AdminRole(StrEnum):
     """Admin roles (docs: future roles plug in with no redesign)."""
 
+    OWNER = "owner"
     SUPER_ADMIN = "super_admin"
     DISTRICT_MANAGER = "district_manager"
     PROCUREMENT_MANAGER = "procurement_manager"
@@ -32,6 +33,7 @@ class AdminPermission(StrEnum):
 
     VIEW_DASHBOARD = "view_dashboard"
     VIEW_ANALYTICS = "view_analytics"
+    VIEW_CROP_INTELLIGENCE = "view_crop_intelligence"
     MANAGE_FARMERS = "manage_farmers"
     MANAGE_PROCUREMENT = "manage_procurement"
     VIEW_AI = "view_ai"
@@ -40,29 +42,35 @@ class AdminPermission(StrEnum):
     VIEW_AUDIT = "view_audit"
     MANAGE_ADMINS = "manage_admins"
     REVEAL_BUYER_CONTACT = "reveal_buyer_contact"
+    VIEW_REVENUE = "view_revenue"
+    VIEW_AI_COSTS = "view_ai_costs"
 
 
 _ALL = tuple(AdminPermission)
+_SUPER_ADMIN = tuple(
+    permission for permission in AdminPermission if permission != AdminPermission.MANAGE_ADMINS
+)
 
 # Transparent role → permission grants (docs: RBAC, least privilege).
 ROLE_PERMISSIONS: dict[str, tuple[AdminPermission, ...]] = {
-    AdminRole.SUPER_ADMIN.value: _ALL,
+    AdminRole.OWNER.value: _ALL,
+    AdminRole.SUPER_ADMIN.value: _SUPER_ADMIN,
     AdminRole.DISTRICT_MANAGER.value: (
         AdminPermission.VIEW_DASHBOARD,
-        AdminPermission.VIEW_ANALYTICS,
+        AdminPermission.VIEW_CROP_INTELLIGENCE,
         AdminPermission.MANAGE_FARMERS,
-        AdminPermission.SEND_BROADCAST,
-        AdminPermission.VIEW_AUDIT,
     ),
     AdminRole.PROCUREMENT_MANAGER.value: (
         AdminPermission.VIEW_DASHBOARD,
         AdminPermission.VIEW_ANALYTICS,
+        AdminPermission.VIEW_CROP_INTELLIGENCE,
         AdminPermission.MANAGE_PROCUREMENT,
         AdminPermission.REVEAL_BUYER_CONTACT,
     ),
     AdminRole.AGRICULTURE_OFFICER.value: (
         AdminPermission.VIEW_DASHBOARD,
         AdminPermission.VIEW_ANALYTICS,
+        AdminPermission.VIEW_CROP_INTELLIGENCE,
         AdminPermission.MANAGE_FARMERS,
         AdminPermission.VIEW_AI,
         AdminPermission.MANAGE_CONTENT,
@@ -70,7 +78,6 @@ ROLE_PERMISSIONS: dict[str, tuple[AdminPermission, ...]] = {
     AdminRole.CUSTOMER_SUPPORT.value: (
         AdminPermission.VIEW_DASHBOARD,
         AdminPermission.MANAGE_FARMERS,
-        AdminPermission.SEND_BROADCAST,
     ),
 }
 
@@ -104,6 +111,9 @@ class AuditAction(StrEnum):
     BROADCAST_SENT = "broadcast_sent"
     ANNOUNCEMENT_CREATED = "announcement_created"
     VIEW_AUDIT = "view_audit"
+    ADMIN_INVITED = "admin_invited"
+    ADMIN_INVITATION_ACCEPTED = "admin_invitation_accepted"
+    ADMIN_STATUS_CHANGED = "admin_status_changed"
 
 
 class ProcurementStatus(StrEnum):
