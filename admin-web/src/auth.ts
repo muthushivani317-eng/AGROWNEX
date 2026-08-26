@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import {
   browserSessionPersistence, getAuth, getMultiFactorResolver, PhoneAuthProvider,
-  PhoneMultiFactorGenerator, RecaptchaVerifier, setPersistence,
+  multiFactor, PhoneMultiFactorGenerator, RecaptchaVerifier, setPersistence,
   signInWithEmailAndPassword, signOut, type AuthError, type MultiFactorError,
   type UserCredential
 } from 'firebase/auth';
@@ -36,6 +36,32 @@ export async function signInAdmin(email: string, password: string, invitationTok
         PhoneMultiFactorGenerator.assertion(PhoneAuthProvider.credential(verificationId, code))
       );
     } finally { verifier.clear(); }
+  }
+  const factors = multiFactor(credential.user);
+  if (factors.enrolledFactors.length === 0) {
+    const phoneNumber = window.prompt(
+      'Enter the owner phone number with country code (for example, +919876543210) to enable MFA.',
+    );
+    if (!phoneNumber?.trim()) {
+      await signOut(instance);
+      throw new Error('Multi-factor enrolment is required for Admin access.');
+    }
+    const verifier = new RecaptchaVerifier(instance, 'admin-recaptcha', { size: 'invisible' });
+    try {
+      const session = await factors.getSession();
+      const verificationId = await new PhoneAuthProvider(instance).verifyPhoneNumber(
+        { phoneNumber: phoneNumber.trim(), session },
+        verifier,
+      );
+      const code = window.prompt('Enter the verification code sent to the owner phone.');
+      if (!code) throw new Error('Multi-factor enrolment was cancelled.');
+      await factors.enroll(
+        PhoneMultiFactorGenerator.assertion(PhoneAuthProvider.credential(verificationId, code)),
+        'AgrowAI Admin phone',
+      );
+    } finally {
+      verifier.clear();
+    }
   }
   const idToken = await credential.user.getIdToken(true);
   if (invitationToken?.trim()) {
