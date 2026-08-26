@@ -11,6 +11,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
+from app.modules.intelligence.constants import MIN_OVERALL_EVIDENCE_MODULES
 from app.modules.intelligence.models import (
     CropDecisionHistory,
     CropIntelligenceReport,
@@ -58,11 +59,15 @@ class IntelligenceReportOut(BaseModel):
 
     @classmethod
     def from_report(cls, report: CropIntelligenceReport) -> IntelligenceReportOut:
+        # Reports created before evidence gating may contain an aggregate derived from
+        # only one module. Preserve the module finding, but fail closed at the API.
+        sufficient = len(set(report.sources_used or [])) >= MIN_OVERALL_EVIDENCE_MODULES
+        safe_overall = report.overall_health_score if sufficient else None
         health = None
         if report.health is not None:
             h = report.health
             health = HealthScoresOut(
-                overall_health_score=h.overall_health_score,
+                overall_health_score=h.overall_health_score if sufficient else None,
                 confidence=h.confidence,
                 disease_score=h.disease_score,
                 nutrient_score=h.nutrient_score,
@@ -85,10 +90,10 @@ class IntelligenceReportOut(BaseModel):
             farm_id=report.farm_id,
             crop=report.crop,
             generated_at=report.generated_at,
-            overall_health_score=report.overall_health_score,
+            overall_health_score=safe_overall,
             confidence=report.confidence,
             overall_risk=report.overall_risk,
-            risk_score=report.risk.risk_score if report.risk else None,
+            risk_score=(report.risk.risk_score if report.risk else None) if sufficient else None,
             sources_used=list(report.sources_used or []),
             health=health,
             priority_issues=issues,
@@ -129,7 +134,11 @@ class IntelligenceHistoryOut(BaseModel):
             id=h.id,
             farm_id=h.farm_id,
             report_id=h.report_id,
-            overall_health_score=h.overall_health_score,
+            overall_health_score=(
+                h.overall_health_score
+                if getattr(h, "_sufficient_evidence", False)
+                else None
+            ),
             overall_risk=h.overall_risk,
             confidence=h.confidence,
             recorded_at=h.recorded_at,

@@ -150,3 +150,16 @@ class IntelligenceRepository:
             .all()
         )
         return list(rows), total
+
+    async def report_source_counts(
+        self, user_id: uuid.UUID, report_ids: list[uuid.UUID]
+    ) -> dict[uuid.UUID, int]:
+        if not report_ids:
+            return {}
+        rows = await self.session.execute(
+            select(CropIntelligenceReport.id, CropIntelligenceReport.sources_used).where(
+                CropIntelligenceReport.user_id == user_id,
+                CropIntelligenceReport.id.in_(report_ids),
+            )
+        )
+        return {report_id: len(set(sources or [])) for report_id, sources in rows.all()}

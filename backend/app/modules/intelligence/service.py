@@ -197,6 +197,11 @@ class IntelligenceService:
         rows, total = await self.repo.list_history(
             user.id, farm_id, limit=page_size, offset=offset
         )
+        source_counts = await self.repo.report_source_counts(
+            user.id, [row.report_id for row in rows if row.report_id is not None]
+        )
+        for row in rows:
+            row._sufficient_evidence = source_counts.get(row.report_id, 0) >= 2
         total_pages = (total + page_size - 1) // page_size if total else 0
         return PaginatedData(
             items=rows, page=page, page_size=page_size, total=total, total_pages=total_pages

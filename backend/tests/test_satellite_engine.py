@@ -167,3 +167,39 @@ def test_collect_satellite_events() -> None:
     )
     assert [e.event_type for e in unavail] == ["imagery_unavailable"]
     assert collect_satellite(SatelliteSessionView(session_id="s1", farm_id="f1")) == []
+
+
+def test_collect_satellite_unavailability_is_scoped_and_deduplicated() -> None:
+    first = collect_satellite(
+        SatelliteSessionView(
+            session_id="s1",
+            farm_id="f1",
+            unavailable=True,
+            unavailable_reason="no_imagery",
+            observation_day="2026-08-26",
+        )
+    )
+    retry = collect_satellite(
+        SatelliteSessionView(
+            session_id="s2",
+            farm_id="f1",
+            unavailable=True,
+            unavailable_reason="no_imagery",
+            observation_day="2026-08-27",
+        )
+    )
+    assert first[0].dedup_key == retry[0].dedup_key
+
+    # Configuration, processing, and missing-boundary failures require an
+    # operational/farm-profile fix; they are not evidence that a clear scene
+    # was unavailable and must not be repeatedly shown to farmers.
+    for reason in ("provider_not_configured", "processing_error", "no_polygon"):
+        assert collect_satellite(
+            SatelliteSessionView(
+                session_id="s3",
+                farm_id="f1",
+                unavailable=True,
+                unavailable_reason=reason,
+                observation_day="2026-08-26",
+            )
+        ) == []

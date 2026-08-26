@@ -14,6 +14,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from app.modules.auth.models import User
 from app.modules.disease.models import DiseaseReport
+from app.modules.disease.repositories import DiseaseReportRepository
 from app.modules.farms.models import Farm, FarmLocation
 from app.modules.intelligence.exceptions import (
     FarmNotOwnedError,
@@ -92,13 +93,32 @@ async def test_refresh_reads_disease_module(db_session) -> None:
     report = await service.refresh(user, farm.id)
     assert "disease" in report.sources_used
     assert report.health.disease_score is not None
-    assert report.overall_health_score is not None
+    # One finding remains visible but cannot stand in for whole-farm health.
+    assert report.overall_health_score is None
     # A confident, severe disease escalates the overall risk.
     assert report.overall_risk == "critical"
     # And produces prioritized, generic recommendations (no brands).
     assert report.recommendations
     assert all(r.code.startswith("intelligence.rec.") for r in report.recommendations)
     assert any(r.code == "intelligence.rec.treat_disease" for r in report.recommendations)
+
+
+async def test_refresh_ignores_stale_disease_for_current_assessment(db_session) -> None:
+    service = _service(db_session)
+    user = await _make_user(db_session)
+    farm = await _make_farm(db_session, user)
+    await _add_disease(db_session, user, farm, severity="high", confidence=90)
+    rows = await DiseaseReportRepository(db_session).list_for_user(
+        user.id, limit=1, offset=0, farm_id=farm.id
+    )
+    report_row = rows[0]
+    report_row.created_at = NOW - timedelta(days=15)
+    await db_session.flush()
+
+    report = await service.refresh(user, farm.id)
+    assert "disease" not in report.sources_used
+    assert report.health.disease_score is None
+    assert report.overall_health_score is None
 
 
 async def test_refresh_persists_priority_issues(db_session) -> None:

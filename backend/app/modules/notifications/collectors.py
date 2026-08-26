@@ -581,6 +581,8 @@ class SatelliteSessionView:
     farm_id: str
     has_vegetation_alert: bool = False
     unavailable: bool = False
+    unavailable_reason: str = "no_imagery"
+    observation_day: str | None = None
 
 
 def collect_satellite(view: SatelliteSessionView) -> list[CandidateEvent]:
@@ -595,13 +597,38 @@ def collect_satellite(view: SatelliteSessionView) -> list[CandidateEvent]:
                 farm_id=view.farm_id,
             )
         )
-    if view.unavailable:
+    farmer_imagery_reasons = {
+        "cloud_cover",
+        "no_imagery",
+        "acquisition_delay",
+        "provider_error",
+        "provider_timeout",
+        "provider_rate_limited",
+    }
+    if view.unavailable and view.unavailable_reason in farmer_imagery_reasons:
+        # A farmer can retry several times while the same Sentinel pass is
+        # unavailable. Group those retries by ISO week and farm instead of by
+        # scan session, otherwise every tap creates another identical card.
+        period = view.session_id
+        if view.observation_day:
+            observed = date.fromisoformat(view.observation_day)
+            iso_year, iso_week, _ = observed.isocalendar()
+            period = f"{iso_year}-W{iso_week:02d}"
         events.append(
             CandidateEvent(
                 module=_M.SATELLITE.value,
                 event_type="imagery_unavailable",
-                dedup_key=_key(_M.SATELLITE.value, "imagery_unavailable", view.session_id),
-                payload={"farm_id": view.farm_id},
+                dedup_key=_key(
+                    _M.SATELLITE.value,
+                    "imagery_unavailable",
+                    view.farm_id,
+                    view.unavailable_reason,
+                    period,
+                ),
+                payload={
+                    "farm_id": view.farm_id,
+                    "unavailable_reason": view.unavailable_reason,
+                },
                 farm_id=view.farm_id,
             )
         )

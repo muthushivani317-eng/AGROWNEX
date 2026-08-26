@@ -478,6 +478,8 @@ class NotificationSources:
                         farm_id=str(sat.farm_id),
                         has_vegetation_alert=has_veg,
                         unavailable=unavailable,
+                        unavailable_reason=sat.unavailable_reason,
+                        observation_day=sat.created_at.date().isoformat(),
                     )
                 )
             )

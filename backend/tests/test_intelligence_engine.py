@@ -146,14 +146,23 @@ class TestComputeHealth:
         assert scores.has_data is False
         assert scores.sources_used == ()
 
-    def test_single_module_overall_equals_its_sub_score(self) -> None:
+    def test_single_module_does_not_claim_whole_farm_health(self) -> None:
         inputs = IntelligenceInputs(
             weather=WeatherSignal(insight_codes=())
         )
         scores = compute_health(inputs)
         assert scores.weather == 92
-        assert scores.overall == 92
+        assert scores.overall is None
         assert scores.sources_used == ("weather",)
+
+    def test_two_independent_modules_can_form_overall_health(self) -> None:
+        scores = compute_health(
+            IntelligenceInputs(
+                weather=WeatherSignal(insight_codes=()),
+                growth=GrowthSignal(health_score=80, health_delta=0, risk_level="low"),
+            )
+        )
+        assert scores.overall is not None
 
     def test_more_modules_raise_confidence(self) -> None:
         one = compute_health(IntelligenceInputs(weather=WeatherSignal(insight_codes=())))

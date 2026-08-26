@@ -20,11 +20,13 @@ from fastapi import APIRouter, BackgroundTasks, Query, status
 
 from app.modules.satellite.constants import TIMELINE_MONTHLY, TIMELINE_WEEKLY
 from app.modules.satellite.dependencies import CurrentUser, SatelliteServiceDep
+from app.modules.satellite.readiness import satellite_readiness
 from app.modules.satellite.schemas import (
     SatelliteAlertOut,
     SatelliteDashboardOut,
     SatelliteHistoryOut,
     SatelliteIndexOut,
+    SatelliteReadinessOut,
     SatelliteSessionOut,
     SatelliteTimelineOut,
     TimelinePointOut,
@@ -33,6 +35,13 @@ from app.modules.satellite.schemas import (
 from app.schemas.response import PaginatedData, SuccessResponse, success
 
 router = APIRouter(prefix="/satellite", tags=["satellite"])
+
+
+@router.get("/readiness", response_model=SuccessResponse[SatelliteReadinessOut])
+async def get_satellite_readiness(current_user: CurrentUser):
+    """Return component booleans only; never return credential values."""
+    del current_user
+    return success(SatelliteReadinessOut(**satellite_readiness()))
 
 
 def _waterlogging_out(row) -> WaterloggingAssessmentOut:

@@ -13,6 +13,7 @@ from app.modules.intelligence.constants import (
     COVERAGE_WEIGHT,
     DISEASE_SEVERITY_PENALTY,
     GROWTH_RISK_SCORE,
+    MIN_OVERALL_EVIDENCE_MODULES,
     MODULE_BASE_CONFIDENCE,
     MODULE_CONFIDENCE_WEIGHT,
     MODULE_WEIGHTS,
@@ -184,7 +185,7 @@ def compute_health(inputs: IntelligenceInputs) -> HealthScores:
     present = {c: s for c, s in scores.items() if s is not None}
 
     overall: int | None = None
-    if present:
+    if len(present) >= MIN_OVERALL_EVIDENCE_MODULES:
         wsum = sum(MODULE_WEIGHTS[c] for c in present)
         weighted = sum(MODULE_WEIGHTS[c] * s for c, s in present.items())
         overall = _clamp(weighted / wsum)

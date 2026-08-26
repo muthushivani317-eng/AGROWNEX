@@ -130,6 +130,15 @@ class SatelliteDashboardOut(BaseModel):
     alerts: list[SatelliteAlertOut]
 
 
+class SatelliteReadinessOut(BaseModel):
+    provider_configured: bool
+    storage_configured: bool
+    public_delivery_configured: bool
+    queue_configured: bool
+    ready_for_image_generation: bool
+    missing_components: list[str]
+
+
 class SatelliteHistoryOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

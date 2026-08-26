@@ -120,6 +120,18 @@ HEALTHY_MIN = 80
 # Confidence below which the engine asks the farmer to gather more data.
 LOW_CONFIDENCE = 50
 
+# A single module may surface its own warning, but it cannot represent the whole farm.
+MIN_OVERALL_EVIDENCE_MODULES = 2
+
+# Maximum ages for observations used in a newly generated assessment.
+SOURCE_FRESHNESS_DAYS: dict[str, int] = {
+    HealthCategory.DISEASE.value: 14,
+    HealthCategory.NUTRIENT.value: 30,
+    HealthCategory.SOIL.value: 365,
+    HealthCategory.SATELLITE.value: 14,
+    HealthCategory.GROWTH.value: 30,
+}
+
 # --------------------------------------------------------------------------- #
 # Health sub-score penalties (transparent; 0-100 scale).
 # --------------------------------------------------------------------------- #

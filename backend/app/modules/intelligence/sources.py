@@ -8,14 +8,17 @@ never breaks generation — it just lowers confidence.
 """
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.modules.auth.models import User
 from app.modules.farms.models import Farm
-from app.modules.intelligence.constants import SATELLITE_VEGETATION_ALERTS
+from app.modules.intelligence.constants import (
+    SATELLITE_VEGETATION_ALERTS,
+    SOURCE_FRESHNESS_DAYS,
+)
 from app.modules.intelligence.signals import (
     CalendarSignal,
     DiseaseSignal,
@@ -45,6 +48,17 @@ class IntelligenceSources:
         self.today: date = now.date()
         self.weather_service = weather_service
         self.enable_weather = enable_weather
+
+    def _fresh(self, source: str, observed_at: datetime | date | None) -> bool:
+        if observed_at is None:
+            return False
+        if isinstance(observed_at, date) and not isinstance(observed_at, datetime):
+            observed = datetime.combine(observed_at, datetime.min.time(), tzinfo=UTC)
+        else:
+            observed = observed_at
+            if observed.tzinfo is None:
+                observed = observed.replace(tzinfo=UTC)
+        return observed >= self.now - timedelta(days=SOURCE_FRESHNESS_DAYS[source])
 
     async def gather(self, user: User, farm: Farm) -> IntelligenceInputs:
         return IntelligenceInputs(
@@ -77,6 +91,8 @@ class IntelligenceSources:
         if not reports:
             return None
         r = reports[0]
+        if not self._fresh("disease", r.created_at):
+            return None
         return DiseaseSignal(
             disease=r.disease,
             confidence=r.confidence,
@@ -89,6 +105,9 @@ class IntelligenceSources:
 
         report = await NutrientRepository(self.session).latest_report(user.id, farm.id)
         if report is None or report.analysis is None:
+            return None
+        observed_at = report.capture_date or report.created_at
+        if not self._fresh("nutrient", observed_at):
             return None
         a = report.analysis
         return NutrientSignal(
@@ -105,6 +124,10 @@ class IntelligenceSources:
 
         assessment = await SoilService(self.session).assessment_for(user, farm.id)
         profile = await SoilRepository(self.session).get_profile(user.id, farm.id)
+        if profile is None or not self._fresh(
+            "soil", profile.last_test_date or profile.updated_at or profile.created_at
+        ):
+            return None
         has_data = assessment.has_any_value or bool(assessment.deficient_micronutrients)
         if not has_data:
             return None
@@ -126,6 +149,8 @@ class IntelligenceSources:
         repo = SatelliteRepository(self.session)
         session = await repo.latest_session(user.id, farm.id, available_only=True)
         if session is None:
+            return None
+        if not self._fresh("satellite", session.capture_date or session.created_at):
             return None
         alerts = await repo.list_alerts(session.id)
         codes = tuple(a.code for a in alerts if a.code in SATELLITE_VEGETATION_ALERTS)
@@ -162,6 +187,13 @@ class IntelligenceSources:
         if session is None:
             return None
         timeline = await repo.latest_timeline_entry(session.id)
+        observed_at = (
+            timeline.created_at
+            if timeline is not None
+            else session.updated_at or session.created_at
+        )
+        if not self._fresh("growth", observed_at):
+            return None
         return GrowthSignal(
             health_score=session.latest_health_score
             or (timeline.health_score if timeline else None),
