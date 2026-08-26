@@ -24,6 +24,7 @@ logger = get_logger("admin.metrics")
 @dataclass
 class FarmerRow:
     user_id: uuid.UUID
+    farmer_ref: str
     full_name: str | None
     phone_number: str | None
     district: str | None
@@ -37,6 +38,8 @@ class FarmerRow:
 @dataclass
 class ProcurementRow:
     offer_id: uuid.UUID
+    listing_ref: str
+    farmer_ref: str
     user_id: uuid.UUID
     crop: str | None
     variety: str | None

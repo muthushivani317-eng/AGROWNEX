@@ -174,12 +174,19 @@ async def get_procurement(
     crop: str | None = Query(None),
     village: str | None = Query(None),
     district: str | None = Query(None),
+    search: str | None = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
 ):
     """Future-harvest produce offers with village/crop/season procurement analytics."""
     data = await service.procurement(
-        ctx, crop=crop, village=village, district=district, page=page, page_size=page_size
+        ctx,
+        crop=crop,
+        village=village,
+        district=district,
+        search=search,
+        page=page,
+        page_size=page_size,
     )
     page_data = data["page"]
     return success(

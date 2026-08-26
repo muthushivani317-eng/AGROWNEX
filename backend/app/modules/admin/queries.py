@@ -50,6 +50,7 @@ class AdminQueries:
                     func.lower(FarmerProfile.full_name).like(like),
                     func.lower(FarmerProfile.village).like(like),
                     User.phone_number.like(f"%{search}%"),
+                    func.lower(User.farmer_ref).like(like),
                 )
             )
 
@@ -70,6 +71,7 @@ class AdminQueries:
         farmers = [
             FarmerRow(
                 user_id=profile.user_id,
+                farmer_ref=user.farmer_ref,
                 full_name=profile.full_name,
                 phone_number=user.phone_number,
                 district=profile.district,
@@ -167,19 +169,34 @@ class AdminQueries:
         crop: str | None = None,
         village: str | None = None,
         district: str | None = None,
+        search: str | None = None,
         limit: int = 20,
         offset: int = 0,
     ) -> tuple[list[ProcurementRow], int]:
+        from app.modules.auth.models import User
         from app.modules.auth.profile_models import FarmerProfile
         from app.modules.produce.models import ProduceOffer
 
-        base = select(ProduceOffer).where(ProduceOffer.is_deleted.is_(False))
+        base = (
+            select(ProduceOffer)
+            .join(User, User.id == ProduceOffer.user_id)
+            .where(ProduceOffer.is_deleted.is_(False))
+        )
         if crop:
             base = base.where(ProduceOffer.crop_name == crop)
         if village:
             base = base.where(ProduceOffer.village == village)
         if district:
             base = base.where(ProduceOffer.district == district)
+        if search:
+            like = f"%{search.lower()}%"
+            base = base.where(
+                or_(
+                    func.lower(ProduceOffer.listing_ref).like(like),
+                    func.lower(User.farmer_ref).like(like),
+                    func.lower(ProduceOffer.crop_name).like(like),
+                )
+            )
 
         total = int(
             (
@@ -200,6 +217,7 @@ class AdminQueries:
 
         user_ids = [o.user_id for o in offers]
         profiles: dict[uuid.UUID, object] = {}
+        users: dict[uuid.UUID, object] = {}
         if user_ids:
             prows = (
                 (
@@ -211,10 +229,18 @@ class AdminQueries:
                 .all()
             )
             profiles = {p.user_id: p for p in prows}
+            urows = (
+                (await self.session.execute(select(User).where(User.id.in_(user_ids))))
+                .scalars()
+                .all()
+            )
+            users = {u.id: u for u in urows}
 
         rows = [
             ProcurementRow(
                 offer_id=o.id,
+                listing_ref=o.listing_ref,
+                farmer_ref=getattr(users.get(o.user_id), "farmer_ref", "—"),
                 user_id=o.user_id,
                 crop=o.crop_name,
                 variety=o.variety,
@@ -239,6 +265,7 @@ class AdminQueries:
 
     async def procurement_offer(self, offer_id: uuid.UUID) -> ProcurementRow | None:
         """Load the updated target directly; avoids scanning a paginated queue."""
+        from app.modules.auth.models import User
         from app.modules.auth.profile_models import FarmerProfile
         from app.modules.produce.models import ProduceOffer
 
@@ -250,8 +277,11 @@ class AdminQueries:
                 select(FarmerProfile).where(FarmerProfile.user_id == offer.user_id)
             )
         ).scalar_one_or_none()
+        user = await self.session.get(User, offer.user_id)
         return ProcurementRow(
             offer_id=offer.id,
+            listing_ref=offer.listing_ref,
+            farmer_ref=getattr(user, "farmer_ref", "—"),
             user_id=offer.user_id,
             crop=offer.crop_name,
             variety=offer.variety,

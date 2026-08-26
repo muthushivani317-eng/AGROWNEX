@@ -58,6 +58,7 @@ class DashboardOut(BaseModel):
 # --------------------------------------------------------------------------- #
 class FarmerRowOut(BaseModel):
     user_id: uuid.UUID
+    farmer_ref: str
     full_name: str | None
     phone_number: str | None
     district: str | None
@@ -83,6 +84,7 @@ class FarmSummaryOut(BaseModel):
 
 class FarmerDetailOut(BaseModel):
     user_id: uuid.UUID
+    farmer_ref: str
     full_name: str | None
     phone_number: str | None
     district: str | None
@@ -100,6 +102,7 @@ class FarmerDetailOut(BaseModel):
         user = detail["user"]
         return cls(
             user_id=user_id,
+            farmer_ref=user.farmer_ref,
             full_name=getattr(profile, "full_name", None),
             phone_number=getattr(user, "phone_number", None),
             district=getattr(profile, "district", None),
@@ -157,6 +160,8 @@ class AnalyticsOut(BaseModel):
 # --------------------------------------------------------------------------- #
 class ProcurementRowOut(BaseModel):
     offer_id: uuid.UUID
+    listing_ref: str
+    farmer_ref: str
     crop: str | None
     variety: str | None
     quantity: float
@@ -190,6 +195,8 @@ class ProcurementRowOut(BaseModel):
         case = item.get("case")
         return cls(
             offer_id=row.offer_id,
+            listing_ref=row.listing_ref,
+            farmer_ref=row.farmer_ref,
             crop=row.crop,
             variety=row.variety,
             quantity=row.quantity,

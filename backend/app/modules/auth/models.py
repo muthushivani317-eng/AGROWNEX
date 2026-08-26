@@ -9,7 +9,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Boolean, DateTime, FetchedValue, ForeignKey, Integer, String, event
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.modules.auth.constants import UserStatus
@@ -27,6 +27,10 @@ class User(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
 
     __tablename__ = "users"
 
+    farmer_ref: Mapped[str] = mapped_column(
+        String(24), unique=True, index=True, nullable=False, server_default=FetchedValue()
+    )
+
     firebase_uid: Mapped[str] = mapped_column(
         String(255), unique=True, index=True, nullable=False
     )
@@ -38,6 +42,14 @@ class User(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
         String(30), default=UserStatus.ACTIVE, nullable=False
     )
     last_login: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+@event.listens_for(User, "before_insert")
+def _sqlite_farmer_ref(_mapper, connection, target: User) -> None:  # noqa: ANN001
+    """Production uses the PostgreSQL sequence; tests need a portable fallback."""
+    if connection.dialect.name != "postgresql" and not target.farmer_ref:
+        target.id = target.id or uuid.uuid4()
+        target.farmer_ref = f"AGF-{target.id.int % 1_000_000_000:09d}"
 
 
 class OtpRequest(UUIDMixin, TimestampMixin, Base):

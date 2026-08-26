@@ -28,11 +28,13 @@ from sqlalchemy import (
     CheckConstraint,
     Date,
     DateTime,
+    FetchedValue,
     Float,
     ForeignKey,
     Integer,
     String,
     Text,
+    event,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -75,6 +77,10 @@ class ProduceOffer(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
             "('farmer_reported','system_estimated','verified')",
             name="ck_produce_quantity_provenance",
         ),
+    )
+
+    listing_ref: Mapped[str] = mapped_column(
+        String(32), unique=True, index=True, nullable=False, server_default=FetchedValue()
     )
 
     user_id: Mapped[uuid.UUID] = mapped_column(
@@ -147,6 +153,15 @@ class ProduceOffer(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
         cascade="all, delete-orphan",
         order_by="OfferStatusHistory.created_at",
     )
+
+
+@event.listens_for(ProduceOffer, "before_insert")
+def _sqlite_listing_ref(_mapper, connection, target: ProduceOffer) -> None:  # noqa: ANN001
+    """Production uses the PostgreSQL sequence; tests need a portable fallback."""
+    if connection.dialect.name != "postgresql" and not target.listing_ref:
+        target.id = target.id or uuid.uuid4()
+        year = datetime.now().year
+        target.listing_ref = f"AGP-{year}-{target.id.int % 1_000_000_000:09d}"
 
 
 class OfferImage(UUIDMixin, TimestampMixin, Base):

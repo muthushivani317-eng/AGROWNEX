@@ -264,7 +264,7 @@ class AdminService:
         self,
         ctx: AdminContext,
         *,
-        search: str | None,
+        search: str | None = None,
         district: str | None,
         crop: str | None,
         page: int,
@@ -310,13 +310,19 @@ class AdminService:
         crop: str | None,
         village: str | None,
         district: str | None,
+        search: str | None = None,
         page: int,
         page_size: int,
     ) -> dict:
         self._require(ctx, AdminPermission.MANAGE_PROCUREMENT)
         offset = (page - 1) * page_size
         rows, total = await self.queries.procurement_offers(
-            crop=crop, village=village, district=district, limit=page_size, offset=offset
+            crop=crop,
+            village=village,
+            district=district,
+            search=search,
+            limit=page_size,
+            offset=offset,
         )
         status_map = await self.repo.procurement_status_map([r.offer_id for r in rows])
         case_map = await self.repo.procurement_case_map([r.offer_id for r in rows])

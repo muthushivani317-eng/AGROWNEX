@@ -198,6 +198,7 @@ class ProcurementInsightOut(BaseModel):
 
 class ProduceOfferSummaryOut(BaseModel):
     id: uuid.UUID
+    listing_ref: str
     farm_id: uuid.UUID
     crop_name: str
     variety: str | None
@@ -231,6 +232,7 @@ class ProduceOfferSummaryOut(BaseModel):
         images = offer.images or []
         return cls(
             id=offer.id,
+            listing_ref=offer.listing_ref,
             farm_id=offer.farm_id,
             crop_name=offer.crop_name,
             variety=offer.variety,
