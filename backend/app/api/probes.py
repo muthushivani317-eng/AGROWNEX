@@ -68,6 +68,24 @@ async def _check_redis() -> bool:
         return False
 
 
+async def _check_disease_models() -> bool:
+    """Verify the controlled crop inventory used by production inference.
+
+    The legacy single-model runtime is no longer the production disease path.
+    Readiness must follow the safety-gated six-crop inventory instead.
+    """
+    if not settings.disease_model_required:
+        return True
+    try:
+        from app.crop_runtime.inventory import get_model_inventory, inventory_ready
+
+        inventory = await asyncio.to_thread(get_model_inventory)
+        return inventory_ready(inventory)
+    except Exception:  # noqa: BLE001 - readiness must never raise
+        logger.warning("readiness: controlled disease inventory check failed")
+        return False
+
+
 @router.get("/health")
 @router.get("/healthz")
 async def healthz():
@@ -78,12 +96,10 @@ async def healthz():
 @router.get("/readyz")
 async def readyz():
     """Readiness — DB (+ Redis when configured) must be reachable."""
-    from app.modules.disease.ml_runtime import get_model_runtime
-
     status_code, body = build_readiness(
         db_ok=await _check_db(),
         redis_ok=await _check_redis(),
-        model_ok=(not settings.disease_model_required or get_model_runtime().ready),
+        model_ok=await _check_disease_models(),
     )
     return JSONResponse(status_code=status_code, content=body)
 

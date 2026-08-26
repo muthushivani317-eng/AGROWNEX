@@ -4,7 +4,6 @@ from __future__ import annotations
 import app.api.probes as probes
 from app.core import security
 from app.modules.ai import constants as ai_constants
-from app.modules.disease import ml_runtime
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -31,7 +30,7 @@ def test_health_is_public_dependency_free_liveness(monkeypatch):
     monkeypatch.setattr(security, "ensure_firebase_app", unexpected_model_load)
     monkeypatch.setattr(ai_constants, "GEMINI_API_KEY", UnexpectedGeminiUse())
     monkeypatch.setattr(ai_constants, "GEMINI_VISION_MODEL", UnexpectedGeminiUse())
-    monkeypatch.setattr(ml_runtime, "get_model_runtime", unexpected_model_load)
+    monkeypatch.setattr(probes, "_check_disease_models", unexpected_dependency_call)
 
     response = _client().get("/health")
 
@@ -67,12 +66,9 @@ def test_readyz_behaviour_is_unchanged(monkeypatch):
     async def redis_ready():
         return True
 
-    class ReadyRuntime:
-        ready = True
-
     monkeypatch.setattr(probes, "_check_db", database_ready)
     monkeypatch.setattr(probes, "_check_redis", redis_ready)
-    monkeypatch.setattr(ml_runtime, "get_model_runtime", lambda: ReadyRuntime())
+    monkeypatch.setattr(probes, "_check_disease_models", database_ready)
 
     response = _client().get("/readyz")
 
