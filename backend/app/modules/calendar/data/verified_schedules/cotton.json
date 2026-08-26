@@ -1,0 +1,240 @@
+{
+  "schema_version": "1.0",
+  "canonical_crop_id": "cotton",
+  "aliases": [
+    "parutthi"
+  ],
+  "variety_or_duration_group": "irrigated_hybrid_long_duration_150_180_day (Bt/irrigated hybrid type, e.g. TCHB 213; TNAU also documents shorter ~150-day non-hybrid varieties like MCU 12/MCU 13/Suvin/SVPR 2 with lower fertilizer doses and an earlier irrigation cut-off -- see notes)",
+  "stages": [
+    {
+      "code": "sowing_and_thinning",
+      "label_key": "calendar.stages.sowing_and_thinning",
+      "start_offset": 0,
+      "end_offset": 15,
+      "activities": [
+        {
+          "code": "field_preparation_fym",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.cotton.field_preparation_fym.title",
+          "description_key": "calendar.verified.cotton.field_preparation_fym.description",
+          "day_offset": -15,
+          "notification_offset_days": null,
+          "notification_eligible": false,
+          "priority": "low",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "basal_fertilizer_application",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.cotton.basal_fertilizer_application.title",
+          "description_key": "calendar.verified.cotton.basal_fertilizer_application.description",
+          "day_offset": -10,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "sowing_dibbling",
+          "activity_type": "sowing",
+          "label_key": "calendar.verified.cotton.sowing_dibbling.title",
+          "description_key": "calendar.verified.cotton.sowing_dibbling.description",
+          "day_offset": 0,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "pre_emergence_herbicide",
+          "activity_type": "weed_management",
+          "label_key": "calendar.verified.cotton.pre_emergence_herbicide.title",
+          "description_key": "calendar.verified.cotton.pre_emergence_herbicide.description",
+          "day_offset": 3,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "spraying"
+        },
+        {
+          "code": "life_irrigation",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.cotton.life_irrigation.title",
+          "description_key": "calendar.verified.cotton.life_irrigation.description",
+          "day_offset": 5,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "gap_filling_and_thinning",
+          "activity_type": "sowing",
+          "label_key": "calendar.verified.cotton.gap_filling_and_thinning.title",
+          "description_key": "calendar.verified.cotton.gap_filling_and_thinning.description",
+          "day_offset": 15,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "vegetative_growth",
+      "label_key": "calendar.stages.vegetative_growth",
+      "start_offset": 16,
+      "end_offset": 44,
+      "activities": [
+        {
+          "code": "vegetative_phase_irrigation",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.cotton.vegetative_phase_irrigation.title",
+          "description_key": "calendar.verified.cotton.vegetative_phase_irrigation.description",
+          "day_offset": 20,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "bollworm_pheromone_trap_scouting",
+          "activity_type": "pest_monitoring",
+          "label_key": "calendar.verified.cotton.bollworm_pheromone_trap_scouting.title",
+          "description_key": "calendar.verified.cotton.bollworm_pheromone_trap_scouting.description",
+          "day_offset": 30,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "squaring_and_flowering",
+      "label_key": "calendar.stages.squaring_and_flowering",
+      "start_offset": 45,
+      "end_offset": 75,
+      "activities": [
+        {
+          "code": "top_dress_fertilizer_1",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.cotton.top_dress_fertilizer_1.title",
+          "description_key": "calendar.verified.cotton.top_dress_fertilizer_1.description",
+          "day_offset": 42,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "hand_weeding",
+          "activity_type": "weed_management",
+          "label_key": "calendar.verified.cotton.hand_weeding.title",
+          "description_key": "calendar.verified.cotton.hand_weeding.description",
+          "day_offset": 45,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "sucking_pest_monitoring",
+          "activity_type": "pest_monitoring",
+          "label_key": "calendar.verified.cotton.sucking_pest_monitoring.title",
+          "description_key": "calendar.verified.cotton.sucking_pest_monitoring.description",
+          "day_offset": 48,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "flowering_critical_irrigation",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.cotton.flowering_critical_irrigation.title",
+          "description_key": "calendar.verified.cotton.flowering_critical_irrigation.description",
+          "day_offset": 55,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "top_dress_fertilizer_2_hybrid",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.cotton.top_dress_fertilizer_2_hybrid.title",
+          "description_key": "calendar.verified.cotton.top_dress_fertilizer_2_hybrid.description",
+          "day_offset": 62,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "boll_development_and_maturity",
+      "label_key": "calendar.stages.boll_development_and_maturity",
+      "start_offset": 76,
+      "end_offset": 129,
+      "activities": [
+        {
+          "code": "boll_development_critical_irrigation",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.cotton.boll_development_critical_irrigation.title",
+          "description_key": "calendar.verified.cotton.boll_development_critical_irrigation.description",
+          "day_offset": 108,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        }
+      ]
+    },
+    {
+      "code": "picking_and_harvest",
+      "label_key": "calendar.stages.picking_and_harvest",
+      "start_offset": 130,
+      "end_offset": 200,
+      "activities": [
+        {
+          "code": "stop_irrigation",
+          "activity_type": "harvest_preparation",
+          "label_key": "calendar.verified.cotton.stop_irrigation.title",
+          "description_key": "calendar.verified.cotton.stop_irrigation.description",
+          "day_offset": 160,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "multiple_picking",
+          "activity_type": "harvest",
+          "label_key": "calendar.verified.cotton.multiple_picking.title",
+          "description_key": "calendar.verified.cotton.multiple_picking.description",
+          "day_offset": 140,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        }
+      ]
+    }
+  ],
+  "geographic_limitations": [
+    "Tamil Nadu"
+  ],
+  "season_limitations": [
+    "kharif"
+  ],
+  "source_organization": "Tamil Nadu Agricultural University (TNAU) - Agritech Portal",
+  "document_reference": "TNAU Agritech Portal, Crop Production Guide - Cotton (Fibre Crops): https://agritech.tnau.ac.in/agriculture/CropProduction/Fibre%20crops/fibrecrops_cotton.html; supplemented by TNAU Agritech Portal pages: 'Irrigated Cotton - Irrigation Management' (http://www.agritech.tnau.ac.in/agriculture/agri_cotton_irri_irrigation%20management.html), 'Cotton - Inorganic Manures' (https://agritech.tnau.ac.in/agriculture/agri_cotton_Inorganic_manures%20.html), 'Irrigated Cotton - Crop Geometry & Seed Rate' (http://www.agritech.tnau.ac.in/agriculture/agri_cotton_Crop%20geometry_Seed%20Rate.html), and 'Crop Protection - IPM - Cotton' (https://agritech.tnau.ac.in/crop_protection/crop_prot_ipm_cotton.html)",
+  "reviewer": "AgrowAI content team -- compiled from cited public source, not independently agronomist-reviewed",
+  "approval_date": "2026-08-18",
+  "review_date": "2027-08-18",
+  "version": "1.0.0",
+  "status": "SOURCED_PUBLIC_REFERENCE",
+  "content_hash": "2d4689c373f227cb2625eb3531b74e6917df3e2ee0ce926598952a881c4bbec9"
+}

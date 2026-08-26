@@ -82,6 +82,16 @@ class RefreshTokenRepository(BaseRepository[RefreshToken]):
 class SessionRepository(BaseRepository[UserSession]):
     model = UserSession
 
+    async def revoke_all_for_user(self, user_id: uuid.UUID) -> None:
+        result = await self.session.execute(
+            select(UserSession).where(
+                UserSession.user_id == user_id,
+                UserSession.revoked.is_(False),
+            )
+        )
+        for user_session in result.scalars().all():
+            user_session.revoked = True
+
 
 class LoginHistoryRepository(BaseRepository[LoginHistory]):
     model = LoginHistory

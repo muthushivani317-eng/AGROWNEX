@@ -90,9 +90,17 @@ def test_procurement_analytics_handles_unknowns_and_unconvertible_units():
     assert out["quantity_trend"] == []
 
 
-def test_super_admin_has_every_permission():
+def test_super_admin_has_every_non_owner_permission():
     perms = set(permissions_for(AdminRole.SUPER_ADMIN.value))
-    assert perms == {p.value for p in AdminPermission}
+    assert AdminPermission.MANAGE_ADMINS.value not in perms
+    assert perms == {
+        permission.value
+        for permission in AdminPermission
+        if permission is not AdminPermission.MANAGE_ADMINS
+    }
+
+    owner = set(permissions_for(AdminRole.OWNER.value))
+    assert owner == {permission.value for permission in AdminPermission}
 
 
 def test_least_privilege_roles():

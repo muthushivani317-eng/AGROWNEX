@@ -35,7 +35,7 @@ from app.modules.ai.repositories import (
 )
 from app.modules.ai.schemas import ChatRequest
 from app.modules.ai.usage_ledger import record_usage_durable
-from app.modules.ai.validator import validate_response
+from app.modules.ai.validator import contains_unsafe_advice, validate_response
 from app.modules.auth.models import User
 from app.modules.auth.repositories import FarmerProfileRepository
 from app.modules.farms.models import Farm
@@ -122,6 +122,15 @@ class AIService:
             provider=result.provider,
             is_sample=result.is_sample,
         )
+        if result.text and contains_unsafe_advice(result.text):
+            # Deterministic output safety check tripped (validator.py) -- flag
+            # it distinctly from an ordinary reply so it can be reviewed,
+            # separate from validate_response()'s own fallback substitution.
+            logger.warning(
+                "AI response blocked by output safety check conversation=%s user=%s",
+                conversation.id,
+                user.id,
+            )
         text = validate_response(result.text, language)
 
         reply = await self.messages.add(

@@ -13,14 +13,31 @@ would rather show "not available" than hand a farmer AI-guessed or unreviewed
 agronomic advice under the label "verified." Nobody has populated this
 directory with real, expert-reviewed content yet, so every crop is blocked.
 
-**Do not add an entry here unless the schedule has genuinely been reviewed
-and approved by a real agricultural authority** (a KVK, a state agricultural
+**Do not add an entry here unless the schedule comes from a genuine,
+checkable public agricultural source** (a KVK, a state agricultural
 university, ICAR, or equivalent) for the crop, region, and season it claims
 to cover. An entry with a made-up `reviewer` or `source_organization` is
 worse than no entry at all — it tells a farmer "this is verified" when it
 isn't.
 
-## Adding a real, reviewed schedule
+## Two ways a schedule can go live — `status`
+
+- `"VERIFIED"` — an independent agronomist has personally reviewed this exact
+  schedule for AgrowAI and signed off. `reviewer` should be that person's
+  real name/role.
+- `"SOURCED_PUBLIC_REFERENCE"` — compiled from a real, cited public source
+  (see above) but not personally reviewed by an independent agronomist for
+  AgrowAI specifically. Still fully live and shown to farmers, still requires
+  genuine `source_organization`/`document_reference`, but the app shows a
+  distinct, honest label ("compiled from a public source, not independently
+  reviewed") instead of claiming full expert verification. Product decision,
+  2026-08-17: show real, cited content rather than nothing, without ever
+  blurring it with an actual expert sign-off.
+
+Both statuses resolve for farmers. `"UNVERIFIED"` / `"EXPERT_REVIEW_PENDING"`
+are for drafts you want tracked but not yet live.
+
+## Adding a real schedule
 
 1. Get the actual reviewed schedule from your agronomic source: for each
    growth stage, its day-offset window from sowing, and for each activity
@@ -50,10 +67,14 @@ isn't.
      date (a `VERIFIED` schedule whose review date has passed is treated as
      stale and rejected — see `CropStageSchedule.active_evidence`). Plan to
      refresh entries before they expire.
-   - `status` — must be exactly `"VERIFIED"` to be loaded as active. Use
-     `"UNVERIFIED"` or `"EXPERT_REVIEW_PENDING"` for drafts you want tracked
-     but not yet live (they're counted by
+   - `status` — `"VERIFIED"` or `"SOURCED_PUBLIC_REFERENCE"` to go live (see
+     above). Use `"UNVERIFIED"` or `"EXPERT_REVIEW_PENDING"` for drafts you
+     want tracked but not yet live (they're counted by
      `CropStageRegistry.unverified_count` but never resolve for a farmer).
+   - `reviewer` — a real agronomist's name/role for `VERIFIED`, or an honest
+     description of who compiled/checked the sourced content (e.g. "AgrowAI
+     content team — compiled from cited public source, not independently
+     agronomist-reviewed") for `SOURCED_PUBLIC_REFERENCE`. Never fabricated.
    - `content_hash` — a SHA-256 of the entry's own content (everything except
      `content_hash` itself), used to detect accidental edits after review
      sign-off. **Don't hand-compute this.** Run:
@@ -77,9 +98,12 @@ isn't.
 ## What NOT to do
 
 Don't wire the old `generate_events()` / `schedules.py` generic-template path
-back in as a silent fallback for crops without a verified entry — that was a
+back in as a silent fallback for crops without a real entry — that was a
 deliberate, discussed decision (see chat 2026-08-17): showing "not available"
-is more honest than silently degrading to unreviewed generic advice under
-the same UI as verified guidance. If that decision changes, it needs its own
-explicit UI treatment (e.g. a clearly-labeled "general guidance, not
-expert-verified" state), not a quiet fallback here.
+is more honest than silently degrading to unreviewed, uncited generic advice
+under the same UI as verified guidance. The `SOURCED_PUBLIC_REFERENCE` status
+above (added 2026-08-17, same conversation) is the sanctioned way to show
+real content without a full expert review — it still requires a genuine
+citation and gets its own distinct, honestly-labeled UI treatment. It is not
+a loophole for `schedules.py`'s uncited generic templates, which still must
+never be wired in here.

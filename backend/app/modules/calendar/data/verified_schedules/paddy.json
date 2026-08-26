@@ -1,0 +1,234 @@
+{
+  "schema_version": "1.0",
+  "canonical_crop_id": "paddy",
+  "aliases": [
+    "rice"
+  ],
+  "variety_or_duration_group": "medium_duration_130_135_day",
+  "stages": [
+    {
+      "code": "nursery_seedling",
+      "label_key": "calendar.stages.nursery_seedling",
+      "start_offset": 0,
+      "end_offset": 25,
+      "activities": [
+        {
+          "code": "nursery_sowing",
+          "activity_type": "sowing",
+          "label_key": "calendar.verified.paddy.nursery_sowing.title",
+          "description_key": "calendar.verified.paddy.nursery_sowing.description",
+          "day_offset": 0,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "nursery_water_management",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.paddy.nursery_water_management.title",
+          "description_key": "calendar.verified.paddy.nursery_water_management.description",
+          "day_offset": 10,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "irrigation"
+        }
+      ]
+    },
+    {
+      "code": "transplanting_establishment",
+      "label_key": "calendar.stages.transplanting_establishment",
+      "start_offset": 25,
+      "end_offset": 35,
+      "activities": [
+        {
+          "code": "transplanting",
+          "activity_type": "sowing",
+          "label_key": "calendar.verified.paddy.transplanting.title",
+          "description_key": "calendar.verified.paddy.transplanting.description",
+          "day_offset": 25,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "shallow_water_maintenance",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.paddy.shallow_water_maintenance.title",
+          "description_key": "calendar.verified.paddy.shallow_water_maintenance.description",
+          "day_offset": 27,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "irrigation"
+        }
+      ]
+    },
+    {
+      "code": "vegetative_tillering",
+      "label_key": "calendar.stages.vegetative_tillering",
+      "start_offset": 35,
+      "end_offset": 70,
+      "activities": [
+        {
+          "code": "hand_weeding_tillering",
+          "activity_type": "weed_management",
+          "label_key": "calendar.verified.paddy.hand_weeding_tillering.title",
+          "description_key": "calendar.verified.paddy.hand_weeding_tillering.description",
+          "day_offset": 40,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "nitrogen_topdress_tillering",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.paddy.nitrogen_topdress_tillering.title",
+          "description_key": "calendar.verified.paddy.nitrogen_topdress_tillering.description",
+          "day_offset": 52,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "panicle_initiation",
+      "label_key": "calendar.stages.panicle_initiation",
+      "start_offset": 70,
+      "end_offset": 90,
+      "activities": [
+        {
+          "code": "nitrogen_topdress_panicle_initiation",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.paddy.nitrogen_topdress_panicle_initiation.title",
+          "description_key": "calendar.verified.paddy.nitrogen_topdress_panicle_initiation.description",
+          "day_offset": 72,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "water_management_pi",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.paddy.water_management_pi.title",
+          "description_key": "calendar.verified.paddy.water_management_pi.description",
+          "day_offset": 75,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        }
+      ]
+    },
+    {
+      "code": "booting_heading_flowering",
+      "label_key": "calendar.stages.booting_heading_flowering",
+      "start_offset": 90,
+      "end_offset": 110,
+      "activities": [
+        {
+          "code": "disease_scouting_booting_heading",
+          "activity_type": "disease_inspection",
+          "label_key": "calendar.verified.paddy.disease_scouting_booting_heading.title",
+          "description_key": "calendar.verified.paddy.disease_scouting_booting_heading.description",
+          "day_offset": 95,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "water_management_flowering",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.paddy.water_management_flowering.title",
+          "description_key": "calendar.verified.paddy.water_management_flowering.description",
+          "day_offset": 100,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        }
+      ]
+    },
+    {
+      "code": "milk_dough_grain_filling",
+      "label_key": "calendar.stages.milk_dough_grain_filling",
+      "start_offset": 110,
+      "end_offset": 125,
+      "activities": [
+        {
+          "code": "grain_filling_water_management",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.paddy.grain_filling_water_management.title",
+          "description_key": "calendar.verified.paddy.grain_filling_water_management.description",
+          "day_offset": 115,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "bird_pest_protection",
+          "activity_type": "pest_monitoring",
+          "label_key": "calendar.verified.paddy.bird_pest_protection.title",
+          "description_key": "calendar.verified.paddy.bird_pest_protection.description",
+          "day_offset": 118,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "maturity_harvest",
+      "label_key": "calendar.stages.maturity_harvest",
+      "start_offset": 125,
+      "end_offset": 135,
+      "activities": [
+        {
+          "code": "drain_field_before_harvest",
+          "activity_type": "harvest_preparation",
+          "label_key": "calendar.verified.paddy.drain_field_before_harvest.title",
+          "description_key": "calendar.verified.paddy.drain_field_before_harvest.description",
+          "day_offset": 125,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "harvest_paddy",
+          "activity_type": "harvest",
+          "label_key": "calendar.verified.paddy.harvest_paddy.title",
+          "description_key": "calendar.verified.paddy.harvest_paddy.description",
+          "day_offset": 132,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        }
+      ]
+    }
+  ],
+  "geographic_limitations": [
+    "Tamil Nadu"
+  ],
+  "season_limitations": [
+    "kharif"
+  ],
+  "source_organization": "Tamil Nadu Agricultural University (TNAU) Agritech Portal",
+  "document_reference": "Crop Production Guide 2020 -- Rice section, https://agritech.tnau.ac.in/pdf/AGRICULTURE.pdf",
+  "reviewer": "AgrowAI content team -- compiled from cited public source, not independently agronomist-reviewed",
+  "approval_date": "2026-08-18",
+  "review_date": "2027-08-18",
+  "version": "1.0.0",
+  "status": "SOURCED_PUBLIC_REFERENCE",
+  "content_hash": "7c6c94e1da9a0784bbccc3c06c01508a2d7bf857b7e71127f755379e0a93abaf"
+}

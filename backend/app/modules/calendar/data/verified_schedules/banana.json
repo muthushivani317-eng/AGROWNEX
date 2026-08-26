@@ -1,0 +1,273 @@
+{
+  "schema_version": "1.0",
+  "canonical_crop_id": "banana",
+  "aliases": [
+    "vazhai",
+    "plantain"
+  ],
+  "variety_or_duration_group": "tissue_culture_grand_naine_robusta_365_425_day",
+  "stages": [
+    {
+      "code": "planting",
+      "label_key": "calendar.stages.planting",
+      "start_offset": 0,
+      "end_offset": 7,
+      "activities": [
+        {
+          "code": "field_ploughing_green_manuring",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.banana.field_ploughing_green_manuring.title",
+          "description_key": "calendar.verified.banana.field_ploughing_green_manuring.description",
+          "day_offset": -30,
+          "notification_offset_days": null,
+          "notification_eligible": false,
+          "priority": "low",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "pit_digging_and_filling",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.banana.pit_digging_and_filling.title",
+          "description_key": "calendar.verified.banana.pit_digging_and_filling.description",
+          "day_offset": -15,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "sucker_planting",
+          "activity_type": "sowing",
+          "label_key": "calendar.verified.banana.sucker_planting.title",
+          "description_key": "calendar.verified.banana.sucker_planting.description",
+          "day_offset": 0,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        }
+      ]
+    },
+    {
+      "code": "establishment",
+      "label_key": "calendar.stages.establishment",
+      "start_offset": 8,
+      "end_offset": 75,
+      "activities": [
+        {
+          "code": "gap_filling",
+          "activity_type": "sowing",
+          "label_key": "calendar.verified.banana.gap_filling.title",
+          "description_key": "calendar.verified.banana.gap_filling.description",
+          "day_offset": 30,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "vegetative_growth_nutrient_mgmt",
+      "label_key": "calendar.stages.vegetative_growth_nutrient_mgmt",
+      "start_offset": 76,
+      "end_offset": 220,
+      "activities": [
+        {
+          "code": "fertilizer_dose_1",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.banana.fertilizer_dose_1.title",
+          "description_key": "calendar.verified.banana.fertilizer_dose_1.description",
+          "day_offset": 90,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "desuckering_monthly",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.banana.desuckering_monthly.title",
+          "description_key": "calendar.verified.banana.desuckering_monthly.description",
+          "day_offset": 100,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "biofertilizer_application",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.banana.biofertilizer_application.title",
+          "description_key": "calendar.verified.banana.biofertilizer_application.description",
+          "day_offset": 120,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "wilt_scouting",
+          "activity_type": "disease_inspection",
+          "label_key": "calendar.verified.banana.wilt_scouting.title",
+          "description_key": "calendar.verified.banana.wilt_scouting.description",
+          "day_offset": 130,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "fertilizer_dose_2",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.banana.fertilizer_dose_2.title",
+          "description_key": "calendar.verified.banana.fertilizer_dose_2.description",
+          "day_offset": 150,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "fertilizer_dose_3",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.banana.fertilizer_dose_3.title",
+          "description_key": "calendar.verified.banana.fertilizer_dose_3.description",
+          "day_offset": 210,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "bunch_emergence_and_propping",
+      "label_key": "calendar.stages.bunch_emergence_and_propping",
+      "start_offset": 221,
+      "end_offset": 300,
+      "activities": [
+        {
+          "code": "denavelling",
+          "activity_type": "flowering_observation",
+          "label_key": "calendar.verified.banana.denavelling.title",
+          "description_key": "calendar.verified.banana.denavelling.description",
+          "day_offset": 285,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "bunch_covering_and_hand_thinning",
+          "activity_type": "harvest_preparation",
+          "label_key": "calendar.verified.banana.bunch_covering_and_hand_thinning.title",
+          "description_key": "calendar.verified.banana.bunch_covering_and_hand_thinning.description",
+          "day_offset": 290,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "propping",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.banana.propping.title",
+          "description_key": "calendar.verified.banana.propping.description",
+          "day_offset": 300,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "bunch_development",
+      "label_key": "calendar.stages.bunch_development",
+      "start_offset": 301,
+      "end_offset": 365,
+      "activities": [
+        {
+          "code": "depistation_cigar_end_rot_prevention",
+          "activity_type": "disease_inspection",
+          "label_key": "calendar.verified.banana.depistation_cigar_end_rot_prevention.title",
+          "description_key": "calendar.verified.banana.depistation_cigar_end_rot_prevention.description",
+          "day_offset": 305,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "spraying"
+        },
+        {
+          "code": "stop_irrigation_before_harvest",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.banana.stop_irrigation_before_harvest.title",
+          "description_key": "calendar.verified.banana.stop_irrigation_before_harvest.description",
+          "day_offset": 358,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        }
+      ]
+    },
+    {
+      "code": "harvest_and_maturity",
+      "label_key": "calendar.stages.harvest_and_maturity",
+      "start_offset": 366,
+      "end_offset": 390,
+      "activities": [
+        {
+          "code": "maturity_check",
+          "activity_type": "harvest_preparation",
+          "label_key": "calendar.verified.banana.maturity_check.title",
+          "description_key": "calendar.verified.banana.maturity_check.description",
+          "day_offset": 375,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "harvest_cutting",
+          "activity_type": "harvest",
+          "label_key": "calendar.verified.banana.harvest_cutting.title",
+          "description_key": "calendar.verified.banana.harvest_cutting.description",
+          "day_offset": 385,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "pseudostem_removal_mattocking",
+          "activity_type": "post_harvest",
+          "label_key": "calendar.verified.banana.pseudostem_removal_mattocking.title",
+          "description_key": "calendar.verified.banana.pseudostem_removal_mattocking.description",
+          "day_offset": 386,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "low",
+          "weather_dependency": "none"
+        }
+      ]
+    }
+  ],
+  "geographic_limitations": [
+    "Tamil Nadu"
+  ],
+  "season_limitations": [
+    "kharif",
+    "rabi",
+    "summer"
+  ],
+  "source_organization": "Tamil Nadu Agricultural University (TNAU), Agritech Portal",
+  "document_reference": "TNAU Agritech Portal, Banana Expert System - 'Cultivation Practices' (http://www.agritech.tnau.ac.in/expert_system/banana/cultivation.html), 'Season & Varieties' (http://www.agritech.tnau.ac.in/expert_system/banana/season&variety.html), and 'Precision Farming' (http://www.agritech.tnau.ac.in/expert_system/banana/precision.html)",
+  "reviewer": "AgrowAI content team -- compiled from cited public source, not independently agronomist-reviewed",
+  "approval_date": "2026-08-18",
+  "review_date": "2027-08-18",
+  "version": "1.0.0",
+  "status": "SOURCED_PUBLIC_REFERENCE",
+  "content_hash": "d2398ed2e2c2134b0773de12a1e50d86d629c9a729bebf618e9345d1848cff29"
+}

@@ -32,6 +32,7 @@ class Cache(Protocol):
 
     def get(self, key: str) -> Any | None: ...
     def set(self, key: str, value: Any) -> None: ...
+    def delete(self, key: str) -> None: ...
     def clear(self) -> None: ...
 
 
@@ -55,6 +56,9 @@ class InMemoryTTLCache:
 
     def set(self, key: str, value: Any) -> None:
         self._store[key] = (value, time.monotonic() + self.ttl)
+
+    def delete(self, key: str) -> None:
+        self._store.pop(key, None)
 
     def clear(self) -> None:
         self._store.clear()
@@ -103,6 +107,13 @@ class RedisTTLCache:
         except Exception as exc:  # noqa: BLE001 - caching is best-effort
             logger.warning("redis cache set failed (%s); using local fallback", exc)
             self._fallback.set(key, value)
+
+    def delete(self, key: str) -> None:
+        try:
+            self._client.delete(self._k(key))
+        except Exception as exc:  # noqa: BLE001 - caching is best-effort
+            logger.warning("redis cache delete failed (%s)", exc)
+        self._fallback.delete(key)
 
     def clear(self) -> None:
         try:

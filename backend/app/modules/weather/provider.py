@@ -71,7 +71,17 @@ class OpenMeteoClient:
                 client = get_http_client()
                 response = await client.get(url, params=params, timeout=self.timeout)
                 response.raise_for_status()
-                return response.json()
+                try:
+                    return response.json()
+                except ValueError as exc:
+                    # A malformed (non-JSON) 200 response — treat like any other
+                    # transient upstream failure rather than raising an uncaught
+                    # exception that would abort an entire batch job (2026-08
+                    # pre-release audit: this could take down the whole scheduled
+                    # weather-alert evaluation run for every farmer, not just the
+                    # one whose fetch hit the bad response).
+                    logger.warning("Open-Meteo returned a non-JSON response")
+                    last_error = exc
             except (httpx.TransportError, httpx.TimeoutException) as exc:
                 last_error = exc
             except httpx.HTTPStatusError as exc:

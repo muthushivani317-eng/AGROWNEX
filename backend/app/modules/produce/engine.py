@@ -6,6 +6,7 @@ harvest is due, a normalized quantity, and indicative values. It never fabricate
 a market price or a buyer — a market value is produced only when a verified price
 reference is supplied (docs/PRODUCT_RULES.md). No I/O, no side effects.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -100,16 +101,12 @@ def compute_insight(
 
     # Market value only when a verified price reference is supplied.
     estimated_market_value = (
-        _value_from_price(quantity_kg, price.modal_price, price.unit)
-        if price is not None
-        else None
+        _value_from_price(quantity_kg, price.modal_price, price.unit) if price is not None else None
     )
 
     # The farmer's own asking price is per the offer's unit (not fabricated data).
     estimated_asking_value = (
-        round(offer.quantity * offer.asking_price, 2)
-        if offer.asking_price is not None
-        else None
+        round(offer.quantity * offer.asking_price, 2) if offer.asking_price is not None else None
     )
 
     return ProcurementInsight(

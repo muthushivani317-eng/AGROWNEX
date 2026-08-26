@@ -18,6 +18,9 @@ def production_settings(**overrides: object) -> Settings:
         "redis_url": "redis://redis.internal:6379/0",
         "session_secret": "production-test-secret-at-least-32-characters",
         "cors_origins": ["https://app.example.invalid"],
+        "admin_web_origins": ["https://admin.example.invalid"],
+        "admin_session_cookie_name": "__Host-agrowai_admin_session",
+        "admin_require_mfa": True,
         "firebase_project_id": "test-project",
         "firebase_credentials_json": '{"type":"service_account"}',
         "otp_provider": "firebase",
@@ -43,8 +46,9 @@ def test_mock_provider_remains_forbidden_in_production() -> None:
         settings.validate_production()
 
 
-def test_msg91_configuration_behavior_is_unchanged() -> None:
-    production_settings(otp_provider="msg91").validate_production()
+def test_unwired_msg91_provider_is_forbidden_in_production() -> None:
+    with pytest.raises(ProductionConfigError, match="not connected"):
+        production_settings(otp_provider="msg91").validate_production()
 
 
 def test_unknown_provider_is_rejected() -> None:

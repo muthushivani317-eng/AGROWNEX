@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0",
+  "pack_id": "REPLACE_ME e.g. paddy-blast-tn",
+  "version": "1.0.0",
+  "crop_id": "paddy",
+  "disease_id": "blast",
+  "regions": ["IN-TN"],
+  "seasons": ["kharif"],
+  "confirmed_stages": ["tillering"],
+  "required_weather_variables": ["humidity_pct", "temperature_c"],
+  "observation_window_hours": 24,
+  "forecast_window_hours": 48,
+  "conditions": [
+    { "variable": "humidity_pct", "operator": "gte", "value": 90 },
+    { "variable": "temperature_c", "operator": "lte", "value": 28 }
+  ],
+  "minimum_data_completeness": 1.0,
+  "maximum_weather_age_hours": 6,
+  "cached_weather_allowed": false,
+  "alert_title_key": "diseaseRisk.verified.REPLACE_ME.title",
+  "alert_explanation_key": "diseaseRisk.verified.REPLACE_ME.explanation",
+  "source_references": [
+    "REPLACE_ME -- real, checkable document/bulletin, e.g. a TNAU/KVK/ICAR advisory URL or publication title"
+  ],
+  "reviewer_id": "REPLACE_ME -- real reviewer name/role (VERIFIED) or an honest compiler description (SOURCED_PUBLIC_REFERENCE), never a placeholder",
+  "approval_status": "UNVERIFIED",
+  "approved_at": null,
+  "review_expires_at": "2027-01-01T00:00:00Z",
+  "cooldown_hours": 24,
+  "alert_expiry_hours": 12,
+  "content_hash": "RUN scripts/compute_rule_pack_hash.py ON YOUR FILLED-IN FILE TO GENERATE THIS"
+}

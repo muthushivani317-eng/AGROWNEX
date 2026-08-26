@@ -1,0 +1,213 @@
+{
+  "schema_version": "1.0",
+  "canonical_crop_id": "brinjal",
+  "aliases": [
+    "eggplant",
+    "aubergine",
+    "kathirikai"
+  ],
+  "variety_or_duration_group": "transplanted_variety_100_120_day_or_hybrid_115_150plus_day",
+  "stages": [
+    {
+      "code": "transplanting_establishment",
+      "label_key": "calendar.stages.transplanting_establishment",
+      "start_offset": 0,
+      "end_offset": 10,
+      "activities": [
+        {
+          "code": "nursery_sowing_seed_treatment",
+          "activity_type": "sowing",
+          "label_key": "calendar.verified.brinjal.nursery_sowing_seed_treatment.title",
+          "description_key": "calendar.verified.brinjal.nursery_sowing_seed_treatment.description",
+          "day_offset": -33,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "main_field_preparation",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.brinjal.main_field_preparation.title",
+          "description_key": "calendar.verified.brinjal.main_field_preparation.description",
+          "day_offset": -5,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "transplanting",
+          "activity_type": "sowing",
+          "label_key": "calendar.verified.brinjal.transplanting.title",
+          "description_key": "calendar.verified.brinjal.transplanting.description",
+          "day_offset": 0,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "basal_fertilizer_application",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.brinjal.basal_fertilizer_application.title",
+          "description_key": "calendar.verified.brinjal.basal_fertilizer_application.description",
+          "day_offset": 0,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "pre_emergence_weed_control",
+          "activity_type": "weed_management",
+          "label_key": "calendar.verified.brinjal.pre_emergence_weed_control.title",
+          "description_key": "calendar.verified.brinjal.pre_emergence_weed_control.description",
+          "day_offset": 3,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "spraying"
+        },
+        {
+          "code": "gap_filling",
+          "activity_type": "sowing",
+          "label_key": "calendar.verified.brinjal.gap_filling.title",
+          "description_key": "calendar.verified.brinjal.gap_filling.description",
+          "day_offset": 7,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "vegetative_growth",
+      "label_key": "calendar.stages.vegetative_growth",
+      "start_offset": 11,
+      "end_offset": 29,
+      "activities": [
+        {
+          "code": "weekly_irrigation_vegetative",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.brinjal.weekly_irrigation_vegetative.title",
+          "description_key": "calendar.verified.brinjal.weekly_irrigation_vegetative.description",
+          "day_offset": 14,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "shoot_borer_scouting",
+          "activity_type": "pest_monitoring",
+          "label_key": "calendar.verified.brinjal.shoot_borer_scouting.title",
+          "description_key": "calendar.verified.brinjal.shoot_borer_scouting.description",
+          "day_offset": 20,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "flowering_fruit_development",
+      "label_key": "calendar.stages.flowering_fruit_development",
+      "start_offset": 30,
+      "end_offset": 54,
+      "activities": [
+        {
+          "code": "top_dress_fertilizer",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.brinjal.top_dress_fertilizer.title",
+          "description_key": "calendar.verified.brinjal.top_dress_fertilizer.description",
+          "day_offset": 30,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "hand_weeding_earthing_up",
+          "activity_type": "weed_management",
+          "label_key": "calendar.verified.brinjal.hand_weeding_earthing_up.title",
+          "description_key": "calendar.verified.brinjal.hand_weeding_earthing_up.description",
+          "day_offset": 30,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "weekly_irrigation_reproductive",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.brinjal.weekly_irrigation_reproductive.title",
+          "description_key": "calendar.verified.brinjal.weekly_irrigation_reproductive.description",
+          "day_offset": 40,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "shoot_fruit_borer_followup",
+          "activity_type": "disease_inspection",
+          "label_key": "calendar.verified.brinjal.shoot_fruit_borer_followup.title",
+          "description_key": "calendar.verified.brinjal.shoot_fruit_borer_followup.description",
+          "day_offset": 45,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "harvest",
+      "label_key": "calendar.stages.harvest",
+      "start_offset": 55,
+      "end_offset": 120,
+      "activities": [
+        {
+          "code": "first_harvest",
+          "activity_type": "harvest",
+          "label_key": "calendar.verified.brinjal.first_harvest.title",
+          "description_key": "calendar.verified.brinjal.first_harvest.description",
+          "day_offset": 55,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "repeat_harvest_picking",
+          "activity_type": "harvest",
+          "label_key": "calendar.verified.brinjal.repeat_harvest_picking.title",
+          "description_key": "calendar.verified.brinjal.repeat_harvest_picking.description",
+          "day_offset": 60,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        }
+      ]
+    }
+  ],
+  "geographic_limitations": [
+    "Tamil Nadu"
+  ],
+  "season_limitations": [
+    "rabi",
+    "kharif"
+  ],
+  "source_organization": "Tamil Nadu Agricultural University (TNAU) Agritech Portal",
+  "document_reference": "TNAU Agritech Portal, Horticulture > Vegetable Crops > Brinjal series (Seed/Nursery: https://agritech.tnau.ac.in/horticulture/horti_vegetables_brinjal_seed.html; Manuring: https://agritech.tnau.ac.in/horticulture/horti_vegetables_brinjal_manuring.html; Cultural Practices: https://agritech.tnau.ac.in/horticulture/horti_vegetables_brinjal_cultural.html; Irrigation: https://agritech.tnau.ac.in/horticulture/horti_vegetables_brinjal_irrigation.html; Season: https://agritech.tnau.ac.in/horticulture/horti_vegetables_brinjal_season.html; Yield: https://agritech.tnau.ac.in/horticulture/horti_vegetables_brinjal_yield.html); TNAU Agritech Portal, Crop Protection - Brinjal Shoot and Fruit Borer, https://agritech.tnau.ac.in/crop_protection/brinjal_1.html; TNAU Agritech Portal ICT-AAS Brinjal summary, https://agritech.tnau.ac.in/ta/aas/brinjal.html",
+  "reviewer": "AgrowAI content team -- compiled from cited public source, not independently agronomist-reviewed",
+  "approval_date": "2026-08-18",
+  "review_date": "2027-08-18",
+  "version": "1.0.0",
+  "status": "SOURCED_PUBLIC_REFERENCE",
+  "content_hash": "75e89c7ae363b62f495e8c480cd78323c603af786681d9f9f9b428cd858494b0"
+}

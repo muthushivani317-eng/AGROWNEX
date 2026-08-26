@@ -8,9 +8,7 @@ class HarvestReadinessRegistry:
 
     def __init__(self, entries: list[ReadinessCriteria] | None = None) -> None:
         self._active = {
-            entry.crop.strip().lower(): entry
-            for entry in entries or []
-            if entry.active_verified
+            entry.crop.strip().lower(): entry for entry in entries or [] if entry.active_verified
         }
 
     def resolve(self, crop: str | None) -> ReadinessCriteria | None:

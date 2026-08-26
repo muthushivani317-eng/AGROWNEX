@@ -74,7 +74,9 @@ async def test_chat_includes_farm_memory(db_session):
     service = AIService(db_session, provider=provider)
     user = await _make_user(db_session)
     db_session.add(
-        FarmerProfile(user_id=user.id, full_name="Selvi", language="ta")
+        FarmerProfile(
+            user_id=user.id, full_name="Selvi", district="madurai", language="ta"
+        )
     )
     farm = Farm(user_id=user.id, name="Riverside", crop="paddy", crop_variety="ADT 43")
     db_session.add(farm)
@@ -85,7 +87,10 @@ async def test_chat_includes_farm_memory(db_session):
     )
     system = provider.calls[0]["system"]
     assert "Riverside" in system
-    assert "Selvi" in system
+    assert "madurai" in system
+    # PII minimization (2026-08 pre-release audit): the farmer's name never
+    # reaches the Gemini prompt — see build_farm_memory() in ai/context.py.
+    assert "Selvi" not in system
 
 
 async def test_language_defaults_to_profile(db_session):
@@ -145,3 +150,28 @@ async def test_ownership_isolation(db_session):
 
     with pytest.raises(ConversationNotFoundError):
         await service.get_conversation(other, conversation.id)
+
+
+class UnsafeAdviceProvider:
+    """Simulates Gemini drifting from its own system prompt (2026-08
+    pre-release audit): the reply text itself is what the output safety
+    check in validator.py needs to catch, not a provider-level failure."""
+
+    async def generate(self, *, system: str, history: list, message: str) -> AIResult:
+        return AIResult(
+            text="Don't worry, this will guarantee your yield doubles this season.",
+            model="fake-model",
+            tokens=42,
+        )
+
+
+async def test_unsafe_advice_is_replaced_with_the_safe_fallback(db_session):
+    service = AIService(db_session, provider=UnsafeAdviceProvider())
+    user = await _make_user(db_session)
+
+    _, reply = await service.chat(
+        user, ChatRequest(message="Will I get a good harvest?", language="en")
+    )
+
+    assert "guarantee" not in reply.message.lower()
+    assert "agriculture officer" in reply.message

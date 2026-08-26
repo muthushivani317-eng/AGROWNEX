@@ -1,0 +1,172 @@
+{
+  "schema_version": "1.0",
+  "canonical_crop_id": "chilli",
+  "aliases": [
+    "chili",
+    "chilly"
+  ],
+  "variety_or_duration_group": "general_transplanted_chilli",
+  "stages": [
+    {
+      "code": "nursery_raising",
+      "label_key": "calendar.stages.nursery_raising",
+      "start_offset": 0,
+      "end_offset": 45,
+      "activities": [
+        {
+          "code": "nursery_sowing",
+          "activity_type": "sowing",
+          "label_key": "calendar.verified.chilli.nursery_sowing.title",
+          "description_key": "calendar.verified.chilli.nursery_sowing.description",
+          "day_offset": 0,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "nursery_irrigation",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.chilli.nursery_irrigation.title",
+          "description_key": "calendar.verified.chilli.nursery_irrigation.description",
+          "day_offset": 10,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "irrigation"
+        }
+      ]
+    },
+    {
+      "code": "transplanting_establishment",
+      "label_key": "calendar.stages.transplanting_establishment",
+      "start_offset": 45,
+      "end_offset": 52,
+      "activities": [
+        {
+          "code": "transplanting",
+          "activity_type": "sowing",
+          "label_key": "calendar.verified.chilli.transplanting.title",
+          "description_key": "calendar.verified.chilli.transplanting.description",
+          "day_offset": 45,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "gap_filling_irrigation",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.chilli.gap_filling_irrigation.title",
+          "description_key": "calendar.verified.chilli.gap_filling_irrigation.description",
+          "day_offset": 52,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "irrigation"
+        }
+      ]
+    },
+    {
+      "code": "vegetative_growth",
+      "label_key": "calendar.stages.vegetative_growth",
+      "start_offset": 52,
+      "end_offset": 70,
+      "activities": []
+    },
+    {
+      "code": "flowering",
+      "label_key": "calendar.stages.flowering",
+      "start_offset": 70,
+      "end_offset": 90,
+      "activities": [
+        {
+          "code": "disease_scouting_flowering",
+          "activity_type": "disease_inspection",
+          "label_key": "calendar.verified.chilli.disease_scouting_flowering.title",
+          "description_key": "calendar.verified.chilli.disease_scouting_flowering.description",
+          "day_offset": 70,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "hand_weeding",
+          "activity_type": "weed_management",
+          "label_key": "calendar.verified.chilli.hand_weeding.title",
+          "description_key": "calendar.verified.chilli.hand_weeding.description",
+          "day_offset": 75,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "fruit_development",
+      "label_key": "calendar.stages.fruit_development",
+      "start_offset": 90,
+      "end_offset": 120,
+      "activities": [
+        {
+          "code": "fruit_fill_irrigation",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.chilli.fruit_fill_irrigation.title",
+          "description_key": "calendar.verified.chilli.fruit_fill_irrigation.description",
+          "day_offset": 100,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "irrigation"
+        }
+      ]
+    },
+    {
+      "code": "harvesting",
+      "label_key": "calendar.stages.harvesting",
+      "start_offset": 120,
+      "end_offset": 180,
+      "activities": [
+        {
+          "code": "first_harvest",
+          "activity_type": "harvest",
+          "label_key": "calendar.verified.chilli.first_harvest.title",
+          "description_key": "calendar.verified.chilli.first_harvest.description",
+          "day_offset": 120,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "repeat_harvest_picking",
+          "activity_type": "harvest",
+          "label_key": "calendar.verified.chilli.repeat_harvest_picking.title",
+          "description_key": "calendar.verified.chilli.repeat_harvest_picking.description",
+          "day_offset": 150,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        }
+      ]
+    }
+  ],
+  "geographic_limitations": [
+    "Tamil Nadu"
+  ],
+  "season_limitations": [
+    "kharif",
+    "rabi"
+  ],
+  "source_organization": "Tamil Nadu Agricultural University (TNAU) Agritech Portal; ICAR-Central Coastal Agricultural Research Institute (CCARI)",
+  "document_reference": "TNAU Agritech Portal -- Horticulture: Vegetables: Chilli (Cultural Practices, https://agritech.tnau.ac.in/horticulture/horti_vegetables_chilli_cultural.html; Yield, https://agritech.tnau.ac.in/horticulture/horti_vegetables_chilli_Yield_new.html); ICAR-CCARI Decision Support System -- Chilli, https://ccari.icar.gov.in/dss/chilli.html",
+  "reviewer": "AgrowAI content team -- compiled from cited public source, not independently agronomist-reviewed",
+  "approval_date": "2026-08-18",
+  "review_date": "2027-08-18",
+  "version": "1.0.0",
+  "status": "SOURCED_PUBLIC_REFERENCE",
+  "content_hash": "6f1a5c4af44687d27c451148fed3f2b95e1c7456c2128ac722792f67061b5ce6"
+}

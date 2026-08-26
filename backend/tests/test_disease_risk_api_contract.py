@@ -6,7 +6,7 @@ from app.modules.farms.models import Farm
 
 
 def test_disease_risk_router_is_registered_with_required_workflow() -> None:
-    paths = {route.path for route in app.routes}
+    paths = set(app.openapi()["paths"])
     assert "/api/v1/disease-risk/evaluate" in paths
     assert "/api/v1/disease-risk/current" in paths
     assert "/api/v1/disease-risk/history" in paths
@@ -26,7 +26,15 @@ async def test_no_verified_rule_is_persisted_idempotently_and_owner_scoped(db_se
     other = User(firebase_uid="risk-other", status="active")
     db_session.add_all([owner, other])
     await db_session.flush()
-    farm = Farm(user_id=owner.id, name="Risk field", crop="paddy")
+    # crop is "redgram", not "paddy": as of 2026-08-18 two real, cited rule
+    # packs (paddy_sheath_blight, paddy_bacterial_leaf_blight -- see
+    # app/modules/disease_risk/data/rule_packs/) are live for paddy, so a
+    # paddy farm would no longer hit RULE_PACK_UNAVAILABLE here (it would hit
+    # STAGE_UNCONFIRMED instead, since no stage is confirmed below). redgram
+    # still has no rule pack, so this test's "no verified guidance available"
+    # path stays accurate. This test is about the persisted
+    # NO_VERIFIED_RULE_AVAILABLE behavior in general, not paddy specifically.
+    farm = Farm(user_id=owner.id, name="Risk field", crop="redgram")
     db_session.add(farm)
     await db_session.flush()
     service = DiseaseRiskService(db_session)

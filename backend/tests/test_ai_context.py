@@ -40,10 +40,20 @@ def _farm():
 
 def test_build_farm_memory_includes_known_details():
     memory = build_farm_memory(_profile(), _farm(), None)
-    assert "Muthu Kumar" in memory
     assert "Riverside" in memory
     assert "paddy" in memory
     assert "alluvial" in memory
+    assert "madurai" in memory  # district kept — needed for agronomic/weather relevance
+
+
+def test_build_farm_memory_omits_personally_identifying_details():
+    """PII minimization (2026-08 pre-release audit): name, block and village
+    are personally identifying and add no advisory value the model needs, so
+    they must never reach the Gemini prompt. Locks in the fix in context.py."""
+    memory = build_farm_memory(_profile(), _farm(), None)
+    assert "Muthu Kumar" not in memory
+    assert "Melur" not in memory  # block
+    assert "Kottampatti" not in memory  # village
 
 
 def test_build_farm_memory_empty():
@@ -73,6 +83,12 @@ def test_system_instruction_language_directive():
     assert "context here" in tamil
     english = build_system_instruction("en", "ctx")
     assert "English" in english
+
+
+def test_system_instruction_requires_vanakkam_not_namaste():
+    instruction = build_system_instruction("en", "ctx")
+    assert 'say "Vanakkam"' in instruction
+    assert 'Never use "Namaste"' in instruction
 
 
 def test_validate_response_trims_and_falls_back():

@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0",
+  "pack_id": "chilli-damping-off-tn",
+  "version": "1.0.0",
+  "crop_id": "chilli",
+  "disease_id": "damping_off",
+  "regions": [
+    "IN-TN"
+  ],
+  "seasons": [
+    "kharif",
+    "rabi"
+  ],
+  "confirmed_stages": [
+    "nursery_raising"
+  ],
+  "required_weather_variables": [
+    "temperature_c",
+    "humidity_pct"
+  ],
+  "observation_window_hours": 24,
+  "forecast_window_hours": 48,
+  "conditions": [
+    {
+      "variable": "temperature_c",
+      "operator": "lte",
+      "value": 22.0
+    },
+    {
+      "variable": "humidity_pct",
+      "operator": "gte",
+      "value": 90.0
+    }
+  ],
+  "minimum_data_completeness": 1.0,
+  "maximum_weather_age_hours": 6,
+  "cached_weather_allowed": false,
+  "alert_title_key": "diseaseRisk.verified.chilli_damping_off.title",
+  "alert_explanation_key": "diseaseRisk.verified.chilli_damping_off.explanation",
+  "source_references": [
+    "TNAU Agritech Portal -- Chilli Diseases: Damping Off (Pythium aphanidermatum), https://agritech.tnau.ac.in/crop_protection/chilli_diseases_1.html"
+  ],
+  "reviewer_id": "AgrowAI content team -- compiled from cited public source, not independently agronomist-reviewed",
+  "approval_status": "SOURCED_PUBLIC_REFERENCE",
+  "approved_at": "2026-08-18T00:00:00Z",
+  "review_expires_at": "2027-08-18T00:00:00Z",
+  "cooldown_hours": 24,
+  "alert_expiry_hours": 12,
+  "content_hash": "29aa16c356a77b5e67cace616eda59829215bf6100f1a9d8bd450703647d603c"
+}

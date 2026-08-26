@@ -4,6 +4,7 @@ The only layer that queries the produce tables: offers (ownership-scoped, filter
 paginated), images, status history and the future-ready buyer_interest table. No
 SQL lives in routes or the service.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -59,12 +60,8 @@ class ProduceRepository:
         await self.session.flush()
         return offer
 
-    async def get_for_user(
-        self, offer_id: uuid.UUID, user_id: uuid.UUID
-    ) -> ProduceOffer | None:
-        result = await self.session.execute(
-            self._owned(user_id).where(ProduceOffer.id == offer_id)
-        )
+    async def get_for_user(self, offer_id: uuid.UUID, user_id: uuid.UUID) -> ProduceOffer | None:
+        result = await self.session.execute(self._owned(user_id).where(ProduceOffer.id == offer_id))
         return result.scalar_one_or_none()
 
     def _filtered(
@@ -124,9 +121,7 @@ class ProduceRepository:
         )
         total = int(
             (
-                await self.session.execute(
-                    select(func.count()).select_from(base.subquery())
-                )
+                await self.session.execute(select(func.count()).select_from(base.subquery()))
             ).scalar_one()
         )
         ordering = (
@@ -135,8 +130,11 @@ class ProduceRepository:
             else ProduceOffer.created_at.desc()
         )
         rows = (
-            await self.session.execute(base.order_by(ordering).limit(limit).offset(offset))
-        ).scalars().unique().all()
+            (await self.session.execute(base.order_by(ordering).limit(limit).offset(offset)))
+            .scalars()
+            .unique()
+            .all()
+        )
         return list(rows), total
 
     async def upcoming_statuses(self) -> tuple[str, ...]:
@@ -174,9 +172,7 @@ class ProduceRepository:
 
     async def next_image_order(self, offer_id: uuid.UUID) -> int:
         result = await self.session.execute(
-            select(func.count()).select_from(OfferImage).where(
-                OfferImage.offer_id == offer_id
-            )
+            select(func.count()).select_from(OfferImage).where(OfferImage.offer_id == offer_id)
         )
         return int(result.scalar_one())
 
@@ -196,9 +192,7 @@ class ProduceRepository:
         await self.session.flush()
         return entry
 
-    async def list_status_history(
-        self, offer_id: uuid.UUID
-    ) -> list[OfferStatusHistory]:
+    async def list_status_history(self, offer_id: uuid.UUID) -> list[OfferStatusHistory]:
         result = await self.session.execute(
             select(OfferStatusHistory)
             .where(OfferStatusHistory.offer_id == offer_id)

@@ -1,0 +1,249 @@
+{
+  "schema_version": "1.0",
+  "canonical_crop_id": "turmeric",
+  "aliases": [
+    "manjal"
+  ],
+  "variety_or_duration_group": "medium_to_long_duration_240_270_day (TNAU BSR 3: 240-250 days, specifically recommended for Coimbatore, Tiruppur, Erode and Salem districts; TNAU CO 1 and CO 2: 270 days, CO 1 is a mutant selection from 'Erode local')",
+  "stages": [
+    {
+      "code": "planting",
+      "label_key": "calendar.stages.planting",
+      "start_offset": 0,
+      "end_offset": 0,
+      "activities": [
+        {
+          "code": "field_preparation_ridges_furrows",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.turmeric.field_preparation_ridges_furrows.title",
+          "description_key": "calendar.verified.turmeric.field_preparation_ridges_furrows.description",
+          "day_offset": -10,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "rhizome_selection_and_treatment",
+          "activity_type": "seed_treatment",
+          "label_key": "calendar.verified.turmeric.rhizome_selection_and_treatment.title",
+          "description_key": "calendar.verified.turmeric.rhizome_selection_and_treatment.description",
+          "day_offset": -2,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "dibble_rhizomes",
+          "activity_type": "sowing",
+          "label_key": "calendar.verified.turmeric.dibble_rhizomes.title",
+          "description_key": "calendar.verified.turmeric.dibble_rhizomes.description",
+          "day_offset": 0,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "basal_manure_fertilizer",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.turmeric.basal_manure_fertilizer.title",
+          "description_key": "calendar.verified.turmeric.basal_manure_fertilizer.description",
+          "day_offset": 0,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "first_leaf_mulching",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.turmeric.first_leaf_mulching.title",
+          "description_key": "calendar.verified.turmeric.first_leaf_mulching.description",
+          "day_offset": 0,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "early_growth_establishment",
+      "label_key": "calendar.stages.early_growth_establishment",
+      "start_offset": 1,
+      "end_offset": 59,
+      "activities": [
+        {
+          "code": "second_mulching",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.turmeric.second_mulching.title",
+          "description_key": "calendar.verified.turmeric.second_mulching.description",
+          "day_offset": 50,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "first_top_dressing",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.turmeric.first_top_dressing.title",
+          "description_key": "calendar.verified.turmeric.first_top_dressing.description",
+          "day_offset": 30,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        }
+      ]
+    },
+    {
+      "code": "vegetative_growth_earthing_up",
+      "label_key": "calendar.stages.vegetative_growth_earthing_up",
+      "start_offset": 60,
+      "end_offset": 119,
+      "activities": [
+        {
+          "code": "second_top_dressing_and_earthing_up",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.turmeric.second_top_dressing_and_earthing_up.title",
+          "description_key": "calendar.verified.turmeric.second_top_dressing_and_earthing_up.description",
+          "day_offset": 60,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "scout_thrips_rhizome_scale",
+          "activity_type": "pest_monitoring",
+          "label_key": "calendar.verified.turmeric.scout_thrips_rhizome_scale.title",
+          "description_key": "calendar.verified.turmeric.scout_thrips_rhizome_scale.description",
+          "day_offset": 75,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "spraying"
+        },
+        {
+          "code": "scout_rhizome_rot_leaf_spot",
+          "activity_type": "disease_inspection",
+          "label_key": "calendar.verified.turmeric.scout_rhizome_rot_leaf_spot.title",
+          "description_key": "calendar.verified.turmeric.scout_rhizome_rot_leaf_spot.description",
+          "day_offset": 75,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "spraying"
+        },
+        {
+          "code": "third_top_dressing",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.turmeric.third_top_dressing.title",
+          "description_key": "calendar.verified.turmeric.third_top_dressing.description",
+          "day_offset": 90,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "micronutrient_foliar_spray",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.turmeric.micronutrient_foliar_spray.title",
+          "description_key": "calendar.verified.turmeric.micronutrient_foliar_spray.description",
+          "day_offset": 90,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "spraying"
+        }
+      ]
+    },
+    {
+      "code": "rhizome_development_bulking",
+      "label_key": "calendar.stages.rhizome_development_bulking",
+      "start_offset": 120,
+      "end_offset": 179,
+      "activities": [
+        {
+          "code": "fourth_top_dressing_and_earthing_up",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.turmeric.fourth_top_dressing_and_earthing_up.title",
+          "description_key": "calendar.verified.turmeric.fourth_top_dressing_and_earthing_up.description",
+          "day_offset": 120,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "fifth_top_dressing",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.turmeric.fifth_top_dressing.title",
+          "description_key": "calendar.verified.turmeric.fifth_top_dressing.description",
+          "day_offset": 150,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        }
+      ]
+    },
+    {
+      "code": "maturation",
+      "label_key": "calendar.stages.maturation",
+      "start_offset": 180,
+      "end_offset": 239,
+      "activities": [
+        {
+          "code": "check_maturity_signs",
+          "activity_type": "harvest_preparation",
+          "label_key": "calendar.verified.turmeric.check_maturity_signs.title",
+          "description_key": "calendar.verified.turmeric.check_maturity_signs.description",
+          "day_offset": 220,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "harvest",
+      "label_key": "calendar.stages.harvest",
+      "start_offset": 240,
+      "end_offset": 270,
+      "activities": [
+        {
+          "code": "harvest_rhizomes",
+          "activity_type": "harvest",
+          "label_key": "calendar.verified.turmeric.harvest_rhizomes.title",
+          "description_key": "calendar.verified.turmeric.harvest_rhizomes.description",
+          "day_offset": 255,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        }
+      ]
+    }
+  ],
+  "geographic_limitations": [
+    "Tamil Nadu",
+    "Erode district and other TN turmeric belts (Coimbatore, Tiruppur, Salem, Dindigul)"
+  ],
+  "season_limitations": [
+    "kharif"
+  ],
+  "source_organization": "Tamil Nadu Agricultural University (TNAU) - Agritech Portal, Department of Horticulture",
+  "document_reference": "TNAU Agritech Portal, Horticulture :: Spice Crops :: Turmeric (cultivation practices), https://agritech.tnau.ac.in/horticulture/horti_spice%20crops_turmeric.html ; TNAU Agritech Portal, Horticulture :: Spice Crops :: Turmeric :: Varieties, https://agritech.tnau.ac.in/horticulture/horti_spice_turmeric_varieties.html ; TNAU Agritech Portal banking/crop package series, 'Turmeric' (organic cultivation practices), https://agritech.tnau.ac.in/banking/pdf/Tumeric.pdf",
+  "reviewer": "AgrowAI content team -- compiled from cited public source, not independently agronomist-reviewed",
+  "approval_date": "2026-08-18",
+  "review_date": "2027-08-18",
+  "version": "1.0.0",
+  "status": "SOURCED_PUBLIC_REFERENCE",
+  "content_hash": "086575c7801c8b0a0de64bab2a22d6df5f7914d4cb93553ae45a9bac99a18bbf"
+}

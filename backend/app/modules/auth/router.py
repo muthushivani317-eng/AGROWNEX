@@ -122,3 +122,10 @@ async def logout(
     """Revoke the session (single refresh token, or all when none is given)."""
     await service.logout(current_user, payload.refresh_token if payload else None)
     return success(None, message="Logged out")
+
+
+@router.delete("/account", status_code=status.HTTP_200_OK)
+async def close_account(current_user: CurrentUser, service: AuthServiceDep):
+    """Close the farmer account and revoke all active server sessions."""
+    await service.close_account(current_user)
+    return success(None, message="Account closed")

@@ -143,9 +143,7 @@ class HarvestReadinessService:
         await self.session.refresh(row)
         return row
 
-    async def history(
-        self, user: User, record_id: uuid.UUID
-    ) -> list[HarvestReadinessHistory]:
+    async def history(self, user: User, record_id: uuid.UUID) -> list[HarvestReadinessHistory]:
         record = await self.session.get(HarvestReadinessRecord, record_id)
         if record is None or record.user_id != user.id:
             return []
@@ -181,9 +179,7 @@ class HarvestReadinessService:
         if row.state != "awaiting_farmer_confirmation":
             raise ValueError("READINESS_NOT_AWAITING_CONFIRMATION")
         prior = row.state
-        row.state = (
-            "farmer_confirmed_ready" if ready else "farmer_confirmed_not_ready"
-        )
+        row.state = "farmer_confirmed_ready" if ready else "farmer_confirmed_not_ready"
         row.version += 1
         self.session.add(
             HarvestReadinessHistory(

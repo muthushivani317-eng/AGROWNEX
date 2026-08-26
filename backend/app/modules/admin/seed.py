@@ -4,6 +4,7 @@ Also exposes ``ensure_admin`` to promote an authenticated user to an admin — t
 bootstrap path used to create the first Super Admin (and by tests). Seeding is safe to
 run repeatedly (upsert by natural key).
 """
+
 from __future__ import annotations
 
 import uuid

@@ -1,0 +1,244 @@
+{
+  "schema_version": "1.0",
+  "canonical_crop_id": "tomato",
+  "aliases": [
+    "thakkali"
+  ],
+  "variety_or_duration_group": "transplanted_hybrid_CO3_type_75_150_day_from_transplanting",
+  "stages": [
+    {
+      "code": "transplanting",
+      "label_key": "calendar.stages.transplanting",
+      "start_offset": 0,
+      "end_offset": 0,
+      "activities": [
+        {
+          "code": "nursery_sowing",
+          "activity_type": "sowing",
+          "label_key": "calendar.verified.tomato.nursery_sowing.title",
+          "description_key": "calendar.verified.tomato.nursery_sowing.description",
+          "day_offset": -25,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "nursery_npk_top_dressing",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.tomato.nursery_npk_top_dressing.title",
+          "description_key": "calendar.verified.tomato.nursery_npk_top_dressing.description",
+          "day_offset": -7,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "main_field_preparation",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.tomato.main_field_preparation.title",
+          "description_key": "calendar.verified.tomato.main_field_preparation.description",
+          "day_offset": -5,
+          "notification_offset_days": null,
+          "notification_eligible": false,
+          "priority": "low",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "basal_fertilizer_application",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.tomato.basal_fertilizer_application.title",
+          "description_key": "calendar.verified.tomato.basal_fertilizer_application.description",
+          "day_offset": -1,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "transplanting",
+          "activity_type": "sowing",
+          "label_key": "calendar.verified.tomato.transplanting.title",
+          "description_key": "calendar.verified.tomato.transplanting.description",
+          "day_offset": 0,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "post_transplant_irrigation",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.tomato.post_transplant_irrigation.title",
+          "description_key": "calendar.verified.tomato.post_transplant_irrigation.description",
+          "day_offset": 0,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        }
+      ]
+    },
+    {
+      "code": "establishment_and_vegetative_growth",
+      "label_key": "calendar.stages.establishment_and_vegetative_growth",
+      "start_offset": 1,
+      "end_offset": 39,
+      "activities": [
+        {
+          "code": "starter_fertigation",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.tomato.starter_fertigation.title",
+          "description_key": "calendar.verified.tomato.starter_fertigation.description",
+          "day_offset": 5,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "fruit_borer_pheromone_trap",
+          "activity_type": "pest_monitoring",
+          "label_key": "calendar.verified.tomato.fruit_borer_pheromone_trap.title",
+          "description_key": "calendar.verified.tomato.fruit_borer_pheromone_trap.description",
+          "day_offset": 20,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "flower_initiation_fertigation",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.tomato.flower_initiation_fertigation.title",
+          "description_key": "calendar.verified.tomato.flower_initiation_fertigation.description",
+          "day_offset": 25,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "staking_and_desuckering",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.tomato.staking_and_desuckering.title",
+          "description_key": "calendar.verified.tomato.staking_and_desuckering.description",
+          "day_offset": 30,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "hand_weeding",
+          "activity_type": "weed_management",
+          "label_key": "calendar.verified.tomato.hand_weeding.title",
+          "description_key": "calendar.verified.tomato.hand_weeding.description",
+          "day_offset": 30,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "flowering_to_fruit_set",
+      "label_key": "calendar.stages.flowering_to_fruit_set",
+      "start_offset": 40,
+      "end_offset": 69,
+      "activities": [
+        {
+          "code": "foliar_disease_scouting",
+          "activity_type": "disease_inspection",
+          "label_key": "calendar.verified.tomato.foliar_disease_scouting.title",
+          "description_key": "calendar.verified.tomato.foliar_disease_scouting.description",
+          "day_offset": 45,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "spraying"
+        },
+        {
+          "code": "zinc_boron_foliar_spray",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.tomato.zinc_boron_foliar_spray.title",
+          "description_key": "calendar.verified.tomato.zinc_boron_foliar_spray.description",
+          "day_offset": 40,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "spraying"
+        },
+        {
+          "code": "fruit_set_fertigation",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.tomato.fruit_set_fertigation.title",
+          "description_key": "calendar.verified.tomato.fruit_set_fertigation.description",
+          "day_offset": 55,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        }
+      ]
+    },
+    {
+      "code": "harvest_and_extended_picking",
+      "label_key": "calendar.stages.harvest_and_extended_picking",
+      "start_offset": 70,
+      "end_offset": 150,
+      "activities": [
+        {
+          "code": "alternate_day_fertigation",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.tomato.alternate_day_fertigation.title",
+          "description_key": "calendar.verified.tomato.alternate_day_fertigation.description",
+          "day_offset": 75,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "first_harvest_picking",
+          "activity_type": "harvest",
+          "label_key": "calendar.verified.tomato.first_harvest_picking.title",
+          "description_key": "calendar.verified.tomato.first_harvest_picking.description",
+          "day_offset": 75,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "extended_harvest_picking",
+          "activity_type": "harvest",
+          "label_key": "calendar.verified.tomato.extended_harvest_picking.title",
+          "description_key": "calendar.verified.tomato.extended_harvest_picking.description",
+          "day_offset": 130,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        }
+      ]
+    }
+  ],
+  "geographic_limitations": [
+    "Tamil Nadu"
+  ],
+  "season_limitations": [
+    "kharif",
+    "rabi"
+  ],
+  "source_organization": "Tamil Nadu Agricultural University (TNAU) - Agritech Portal",
+  "document_reference": "TNAU Agritech Portal - Horticulture: Vegetables - Tomato Cultural Practices (https://agritech.tnau.ac.in/horticulture/horti_vegetables_tomato_cultural%20practices.html); Tomato Fertigation Schedule (https://agritech.tnau.ac.in/horticulture/horti_vegetables_tomato_fertigation.html); Seed: Vegetables - Tomato / Nursery (https://agritech.tnau.ac.in/horticulture/horti_vegetables_tomato_seed.html); Organic Farming - Tomato Cultivation and Harvest (https://agritech.tnau.ac.in/org_farm/orgfarm_tomato_cultivation.html, https://agritech.tnau.ac.in/org_farm/orgfarm_tomato_harvest.html); Crop Protection - Fruit Borer (https://agritech.tnau.ac.in/crop_protection/tomato/tomato_1.html); Crop Protection - Early Blight (https://agritech.tnau.ac.in/crop_protection/tomato_diseases_2.html); Crop Protection - Late Blight (https://agritech.tnau.ac.in/crop_protection/tomato_diseases_8.html)",
+  "reviewer": "AgrowAI content team -- compiled from cited public source, not independently agronomist-reviewed",
+  "approval_date": "2026-08-18",
+  "review_date": "2027-08-18",
+  "version": "1.0.0",
+  "status": "SOURCED_PUBLIC_REFERENCE",
+  "content_hash": "82ea623cde607eef1b5f165a7273d5d99c9609ba66105af5c00b9a31fa49d3a0"
+}

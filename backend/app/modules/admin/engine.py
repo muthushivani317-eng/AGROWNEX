@@ -5,6 +5,7 @@ procurement analytics (village-wise / crop-wise / season-wise / quantity trends)
 Reuses the produce quantity normalizer and the memory season helper — no duplication
 (docs/PRODUCT_RULES.md → No duplicate code). Nothing here fabricates data.
 """
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -62,10 +63,7 @@ def _bucket(facts: list[ProcurementFact], key_fn) -> list[dict]:  # noqa: ANN001
             key = "unknown"
         counts[key] += 1
         kilos[key] += _kg(f.quantity, f.unit)
-    rows = [
-        {"label": k, "count": counts[k], "quantity_kg": round(kilos[k], 2)}
-        for k in counts
-    ]
+    rows = [{"label": k, "count": counts[k], "quantity_kg": round(kilos[k], 2)} for k in counts]
     rows.sort(key=lambda r: (r["count"], r["quantity_kg"]), reverse=True)
     return rows
 

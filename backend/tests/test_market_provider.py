@@ -43,6 +43,30 @@ def test_parse_agmarknet_record_normalizes_fields() -> None:
     assert price.source == "agmarknet"
 
 
+def test_parse_agmarknet_record_accepts_legacy_government_field_names() -> None:
+    price = parse_agmarknet_record(
+        {
+            "State": "Tamil Nadu",
+            "District": "Thanjavur",
+            "Market": "Thanjavur",
+            "Commodity": "Paddy",
+            "Variety": "Common",
+            "Grade": "FAQ",
+            "Arrival_Date": "22/08/2026",
+            "Min_x0020_Price": "1980",
+            "Max_x0020_Price": "2120",
+            "Modal_x0020_Price": "2050",
+        }
+    )
+
+    assert price is not None
+    assert price.commodity == "Paddy"
+    assert price.market == "Thanjavur"
+    assert price.district == "Thanjavur"
+    assert price.modal_price == 2050
+    assert price.price_date == date(2026, 8, 22)
+
+
 def test_parse_fills_missing_min_max_from_modal() -> None:
     price = parse_agmarknet_record(_record(min_price="0", max_price=""))
     assert price is not None

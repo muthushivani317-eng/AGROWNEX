@@ -67,6 +67,17 @@ def test_registry_rejects_tampered_expired_suspended_and_unverified() -> None:
     assert RulePackRegistry([pack(approval_status="UNVERIFIED")], now=NOW).active == []
 
 
+def test_sourced_public_reference_also_activates() -> None:
+    """SOURCED_PUBLIC_REFERENCE (compiled from a real cited public source,
+    not personally expert-reviewed -- product decision 2026-08-17) is live
+    alongside VERIFIED; only the frontend label differs."""
+    active = RulePackRegistry(
+        [pack(approval_status="SOURCED_PUBLIC_REFERENCE")], now=NOW
+    ).active
+    assert len(active) == 1
+    assert active[0].approval_status == "SOURCED_PUBLIC_REFERENCE"
+
+
 def test_stage_must_be_confirmed_and_weather_complete_fresh_live() -> None:
     active = RulePackRegistry([pack()], now=NOW).active[0]
     assert (

@@ -1,0 +1,180 @@
+{
+  "schema_version": "1.0",
+  "canonical_crop_id": "coconut",
+  "aliases": [
+    "thennai"
+  ],
+  "variety_or_duration_group": "establishment_phase_years_1_2 (pre-bearing/formative phase only, from pit preparation through month 24 after planting; excludes the adult productive/harvest phase which begins around year 4-6 and continues indefinitely)",
+  "stages": [
+    {
+      "code": "planting_and_basin_establishment",
+      "label_key": "calendar.stages.planting_and_basin_establishment",
+      "start_offset": 0,
+      "end_offset": 30,
+      "activities": [
+        {
+          "code": "pit_digging",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.coconut.pit_digging.title",
+          "description_key": "calendar.verified.coconut.pit_digging.description",
+          "day_offset": -60,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "pit_filling_husk_layering",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.coconut.pit_filling_husk_layering.title",
+          "description_key": "calendar.verified.coconut.pit_filling_husk_layering.description",
+          "day_offset": -30,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "seedling_selection",
+          "activity_type": "seed_treatment",
+          "label_key": "calendar.verified.coconut.seedling_selection.title",
+          "description_key": "calendar.verified.coconut.seedling_selection.description",
+          "day_offset": -15,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "transplanting_seedling",
+          "activity_type": "sowing",
+          "label_key": "calendar.verified.coconut.transplanting_seedling.title",
+          "description_key": "calendar.verified.coconut.transplanting_seedling.description",
+          "day_offset": 0,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        }
+      ]
+    },
+    {
+      "code": "year1_irrigation_and_early_care",
+      "label_key": "calendar.stages.year1_irrigation_and_early_care",
+      "start_offset": 31,
+      "end_offset": 365,
+      "activities": [
+        {
+          "code": "irrigation_young_palms_summer",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.coconut.irrigation_young_palms_summer.title",
+          "description_key": "calendar.verified.coconut.irrigation_young_palms_summer.description",
+          "day_offset": 60,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "compost_application_6_months",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.coconut.compost_application_6_months.title",
+          "description_key": "calendar.verified.coconut.compost_application_6_months.description",
+          "day_offset": 180,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "basin_mulching",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.coconut.basin_mulching.title",
+          "description_key": "calendar.verified.coconut.basin_mulching.description",
+          "day_offset": 200,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "low",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "rhinoceros_beetle_watch",
+          "activity_type": "pest_monitoring",
+          "label_key": "calendar.verified.coconut.rhinoceros_beetle_watch.title",
+          "description_key": "calendar.verified.coconut.rhinoceros_beetle_watch.description",
+          "day_offset": 240,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "root_grub_watch",
+          "activity_type": "pest_monitoring",
+          "label_key": "calendar.verified.coconut.root_grub_watch.title",
+          "description_key": "calendar.verified.coconut.root_grub_watch.description",
+          "day_offset": 300,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "year2_manuring_and_intercropping",
+      "label_key": "calendar.stages.year2_manuring_and_intercropping",
+      "start_offset": 366,
+      "end_offset": 730,
+      "activities": [
+        {
+          "code": "npk_manuring_year2",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.coconut.npk_manuring_year2.title",
+          "description_key": "calendar.verified.coconut.npk_manuring_year2.description",
+          "day_offset": 380,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "intercropping_establishment_phase",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.coconut.intercropping_establishment_phase.title",
+          "description_key": "calendar.verified.coconut.intercropping_establishment_phase.description",
+          "day_offset": 420,
+          "notification_offset_days": null,
+          "notification_eligible": false,
+          "priority": "low",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "continued_irrigation_year2",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.coconut.continued_irrigation_year2.title",
+          "description_key": "calendar.verified.coconut.continued_irrigation_year2.description",
+          "day_offset": 450,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        }
+      ]
+    }
+  ],
+  "geographic_limitations": [
+    "Tamil Nadu"
+  ],
+  "season_limitations": [
+    "summer"
+  ],
+  "source_organization": "Tamil Nadu Agricultural University (TNAU) Agritech Portal and ICAR-Central Plantation Crops Research Institute (CPCRI)",
+  "document_reference": "TNAU Agritech Portal - Horticulture: Plantation Crops: Coconut - Spacing and Planting (https://agritech.tnau.ac.in/horticulture/horti_pcrops_coconut_spacing.html); Coconut - Nursery management/seedling selection (https://agritech.tnau.ac.in/horticulture/horti_pcrops_coconut_nursery.html); Expert System: Coconut - Nutrient Management (http://www.agritech.tnau.ac.in/expert_system/coconut/coconut/coconut_nutrient_management.html); Expert System: Coconut Main Field - Cultivation Practices (http://www.agritech.tnau.ac.in/expert_system/coconut/coconut/coconut_mainfield.html); Coconut - Pest management (https://agritech.tnau.ac.in/horticulture/horti_pcrops_coconut_pest_dis_mgnt.html); ICAR-CPCRI, Package of Practices for Organic Farming in Coconut (https://cpcri.gov.in/filemgr/webfs/publication/64package_of_practices_for_organic_farming_in_coconut.pdf)",
+  "reviewer": "AgrowAI content team -- compiled from cited public source, not independently agronomist-reviewed",
+  "approval_date": "2026-08-18",
+  "review_date": "2027-08-18",
+  "version": "1.0.0",
+  "status": "SOURCED_PUBLIC_REFERENCE",
+  "content_hash": "211e15290a2bf3b0c5c7c155bfb6703499114acd6ab6c1ecada4cd1904eb7848"
+}

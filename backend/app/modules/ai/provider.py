@@ -23,6 +23,7 @@ from app.modules.ai.constants import (
     GEMINI_CHAT_MODEL,
     GEMINI_MAX_OUTPUT_TOKENS,
     GEMINI_MAX_RETRIES,
+    GEMINI_SAFETY_SETTINGS,
     GEMINI_TEMPERATURE,
     GEMINI_TIMEOUT_SECONDS,
     GEMINI_VISION_MODEL,
@@ -88,6 +89,12 @@ class GeminiClient:
                 "temperature": GEMINI_TEMPERATURE,
                 "maxOutputTokens": GEMINI_MAX_OUTPUT_TOKENS,
             },
+            # Explicit thresholds (2026-08 pre-release audit) — previously
+            # unset, so every call silently relied on Gemini's undocumented
+            # defaults. A response Gemini blocks on safety grounds comes back
+            # with no usable candidate, which _parse() below already turns
+            # into AIUnavailableError (fail-closed, not a raw crash).
+            "safetySettings": GEMINI_SAFETY_SETTINGS,
         }
 
     async def generate(
@@ -106,7 +113,22 @@ class GeminiClient:
                 )
                 response.raise_for_status()
                 latency_ms = int((time.monotonic() - started) * 1000)
-                return self._parse(response.json(), latency_ms)
+                try:
+                    payload = response.json()
+                except ValueError as exc:
+                    # Gemini (or a proxy in front of it) returned a 2xx with a
+                    # body that isn't valid JSON — e.g. truncated output or an
+                    # HTML error page. Previously this propagated as an
+                    # unhandled exception (a raw 500 to the farmer) instead of
+                    # the graceful AIUnavailableError every other failure mode
+                    # gets. Treat it like a transient transport failure: retry,
+                    # then fail closed.
+                    logger.warning("Gemini returned non-JSON response body")
+                    last_error = exc
+                    if attempt < self.max_retries:
+                        await asyncio.sleep(min(0.5 * 2 ** (attempt - 1), 4.0))
+                    continue
+                return self._parse(payload, latency_ms)
             except (httpx.TransportError, httpx.TimeoutException) as exc:
                 last_error = exc
             except httpx.HTTPStatusError as exc:

@@ -9,7 +9,25 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-Lifecycle = Literal["UNVERIFIED", "PENDING_REVIEW", "VERIFIED", "SUSPENDED", "REJECTED", "EXPIRED"]
+Lifecycle = Literal[
+    "UNVERIFIED",
+    "PENDING_REVIEW",
+    "VERIFIED",
+    # Compiled from a real, cited public agronomic/epidemiological source
+    # (e.g. a KVK/TNAU/ICAR advisory bulletin on weather-triggered disease
+    # risk) but not personally reviewed by an independent agronomist for
+    # AgrowAI -- mirrors app.modules.calendar.registry.ScheduleStatus's
+    # SOURCED_PUBLIC_REFERENCE. `source_references` must still be genuine,
+    # real, checkable documents; this status only changes the "who signed
+    # off" claim shown to the farmer, never the "is this made up" answer.
+    "SOURCED_PUBLIC_REFERENCE",
+    "SUSPENDED",
+    "REJECTED",
+    "EXPIRED",
+]
+
+# Statuses that make a rule pack live/executable for a farmer.
+LIVE_LIFECYCLE_STATUSES = frozenset({"VERIFIED", "SOURCED_PUBLIC_REFERENCE"})
 
 
 class RiskStatus(StrEnum):
@@ -92,8 +110,8 @@ class RulePack(BaseModel):
 
     @model_validator(mode="after")
     def verified_has_approval(self):
-        if self.approval_status == "VERIFIED" and self.approved_at is None:
-            raise ValueError("VERIFIED_PACK_REQUIRES_APPROVAL_DATE")
+        if self.approval_status in LIVE_LIFECYCLE_STATUSES and self.approved_at is None:
+            raise ValueError("LIVE_PACK_REQUIRES_APPROVAL_DATE")
         return self
 
     def expected_hash(self) -> str:

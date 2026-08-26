@@ -5,6 +5,7 @@ reusing the Notifications module (no duplicate delivery code). The provider is a
 abstraction so future channels (FCM push, SMS, WhatsApp, Email) plug in with no change
 to the admin service (docs: FUTURE READY). ``MockBroadcastProvider`` is used in tests.
 """
+
 from __future__ import annotations
 
 import uuid

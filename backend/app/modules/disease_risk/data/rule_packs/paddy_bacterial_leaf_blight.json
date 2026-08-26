@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0",
+  "pack_id": "paddy-bacterial-leaf-blight-tn",
+  "version": "1.0.0",
+  "crop_id": "paddy",
+  "disease_id": "bacterial_leaf_blight",
+  "regions": [
+    "IN-TN"
+  ],
+  "seasons": [
+    "kharif"
+  ],
+  "confirmed_stages": [
+    "nursery_seedling",
+    "transplanting_establishment"
+  ],
+  "required_weather_variables": [
+    "temperature_c"
+  ],
+  "observation_window_hours": 24,
+  "forecast_window_hours": 48,
+  "conditions": [
+    {
+      "variable": "temperature_c",
+      "operator": "gte",
+      "value": 25.0
+    },
+    {
+      "variable": "temperature_c",
+      "operator": "lte",
+      "value": 30.0
+    }
+  ],
+  "minimum_data_completeness": 1.0,
+  "maximum_weather_age_hours": 6,
+  "cached_weather_allowed": false,
+  "alert_title_key": "diseaseRisk.verified.paddy_bacterial_leaf_blight.title",
+  "alert_explanation_key": "diseaseRisk.verified.paddy_bacterial_leaf_blight.explanation",
+  "source_references": [
+    "TNAU Agritech Portal -- Rice Diseases: Bacterial Leaf Blight (Xanthomonas oryzae pv. oryzae), https://agritech.tnau.ac.in/crop_protection/rice_diseases/rice_3.html"
+  ],
+  "reviewer_id": "AgrowAI content team -- compiled from cited public source, not independently agronomist-reviewed",
+  "approval_status": "SOURCED_PUBLIC_REFERENCE",
+  "approved_at": "2026-08-18T00:00:00Z",
+  "review_expires_at": "2027-08-18T00:00:00Z",
+  "cooldown_hours": 24,
+  "alert_expiry_hours": 12,
+  "content_hash": "89ab321867f44cab77d18b22646103972d7531362a723809d973e81450138cd7"
+}

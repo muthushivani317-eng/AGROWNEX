@@ -1,0 +1,241 @@
+{
+  "schema_version": "1.0",
+  "canonical_crop_id": "groundnut",
+  "aliases": [
+    "peanut"
+  ],
+  "variety_or_duration_group": "short_duration_105_110_day_irrigated (e.g. VRI 8, BSR 2; TMV 7 at 100-105 days)",
+  "stages": [
+    {
+      "code": "sowing_and_establishment",
+      "label_key": "calendar.stages.sowing_and_establishment",
+      "start_offset": 0,
+      "end_offset": 5,
+      "activities": [
+        {
+          "code": "plough_and_apply_fym",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.groundnut.plough_and_apply_fym.title",
+          "description_key": "calendar.verified.groundnut.plough_and_apply_fym.description",
+          "day_offset": -12,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "seed_treatment",
+          "activity_type": "seed_treatment",
+          "label_key": "calendar.verified.groundnut.seed_treatment.title",
+          "description_key": "calendar.verified.groundnut.seed_treatment.description",
+          "day_offset": -1,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "sowing",
+          "activity_type": "sowing",
+          "label_key": "calendar.verified.groundnut.sowing.title",
+          "description_key": "calendar.verified.groundnut.sowing.description",
+          "day_offset": 0,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "life_irrigation",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.groundnut.life_irrigation.title",
+          "description_key": "calendar.verified.groundnut.life_irrigation.description",
+          "day_offset": 4,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        }
+      ]
+    },
+    {
+      "code": "vegetative_growth",
+      "label_key": "calendar.stages.vegetative_growth",
+      "start_offset": 6,
+      "end_offset": 25,
+      "activities": [
+        {
+          "code": "micronutrient_application",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.groundnut.micronutrient_application.title",
+          "description_key": "calendar.verified.groundnut.micronutrient_application.description",
+          "day_offset": 18,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "irrigation_20das",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.groundnut.irrigation_20das.title",
+          "description_key": "calendar.verified.groundnut.irrigation_20das.description",
+          "day_offset": 20,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "first_hand_weeding",
+          "activity_type": "weed_management",
+          "label_key": "calendar.verified.groundnut.first_hand_weeding.title",
+          "description_key": "calendar.verified.groundnut.first_hand_weeding.description",
+          "day_offset": 20,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "flowering_pegging",
+      "label_key": "calendar.stages.flowering_pegging",
+      "start_offset": 26,
+      "end_offset": 45,
+      "activities": [
+        {
+          "code": "flowering_irrigation",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.groundnut.flowering_irrigation.title",
+          "description_key": "calendar.verified.groundnut.flowering_irrigation.description",
+          "day_offset": 35,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "gypsum_application",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.groundnut.gypsum_application.title",
+          "description_key": "calendar.verified.groundnut.gypsum_application.description",
+          "day_offset": 42,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "second_weeding_and_earthing_up",
+          "activity_type": "weed_management",
+          "label_key": "calendar.verified.groundnut.second_weeding_and_earthing_up.title",
+          "description_key": "calendar.verified.groundnut.second_weeding_and_earthing_up.description",
+          "day_offset": 40,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "pod_borer_scouting",
+          "activity_type": "pest_monitoring",
+          "label_key": "calendar.verified.groundnut.pod_borer_scouting.title",
+          "description_key": "calendar.verified.groundnut.pod_borer_scouting.description",
+          "day_offset": 45,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "spraying"
+        }
+      ]
+    },
+    {
+      "code": "pod_development",
+      "label_key": "calendar.stages.pod_development",
+      "start_offset": 46,
+      "end_offset": 90,
+      "activities": [
+        {
+          "code": "pod_development_irrigation",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.groundnut.pod_development_irrigation.title",
+          "description_key": "calendar.verified.groundnut.pod_development_irrigation.description",
+          "day_offset": 65,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "foliar_disease_scouting",
+          "activity_type": "disease_inspection",
+          "label_key": "calendar.verified.groundnut.foliar_disease_scouting.title",
+          "description_key": "calendar.verified.groundnut.foliar_disease_scouting.description",
+          "day_offset": 60,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "spraying"
+        }
+      ]
+    },
+    {
+      "code": "maturity_and_harvest",
+      "label_key": "calendar.stages.maturity_and_harvest",
+      "start_offset": 91,
+      "end_offset": 108,
+      "activities": [
+        {
+          "code": "maturity_check",
+          "activity_type": "harvest_preparation",
+          "label_key": "calendar.verified.groundnut.maturity_check.title",
+          "description_key": "calendar.verified.groundnut.maturity_check.description",
+          "day_offset": 95,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "harvest",
+          "activity_type": "harvest",
+          "label_key": "calendar.verified.groundnut.harvest.title",
+          "description_key": "calendar.verified.groundnut.harvest.description",
+          "day_offset": 105,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "post_harvest_drying",
+          "activity_type": "post_harvest",
+          "label_key": "calendar.verified.groundnut.post_harvest_drying.title",
+          "description_key": "calendar.verified.groundnut.post_harvest_drying.description",
+          "day_offset": 107,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        }
+      ]
+    }
+  ],
+  "geographic_limitations": [
+    "Tamil Nadu"
+  ],
+  "season_limitations": [
+    "rabi",
+    "summer"
+  ],
+  "source_organization": "Tamil Nadu Agricultural University (TNAU) Agritech Portal, cross-checked with the Tamil Nadu Department of Agriculture and Farmers' Welfare Crop Production Guide",
+  "document_reference": "TNAU Agritech Portal, 'Crop Production :: Oilseeds :: Groundnut' (Irrigated), https://agritech.tnau.ac.in/agriculture/CropProduction/Oilseeds/oilseeds_groundnut01.html ; Tamil Nadu Crop Production Guide, Chapter 5 'Groundnut', Department of Agriculture, https://tnagriculture.in/dashboard/CPG/05_Groundnut.pdf ; pest reference: TNAU Agritech Portal Crop Protection - Groundnut pest page, https://agritech.tnau.ac.in/crop_protection/groundnut/crop_prot_crop_insect_oil_ground%20nut_4.html ; disease reference: TNAU Agritech Portal Crop Protection - Groundnut diseases page, https://agritech.tnau.ac.in/crop_protection/crop_prot_crop%20diseases_oilseeds_groundnut.html",
+  "reviewer": "AgrowAI content team -- compiled from cited public source, not independently agronomist-reviewed",
+  "approval_date": "2026-08-18",
+  "review_date": "2027-08-18",
+  "version": "1.0.0",
+  "status": "SOURCED_PUBLIC_REFERENCE",
+  "content_hash": "1f54b327a812d081e936dd3ae1da99b8f412c5aead829e33446a401b5c75b2f8"
+}

@@ -26,11 +26,12 @@ def build_farm_memory(
 
     if profile is not None:
         crops = [c for c in (profile.primary_crop, profile.secondary_crop) if c]
+        # PII minimization (2026-08 pre-release audit): only District is sent —
+        # it's needed for agronomic/weather relevance. Name, Block and Village
+        # are personally identifying and add no advisory value the model needs,
+        # so they never leave the device in the prompt sent to Gemini.
         farmer_lines = [
-            _line("Name", profile.full_name),
             _line("District", profile.district),
-            _line("Block", profile.block),
-            _line("Village", profile.village),
             _line("Experience (years)", profile.experience_years),
             _line("Preferred crops", ", ".join(crops) if crops else None),
         ]
@@ -51,7 +52,7 @@ def build_farm_memory(
             _line("Sowing date", farm.sowing_date),
             _line("Status", farm.status),
             _line("District", location.district if location else None),
-            _line("Village", location.village if location else None),
+            # Village omitted — same PII-minimization rationale as above.
         ]
         details = [line for line in farm_lines if line]
         if details:

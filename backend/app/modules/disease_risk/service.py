@@ -12,26 +12,25 @@ from app.modules.weather.service import WeatherService
 
 from .engine import RiskInputs, RiskOutcome, evaluate_risk
 from .models import DiseaseRiskAlert
-from .registry import RulePackRegistry
+from .registry import RulePackRegistry, load_active_registry
 from .repository import DiseaseRiskRepository
 
-# Deliberately empty (found in the 2026-08 pre-release audit as "the alert
-# feature is permanently dead"). This is fail-closed by design, not a bug:
-# every RulePack drives a real weather-triggered disease-risk alert shown to a
-# farmer (e.g. "conditions favour Sigatoka leaf spot this week"), which means
-# each one needs real, source-cited epidemiological thresholds -- crop,
-# disease, region/season, the specific temperature/humidity/rainfall
-# conditions that raise risk, reviewed and approved by an agronomist against a
-# citable official source (RulePack.source_references, .reviewer_id,
-# .approval_status == "VERIFIED"; see schemas.py). That is safety-critical
-# agricultural content this codebase must not fabricate (docs/CLAUDE.md), so
-# until real verified RulePack entries exist, ACTIVE_RULE_REGISTRY correctly
-# stays empty and every evaluate() call returns NO_VERIFIED_RULE_AVAILABLE
-# (farmer_message_key="diseaseRisk.noVerifiedRule") instead of guessing.
-# To activate: construct RulePackRegistry([...]) with one or more RulePack
-# instances that pass RulePackRegistry._executable (VERIFIED, unexpired,
-# content-hash-matched) and wire the result in here.
-ACTIVE_RULE_REGISTRY = RulePackRegistry([])
+# Loads every *.json rule pack from app/modules/disease_risk/data/rule_packs/
+# at import time (see registry.load_active_registry() /
+# _load_rule_pack_entries()), mirroring app.modules.calendar.registry's
+# VERIFIED_SCHEDULES_DIR loader. Originally this was hardcoded to
+# RulePackRegistry([]) -- found in the 2026-08 pre-release audit as "the
+# alert feature is permanently dead" -- because every RulePack drives a real
+# weather-triggered disease-risk alert shown to a farmer (e.g. "conditions
+# favour Sigatoka leaf spot this week"), which needs real, source-cited
+# epidemiological thresholds (RulePack.source_references, .reviewer_id,
+# .approval_status; see schemas.py), and no real content existed yet. That is
+# still true for anything not backed by a real citation -- this codebase must
+# not fabricate safety-critical agricultural content (docs/CLAUDE.md). With
+# the directory currently empty, behavior is unchanged: evaluate() still
+# returns NO_VERIFIED_RULE_AVAILABLE for every crop until real rule-pack
+# entries are added under data/rule_packs/ (see its README).
+ACTIVE_RULE_REGISTRY = load_active_registry()
 
 
 class DiseaseRiskService:
@@ -135,7 +134,13 @@ class DiseaseRiskService:
             disease_key=pack.disease_id if pack else None,
             status=status,
             risk_level="HIGH" if status == "RISK_CONDITIONS_PRESENT" else None,
-            confidence="verified_rule_evidence" if pack else "unavailable",
+            confidence=(
+                "verified_rule_evidence"
+                if pack and pack.approval_status == "VERIFIED"
+                else "sourced_public_reference_evidence"
+                if pack
+                else "unavailable"
+            ),
             weather_factors=result.matched_conditions,
             weather_source=weather_source,
             weather_observed_at=observed_at,
@@ -144,7 +149,7 @@ class DiseaseRiskService:
             valid_until=now + timedelta(hours=pack.alert_expiry_hours) if pack else None,
             rule_pack_id=pack.pack_id if pack else None,
             rule_version=pack.version if pack else None,
-            rule_verification_status="VERIFIED" if pack else "UNAVAILABLE",
+            rule_verification_status=pack.approval_status if pack else "UNAVAILABLE",
             farmer_message_key=message,
             evidence=result.evidence_used,
             missing_inputs=result.missing_fields,

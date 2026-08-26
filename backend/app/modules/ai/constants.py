@@ -21,6 +21,19 @@ GEMINI_MAX_RETRIES = int(os.getenv("GEMINI_MAX_RETRIES", "2"))
 GEMINI_TEMPERATURE = 0.4
 GEMINI_MAX_OUTPUT_TOKENS = 800
 
+# Explicit per-category safety thresholds sent with every generateContent call
+# (2026-08 pre-release audit: previously unset, so every chat silently relied
+# on Gemini's undocumented default thresholds instead of an explicit,
+# reviewable choice). BLOCK_MEDIUM_AND_ABOVE blocks medium/high-probability
+# harmful content while still allowing ordinary agricultural discussion
+# (pesticide names, pest/disease descriptions) through.
+GEMINI_SAFETY_SETTINGS: list[dict[str, str]] = [
+    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+]
+
 # --- Cost control (docs: cost table in constants, env-overridable) ---
 # Estimated price in INR per 1,000 tokens. Defaults are conservative approximations of
 # Google's published USD list prices at ~₹85/USD; override per deployment via env so the

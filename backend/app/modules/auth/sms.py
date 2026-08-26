@@ -100,16 +100,16 @@ class MSG91Provider:
 def get_default_sms_provider() -> SMSProvider:
     """Select the SMS provider from ``OTP_PROVIDER`` (mock by default).
 
-    In production, an ``msg91`` selection without an auth key falls back to the
-    mock and logs — a missing credential must never silently look like a send.
+    An ``msg91`` selection must be complete. It must never fall back to the
+    mock because that could make a production request look successfully sent.
     """
     if settings.otp_provider == "firebase":
         # Firebase Phone Auth owns SMS dispatch on the trusted native client.
         # Fail closed if server-side code accidentally tries to send that OTP.
         raise RuntimeError("FIREBASE_PHONE_AUTH_SMS_IS_CLIENT_DISPATCHED")
     if settings.otp_provider == "msg91":
-        if settings.msg91_auth_key:
-            logger.info("SMS OTP provider: msg91")
-            return MSG91Provider()
-        logger.warning("OTP_PROVIDER=msg91 but MSG91_AUTH_KEY unset; using mock")
+        if not settings.msg91_auth_key or not settings.msg91_template_id:
+            raise RuntimeError("MSG91_CONFIGURATION_INCOMPLETE")
+        logger.info("SMS OTP provider: msg91")
+        return MSG91Provider()
     return MockSMSProvider()

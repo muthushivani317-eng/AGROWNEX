@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import pytest
 from app.modules.auth import service as service_module
+from app.modules.auth.constants import UserStatus
 from app.modules.auth.exceptions import (
     InvalidRefreshTokenError,
     OtpRateLimitError,
@@ -123,3 +124,18 @@ async def test_logout_revokes_refresh_token(db_session):
 
     with pytest.raises(InvalidRefreshTokenError):
         await service.refresh_session(result.refresh_token)
+
+
+async def test_close_account_revokes_access_and_blocks_new_session(db_session):
+    service = AuthService(db_session)
+    result = await service.verify_otp("t", device_name="Pixel", device_type="android")
+
+    await service.close_account(result.user)
+
+    assert result.user.status == UserStatus.DELETED
+    assert result.user.is_deleted is True
+    assert result.user.deleted_at is not None
+    with pytest.raises(InvalidRefreshTokenError):
+        await service.refresh_session(result.refresh_token)
+    with pytest.raises(InvalidRefreshTokenError):
+        await service.verify_otp("t", device_name=None, device_type=None)

@@ -1,0 +1,229 @@
+{
+  "schema_version": "1.0",
+  "canonical_crop_id": "millet",
+  "aliases": [
+    "pearl_millet",
+    "cumbu",
+    "bajra"
+  ],
+  "variety_or_duration_group": "pearl_millet_cumbu_CO(Cu)9_80_85_day",
+  "stages": [
+    {
+      "code": "sowing",
+      "label_key": "calendar.stages.sowing",
+      "start_offset": 0,
+      "end_offset": 0,
+      "activities": [
+        {
+          "code": "plough_and_apply_fym",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.millet.plough_and_apply_fym.title",
+          "description_key": "calendar.verified.millet.plough_and_apply_fym.description",
+          "day_offset": -10,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "form_ridges",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.millet.form_ridges.title",
+          "description_key": "calendar.verified.millet.form_ridges.description",
+          "day_offset": -3,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "low",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "seed_treatment_soak",
+          "activity_type": "seed_treatment",
+          "label_key": "calendar.verified.millet.seed_treatment_soak.title",
+          "description_key": "calendar.verified.millet.seed_treatment_soak.description",
+          "day_offset": -1,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "low",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "direct_sowing",
+          "activity_type": "sowing",
+          "label_key": "calendar.verified.millet.direct_sowing.title",
+          "description_key": "calendar.verified.millet.direct_sowing.description",
+          "day_offset": 0,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "fertilizer_management",
+      "label_key": "calendar.stages.fertilizer_management",
+      "start_offset": 0,
+      "end_offset": 30,
+      "activities": [
+        {
+          "code": "basal_fertilizer_application",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.millet.basal_fertilizer_application.title",
+          "description_key": "calendar.verified.millet.basal_fertilizer_application.description",
+          "day_offset": 0,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "top_dress_nitrogen_15das",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.millet.top_dress_nitrogen_15das.title",
+          "description_key": "calendar.verified.millet.top_dress_nitrogen_15das.description",
+          "day_offset": 15,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "top_dress_nitrogen_30das",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.millet.top_dress_nitrogen_30das.title",
+          "description_key": "calendar.verified.millet.top_dress_nitrogen_30das.description",
+          "day_offset": 30,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "establishment_and_weed_management",
+      "label_key": "calendar.stages.establishment_and_weed_management",
+      "start_offset": 15,
+      "end_offset": 35,
+      "activities": [
+        {
+          "code": "first_hand_weeding_thinning",
+          "activity_type": "weed_management",
+          "label_key": "calendar.verified.millet.first_hand_weeding_thinning.title",
+          "description_key": "calendar.verified.millet.first_hand_weeding_thinning.description",
+          "day_offset": 15,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "second_hand_weeding",
+          "activity_type": "weed_management",
+          "label_key": "calendar.verified.millet.second_hand_weeding.title",
+          "description_key": "calendar.verified.millet.second_hand_weeding.description",
+          "day_offset": 33,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "irrigation_management",
+      "label_key": "calendar.stages.irrigation_management",
+      "start_offset": 1,
+      "end_offset": 77,
+      "activities": [
+        {
+          "code": "critical_stage_irrigation",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.millet.critical_stage_irrigation.title",
+          "description_key": "calendar.verified.millet.critical_stage_irrigation.description",
+          "day_offset": 40,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "irrigation"
+        }
+      ]
+    },
+    {
+      "code": "disease_and_pest_scouting",
+      "label_key": "calendar.stages.disease_and_pest_scouting",
+      "start_offset": 15,
+      "end_offset": 55,
+      "activities": [
+        {
+          "code": "downy_mildew_scouting",
+          "activity_type": "disease_inspection",
+          "label_key": "calendar.verified.millet.downy_mildew_scouting.title",
+          "description_key": "calendar.verified.millet.downy_mildew_scouting.description",
+          "day_offset": 20,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "spraying"
+        },
+        {
+          "code": "ergot_flowering_scouting",
+          "activity_type": "disease_inspection",
+          "label_key": "calendar.verified.millet.ergot_flowering_scouting.title",
+          "description_key": "calendar.verified.millet.ergot_flowering_scouting.description",
+          "day_offset": 45,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "spraying"
+        }
+      ]
+    },
+    {
+      "code": "harvest",
+      "label_key": "calendar.stages.harvest",
+      "start_offset": 75,
+      "end_offset": 90,
+      "activities": [
+        {
+          "code": "check_maturity_signs",
+          "activity_type": "harvest_preparation",
+          "label_key": "calendar.verified.millet.check_maturity_signs.title",
+          "description_key": "calendar.verified.millet.check_maturity_signs.description",
+          "day_offset": 78,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "harvest_earheads_and_dry",
+          "activity_type": "harvest",
+          "label_key": "calendar.verified.millet.harvest_earheads_and_dry.title",
+          "description_key": "calendar.verified.millet.harvest_earheads_and_dry.description",
+          "day_offset": 83,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        }
+      ]
+    }
+  ],
+  "geographic_limitations": [
+    "Tamil Nadu"
+  ],
+  "season_limitations": [
+    "kharif",
+    "rabi"
+  ],
+  "source_organization": "Tamil Nadu Agricultural University (TNAU), Coimbatore",
+  "document_reference": "TNAU Agritech Portal -- Crop Production: Millets: Cumbu (https://agritech.tnau.ac.in/agriculture/millets_cumbu.html); Season and Varieties: Cumbu (https://agritech.tnau.ac.in/agriculture/agri_seasonandvarieties_cumbu.html); Crop Protection: Cumbu Downy Mildew (https://agritech.tnau.ac.in/crop_protection/cumbu_disease/cumbu_1.html); Crop Protection: Cumbu Ergot (https://agritech.tnau.ac.in/crop_protection/cumbu_disease/cumbu_2.html)",
+  "reviewer": "AgrowAI content team -- compiled from cited public source, not independently agronomist-reviewed",
+  "approval_date": "2026-08-18",
+  "review_date": "2027-08-18",
+  "version": "1.0.0",
+  "status": "SOURCED_PUBLIC_REFERENCE",
+  "content_hash": "d7f3022fc7278809d8b82aba59d89ffc427bf8567d16fdcb53769f9e9b1b3f60"
+}

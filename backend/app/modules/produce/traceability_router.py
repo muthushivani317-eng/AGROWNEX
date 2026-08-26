@@ -47,12 +47,16 @@ async def _batch(session: AsyncSession, offer_id: uuid.UUID):
 
 async def _timeline(session: AsyncSession, batch: ProduceTraceBatch) -> TraceTimelineOut:
     events = (
-        await session.execute(
-            select(ProduceTraceEvent)
-            .where(ProduceTraceEvent.batch_id == batch.id)
-            .order_by(ProduceTraceEvent.occurred_at.asc(), ProduceTraceEvent.created_at.asc())
+        (
+            await session.execute(
+                select(ProduceTraceEvent)
+                .where(ProduceTraceEvent.batch_id == batch.id)
+                .order_by(ProduceTraceEvent.occurred_at.asc(), ProduceTraceEvent.created_at.asc())
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     return TraceTimelineOut(
         batch_id=batch.id,
         offer_id=batch.offer_id,
@@ -87,9 +91,7 @@ async def initialize_traceability(
     "/{offer_id}/traceability-controlled",
     response_model=SuccessResponse[TraceTimelineOut | None],
 )
-async def get_traceability(
-    offer_id: uuid.UUID, tester: ControlledTester, session: SessionDep
-):
+async def get_traceability(offer_id: uuid.UUID, tester: ControlledTester, session: SessionDep):
     await _offer(session, offer_id, tester.user.id)
     batch = await _batch(session, offer_id)
     return success(await _timeline(session, batch) if batch else None)
@@ -114,9 +116,7 @@ async def add_trace_event(
         raise HTTPException(422, detail={"code": "TRACE_EVENT_IN_FUTURE"})
     # Serialize appends for this batch so concurrent requests cannot fork the chain.
     await session.execute(
-        select(ProduceTraceBatch)
-        .where(ProduceTraceBatch.id == batch.id)
-        .with_for_update()
+        select(ProduceTraceBatch).where(ProduceTraceBatch.id == batch.id).with_for_update()
     )
     previous = (
         await session.execute(

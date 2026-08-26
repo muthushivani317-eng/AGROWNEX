@@ -97,32 +97,58 @@ def _parse_agmarknet_date(value: Any) -> date:
     return datetime.now(UTC).date()
 
 
+def _record_value(record: dict[str, Any], *keys: str) -> Any:
+    """Read a field from either the current or legacy Agmarknet schema.
+
+    data.gov.in has exposed this resource with both normalized lowercase keys
+    (``modal_price``) and its older OData-style keys
+    (``Modal_x0020_Price``).  Treat both as the same verified source instead of
+    silently discarding otherwise valid government records.
+    """
+    for key in keys:
+        if key in record and record[key] not in (None, ""):
+            return record[key]
+    return None
+
+
 def parse_agmarknet_record(record: dict[str, Any]) -> ProviderPrice | None:
     """Normalize one Agmarknet record; ``None`` if it lacks a usable modal price."""
-    modal = _to_float(record.get("modal_price"))
-    minimum = _to_float(record.get("min_price"))
-    maximum = _to_float(record.get("max_price"))
+    modal = _to_float(
+        _record_value(record, "modal_price", "Modal_Price", "Modal_x0020_Price")
+    )
+    minimum = _to_float(
+        _record_value(record, "min_price", "Min_Price", "Min_x0020_Price")
+    )
+    maximum = _to_float(
+        _record_value(record, "max_price", "Max_Price", "Max_x0020_Price")
+    )
     if modal is None and minimum is None and maximum is None:
         return None
     modal = modal or maximum or minimum
     minimum = minimum or modal
     maximum = maximum or modal
-    commodity = str(record.get("commodity") or "").strip()
-    market = str(record.get("market") or "").strip()
+    commodity = str(_record_value(record, "commodity", "Commodity") or "").strip()
+    market = str(_record_value(record, "market", "Market") or "").strip()
     if not commodity or not market:
         return None
     return ProviderPrice(
         commodity=commodity,
-        variety=str(record.get("variety") or "").strip(),
-        grade=(str(record.get("grade")).strip() or None) if record.get("grade") else None,
+        variety=str(_record_value(record, "variety", "Variety") or "").strip(),
+        grade=(
+            str(_record_value(record, "grade", "Grade")).strip() or None
+            if _record_value(record, "grade", "Grade")
+            else None
+        ),
         market=market,
-        district=str(record.get("district") or "").strip(),
-        state=str(record.get("state") or "").strip(),
+        district=str(_record_value(record, "district", "District") or "").strip(),
+        state=str(_record_value(record, "state", "State") or "").strip(),
         minimum_price=float(minimum),
         maximum_price=float(maximum),
         modal_price=float(modal),
         unit=PriceUnit.QUINTAL.value,  # Agmarknet quotes ₹/quintal.
-        price_date=_parse_agmarknet_date(record.get("arrival_date")),
+        price_date=_parse_agmarknet_date(
+            _record_value(record, "arrival_date", "Arrival_Date")
+        ),
         source=SOURCE_AGMARKNET,
     )
 
@@ -174,13 +200,26 @@ class AgmarknetProvider:
                 client = get_http_client()
                 response = await client.get(url, params=params, timeout=self.timeout)
                 response.raise_for_status()
-                payload = response.json()
-                records = payload.get("records", []) if isinstance(payload, dict) else []
-                return [
-                    price
-                    for record in records
-                    if (price := parse_agmarknet_record(record)) is not None
-                ]
+                try:
+                    payload = response.json()
+                except ValueError as exc:
+                    # A malformed (non-JSON) 200 response — treat like any other
+                    # transient upstream failure. Previously this raised an
+                    # uncaught JSONDecodeError that propagated past every
+                    # MarketDataUnavailableError handler in the codebase,
+                    # including the batch refresh job's per-target try/except
+                    # (2026-08 pre-release audit) — one bad Agmarknet response
+                    # could abort every other farmer's favourited crop/market
+                    # still waiting in that same batch.
+                    logger.warning("Agmarknet returned a non-JSON response")
+                    last_error = exc
+                else:
+                    records = payload.get("records", []) if isinstance(payload, dict) else []
+                    return [
+                        price
+                        for record in records
+                        if (price := parse_agmarknet_record(record)) is not None
+                    ]
             except (httpx.TransportError, httpx.TimeoutException) as exc:
                 last_error = exc
             except httpx.HTTPStatusError as exc:

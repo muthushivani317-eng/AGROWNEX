@@ -61,7 +61,10 @@ def main() -> int:
     try:
         schedule = CropStageSchedule.model_validate(raw)
     except ValidationError as exc:
-        print(f"\n{path}: hash written, but the file does not pass schema validation:", file=sys.stderr)
+        print(
+            f"\n{path}: hash written, but the file does not pass schema validation:",
+            file=sys.stderr,
+        )
         for error in exc.errors():
             loc = ".".join(str(part) for part in error["loc"])
             print(f"  - {loc}: {error['msg']}", file=sys.stderr)
@@ -72,14 +75,25 @@ def main() -> int:
         )
         return 1
 
-    if schedule.status.value != "VERIFIED":
+    live_statuses = {"VERIFIED", "SOURCED_PUBLIC_REFERENCE"}
+    if schedule.status.value not in live_statuses:
         print(
-            f"\nNote: status is \"{schedule.status.value}\", not \"VERIFIED\" -- "
-            "this entry is tracked but will NOT be resolved for any farmer "
-            "until status is set to \"VERIFIED\" by whoever actually did the "
-            "review. Re-run this script after changing status (the hash "
-            "does not depend on status, but re-running keeps this check "
-            "honest).",
+            f"\nNote: status is \"{schedule.status.value}\", not a live status "
+            f"({', '.join(sorted(live_statuses))}) -- this entry is tracked "
+            "but will NOT be resolved for any farmer until status is set to "
+            "one of those by whoever actually reviewed/sourced it. Re-run "
+            "this script after changing status (the hash does not depend on "
+            "status, but re-running keeps this check honest).",
+        )
+    elif schedule.status.value == "SOURCED_PUBLIC_REFERENCE":
+        print(
+            f"\n{path}: valid SOURCED_PUBLIC_REFERENCE schedule for "
+            f"\"{schedule.canonical_crop_id}\" (aliases: {', '.join(schedule.aliases) or 'none'}). "
+            "This will be live for every farmer with that crop on next deploy, "
+            "honestly labeled as compiled from a public source rather than "
+            "personally reviewed by an agronomist -- make sure "
+            "source_organization/document_reference are the genuine, real "
+            "publication.",
         )
     else:
         print(

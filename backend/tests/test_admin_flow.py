@@ -7,6 +7,7 @@ audited and derived from the immutable trail — no farmer table is mutated), br
 delivery via a mock provider, announcements, and the audit trail. Nothing is
 fabricated; untracked metrics stay ``None``.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -78,9 +79,7 @@ async def _offer(
     harvest: date = date(2026, 8, 1),
 ) -> ProduceOffer:
     farm = (
-        await db_session.execute(
-            Farm.__table__.select().where(Farm.user_id == user.id)
-        )
+        await db_session.execute(Farm.__table__.select().where(Farm.user_id == user.id))
     ).first()
     offer = ProduceOffer(
         user_id=user.id,
@@ -136,9 +135,7 @@ async def test_least_privilege_denies_out_of_scope_action(db_session):
     ctx = await _admin_ctx(db_session, service, role=AdminRole.PROCUREMENT_MANAGER.value)
     # A procurement manager may not browse the farmer directory.
     with pytest.raises(PermissionDeniedError):
-        await service.farmers(
-            ctx, search=None, district=None, crop=None, page=1, page_size=20
-        )
+        await service.farmers(ctx, search=None, district=None, crop=None, page=1, page_size=20)
     # …but they can see procurement.
     result = await service.procurement(
         ctx, crop=None, village=None, district=None, page=1, page_size=20
@@ -202,9 +199,7 @@ async def test_farmer_directory_search_and_detail(db_session):
     await _farmer(db_session, "fb-k", name="Kumar", village="Papanasam")
     ctx = await _admin_ctx(db_session, service)
 
-    page = await service.farmers(
-        ctx, search="raja", district=None, crop=None, page=1, page_size=20
-    )
+    page = await service.farmers(ctx, search="raja", district=None, crop=None, page=1, page_size=20)
     assert page.total == 1
     assert page.items[0].full_name == "Raja Selvam"
     assert page.items[0].farm_count == 1
@@ -278,7 +273,7 @@ async def test_procurement_status_rejects_bad_status_and_unknown_offer(db_sessio
         await service.update_procurement_status(ctx, uuid.uuid4(), "teleported")
     with pytest.raises(OfferNotFoundError):
         await service.update_procurement_status(
-            ctx, uuid.uuid4(), ProcurementStatus.SOLD.value
+            ctx, uuid.uuid4(), ProcurementStatus.UNDER_REVIEW.value
         )
 
 
@@ -337,8 +332,12 @@ async def test_announcement_create_and_list(db_session):
     service = _service(db_session)
     ctx = await _admin_ctx(db_session, service)
     ann = await service.create_announcement(
-        ctx, title="Maintenance", body="Downtime tonight", language="en",
-        category="ops", audience="all",
+        ctx,
+        title="Maintenance",
+        body="Downtime tonight",
+        language="en",
+        category="ops",
+        audience="all",
     )
     assert ann.title == "Maintenance"
     page = await service.announcements(ctx, page=1, page_size=20)

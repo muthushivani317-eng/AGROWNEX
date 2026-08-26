@@ -185,6 +185,8 @@ class AuthService:
         firebase_uid = claims["uid"]
         existing = await self.users.get_by_firebase_uid(firebase_uid)
         if existing is not None:
+            if existing.status != UserStatus.ACTIVE or existing.deleted_at is not None:
+                raise InvalidRefreshTokenError()
             return existing
 
         user = User(
@@ -251,6 +253,21 @@ class AuthService:
             await self.refresh_tokens.revoke_all_for_user(user.id)
         await self.logins.add(
             LoginHistory(user_id=user.id, login_method="logout", success=True)
+        )
+
+    async def close_account(self, user: User) -> None:
+        """Immediately disable access while preserving required audit records."""
+        user.status = UserStatus.DELETED
+        user.deleted_at = datetime.now(UTC)
+        user.is_deleted = True
+        await self.refresh_tokens.revoke_all_for_user(user.id)
+        await self.sessions.revoke_all_for_user(user.id)
+        await self.logins.add(
+            LoginHistory(
+                user_id=user.id,
+                login_method="account_closure",
+                success=True,
+            )
         )
 
     # ----- Profile -----

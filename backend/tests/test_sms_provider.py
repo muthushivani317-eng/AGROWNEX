@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import httpx
+import pytest
 from app.core.config import settings
 from app.modules.auth.sms import (
     MockSMSProvider,
@@ -19,14 +20,17 @@ def test_default_provider_is_mock(monkeypatch):
 def test_msg91_selected_when_configured(monkeypatch):
     monkeypatch.setattr(settings, "otp_provider", "msg91")
     monkeypatch.setattr(settings, "msg91_auth_key", "key-123")
+    monkeypatch.setattr(settings, "msg91_template_id", "tmpl-1")
     assert isinstance(get_default_sms_provider(), MSG91Provider)
 
 
-def test_msg91_without_key_falls_back_to_mock(monkeypatch):
+def test_msg91_without_key_fails_closed(monkeypatch):
     # A missing credential must never silently look like a real send.
     monkeypatch.setattr(settings, "otp_provider", "msg91")
     monkeypatch.setattr(settings, "msg91_auth_key", "")
-    assert isinstance(get_default_sms_provider(), MockSMSProvider)
+    monkeypatch.setattr(settings, "msg91_template_id", "tmpl-1")
+    with pytest.raises(RuntimeError, match="MSG91_CONFIGURATION_INCOMPLETE"):
+        get_default_sms_provider()
 
 
 def test_otp_message_is_tamil_first():

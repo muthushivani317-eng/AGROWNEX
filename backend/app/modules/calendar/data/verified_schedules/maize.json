@@ -1,0 +1,242 @@
+{
+  "schema_version": "1.0",
+  "canonical_crop_id": "maize",
+  "aliases": [
+    "corn"
+  ],
+  "variety_or_duration_group": "hybrid_medium_duration_100_115_day (TNAU CO 6 single-cross hybrid, ~110-day duration; TNAU also lists a shorter COH(M) 8 hybrid at 85-95 days for the same practices)",
+  "stages": [
+    {
+      "code": "sowing_and_basal_dose",
+      "label_key": "calendar.stages.sowing_and_basal_dose",
+      "start_offset": 0,
+      "end_offset": 0,
+      "activities": [
+        {
+          "code": "fym_azospirillum_application",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.maize.fym_azospirillum_application.title",
+          "description_key": "calendar.verified.maize.fym_azospirillum_application.description",
+          "day_offset": -10,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "field_ploughing_ridge_formation",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.maize.field_ploughing_ridge_formation.title",
+          "description_key": "calendar.verified.maize.field_ploughing_ridge_formation.description",
+          "day_offset": -3,
+          "notification_offset_days": null,
+          "notification_eligible": false,
+          "priority": "low",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "seed_treatment_and_dibbling",
+          "activity_type": "sowing",
+          "label_key": "calendar.verified.maize.seed_treatment_and_dibbling.title",
+          "description_key": "calendar.verified.maize.seed_treatment_and_dibbling.description",
+          "day_offset": 0,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "basal_fertilizer_application",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.maize.basal_fertilizer_application.title",
+          "description_key": "calendar.verified.maize.basal_fertilizer_application.description",
+          "day_offset": 0,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "establishment",
+      "label_key": "calendar.stages.establishment",
+      "start_offset": 1,
+      "end_offset": 15,
+      "activities": [
+        {
+          "code": "pre_emergence_herbicide_spray",
+          "activity_type": "weed_management",
+          "label_key": "calendar.verified.maize.pre_emergence_herbicide_spray.title",
+          "description_key": "calendar.verified.maize.pre_emergence_herbicide_spray.description",
+          "day_offset": 4,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "spraying"
+        },
+        {
+          "code": "germination_stage_irrigation",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.maize.germination_stage_irrigation.title",
+          "description_key": "calendar.verified.maize.germination_stage_irrigation.description",
+          "day_offset": 12,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "thinning_and_gap_filling",
+          "activity_type": "sowing",
+          "label_key": "calendar.verified.maize.thinning_and_gap_filling.title",
+          "description_key": "calendar.verified.maize.thinning_and_gap_filling.description",
+          "day_offset": 13,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "vegetative_growth",
+      "label_key": "calendar.stages.vegetative_growth",
+      "start_offset": 16,
+      "end_offset": 39,
+      "activities": [
+        {
+          "code": "fall_armyworm_whorl_scouting",
+          "activity_type": "pest_monitoring",
+          "label_key": "calendar.verified.maize.fall_armyworm_whorl_scouting.title",
+          "description_key": "calendar.verified.maize.fall_armyworm_whorl_scouting.description",
+          "day_offset": 18,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "first_nitrogen_topdress",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.maize.first_nitrogen_topdress.title",
+          "description_key": "calendar.verified.maize.first_nitrogen_topdress.description",
+          "day_offset": 25,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "vegetative_stage_irrigation",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.maize.vegetative_stage_irrigation.title",
+          "description_key": "calendar.verified.maize.vegetative_stage_irrigation.description",
+          "day_offset": 30,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "hand_weeding",
+          "activity_type": "weed_management",
+          "label_key": "calendar.verified.maize.hand_weeding.title",
+          "description_key": "calendar.verified.maize.hand_weeding.description",
+          "day_offset": 32,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "flowering_tasseling_silking",
+      "label_key": "calendar.stages.flowering_tasseling_silking",
+      "start_offset": 40,
+      "end_offset": 65,
+      "activities": [
+        {
+          "code": "second_nitrogen_topdress",
+          "activity_type": "fertilizer",
+          "label_key": "calendar.verified.maize.second_nitrogen_topdress.title",
+          "description_key": "calendar.verified.maize.second_nitrogen_topdress.description",
+          "day_offset": 45,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        },
+        {
+          "code": "tasseling_silking_critical_irrigation",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.maize.tasseling_silking_critical_irrigation.title",
+          "description_key": "calendar.verified.maize.tasseling_silking_critical_irrigation.description",
+          "day_offset": 50,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "fall_armyworm_tasseling_check",
+          "activity_type": "pest_monitoring",
+          "label_key": "calendar.verified.maize.fall_armyworm_tasseling_check.title",
+          "description_key": "calendar.verified.maize.fall_armyworm_tasseling_check.description",
+          "day_offset": 62,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
+        }
+      ]
+    },
+    {
+      "code": "grain_filling_and_maturity",
+      "label_key": "calendar.stages.grain_filling_and_maturity",
+      "start_offset": 66,
+      "end_offset": 115,
+      "activities": [
+        {
+          "code": "maturity_stage_irrigation",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.maize.maturity_stage_irrigation.title",
+          "description_key": "calendar.verified.maize.maturity_stage_irrigation.description",
+          "day_offset": 78,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "irrigation"
+        },
+        {
+          "code": "harvest",
+          "activity_type": "harvest",
+          "label_key": "calendar.verified.maize.harvest.title",
+          "description_key": "calendar.verified.maize.harvest.description",
+          "day_offset": 105,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none"
+        }
+      ]
+    }
+  ],
+  "geographic_limitations": [
+    "Tamil Nadu"
+  ],
+  "season_limitations": [
+    "kharif",
+    "rabi",
+    "summer"
+  ],
+  "source_organization": "Tamil Nadu Agricultural University (TNAU) Agritech Portal; Tamil Nadu Department of Agriculture and Farmers Welfare (Crop Production Guide)",
+  "document_reference": "TNAU Agritech Portal, 'Crop Management: Irrigated Maize' (field preparation, fertilizer, seed & sowing sub-pages) https://agritech.tnau.ac.in/agriculture/millets_maize_irrigated_maize.html ; TNAU Agritech Portal, 'Irrigation Management :: Maize' https://agritech.tnau.ac.in/agriculture/agri_irrigationmgt_maize.html ; TNAU Agritech Portal, 'Weed Management :: Maize' https://agritech.tnau.ac.in/agriculture/agri_weedmgt_maize.html ; Tamil Nadu Department of Agriculture, 'Crop Production Guide - Maize (Zea mays L.)' https://tnagriculture.in/dashboard/CPG/02_%20Maize.pdf",
+  "reviewer": "AgrowAI content team -- compiled from cited public source, not independently agronomist-reviewed",
+  "approval_date": "2026-08-18",
+  "review_date": "2027-08-18",
+  "version": "1.0.0",
+  "status": "SOURCED_PUBLIC_REFERENCE",
+  "content_hash": "1e447815c048be4d8e2ab28a25888d912bbc6cc282d52266cd3830eac3f4557e"
+}

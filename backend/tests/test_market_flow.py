@@ -157,14 +157,11 @@ async def test_offline_fallback_labels_older_verified_price_as_stale(
     assert result.items[0].age_days == 3
 
 
-async def test_provider_failure_is_cached_to_avoid_retry_storm(
+async def test_provider_failure_can_retry_after_background_attempt_settles(
     db_session, session_factory, monkeypatch
 ) -> None:
-    # A timing-out / failing provider must be marked fresh after the first read
-    # so it is not re-hit on every request (which would make each response block
-    # on the full retry budget and exceed the client timeout). The refresh now
-    # runs in the background, so the marker is set before the task is fired and
-    # the second read never spawns a second refresh.
+    # The in-flight marker prevents duplicate concurrent calls, but a failed
+    # attempt must clear it after settling so Refresh can make a real retry.
     monkeypatch.setattr(
         "app.modules.market.service.SessionLocal", session_factory
     )
@@ -182,9 +179,43 @@ async def test_provider_failure_is_cached_to_avoid_retry_storm(
     provider = CountingFailingProvider()
     service = MarketService(db_session, provider=provider, cache=MarketCache())
     await service.get_prices(MarketPriceFilters())
-    await service.get_prices(MarketPriceFilters())  # same key → served from cache
-    await _drain_refreshes(service)  # let the single background refresh settle
+    await _drain_refreshes(service)
     assert provider.calls == 1
+
+    await service.get_prices(MarketPriceFilters())
+    await _drain_refreshes(service)
+    assert provider.calls == 2
+
+
+async def test_empty_provider_response_can_retry_after_attempt_settles(
+    db_session, session_factory, monkeypatch
+) -> None:
+    monkeypatch.setattr("app.modules.market.service.SessionLocal", session_factory)
+
+    class EmptyThenGoodProvider:
+        source = "empty-then-good"
+
+        def __init__(self) -> None:
+            self.calls = 0
+            self._inner = MockMarketProvider(today=_today())
+
+        async def fetch_prices(self, query: PriceQuery) -> list[ProviderPrice]:
+            self.calls += 1
+            if self.calls == 1:
+                return []
+            return await self._inner.fetch_prices(query)
+
+    provider = EmptyThenGoodProvider()
+    service = MarketService(db_session, provider=provider, cache=MarketCache())
+    first = await service.get_prices(MarketPriceFilters())
+    await _drain_refreshes(service)
+    assert first.items == []
+
+    await service.get_prices(MarketPriceFilters())
+    await _drain_refreshes(service)
+    result = await service.get_prices(MarketPriceFilters())
+    assert provider.calls == 2
+    assert result.items
 
 
 async def test_cache_prevents_duplicate_provider_calls(

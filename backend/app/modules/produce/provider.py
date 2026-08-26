@@ -8,6 +8,7 @@ end-to-end) and returns **no** buyer interest — buyers are never fabricated
 export companies, an admin portal) implement the same Protocol and are selected in
 ``get_default_provider`` with no change to the rest of the module.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

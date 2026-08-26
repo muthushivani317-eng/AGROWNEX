@@ -41,6 +41,9 @@ class MarketCache:
     def set(self, key: str, value: Any) -> None:
         self._backend.set(key, value)
 
+    def delete(self, key: str) -> None:
+        self._backend.delete(key)
+
     def clear(self) -> None:
         self._backend.clear()
 

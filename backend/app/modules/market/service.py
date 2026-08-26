@@ -240,14 +240,23 @@ class MarketService:
         detached via :func:`asyncio.create_task`.
         """
         async with SessionLocal() as session:
+            key = self.cache.key(query)
             try:
                 service = MarketService(session, provider=self.provider)
-                await service._fetch_and_store(query)
+                records = await service._fetch_and_store(query)
                 await session.commit()
+                # A zero-row response is not fresh market data. Remove the
+                # optimistic in-flight marker so a later manual/app retry can
+                # ask the provider again instead of serving an empty page for
+                # the full cache TTL.
+                if not records:
+                    self.cache.delete(key)
             except MarketDataUnavailableError:
+                self.cache.delete(key)
                 logger.info("market background refresh unavailable for query")
             except Exception:
                 await session.rollback()
+                self.cache.delete(key)
                 logger.exception("market background refresh failed")
 
     async def _fetch_and_store(self, query: PriceQuery) -> list[ProviderPrice]:
