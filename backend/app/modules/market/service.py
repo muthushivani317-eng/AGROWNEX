@@ -15,6 +15,7 @@ from __future__ import annotations
 import asyncio
 import uuid
 from datetime import timedelta
+from enum import StrEnum
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -56,6 +57,17 @@ from app.schemas.response import PaginatedData
 logger = get_logger("market.service")
 
 
+class _RefreshOutcome(StrEnum):
+    """Internal result of one upstream refresh attempt.
+
+    An empty list can be a valid provider response, so callers must not infer
+    provider health from the number of records returned.
+    """
+
+    SUCCESS = "success"
+    UNAVAILABLE = "unavailable"
+
+
 class MarketService:
     def __init__(
         self,
@@ -71,8 +83,9 @@ class MarketService:
         # Strong references to detached background refresh tasks. Without this
         # the event loop only weakly references a bare ``create_task`` result,
         # so the refresh could be garbage-collected mid-flight (see asyncio docs).
-        self._refresh_tasks: set[asyncio.Task[None]] = set()
-        self._refresh_tasks_by_key: dict[str, asyncio.Task[None]] = {}
+        self._refresh_tasks: set[asyncio.Task[_RefreshOutcome]] = set()
+        self._refresh_tasks_by_key: dict[str, asyncio.Task[_RefreshOutcome]] = {}
+        self._refresh_outcomes_by_key: dict[str, _RefreshOutcome] = {}
 
     # ----------------------------------------------------------------- #
     # Current prices
@@ -101,8 +114,10 @@ class MarketService:
             limit=filters.page_size,
             offset=offset,
         )
+        refresh_outcome: _RefreshOutcome | None = None
         if not rows and refresh_started:
-            refresh_task = self._refresh_tasks_by_key.get(self.cache.key(query))
+            key = self.cache.key(query)
+            refresh_task = self._refresh_tasks_by_key.get(key)
             if refresh_task is not None:
                 # Give the just-started background refresh a chance to land real
                 # data before we respond -- but never hold the HTTP response
@@ -135,9 +150,11 @@ class MarketService:
                 # next request (or a manual pull-to-refresh) for this filter
                 # combo benefits once it lands.
                 try:
-                    await asyncio.wait_for(asyncio.shield(refresh_task), timeout=8.5)
+                    refresh_outcome = await asyncio.wait_for(
+                        asyncio.shield(refresh_task), timeout=8.5
+                    )
                 except TimeoutError:
-                    pass
+                    refresh_outcome = _RefreshOutcome.UNAVAILABLE
                 else:
                     rows, total = await self.repo.list_prices(
                         crop=filters.crop,
@@ -148,6 +165,18 @@ class MarketService:
                         limit=filters.page_size,
                         offset=offset,
                     )
+            else:
+                # A very fast provider failure can finish between
+                # ``_ensure_fresh`` returning and this lookup. Its completion
+                # callback preserves the typed outcome after removing the task.
+                refresh_outcome = self._refresh_outcomes_by_key.pop(key, None)
+        elif not rows and total == 0 and self.cache.get(self.cache.key(query)) == "refreshing":
+            # The shared Redis/in-memory cache can contain an in-flight marker
+            # created by another request or process. This service has no local
+            # task/outcome to await, so the provider state is still unknown.
+            # Do not turn that uncertainty into a misleading successful empty
+            # response; verified stored rows above remain available.
+            refresh_outcome = _RefreshOutcome.UNAVAILABLE
         # Mandi publications can arrive after midnight. The "Today" view should
         # remain useful on those days by showing the most recent reported market
         # date instead of incorrectly presenting an empty result.
@@ -168,6 +197,13 @@ class MarketService:
                     limit=filters.page_size,
                     offset=offset,
                 )
+        # No stored verified fallback and the provider attempt failed (or did
+        # not finish within the bounded request wait): surface a retryable
+        # outage instead of misrepresenting the failure as a genuine zero-match
+        # response. A completed successful provider call that returned [] keeps
+        # the normal empty-page semantics.
+        if not rows and refresh_outcome is _RefreshOutcome.UNAVAILABLE:
+            raise MarketDataUnavailableError()
         items = [
             MarketPriceOut.from_row(
                 price, market=loc.market_name, district=loc.district, state=loc.state
@@ -215,21 +251,28 @@ class MarketService:
         key = self.cache.key(query)
         if self.cache.get(key) is not None:
             return False
-        self.cache.set(key, True)
+        self._refresh_outcomes_by_key.pop(key, None)
+        self.cache.set(key, "refreshing")
         task = asyncio.create_task(self._background_refresh(query))
         self._refresh_tasks.add(task)
         self._refresh_tasks_by_key[key] = task
-        task.add_done_callback(
-            lambda completed: (
-                self._refresh_tasks.discard(completed),
+
+        def _record_completion(completed: asyncio.Task[_RefreshOutcome]) -> None:
+            self._refresh_tasks.discard(completed)
+            if self._refresh_tasks_by_key.get(key) is completed:
                 self._refresh_tasks_by_key.pop(key, None)
-                if self._refresh_tasks_by_key.get(key) is completed
-                else None,
-            )
-        )
+            try:
+                self._refresh_outcomes_by_key[key] = completed.result()
+            except (asyncio.CancelledError, Exception):
+                # `_background_refresh` normally translates all provider/runtime
+                # failures. This final guard still fails closed if cancellation
+                # or an unexpected callback boundary escapes it.
+                self._refresh_outcomes_by_key[key] = _RefreshOutcome.UNAVAILABLE
+
+        task.add_done_callback(_record_completion)
         return True
 
-    async def _background_refresh(self, query: PriceQuery) -> None:
+    async def _background_refresh(self, query: PriceQuery) -> _RefreshOutcome:
         """Fetch + store prices for ``query`` on a detached background task.
 
         Runs its own DB session because this task may still be running after the
@@ -251,13 +294,18 @@ class MarketService:
                 # the full cache TTL.
                 if not records:
                     self.cache.delete(key)
+                else:
+                    self.cache.set(key, "fresh")
+                return _RefreshOutcome.SUCCESS
             except MarketDataUnavailableError:
                 self.cache.delete(key)
                 logger.info("market background refresh unavailable for query")
+                return _RefreshOutcome.UNAVAILABLE
             except Exception:
                 await session.rollback()
                 self.cache.delete(key)
                 logger.exception("market background refresh failed")
+                return _RefreshOutcome.UNAVAILABLE
 
     async def _fetch_and_store(self, query: PriceQuery) -> list[ProviderPrice]:
         records = await self.provider.fetch_prices(query)

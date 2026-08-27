@@ -178,13 +178,85 @@ async def test_provider_failure_can_retry_after_background_attempt_settles(
 
     provider = CountingFailingProvider()
     service = MarketService(db_session, provider=provider, cache=MarketCache())
-    await service.get_prices(MarketPriceFilters())
+    with pytest.raises(MarketDataUnavailableError) as error:
+        await service.get_prices(MarketPriceFilters())
+    assert error.value.status_code == 503
+    assert error.value.error_code == "market_data_unavailable"
     await _drain_refreshes(service)
     assert provider.calls == 1
 
-    await service.get_prices(MarketPriceFilters())
+    with pytest.raises(MarketDataUnavailableError):
+        await service.get_prices(MarketPriceFilters())
     await _drain_refreshes(service)
     assert provider.calls == 2
+
+
+async def test_successful_empty_provider_response_is_not_reported_as_outage(
+    db_session, session_factory, monkeypatch
+) -> None:
+    """A verified upstream zero-match response remains a genuine empty result."""
+    monkeypatch.setattr("app.modules.market.service.SessionLocal", session_factory)
+
+    class SuccessfulEmptyProvider:
+        source = "successful-empty"
+
+        async def fetch_prices(self, query: PriceQuery) -> list[ProviderPrice]:
+            return []
+
+    service = MarketService(
+        db_session, provider=SuccessfulEmptyProvider(), cache=MarketCache()
+    )
+
+    result = await service.get_prices(MarketPriceFilters(crop="NoSuchCrop"))
+
+    assert result.items == []
+    assert result.total == 0
+
+
+async def test_shared_inflight_marker_without_local_task_fails_closed(
+    db_session,
+) -> None:
+    """Another request/worker may own the refresh represented by the cache marker."""
+    cache = MarketCache()
+    query = PriceQuery(commodity="Paddy")
+    cache.set(cache.key(query), "refreshing")
+    service = MarketService(
+        db_session, provider=FailingProvider(), cache=cache
+    )
+
+    with pytest.raises(MarketDataUnavailableError):
+        await service.get_prices(MarketPriceFilters(crop="Paddy"))
+
+
+async def test_shared_inflight_marker_still_serves_verified_stored_rows(
+    db_session,
+) -> None:
+    cache = MarketCache()
+    query = PriceQuery(commodity="Paddy")
+    service = MarketService(db_session, provider=FailingProvider(), cache=cache)
+    await service.repo.save_prices(
+        [
+            ProviderPrice(
+                commodity="Paddy",
+                variety="Common",
+                market="Thanjavur",
+                district="Thanjavur",
+                state="Tamil Nadu",
+                minimum_price=1980,
+                maximum_price=2120,
+                modal_price=2050,
+                unit="quintal",
+                price_date=_today(),
+                source="agmarknet",
+            )
+        ]
+    )
+    cache.set(cache.key(query), "refreshing")
+
+    result = await service.get_prices(MarketPriceFilters(crop="Paddy"))
+
+    assert result.total == 1
+    assert result.items[0].verified is True
 
 
 async def test_empty_provider_response_can_retry_after_attempt_settles(

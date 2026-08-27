@@ -14,6 +14,7 @@ change to the service, API or frontend (docs: provider must be replaceable).
 from __future__ import annotations
 
 import asyncio
+import time
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from typing import Any, Protocol
@@ -196,6 +197,7 @@ class AgmarknetProvider:
         last_error: Exception | None = None
 
         for attempt in range(1, self.max_retries + 1):
+            started = time.perf_counter()
             try:
                 client = get_http_client()
                 response = await client.get(url, params=params, timeout=self.timeout)
@@ -211,18 +213,76 @@ class AgmarknetProvider:
                     # (2026-08 pre-release audit) — one bad Agmarknet response
                     # could abort every other farmer's favourited crop/market
                     # still waiting in that same batch.
-                    logger.warning("Agmarknet returned a non-JSON response")
+                    logger.warning(
+                        "provider=agmarknet attempt=%s outcome=failed "
+                        "category=invalid_payload status=%s latency_ms=%s",
+                        attempt,
+                        response.status_code,
+                        round((time.perf_counter() - started) * 1000),
+                    )
                     last_error = exc
                 else:
-                    records = payload.get("records", []) if isinstance(payload, dict) else []
-                    return [
-                        price
-                        for record in records
-                        if (price := parse_agmarknet_record(record)) is not None
-                    ]
+                    records = payload.get("records") if isinstance(payload, dict) else None
+                    if not isinstance(records, list):
+                        logger.warning(
+                            "provider=agmarknet attempt=%s outcome=failed "
+                            "category=schema_error status=%s latency_ms=%s",
+                            attempt,
+                            response.status_code,
+                            round((time.perf_counter() - started) * 1000),
+                        )
+                        last_error = ValueError("Agmarknet records schema is invalid")
+                        prices = None
+                    else:
+                        prices = [
+                            price
+                            for record in records
+                            if isinstance(record, dict)
+                            and (price := parse_agmarknet_record(record)) is not None
+                        ]
+                        if records and not prices:
+                            logger.warning(
+                                "provider=agmarknet attempt=%s outcome=failed "
+                                "category=schema_error status=%s latency_ms=%s",
+                                attempt,
+                                response.status_code,
+                                round((time.perf_counter() - started) * 1000),
+                            )
+                            last_error = ValueError(
+                                "Agmarknet records contained no valid market prices"
+                            )
+                            prices = None
+                    if prices is None:
+                        # Retry schema failures just like malformed JSON; a
+                        # transient upstream/proxy response must not become a
+                        # genuine zero-match result.
+                        pass
+                    else:
+                        logger.info(
+                            "provider=agmarknet attempt=%s outcome=success "
+                            "category=success status=%s latency_ms=%s records=%s",
+                            attempt,
+                            response.status_code,
+                            round((time.perf_counter() - started) * 1000),
+                            len(prices),
+                        )
+                        return prices
             except (httpx.TransportError, httpx.TimeoutException) as exc:
                 last_error = exc
+                logger.warning(
+                    "provider=agmarknet attempt=%s outcome=failed "
+                    "category=transport_error status=none latency_ms=%s",
+                    attempt,
+                    round((time.perf_counter() - started) * 1000),
+                )
             except httpx.HTTPStatusError as exc:
+                logger.warning(
+                    "provider=agmarknet attempt=%s outcome=failed "
+                    "category=http_status status=%s latency_ms=%s",
+                    attempt,
+                    exc.response.status_code,
+                    round((time.perf_counter() - started) * 1000),
+                )
                 if exc.response.status_code < 500:
                     # Client error (bad key/params) — no point retrying.
                     raise MarketDataUnavailableError() from exc

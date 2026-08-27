@@ -48,6 +48,7 @@ guards (`Settings.validate_production`) hard-fail on the starred ones.
 | `AI_DAILY_DISEASE_QUOTA` / `AI_DAILY_CHAT_QUOTA` | `30` / `100` | tune |
 | `ALLOW_MOCK_PROVIDERS` | `false` | keep `false` in prod |
 | `GEMINI_API_KEY` | empty → mock provider | yes (else runs in mock mode) |
+| `DATA_GOV_API_KEY` | empty → market provider unavailable | yes (live mandi prices) |
 | `GEMINI_VISION_MODEL` / `GEMINI_CHAT_MODEL` | `gemini-2.5-pro` / `gemini-2.5-flash` | optional |
 | `COST_*_INR_PER_1K` | published-price approximations | set to real contract |
 | `FIREBASE_PROJECT_ID` / `FIREBASE_CREDENTIALS_JSON` | empty | yes (auth) |
@@ -92,7 +93,30 @@ Operator actions: confirm `GEMINI_API_KEY`/quota with the provider, watch
 check Sentry for `ai_unavailable` spikes. Farmers see an honest "try again"
 message in Tamil; their photos are never lost (client-side retry queue).
 
-## 7. Tests / CI
+## 7. "What to do when market prices are unavailable"
+
+`GET /api/v1/market` returns `503` with error code
+`market_data_unavailable` only when the live provider failed and no verified
+stored price matches the request. A successful provider response with zero
+matching records remains `200` with an empty list. Previously verified database
+prices continue to be served and are labelled stale when their publication date
+is old.
+
+Operator actions:
+
+1. Confirm `DATA_GOV_API_KEY` is present in the API service. The worker also
+   needs the same valid key for scheduled market refresh jobs.
+2. Inspect `market.provider` logs for `category`, upstream HTTP `status`,
+   `latency_ms`, and attempt number. Logs deliberately exclude the API key,
+   query payload, response body, and farmer identifiers.
+3. A `401`, `403`, or `429` normally indicates an invalid/revoked key, provider
+   permission, quota, or rate-limit problem. Transport errors and `5xx` statuses
+   can be retried after the upstream service recovers.
+4. After changing the key, redeploy the API and worker, then call a known crop
+   and district query. Confirm a `200` response contains verified records before
+   closing the incident.
+
+## 8. Tests / CI
 
 ```bash
 pytest backend/tests -q          # full suite

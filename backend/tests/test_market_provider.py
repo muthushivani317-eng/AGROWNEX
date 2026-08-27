@@ -1,11 +1,15 @@
 """Unit tests for market providers (no network — parsing + mock + selection)."""
 from __future__ import annotations
 
+import logging
 from datetime import date
 
+import httpx
 import pytest
 from app.modules.market.constants import PriceUnit
+from app.modules.market.exceptions import MarketDataUnavailableError
 from app.modules.market.provider import (
+    AgmarknetProvider,
     MockMarketProvider,
     PriceQuery,
     get_default_provider,
@@ -110,3 +114,78 @@ def test_default_provider_is_unavailable_without_key(monkeypatch: pytest.MonkeyP
     # Missing credentials must never synthesize farmer-facing prices.
     provider = get_default_provider()
     assert provider.source == "unavailable"
+
+
+async def test_agmarknet_failure_logs_sanitized_attempt_metadata(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    secret = "sensitive-data-gov-api-key"
+    raw_payload = "upstream-private-response"
+
+    class FailingClient:
+        async def get(self, url, **_request_options):
+            request = httpx.Request("GET", url)
+            return httpx.Response(429, request=request, text=raw_payload)
+
+    monkeypatch.setattr(
+        "app.modules.market.provider.get_http_client", lambda: FailingClient()
+    )
+    provider = AgmarknetProvider(api_key=secret, max_retries=1)
+
+    with caplog.at_level(logging.INFO), pytest.raises(MarketDataUnavailableError):
+        await provider.fetch_prices(PriceQuery(commodity="Paddy"))
+
+    rendered = caplog.text
+    assert "provider=agmarknet" in rendered
+    assert "attempt=1" in rendered
+    assert "category=http_status" in rendered
+    assert "status=429" in rendered
+    assert "latency_ms=" in rendered
+    assert secret not in rendered
+    assert raw_payload not in rendered
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {},
+        {"records": {"commodity": "Paddy"}},
+        {"records": [{"unexpected": "row"}]},
+    ],
+    ids=["missing-records", "records-not-list", "all-records-invalid"],
+)
+async def test_agmarknet_schema_failures_are_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    payload: object,
+) -> None:
+    class SchemaFailureClient:
+        async def get(self, url, **_request_options):
+            request = httpx.Request("GET", url)
+            return httpx.Response(200, request=request, json=payload)
+
+    monkeypatch.setattr(
+        "app.modules.market.provider.get_http_client", lambda: SchemaFailureClient()
+    )
+    provider = AgmarknetProvider(api_key="configured", max_retries=1)
+
+    with caplog.at_level(logging.INFO), pytest.raises(MarketDataUnavailableError):
+        await provider.fetch_prices(PriceQuery(commodity="Paddy"))
+
+    assert "category=schema_error" in caplog.text
+
+
+async def test_agmarknet_explicit_empty_records_is_successful_empty(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class EmptyClient:
+        async def get(self, url, **_request_options):
+            request = httpx.Request("GET", url)
+            return httpx.Response(200, request=request, json={"records": []})
+
+    monkeypatch.setattr(
+        "app.modules.market.provider.get_http_client", lambda: EmptyClient()
+    )
+    provider = AgmarknetProvider(api_key="configured", max_retries=1)
+
+    assert await provider.fetch_prices(PriceQuery(commodity="NoSuchCrop")) == []
