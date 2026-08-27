@@ -12,6 +12,7 @@ from app.modules.weather.service import WeatherService
 
 from .engine import RiskInputs, RiskOutcome, evaluate_risk
 from .models import DiseaseRiskAlert
+from .regions import resolve_rule_region
 from .registry import RulePackRegistry, load_active_registry
 from .repository import DiseaseRiskRepository
 
@@ -26,10 +27,9 @@ from .repository import DiseaseRiskRepository
 # epidemiological thresholds (RulePack.source_references, .reviewer_id,
 # .approval_status; see schemas.py), and no real content existed yet. That is
 # still true for anything not backed by a real citation -- this codebase must
-# not fabricate safety-critical agricultural content (docs/CLAUDE.md). With
-# the directory currently empty, behavior is unchanged: evaluate() still
-# returns NO_VERIFIED_RULE_AVAILABLE for every crop until real rule-pack
-# entries are added under data/rule_packs/ (see its README).
+# not fabricate safety-critical agricultural content (docs/CLAUDE.md). Crops
+# and regions without a currently executable pack continue to return
+# NO_VERIFIED_RULE_AVAILABLE; see data/rule_packs/README.md.
 ACTIVE_RULE_REGISTRY = load_active_registry()
 
 
@@ -62,8 +62,12 @@ class DiseaseRiskService:
         farm = await self._farm(user, farm_id)
         now = datetime.now(UTC)
         crop = (farm.crop or "unknown").strip().lower()
-        region = farm.location.district if farm.location else None
-        pack = self.registry.find(crop_id=crop, region=region, season=None)
+        region = resolve_rule_region(farm.location.district if farm.location else None)
+        pack = (
+            self.registry.find(crop_id=crop, region=region, season=None)
+            if region is not None
+            else None
+        )
         stage = None
         stage_confirmed = False
         weather_values: dict[str, float] = {}
