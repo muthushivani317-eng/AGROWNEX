@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 import httpx
 import pytest
 from app.core.database import get_session
@@ -92,6 +94,45 @@ async def test_tamil_nadu_district_resolves_state_scoped_paddy_rule(db_session) 
     assert result.status != "NO_VERIFIED_RULE_AVAILABLE"
     assert result.rule_pack_id is not None
     assert result.rule_verification_status == "SOURCED_PUBLIC_REFERENCE"
+
+
+@pytest.mark.asyncio
+async def test_unconfirmed_stage_does_not_hide_available_weather(db_session) -> None:
+    owner = User(firebase_uid="risk-weather-owner", status="active")
+    db_session.add(owner)
+    await db_session.flush()
+    farm = Farm(user_id=owner.id, name="Weather-backed paddy field", crop="paddy")
+    farm.location = FarmLocation(district="Thanjavur", source="manual")
+    db_session.add(farm)
+    await db_session.flush()
+
+    class AvailableWeather:
+        called = False
+
+        async def get_by_farm(self, user, farm_id):
+            self.called = True
+            assert user.id == owner.id
+            assert farm_id == farm.id
+            return SimpleNamespace(
+                source="open-meteo",
+                current=SimpleNamespace(
+                    temperature_c=31.0,
+                    humidity_pct=78.0,
+                    precipitation_mm=2.0,
+                    wind_speed_kmh=8.0,
+                    time="2026-08-27T17:30:00Z",
+                ),
+            )
+
+    weather = AvailableWeather()
+    result = await DiseaseRiskService(db_session, weather=weather).evaluate(
+        owner, farm.id, None, "risk-weather-without-stage-0001"
+    )
+
+    assert weather.called is True
+    assert result.status == "STAGE_UNCONFIRMED"
+    assert result.weather_source == "live"
+    assert result.weather_observed_at is not None
 
 
 @pytest.mark.asyncio

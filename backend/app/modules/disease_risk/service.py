@@ -83,26 +83,28 @@ class DiseaseRiskService:
             stage_confirmed = bool(
                 state and state.state in {"confirmed", "corrected", "completed"} and stage
             )
-            if stage_confirmed:
-                try:
-                    bundle = await self.weather.get_by_farm(user, farm_id)
-                    current = bundle.current
-                    weather_values = {
-                        k: v
-                        for k, v in {
-                            "temperature_c": current.temperature_c,
-                            "humidity_pct": current.humidity_pct,
-                            "precipitation_mm": current.precipitation_mm,
-                            "wind_speed_kmh": current.wind_speed_kmh,
-                        }.items()
-                        if v is not None
-                    }
-                    weather_source = (
-                        bundle.source if bundle.source in {"live", "cached"} else "live"
-                    )
-                    observed_at = datetime.fromisoformat(current.time.replace("Z", "+00:00"))
-                except Exception:
-                    weather_source = "missing"
+            # Weather is independent evidence. Collect it even when the farmer
+            # has not confirmed a crop stage, while evaluate_risk continues to
+            # fail closed at STAGE_UNCONFIRMED before issuing any risk alert.
+            try:
+                bundle = await self.weather.get_by_farm(user, farm_id)
+                current = bundle.current
+                weather_values = {
+                    k: v
+                    for k, v in {
+                        "temperature_c": current.temperature_c,
+                        "humidity_pct": current.humidity_pct,
+                        "precipitation_mm": current.precipitation_mm,
+                        "wind_speed_kmh": current.wind_speed_kmh,
+                    }.items()
+                    if v is not None
+                }
+                weather_source = (
+                    bundle.source if bundle.source in {"live", "cached"} else "live"
+                )
+                observed_at = datetime.fromisoformat(current.time.replace("Z", "+00:00"))
+            except Exception:
+                weather_source = "missing"
         result = evaluate_risk(
             pack,
             RiskInputs(
