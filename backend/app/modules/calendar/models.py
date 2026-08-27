@@ -59,7 +59,9 @@ class CalendarEvent(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
 
     crop: Mapped[str | None] = mapped_column(String(80), index=True)
     season: Mapped[str | None] = mapped_column(String(20))
-    growth_stage: Mapped[str] = mapped_column(String(20), nullable=False)
+    # VerifiedStage.code permits 40 characters. Keep the persistence contract
+    # aligned so valid schedule stages are never rejected by PostgreSQL.
+    growth_stage: Mapped[str] = mapped_column(String(40), nullable=False)
 
     priority: Mapped[str] = mapped_column(String(10), default=Priority.MEDIUM.value, nullable=False)
     status: Mapped[str] = mapped_column(

@@ -1,4 +1,5 @@
 from app.api.v1.router import api_router
+from app.modules.calendar.models import CalendarEvent
 from app.modules.calendar.registry import ACTIVE_CROP_STAGE_REGISTRY
 from fastapi import FastAPI
 
@@ -37,3 +38,8 @@ def test_production_registry_contains_no_claimed_verified_agronomy() -> None:
     # this assertion updates to match, rather than staying at 0 forever.
     assert ACTIVE_CROP_STAGE_REGISTRY.active_count == 12
     assert ACTIVE_CROP_STAGE_REGISTRY.unverified_count == 0
+
+
+def test_calendar_growth_stage_column_accepts_verified_registry_codes() -> None:
+    """The database contract must match VerifiedStage.code(max_length=40)."""
+    assert CalendarEvent.__table__.c.growth_stage.type.length >= 40
