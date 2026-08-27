@@ -21,7 +21,9 @@ class DiseaseRiskAlert(UUIDMixin, TimestampMixin, Base):
     disease_key: Mapped[str | None] = mapped_column(String(100))
     status: Mapped[str] = mapped_column(String(50), index=True, nullable=False)
     risk_level: Mapped[str | None] = mapped_column(String(20))
-    confidence: Mapped[str] = mapped_column(String(30), nullable=False)
+    # Qualitative evidence labels are intentionally descriptive; the longest
+    # released value (``sourced_public_reference_evidence``) exceeds 30 chars.
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False)
     weather_factors: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
     weather_source: Mapped[str] = mapped_column(String(20), nullable=False)
     weather_observed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

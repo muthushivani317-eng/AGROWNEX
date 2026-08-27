@@ -4,6 +4,7 @@ from app.core.database import get_session
 from app.main import app
 from app.modules.auth.dependencies import get_current_user
 from app.modules.auth.models import User
+from app.modules.disease_risk.models import DiseaseRiskAlert
 from app.modules.disease_risk.service import DiseaseRiskService
 from app.modules.farms.models import Farm, FarmLocation
 
@@ -15,6 +16,15 @@ def _app_for(db_session, user):
     app.dependency_overrides[get_session] = session_override
     app.dependency_overrides[get_current_user] = lambda: user
     return app
+
+
+def test_confidence_column_accepts_released_evidence_labels() -> None:
+    column = DiseaseRiskAlert.__table__.c.confidence
+    released_label = "sourced_public_reference_evidence"
+
+    assert len(released_label) > 30
+    assert column.type.length is not None
+    assert column.type.length >= len(released_label)
 
 
 def test_disease_risk_router_is_registered_with_required_workflow() -> None:
