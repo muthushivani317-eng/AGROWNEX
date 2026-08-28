@@ -8,6 +8,8 @@ lifecycle so verified harvest information can be planned for procurement.
 from __future__ import annotations
 
 import os
+import re
+import unicodedata
 from enum import StrEnum
 
 DEFAULT_LANGUAGE = "ta"
@@ -32,6 +34,80 @@ class ProduceUnit(StrEnum):
     QUINTAL = "quintal"
     TONNE = "tonne"
     BAG = "bag"  # non-standard weight → not convertible for value estimates
+
+
+class ProduceCategory(StrEnum):
+    GRAINS = "grains"
+    PULSES = "pulses"
+    VEGETABLES = "vegetables"
+    FRUITS = "fruits"
+    SPICES = "spices"
+    PLANTATION_CROPS = "plantation_crops"
+    FLOWERS = "flowers"
+    OTHER_PRODUCE = "other_produce"
+
+
+class ProduceAvailabilityType(StrEnum):
+    AVAILABLE_NOW = "available_now"
+    UPCOMING_HARVEST = "upcoming_harvest"
+
+
+# Public API contract (shared verbatim with mobile): categories are
+# grains|pulses|vegetables|fruits|spices|plantation_crops|flowers|other_produce;
+# availability is available_now|upcoming_harvest.
+PRODUCE_TAXONOMY: dict[str, str] = {
+    "paddy": ProduceCategory.GRAINS,
+    "rice": ProduceCategory.GRAINS,
+    "maize": ProduceCategory.GRAINS,
+    "wheat": ProduceCategory.GRAINS,
+    "ragi": ProduceCategory.GRAINS,
+    "millet": ProduceCategory.GRAINS,
+    "sorghum": ProduceCategory.GRAINS,
+    "redgram": ProduceCategory.PULSES,
+    "blackgram": ProduceCategory.PULSES,
+    "greengram": ProduceCategory.PULSES,
+    "chickpea": ProduceCategory.PULSES,
+    "groundnut": ProduceCategory.PULSES,
+    "tomato": ProduceCategory.VEGETABLES,
+    "brinjal": ProduceCategory.VEGETABLES,
+    "onion": ProduceCategory.VEGETABLES,
+    "potato": ProduceCategory.VEGETABLES,
+    "okra": ProduceCategory.VEGETABLES,
+    "moringa": ProduceCategory.VEGETABLES,
+    "banana": ProduceCategory.FRUITS,
+    "mango": ProduceCategory.FRUITS,
+    "guava": ProduceCategory.FRUITS,
+    "papaya": ProduceCategory.FRUITS,
+    "grapes": ProduceCategory.FRUITS,
+    "chilli": ProduceCategory.SPICES,
+    "turmeric": ProduceCategory.SPICES,
+    "pepper": ProduceCategory.SPICES,
+    "coriander": ProduceCategory.SPICES,
+    "coconut": ProduceCategory.PLANTATION_CROPS,
+    "sugarcane": ProduceCategory.PLANTATION_CROPS,
+    "tea": ProduceCategory.PLANTATION_CROPS,
+    "coffee": ProduceCategory.PLANTATION_CROPS,
+    "jasmine": ProduceCategory.FLOWERS,
+    "marigold": ProduceCategory.FLOWERS,
+    "rose": ProduceCategory.FLOWERS,
+}
+
+_PROHIBITED_TERMS = {
+    "seed", "seeds", "pesticide", "insecticide", "herbicide", "fungicide",
+    "fertilizer", "fertiliser", "urea", "agrochemical", "medicine", "veterinary",
+    "livestock", "cattle", "goat", "goats", "poultry", "tractor", "machinery", "equipment",
+    "விதை", "பூச்சிக்கொல்லி", "உரம்", "மருந்து", "கால்நடை", "இயந்திரம்", "டிராக்டர்",
+}
+
+
+def normalize_product_name(value: str) -> str:
+    normalized = unicodedata.normalize("NFKC", value).casefold().strip()
+    return " ".join(re.sub(r"[^\w\u0b80-\u0bff]+", " ", normalized).split())
+
+
+def prohibited_product_term(value: str) -> str | None:
+    tokens = set(normalize_product_name(value).split())
+    return next((term for term in _PROHIBITED_TERMS if term in tokens), None)
 
 
 # Kilograms per unit for the convertible units (bag is intentionally absent).

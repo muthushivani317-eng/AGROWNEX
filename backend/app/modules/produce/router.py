@@ -20,7 +20,7 @@ import uuid
 
 from fastapi import APIRouter, Query, status
 
-from app.modules.produce.constants import ProduceStatus
+from app.modules.produce.constants import ProduceAvailabilityType, ProduceCategory, ProduceStatus
 from app.modules.produce.dependencies import CurrentUser, ProduceServiceDep
 from app.modules.produce.schemas import (
     FarmerOfferDecisionIn,
@@ -56,6 +56,8 @@ async def list_produce(
     status_filter: ProduceStatus | None = Query(None, alias="status"),
     crop: str | None = Query(None, max_length=80),
     farm_id: uuid.UUID | None = Query(None),
+    category: ProduceCategory | None = Query(None),
+    availability_type: ProduceAvailabilityType | None = Query(None),
     search: str | None = Query(None, max_length=120),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -65,6 +67,8 @@ async def list_produce(
         status=status_filter,
         crop=crop,
         farm_id=farm_id,
+        category=category,
+        availability_type=availability_type,
         search=search,
         page=page,
         page_size=page_size,

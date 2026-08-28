@@ -58,6 +58,7 @@ from app.modules.admin.schemas import (
 )
 from app.modules.admin.web_security import InvalidAdminOriginError, require_admin_origin
 from app.modules.auth.dependencies import CurrentUser
+from app.modules.produce.constants import ProduceAvailabilityType, ProduceCategory
 from app.schemas.response import PaginatedData, SuccessResponse, success
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -334,6 +335,8 @@ async def get_procurement(
     village: str | None = Query(None),
     district: str | None = Query(None),
     search: str | None = Query(None),
+    category: ProduceCategory | None = Query(None),
+    availability_type: ProduceAvailabilityType | None = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
 ):
@@ -344,6 +347,8 @@ async def get_procurement(
         village=village,
         district=district,
         search=search,
+        category=category.value if category else None,
+        availability_type=availability_type.value if availability_type else None,
         page=page,
         page_size=page_size,
     )

@@ -218,6 +218,8 @@ class ProcurementRowOut(BaseModel):
     listing_ref: str
     farmer_ref: str
     crop: str | None
+    product_category: str
+    availability_type: str
     variety: str | None
     quantity: float
     unit: str
@@ -243,6 +245,12 @@ class ProcurementRowOut(BaseModel):
     transport_cost: float | None = None
     commission_rate: float | None = None
     negotiation_notes: str | None = None
+    packaging: str | None = None
+    asking_price: Decimal | None = None
+    price_unit: str | None = None
+    negotiable: bool = False
+    pickup_available: bool = False
+    pickup_location: str | None = None
 
     @classmethod
     def from_item(cls, item: dict) -> ProcurementRowOut:
@@ -253,6 +261,8 @@ class ProcurementRowOut(BaseModel):
             listing_ref=row.listing_ref,
             farmer_ref=row.farmer_ref,
             crop=row.crop,
+            product_category=row.product_category,
+            availability_type=row.availability_type,
             variety=row.variety,
             quantity=row.quantity,
             unit=row.unit,
@@ -278,6 +288,12 @@ class ProcurementRowOut(BaseModel):
             transport_cost=getattr(case, "transport_cost", None),
             commission_rate=getattr(case, "commission_rate", None),
             negotiation_notes=getattr(case, "negotiation_notes", None),
+            packaging=row.packaging,
+            asking_price=row.asking_price,
+            price_unit=row.price_unit,
+            negotiable=row.negotiable,
+            pickup_available=row.pickup_available,
+            pickup_location=row.pickup_location,
         )
 
 

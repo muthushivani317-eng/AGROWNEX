@@ -24,8 +24,11 @@ from app.modules.farms.repositories import FarmRepository
 from app.modules.market.repository import MarketRepository
 from app.modules.produce.constants import (
     FARMER_SETTABLE_STATUSES,
+    PRODUCE_TAXONOMY,
     ProcurementChannel,
     ProduceStatus,
+    normalize_product_name,
+    prohibited_product_term,
 )
 from app.modules.produce.engine import (
     OfferFacts,
@@ -163,6 +166,13 @@ class ProduceService:
         if harvest_date < self._now_date():
             raise InvalidProduceError("Expected harvest date cannot be in the past.")
 
+    @staticmethod
+    def _validate_product_name(name: str) -> str:
+        clean = name.strip()
+        if prohibited_product_term(clean):
+            raise InvalidProduceError("Only agricultural produce can be listed.")
+        return clean
+
     async def _require_farm(self, user: User, farm_id: uuid.UUID):
         farm = await self.farms.get_for_user(farm_id, user.id)
         if farm is None:
@@ -199,8 +209,7 @@ class ProduceService:
             district=location.district,
         )
 
-    @staticmethod
-    def _reference_from_snapshot(offer: ProduceOffer) -> PriceReference | None:
+    def _reference_from_snapshot(self, offer: ProduceOffer) -> PriceReference | None:
         """Rebuild the frozen snapshot for reads (no re-query, stays faithful)."""
         if offer.current_market_price_snapshot is None or offer.market_price_unit is None:
             return None
@@ -214,7 +223,7 @@ class ProduceService:
             else offer.current_market_price_snapshot,
             unit=offer.market_price_unit,
             source=offer.market_price_source or "market",
-            price_date=offer.market_price_date or offer.expected_harvest_date,
+            price_date=offer.market_price_date or offer.expected_harvest_date or self._now_date(),
             district=offer.district,
         )
 
@@ -265,27 +274,22 @@ class ProduceService:
     # Create
     # ----------------------------------------------------------------- #
     async def create_offer(self, user: User, data: ProduceOfferCreate) -> ProduceOffer:
-        self._validate_harvest_date(data.expected_harvest_date)
+        if data.expected_harvest_date is not None:
+            self._validate_harvest_date(data.expected_harvest_date)
         farm = await self._require_farm(user, data.farm_id)
 
-        district = data.district or (farm.location.district if farm.location else None)
-        block = data.block or (farm.location.block if farm.location else None)
-        village = data.village or (farm.location.village if farm.location else None)
-        latitude = (
-            data.latitude
-            if data.latitude is not None
-            else (farm.location.latitude if farm.location else None)
-        )
-        longitude = (
-            data.longitude
-            if data.longitude is not None
-            else (farm.location.longitude if farm.location else None)
-        )
+        district = farm.location.district if farm.location else None
+        block = farm.location.block if farm.location else None
+        village = farm.location.village if farm.location else None
+        latitude = farm.location.latitude if farm.location else None
+        longitude = farm.location.longitude if farm.location else None
 
         offer = ProduceOffer(
             user_id=user.id,
             farm_id=farm.id,
-            crop_name=data.crop_name,
+            crop_name=self._validate_product_name(data.crop_name),
+            product_category=data.category.value,
+            availability_type=data.availability_type.value,
             variety=data.variety,
             quantity=data.quantity,
             unit=data.unit.value,
@@ -299,6 +303,11 @@ class ProduceService:
             expected_harvest_date=data.expected_harvest_date,
             expected_grade=data.expected_grade.value if data.expected_grade else None,
             asking_price=data.asking_price,
+            packaging=data.packaging,
+            price_unit=data.price_unit,
+            negotiable=data.negotiable,
+            pickup_available=data.pickup_available,
+            pickup_location=data.pickup_location,
             currency=data.currency,
             available_from=data.available_from,
             available_until=data.available_until,
@@ -375,6 +384,10 @@ class ProduceService:
             status=filters.status.value if filters.status else None,
             crop=filters.crop,
             farm_id=filters.farm_id,
+            category=filters.category.value if filters.category else None,
+            availability_type=(
+                filters.availability_type.value if filters.availability_type else None
+            ),
             search=filters.search,
             limit=filters.page_size,
             offset=offset,
@@ -463,6 +476,34 @@ class ProduceService:
         offer = await self._require_offer(user, offer_id)
         fields = data.model_dump(exclude_unset=True)
 
+        product_name = fields.pop("product_name", None)
+        if product_name is not None:
+            fields["crop_name"] = self._validate_product_name(product_name)
+        elif fields.get("crop_name") is not None:
+            fields["crop_name"] = self._validate_product_name(fields["crop_name"])
+        for protected in {"district", "block", "village", "latitude", "longitude"}:
+            fields.pop(protected, None)
+        if "category" in fields and fields["category"] is not None:
+            fields["product_category"] = fields.pop("category")
+        if fields.get("availability_type") is not None:
+            fields["availability_type"] = fields["availability_type"].value
+            if fields["availability_type"] == "available_now":
+                fields["expected_harvest_date"] = None
+
+        next_availability = fields.get("availability_type", offer.availability_type)
+        next_harvest = fields.get("expected_harvest_date", offer.expected_harvest_date)
+        if next_availability == "upcoming_harvest" and next_harvest is None:
+            raise InvalidProduceError("Upcoming harvest listings require an expected harvest date.")
+        next_name = fields.get("crop_name", offer.crop_name)
+        canonical = PRODUCE_TAXONOMY.get(normalize_product_name(next_name))
+        next_category = fields.get("product_category", offer.product_category)
+        next_category = next_category.value if hasattr(next_category, "value") else next_category
+        if canonical is not None and next_category != canonical:
+            raise InvalidProduceError("Category does not match the server produce taxonomy.")
+        if canonical is None:
+            fields["product_category"] = "other_produce"
+            fields["status"] = ProduceStatus.DRAFT
+
         if "expected_harvest_date" in fields and fields["expected_harvest_date"]:
             self._validate_harvest_date(fields["expected_harvest_date"])
 
@@ -474,7 +515,8 @@ class ProduceService:
         crop_or_district_changed = False
 
         for key, value in fields.items():
-            if key in {"unit", "expected_grade", "quantity_provenance"} and value is not None:
+            enum_fields = {"unit", "expected_grade", "quantity_provenance", "product_category"}
+            if key in enum_fields and value is not None:
                 value = value.value if hasattr(value, "value") else value
             if key in {"crop_name", "district"} and value != getattr(offer, key):
                 crop_or_district_changed = True
@@ -515,7 +557,13 @@ class ProduceService:
         self, user: User, offer_id: uuid.UUID, image: ProduceImageIn
     ) -> tuple[ProduceOffer, OfferImage]:
         offer = await self._require_offer(user, offer_id)
+        # Serialize additions for this listing before enforcing the six-image
+        # limit. Without this parent-row lock, concurrent requests could both
+        # observe the same count and insert a seventh image.
+        await self.repo.lock_offer_for_image_update(offer.id)
         order = await self.repo.next_image_order(offer.id)
+        if order >= 6:
+            raise InvalidProduceError("A produce listing can contain at most 6 images.")
         entity = await self._attach_image(user, offer, image, order=order)
         await self.session.flush()
         await self.session.refresh(offer)

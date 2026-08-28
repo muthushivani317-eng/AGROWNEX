@@ -11,6 +11,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -42,6 +43,8 @@ class ProcurementRow:
     farmer_ref: str
     user_id: uuid.UUID
     crop: str | None
+    product_category: str
+    availability_type: str
     variety: str | None
     quantity: float
     unit: str
@@ -57,6 +60,12 @@ class ProcurementRow:
     available_quantity: float | None
     quantity_provenance: str | None
     quality_notes: str | None
+    packaging: str | None
+    asking_price: Decimal | None
+    price_unit: str | None
+    negotiable: bool
+    pickup_available: bool
+    pickup_location: str | None
 
 
 @dataclass

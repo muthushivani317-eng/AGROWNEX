@@ -71,6 +71,8 @@ class ProduceRepository:
         status: str | None,
         crop: str | None,
         farm_id: uuid.UUID | None,
+        category: str | None,
+        availability_type: str | None,
         statuses: tuple[str, ...] | None,
         harvest_from: date | None,
         search: str | None,
@@ -84,6 +86,10 @@ class ProduceRepository:
             stmt = stmt.where(func.lower(ProduceOffer.crop_name).like(f"%{crop.lower()}%"))
         if farm_id:
             stmt = stmt.where(ProduceOffer.farm_id == farm_id)
+        if category:
+            stmt = stmt.where(ProduceOffer.product_category == category)
+        if availability_type:
+            stmt = stmt.where(ProduceOffer.availability_type == availability_type)
         if harvest_from is not None:
             stmt = stmt.where(ProduceOffer.expected_harvest_date >= harvest_from)
         if search:
@@ -103,6 +109,8 @@ class ProduceRepository:
         status: str | None = None,
         crop: str | None = None,
         farm_id: uuid.UUID | None = None,
+        category: str | None = None,
+        availability_type: str | None = None,
         statuses: tuple[str, ...] | None = None,
         harvest_from: date | None = None,
         search: str | None = None,
@@ -115,6 +123,8 @@ class ProduceRepository:
             status=status,
             crop=crop,
             farm_id=farm_id,
+            category=category,
+            availability_type=availability_type,
             statuses=statuses,
             harvest_from=harvest_from,
             search=search,
@@ -165,6 +175,20 @@ class ProduceRepository:
     # ----------------------------------------------------------------- #
     # Images
     # ----------------------------------------------------------------- #
+    async def lock_offer_for_image_update(self, offer_id: uuid.UUID) -> None:
+        """Serialize image-count changes for one listing on PostgreSQL.
+
+        Locking the parent row makes the count-and-insert limit atomic without
+        requiring a database-specific constraint on the child-row count.
+        SQLite ignores ``FOR UPDATE``, which is sufficient for its single-writer
+        test/runtime semantics.
+        """
+        await self.session.execute(
+            select(ProduceOffer.id)
+            .where(ProduceOffer.id == offer_id)
+            .with_for_update()
+        )
+
     async def add_image(self, image: OfferImage) -> OfferImage:
         self.session.add(image)
         await self.session.flush()

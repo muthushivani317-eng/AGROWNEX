@@ -40,7 +40,7 @@ class OfferFacts:
 
     quantity: float
     unit: str
-    expected_harvest_date: date
+    expected_harvest_date: date | None
     asking_price: float | None = None
 
 
@@ -48,8 +48,8 @@ class OfferFacts:
 class ProcurementInsight:
     """Deterministic, explainable output of the engine."""
 
-    days_to_harvest: int
-    harvest_window: str
+    days_to_harvest: int | None
+    harvest_window: str | None
     quantity_kg: float | None
     estimated_market_value: float | None
     estimated_asking_value: float | None
@@ -96,7 +96,11 @@ def compute_insight(
     today: date,
 ) -> ProcurementInsight:
     """Enrich an offer with procurement intelligence (pure)."""
-    days = days_between(offer.expected_harvest_date, today)
+    days = (
+        days_between(offer.expected_harvest_date, today)
+        if offer.expected_harvest_date is not None
+        else None
+    )
     quantity_kg = to_kilograms(offer.quantity, offer.unit)
 
     # Market value only when a verified price reference is supplied.
@@ -111,7 +115,7 @@ def compute_insight(
 
     return ProcurementInsight(
         days_to_harvest=days,
-        harvest_window=classify_window(days),
+        harvest_window=classify_window(days) if days is not None else None,
         quantity_kg=quantity_kg,
         estimated_market_value=estimated_market_value,
         estimated_asking_value=estimated_asking_value,

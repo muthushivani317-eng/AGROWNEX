@@ -18,6 +18,7 @@ from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -127,6 +128,24 @@ class AdminService:
 
     def _now_dt(self) -> datetime:
         return self._now or datetime.now(UTC)
+
+    def _procurement_override(self, ctx: AdminContext) -> bool:
+        return ctx.admin.role in {AdminRole.OWNER.value, AdminRole.SUPER_ADMIN.value}
+
+    async def _require_procurement_scope(
+        self, ctx: AdminContext, offer_id: uuid.UUID, *, allow_claim: bool = False
+    ) -> ProcurementCase | None:
+        self._require(ctx, AdminPermission.MANAGE_PROCUREMENT)
+        case = await self.repo.procurement_case_of(offer_id)
+        if self._procurement_override(ctx):
+            return case
+        if case is None or case.assigned_admin_id is None:
+            if allow_claim:
+                return case
+            raise PermissionDeniedError("This procurement case is not assigned to you.")
+        if case.assigned_admin_id != ctx.admin.id:
+            raise PermissionDeniedError("This procurement case is assigned to another admin.")
+        return case
 
     # ----------------------------------------------------------------- #
     # Auth + permissions + audit
@@ -459,6 +478,8 @@ class AdminService:
         village: str | None,
         district: str | None,
         search: str | None = None,
+        category: str | None = None,
+        availability_type: str | None = None,
         page: int,
         page_size: int,
     ) -> dict:
@@ -469,12 +490,19 @@ class AdminService:
             village=village,
             district=district,
             search=search,
+            category=category,
+            availability_type=availability_type,
             limit=page_size,
             offset=offset,
+            assigned_admin_id=ctx.admin.id,
+            include_all_assignments=self._procurement_override(ctx),
         )
         status_map = await self.repo.procurement_status_map([r.offer_id for r in rows])
         case_map = await self.repo.procurement_case_map([r.offer_id for r in rows])
-        facts = await self.queries.procurement_facts()
+        facts = await self.queries.procurement_facts(
+            assigned_admin_id=ctx.admin.id,
+            include_all_assignments=self._procurement_override(ctx),
+        )
         analytics = procurement_analytics(facts)
         await self._audit(ctx, AuditAction.VIEW_PROCUREMENT)
         items = [
@@ -523,9 +551,12 @@ class AdminService:
     ) -> ProcurementCase:
         """Create/update the internal assisted-sales case for a farmer offer."""
         self._require(ctx, AdminPermission.MANAGE_PROCUREMENT)
-        if not await self.queries.offer_exists(offer_id):
+        locked_offer = await self.session.scalar(
+            select(ProduceOffer).where(ProduceOffer.id == offer_id).with_for_update()
+        )
+        if locked_offer is None:
             raise OfferNotFoundError()
-        case = await self.repo.procurement_case_of(offer_id)
+        case = await self._require_procurement_scope(ctx, offer_id, allow_claim=True)
         if case is None:
             legacy_status = await self.repo.procurement_status_of(offer_id)
             initial_status = (
@@ -533,9 +564,23 @@ class AdminService:
                 if legacy_status in {status.value for status in ProcurementStatus}
                 else ProcurementStatus.NEW.value
             )
-            case = await self.repo.add_procurement_case(
-                ProcurementCase(offer_id=offer_id, status=initial_status)
+            case = ProcurementCase(
+                offer_id=offer_id,
+                status=initial_status,
+                assigned_admin_id=(None if self._procurement_override(ctx) else ctx.admin.id),
             )
+            try:
+                async with self.session.begin_nested():
+                    self.session.add(case)
+                    await self.session.flush()
+            except IntegrityError as exc:
+                case = await self.repo.procurement_case_of(offer_id)
+                if case is None:
+                    raise
+                if not self._procurement_override(ctx) and case.assigned_admin_id != ctx.admin.id:
+                    raise PermissionDeniedError(
+                        "This procurement case was claimed by another admin."
+                    ) from exc
         fields = data.model_dump(exclude_unset=True)
         commercial_fields = {
             "buyer_name",
@@ -550,6 +595,12 @@ class AdminService:
         if case.frozen_at is not None and commercial_fields.intersection(fields):
             raise InvalidProcurementStatusError("Frozen buyer offer terms cannot be edited.")
         assignee_id = fields.get("assigned_admin_id")
+        if not self._procurement_override(ctx):
+            if assignee_id not in {None, ctx.admin.id}:
+                raise PermissionDeniedError(
+                    "Procurement admins may only assign cases to themselves."
+                )
+            fields["assigned_admin_id"] = ctx.admin.id
         if assignee_id is not None:
             assignee = await self.session.get(AdminUser, assignee_id)
             if (
@@ -668,7 +719,7 @@ class AdminService:
     async def reveal_buyer_contact(self, ctx: AdminContext, offer_id: uuid.UUID) -> str:
         """Reveal one buyer contact with explicit permission and record-level audit."""
         self._require(ctx, AdminPermission.REVEAL_BUYER_CONTACT)
-        case = await self.repo.procurement_case_of(offer_id)
+        case = await self._require_procurement_scope(ctx, offer_id)
         if case is None or not case.buyer_contact:
             raise OfferNotFoundError()
         await self._audit(
@@ -683,7 +734,7 @@ class AdminService:
 
     async def record_pickup(self, ctx: AdminContext, offer_id: uuid.UUID, data: PickupLedgerIn):
         self._require(ctx, AdminPermission.MANAGE_PROCUREMENT)
-        case = await self.repo.procurement_case_of(offer_id)
+        case = await self._require_procurement_scope(ctx, offer_id)
         if case is None or case.status != ProcurementStatus.FARMER_ACCEPTED.value:
             raise InvalidProcurementStatusError("Pickup requires an accepted farmer offer.")
         if data.status == "completed" and data.occurred_at is None:
@@ -704,7 +755,7 @@ class AdminService:
 
     async def record_transaction(self, ctx: AdminContext, offer_id: uuid.UUID, data: TransactionIn):
         self._require(ctx, AdminPermission.MANAGE_PROCUREMENT)
-        case = await self.repo.procurement_case_of(offer_id)
+        case = await self._require_procurement_scope(ctx, offer_id)
         if (
             case is None
             or case.status != ProcurementStatus.FARMER_ACCEPTED.value
@@ -748,6 +799,10 @@ class AdminService:
         transaction = await self.session.get(ProcurementTransaction, transaction_id)
         if transaction is None:
             raise OfferNotFoundError()
+        case = await self.session.get(ProcurementCase, transaction.case_id)
+        if case is None:
+            raise OfferNotFoundError()
+        await self._require_procurement_scope(ctx, case.offer_id)
         entry = PaymentLedgerEntry(
             transaction_id=transaction_id,
             recorded_by_admin_id=ctx.admin.id,
@@ -772,6 +827,8 @@ class AdminService:
         if transaction is None:
             raise OfferNotFoundError()
         case = await self.session.get(ProcurementCase, transaction.case_id)
+        if case is not None:
+            await self._require_procurement_scope(ctx, case.offer_id)
         if case is None or not case.frozen_terms:
             raise InvalidProcurementStatusError("Frozen terms are unavailable.")
         if data.entry_type == "earned":
@@ -820,7 +877,7 @@ class AdminService:
 
     async def commerce_summary(self, ctx: AdminContext, offer_id: uuid.UUID) -> dict:
         self._require(ctx, AdminPermission.MANAGE_PROCUREMENT)
-        case = await self.repo.procurement_case_of(offer_id)
+        case = await self._require_procurement_scope(ctx, offer_id)
         if case is None:
             raise OfferNotFoundError()
         transaction = (
@@ -927,7 +984,7 @@ class AdminService:
         row = await self.queries.procurement_offer(offer_id)
         if row is None:
             raise OfferNotFoundError()
-        case = await self.repo.procurement_case_of(offer_id)
+        case = await self._require_procurement_scope(ctx, offer_id)
         return {
             "row": row,
             "case": case,

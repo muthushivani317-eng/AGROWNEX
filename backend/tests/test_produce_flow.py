@@ -239,33 +239,33 @@ async def test_upcoming_orders_by_harvest_and_excludes_past(db_session) -> None:
     await service.create_offer(
         user,
         _create_payload(
-            farm.id, crop_name="Later", expected_harvest_date=TODAY + timedelta(days=30)
+            farm.id, crop_name="Turmeric", expected_harvest_date=TODAY + timedelta(days=30)
         ),
     )
     await service.create_offer(
         user,
         _create_payload(
-            farm.id, crop_name="Soon", expected_harvest_date=TODAY + timedelta(days=3)
+            farm.id, crop_name="Tomato", expected_harvest_date=TODAY + timedelta(days=3)
         ),
     )
     page, _ = await service.upcoming(user, page=1, page_size=10)
-    assert [o.crop_name for o in page.items] == ["Soon", "Later"]
+    assert [o.crop_name for o in page.items] == ["Tomato", "Turmeric"]
 
 
 async def test_history_shows_only_concluded_offers(db_session) -> None:
     user = await _make_user(db_session)
     farm = await _make_farm(db_session, user)
     service = _service(db_session)
-    await service.create_offer(user, _create_payload(farm.id, crop_name="Active"))
-    concluded = await service.create_offer(user, _create_payload(farm.id, crop_name="Done"))
+    await service.create_offer(user, _create_payload(farm.id, crop_name="Paddy"))
+    concluded = await service.create_offer(user, _create_payload(farm.id, crop_name="Banana"))
     await service.update_offer(
         user, concluded.id, ProduceOfferUpdate(status=ProduceStatus.HARVESTED)
     )
 
     page, _ = await service.history(user, page=1, page_size=10)
     crops = {o.crop_name for o in page.items}
-    assert "Done" in crops
-    assert "Active" not in crops
+    assert "Banana" in crops
+    assert "Paddy" not in crops
 
 
 # --------------------------------------------------------------------------- #
@@ -359,6 +359,25 @@ async def test_create_with_images_and_add_more(db_session) -> None:
     images = await service.repo.list_images(offer.id)
     assert len(images) == 2
     assert [i.display_order for i in images] == [0, 1]
+
+
+async def test_add_image_rejects_seventh_image(db_session) -> None:
+    user = await _make_user(db_session)
+    farm = await _make_farm(db_session, user)
+    service = _service(db_session)
+    offer = await service.create_offer(user, _create_payload(farm.id))
+    for index in range(6):
+        await service.add_image(
+            user,
+            offer.id,
+            ProduceImageIn(image_url=f"https://cdn/r2/{index}.jpg"),
+        )
+    with pytest.raises(InvalidProduceError, match="at most 6 images"):
+        await service.add_image(
+            user,
+            offer.id,
+            ProduceImageIn(image_url="https://cdn/r2/seventh.jpg"),
+        )
 
 
 # --------------------------------------------------------------------------- #

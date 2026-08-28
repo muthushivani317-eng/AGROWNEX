@@ -170,9 +170,14 @@ class AdminQueries:
         village: str | None = None,
         district: str | None = None,
         search: str | None = None,
+        category: str | None = None,
+        availability_type: str | None = None,
         limit: int = 20,
         offset: int = 0,
+        assigned_admin_id: uuid.UUID | None = None,
+        include_all_assignments: bool = False,
     ) -> tuple[list[ProcurementRow], int]:
+        from app.modules.admin.models import ProcurementCase
         from app.modules.auth.models import User
         from app.modules.auth.profile_models import FarmerProfile
         from app.modules.produce.models import ProduceOffer
@@ -180,10 +185,23 @@ class AdminQueries:
         base = (
             select(ProduceOffer)
             .join(User, User.id == ProduceOffer.user_id)
+            .outerjoin(ProcurementCase, ProcurementCase.offer_id == ProduceOffer.id)
             .where(ProduceOffer.is_deleted.is_(False))
         )
+        if not include_all_assignments:
+            base = base.where(
+                or_(
+                    ProcurementCase.id.is_(None),
+                    ProcurementCase.assigned_admin_id.is_(None),
+                    ProcurementCase.assigned_admin_id == assigned_admin_id,
+                )
+            )
         if crop:
             base = base.where(ProduceOffer.crop_name == crop)
+        if category:
+            base = base.where(ProduceOffer.product_category == category)
+        if availability_type:
+            base = base.where(ProduceOffer.availability_type == availability_type)
         if village:
             base = base.where(ProduceOffer.village == village)
         if district:
@@ -243,6 +261,8 @@ class AdminQueries:
                 farmer_ref=getattr(users.get(o.user_id), "farmer_ref", "—"),
                 user_id=o.user_id,
                 crop=o.crop_name,
+                product_category=o.product_category,
+                availability_type=o.availability_type,
                 variety=o.variety,
                 quantity=o.quantity,
                 unit=o.unit,
@@ -258,6 +278,12 @@ class AdminQueries:
                 available_quantity=o.available_quantity,
                 quantity_provenance=o.quantity_provenance,
                 quality_notes=o.quality_notes,
+                packaging=o.packaging,
+                asking_price=o.asking_price,
+                price_unit=o.price_unit,
+                negotiable=o.negotiable,
+                pickup_available=o.pickup_available,
+                pickup_location=o.pickup_location,
             )
             for o in offers
         ]
@@ -284,6 +310,8 @@ class AdminQueries:
             farmer_ref=getattr(user, "farmer_ref", "—"),
             user_id=offer.user_id,
             crop=offer.crop_name,
+            product_category=offer.product_category,
+            availability_type=offer.availability_type,
             variety=offer.variety,
             quantity=offer.quantity,
             unit=offer.unit,
@@ -299,22 +327,45 @@ class AdminQueries:
             available_quantity=offer.available_quantity,
             quantity_provenance=offer.quantity_provenance,
             quality_notes=offer.quality_notes,
+            packaging=offer.packaging,
+            asking_price=offer.asking_price,
+            price_unit=offer.price_unit,
+            negotiable=offer.negotiable,
+            pickup_available=offer.pickup_available,
+            pickup_location=offer.pickup_location,
         )
 
-    async def procurement_facts(self):  # noqa: ANN201
+    async def procurement_facts(
+        self, *, assigned_admin_id: uuid.UUID | None = None, include_all_assignments: bool = False
+    ):  # noqa: ANN201
         """All offers as minimal analytics facts (village/crop/harvest/quantity)."""
         from app.modules.admin.engine import ProcurementFact
+        from app.modules.admin.models import ProcurementCase
         from app.modules.produce.models import ProduceOffer
+
+        stmt = (
+            select(
+                ProduceOffer.village,
+                ProduceOffer.crop_name,
+                ProduceOffer.expected_harvest_date,
+                ProduceOffer.quantity,
+                ProduceOffer.unit,
+            )
+            .outerjoin(ProcurementCase, ProcurementCase.offer_id == ProduceOffer.id)
+            .where(ProduceOffer.is_deleted.is_(False))
+        )
+        if not include_all_assignments:
+            stmt = stmt.where(
+                or_(
+                    ProcurementCase.id.is_(None),
+                    ProcurementCase.assigned_admin_id.is_(None),
+                    ProcurementCase.assigned_admin_id == assigned_admin_id,
+                )
+            )
 
         offers = (
             await self.session.execute(
-                select(
-                    ProduceOffer.village,
-                    ProduceOffer.crop_name,
-                    ProduceOffer.expected_harvest_date,
-                    ProduceOffer.quantity,
-                    ProduceOffer.unit,
-                ).where(ProduceOffer.is_deleted.is_(False))
+                stmt
             )
         ).all()
         return [

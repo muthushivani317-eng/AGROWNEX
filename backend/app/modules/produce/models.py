@@ -101,8 +101,20 @@ class ProduceOffer(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     available_quantity: Mapped[float | None] = mapped_column(Float)
     quantity_provenance: Mapped[str | None] = mapped_column(String(24))
     quality_notes: Mapped[str | None] = mapped_column(Text)
-    expected_harvest_date: Mapped[date] = mapped_column(Date, index=True, nullable=False)
+    expected_harvest_date: Mapped[date | None] = mapped_column(Date, index=True)
     expected_grade: Mapped[str | None] = mapped_column(String(12))
+
+    product_category: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="other_produce", server_default="other_produce"
+    )
+    availability_type: Mapped[str] = mapped_column(
+        String(24), nullable=False, default="upcoming_harvest", server_default="upcoming_harvest"
+    )
+    packaging: Mapped[str | None] = mapped_column(String(160))
+    price_unit: Mapped[str | None] = mapped_column(String(24))
+    negotiable: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    pickup_available: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    pickup_location: Mapped[str | None] = mapped_column(String(255))
 
     asking_price: Mapped[float | None] = mapped_column(Float)
     currency: Mapped[str] = mapped_column(String(3), default=DEFAULT_CURRENCY, nullable=False)
