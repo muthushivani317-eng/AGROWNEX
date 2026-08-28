@@ -23,10 +23,15 @@ export interface Farmer {
 }
 export interface Procurement {
   offer_id: string; listing_ref?: string; farmer_ref?: string; crop: string | null;
+  product_category?: string | null;
+  availability_type?: 'available_now' | 'upcoming_harvest' | null;
   quantity: number; unit: string; harvest_date: string | null; village: string | null;
   district: string | null; farmer_name: string | null; admin_status: string;
   buyer_name: string | null; buyer_contact: string | null; buyer_contact_masked: boolean;
   buyer_offer_price: number | null; follow_up_at: string | null;
+  variety?: string | null; expected_grade?: string | null; asking_price?: number | null;
+  price_unit?: string | null; negotiable?: boolean; packaging?: string | null;
+  pickup_location?: string | null; pickup_available?: boolean;
 }
 export interface AuditRow {
   id: string; role: string | null; action: string; target: string | null;

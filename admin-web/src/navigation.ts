@@ -5,7 +5,7 @@ export const navigation = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, permission: 'view_dashboard' },
   { to: '/farmers', label: 'Farmers', icon: Users, permission: 'manage_farmers' },
   { to: '/farms', label: 'Farms', icon: Building2, permission: 'view_analytics' },
-  { to: '/produce', label: 'Sell My Produce', icon: Leaf, permission: 'manage_procurement' },
+  { to: '/produce', label: 'Agricultural Produce', icon: Leaf, permission: 'manage_procurement' },
   { to: '/buyers', label: 'Buyer CRM', icon: ClipboardList, permission: 'manage_procurement' },
   { to: '/ledgers', label: 'Ledgers', icon: Scale, permission: 'manage_procurement' },
   { to: '/crop-intelligence', label: 'Crop Intelligence', icon: Activity, permission: 'view_crop_intelligence' },

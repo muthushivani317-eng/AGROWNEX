@@ -3,6 +3,7 @@ import { api } from './api';
 import { Card, DataTable, Empty, ErrorPanel, Loading, Metric, PageTitle, formatDate } from './components';
 import type { AuditRow, Farmer, JsonRecord, MetricCard, Page, Procurement } from './types';
 import { useResource } from './useResource';
+import { buildProcurementPath, marketplaceAvailabilityLabel, marketplaceFarmerReference, marketplacePickupLabel, marketplacePriceLabel, marketplaceProductLabel, produceCategories, type ProcurementFilters } from './procurement';
 
 function Resource<T>({ state, children }: { state: ReturnType<typeof useResource<T>>; children: (data: T) => React.ReactNode }) {
   if (state.loading) return <Loading />;
@@ -44,10 +45,16 @@ function LedgerSummary({ offerId }: { offerId:string }) {
 }
 
 export function ProducePage({ mode = 'produce', canReveal = false }: { mode?: 'produce'|'buyers'|'ledgers'; canReveal?:boolean }) {
-  const state = useResource(() => api<{ page: Page<Procurement> }>('/admin/procurement?page=1&page_size=50'));
-  const title = mode === 'buyers' ? 'Buyer CRM' : mode === 'ledgers' ? 'Procurement ledgers' : 'Sell My Produce';
+  const [draftFilters,setDraftFilters]=useState<ProcurementFilters>({search:'',category:'',availabilityType:''});
+  const [filters,setFilters]=useState<ProcurementFilters>(draftFilters);
+  const path=buildProcurementPath(filters);
+  const state = useResource(() => api<{ page: Page<Procurement> }>(path), [path]);
+  const title = mode === 'buyers' ? 'Buyer CRM' : mode === 'ledgers' ? 'Procurement ledgers' : 'Sell Agricultural Produce';
+  function applyFilters(event: React.FormEvent) { event.preventDefault(); setFilters({...draftFilters}); }
+  function clearFilters() { const cleared={search:'',category:'',availabilityType:''}; setDraftFilters(cleared); setFilters(cleared); }
   return <><PageTitle title={title} subtitle={mode === 'buyers' ? 'Buyer search, offers and negotiation follow-up.' : mode === 'ledgers' ? 'Pickup, transaction, payment and commission records.' : 'Farmer produce listings requiring team action.'} />
-    <Resource state={state}>{data => data.page.items.length ? <Card><DataTable columns={['Listing','Farmer','Crop','Quantity','Harvest','Location','Stage','Buyer','Contact','Offer']} rows={data.page.items.map(x => [x.listing_ref ?? x.offer_id.slice(0,8), x.farmer_ref ?? x.farmer_name ?? '—', x.crop ?? '—', `${x.quantity} ${x.unit}`, formatDate(x.harvest_date), [x.village,x.district].filter(Boolean).join(', ') || '—', x.admin_status.replaceAll('_',' '), x.buyer_name ?? 'Not assigned', <BuyerContact offerId={x.offer_id} initial={x.buyer_contact_masked ? null : x.buyer_contact} canReveal={canReveal}/>, mode === 'ledgers' ? <LedgerSummary offerId={x.offer_id}/> : (x.buyer_offer_price ? `₹${x.buyer_offer_price}` : '—')])} /></Card> : <Empty title="No produce listings" body="New farmer listings will appear here automatically after backend submission." />}</Resource></>;
+    <Card className="procurement-filters"><form onSubmit={applyFilters}><label>Search listings<input value={draftFilters.search} onChange={e=>setDraftFilters({...draftFilters,search:e.target.value})} placeholder="Listing, farmer or produce"/></label><label>Category<select value={draftFilters.category} onChange={e=>setDraftFilters({...draftFilters,category:e.target.value})}><option value="">All categories</option>{produceCategories.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label><label>Availability<select value={draftFilters.availabilityType} onChange={e=>setDraftFilters({...draftFilters,availabilityType:e.target.value})}><option value="">All availability</option><option value="available_now">Available now</option><option value="upcoming_harvest">Upcoming harvest</option></select></label><div className="filter-actions"><button type="submit">Apply filters</button><button type="button" className="secondary-button" onClick={clearFilters}>Clear</button></div></form><small>Results remain restricted to your role and assigned operational scope.</small></Card>
+    <Resource state={state}>{data => data.page.items.length ? <Card><DataTable columns={['Listing','Farmer reference','Product','Availability','Quantity','Grade & packaging','Asking price','Pickup','Operational area','Stage','Buyer','Contact','Offer']} rows={data.page.items.map(x => [x.listing_ref ?? x.offer_id.slice(0,8), marketplaceFarmerReference(x), marketplaceProductLabel(x), <span><strong>{marketplaceAvailabilityLabel(x)}</strong>{x.harvest_date&&<small className="table-detail">Harvest {formatDate(x.harvest_date)}</small>}</span>, `${x.quantity} ${x.unit}`, [x.variety,x.expected_grade,x.packaging].filter(Boolean).join(' · ') || 'Not provided', marketplacePriceLabel(x), marketplacePickupLabel(x), [x.village,x.district].filter(Boolean).join(', ') || '—', x.admin_status.replaceAll('_',' '), x.buyer_name ?? 'Not assigned', <BuyerContact offerId={x.offer_id} initial={x.buyer_contact_masked ? null : x.buyer_contact} canReveal={canReveal}/>, mode === 'ledgers' ? <LedgerSummary offerId={x.offer_id}/> : (x.buyer_offer_price ? `₹${x.buyer_offer_price}` : '—')])} /></Card> : <Empty title="No produce listings" body="No farmer listings matched these filters in your authorised scope." />}</Resource></>;
 }
 
 export function CropIntelligencePage() {
