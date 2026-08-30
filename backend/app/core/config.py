@@ -197,6 +197,8 @@ class Settings(BaseSettings):
             not origin.startswith("https://") for origin in self.admin_web_origins
         ):
             problems.append("ADMIN_WEB_ORIGINS must contain explicit HTTPS origins.")
+        elif any(origin not in self.cors_origins for origin in self.admin_web_origins):
+            problems.append("Every ADMIN_WEB_ORIGINS entry must also be present in CORS_ORIGINS.")
         if not self.admin_session_cookie_name.startswith("__Host-"):
             problems.append("ADMIN_SESSION_COOKIE_NAME must use the __Host- prefix.")
         if not self.admin_require_mfa:

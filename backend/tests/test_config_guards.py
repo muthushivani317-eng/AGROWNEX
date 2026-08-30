@@ -10,7 +10,7 @@ def _prod(**overrides) -> Settings:
         environment="production",
         debug=False,
         session_secret="a-real-production-secret",
-        cors_origins=["https://app.agrowai.in"],
+        cors_origins=["https://app.agrowai.in", "https://admin.agrowai.in"],
         admin_web_origins=["https://admin.agrowai.in"],
         admin_session_cookie_name="__Host-agrowai_admin",
         admin_require_mfa=True,
@@ -47,6 +47,14 @@ def test_rejects_wildcard_cors_in_production():
 def test_rejects_empty_cors_in_production():
     with pytest.raises(ProductionConfigError):
         _prod(cors_origins=[]).validate_production()
+
+
+def test_rejects_admin_origin_missing_from_cors_allowlist():
+    with pytest.raises(ProductionConfigError, match="ADMIN_WEB_ORIGINS.*CORS_ORIGINS"):
+        _prod(
+            cors_origins=["https://app.agrowai.in"],
+            admin_web_origins=["https://admin.agrowai.in"],
+        ).validate_production()
 
 
 @pytest.mark.parametrize("origins", [[], ["http://admin.agrowai.in"]])
