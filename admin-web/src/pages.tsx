@@ -1,7 +1,11 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { ProduceListings } from './ProduceListings';
+import { BuyerCRM } from './BuyerCRM';
+import { ProcurementLedgers } from './ProcurementLedgers';
 import { api } from './api';
 import { Card, DataTable, Empty, ErrorPanel, Loading, Metric, PageTitle, formatDate } from './components';
-import type { AuditRow, Farmer, JsonRecord, MetricCard, Page, Procurement } from './types';
+import type { AuditRow, Farmer, JsonRecord, Page, Procurement, SupportTicket } from './types';
 import { useResource } from './useResource';
 import { buildProcurementPath, marketplaceAvailabilityLabel, marketplaceFarmerReference, marketplacePickupLabel, marketplacePriceLabel, marketplaceProductLabel, produceCategories, type ProcurementFilters } from './procurement';
 
@@ -11,23 +15,9 @@ function Resource<T>({ state, children }: { state: ReturnType<typeof useResource
   return <>{state.data && children(state.data)}</>;
 }
 
-function BusinessMetrics() {
-  const business = useResource(() => api<JsonRecord>('/admin/business-dashboard'));
-  return <Resource state={business}>{data => <div className="metrics">{Object.entries(data).filter(([k]) => !['generated_at','currency','procurement_status_counts'].includes(k)).slice(0, 12).map(([key, value]) => <Metric key={key} label={key} value={typeof value === 'object' ? '—' : String(value ?? '—')} />)}</div>}</Resource>;
-}
+export { DashboardPage } from './Dashboard';
 
-export function DashboardPage({ canViewRevenue }: { canViewRevenue: boolean }) {
-  const dashboard = useResource(() => api<{ cards: MetricCard[]; procurement_status_counts: Record<string, number> }>('/admin/dashboard'));
-  return <><PageTitle title="Command centre" subtitle="A live, permission-controlled view of AgrowAI operations." />
-    {canViewRevenue && <BusinessMetrics />}
-    <Resource state={dashboard}>{data => <Card><div className="section-head"><h2>Platform coverage</h2><span>Verified backend metrics</span></div><div className="metrics compact">{data.cards.map(card => <Metric key={card.key} label={card.key} value={card.value} />)}</div></Card>}</Resource>
-  </>;
-}
-
-export function FarmersPage() {
-  const state = useResource(() => api<Page<Farmer>>('/admin/farmers?page=1&page_size=50'));
-  return <><PageTitle title="Farmers" subtitle="Registered farmer records available to your authorised scope." /><Resource state={state}>{data => data.items.length ? <Card><DataTable columns={['Reference','Farmer','Phone','Location','Crop','Farms','Joined']} rows={data.items.map(x => [x.farmer_ref ?? '—', x.full_name ?? 'Unnamed', x.phone_number ?? '—', [x.village,x.district].filter(Boolean).join(', ') || '—', x.primary_crop ?? '—', x.farm_count, formatDate(x.created_at)])} /></Card> : <Empty title="No farmers in this scope" body="No verified farmer records matched your current access scope." />}</Resource></>;
-}
+export { FarmersPage } from './Farmers';
 
 function BuyerContact({ offerId, initial, canReveal }: { offerId:string; initial:string|null; canReveal:boolean }) {
   const [contact,setContact]=useState(initial); const [busy,setBusy]=useState(false);
@@ -45,7 +35,12 @@ function LedgerSummary({ offerId }: { offerId:string }) {
 }
 
 export function ProducePage({ mode = 'produce', canReveal = false }: { mode?: 'produce'|'buyers'|'ledgers'; canReveal?:boolean }) {
-  const [draftFilters,setDraftFilters]=useState<ProcurementFilters>({search:'',category:'',availabilityType:''});
+  return mode === 'produce' ? <ProduceListings canReveal={canReveal}/> : mode === 'buyers' ? <BuyerCRM canReveal={canReveal}/> : <ProcurementLedgers/>;
+}
+
+function LegacyProducePage({ mode, canReveal }: { mode: 'buyers'|'ledgers'; canReveal:boolean }) {
+  const [params] = useSearchParams();
+  const [draftFilters,setDraftFilters]=useState<ProcurementFilters>({search:params.get('search') ?? '',category:'',availabilityType:''});
   const [filters,setFilters]=useState<ProcurementFilters>(draftFilters);
   const path=buildProcurementPath(filters);
   const state = useResource(() => api<{ page: Page<Procurement> }>(path), [path]);
@@ -57,32 +52,36 @@ export function ProducePage({ mode = 'produce', canReveal = false }: { mode?: 'p
     <Resource state={state}>{data => data.page.items.length ? <Card><DataTable columns={['Listing','Farmer reference','Product','Availability','Quantity','Grade & packaging','Asking price','Pickup','Operational area','Stage','Buyer','Contact','Offer']} rows={data.page.items.map(x => [x.listing_ref ?? x.offer_id.slice(0,8), marketplaceFarmerReference(x), marketplaceProductLabel(x), <span><strong>{marketplaceAvailabilityLabel(x)}</strong>{x.harvest_date&&<small className="table-detail">Harvest {formatDate(x.harvest_date)}</small>}</span>, `${x.quantity} ${x.unit}`, [x.variety,x.expected_grade,x.packaging].filter(Boolean).join(' · ') || 'Not provided', marketplacePriceLabel(x), marketplacePickupLabel(x), [x.village,x.district].filter(Boolean).join(', ') || '—', x.admin_status.replaceAll('_',' '), x.buyer_name ?? 'Not assigned', <BuyerContact offerId={x.offer_id} initial={x.buyer_contact_masked ? null : x.buyer_contact} canReveal={canReveal}/>, mode === 'ledgers' ? <LedgerSummary offerId={x.offer_id}/> : (x.buyer_offer_price ? `₹${x.buyer_offer_price}` : '—')])} /></Card> : <Empty title="No produce listings" body="No farmer listings matched these filters in your authorised scope." />}</Resource></>;
 }
 
-export function CropIntelligencePage() {
-  const state = useResource(() => api<JsonRecord>('/admin/crop-intelligence?harvest_days=30'));
-  return <><PageTitle title="Crop intelligence" subtitle="Registered crop, acreage, stage and 30-day harvest signals." /><Resource state={state}>{data => { const summary = (data.summary ?? {}) as JsonRecord; return <><div className="metrics">{Object.entries(summary).map(([k,v]) => <Metric key={k} label={k} value={String(v ?? '—')} />)}</div><Card><h2>Supply by crop</h2><DataTable columns={['Crop','Farms','Farmers','Known hectares']} rows={((data.by_crop ?? []) as JsonRecord[]).map(x => [String(x.label),String(x.farm_count),String(x.farmer_count),String(x.known_area_hectares)])} /></Card></>; }}</Resource></>;
+export function SupportPage() {
+  const [status, setStatus] = useState('');
+  const [active, setActive] = useState<string | null>(null);
+  const [response, setResponse] = useState('');
+  const path = `/admin/support-tickets?page=1&page_size=100${status ? `&status=${encodeURIComponent(status)}` : ''}`;
+  const state = useResource(() => api<Page<SupportTicket>>(path), [path]);
+  async function update(ticket: SupportTicket, nextStatus?: SupportTicket['status']) {
+    await api<SupportTicket>(`/admin/support-tickets/${ticket.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: nextStatus, response: response.trim() || undefined }),
+    });
+    setResponse(''); setActive(null); await state.reload();
+  }
+  return <><PageTitle title="Farmer Support" subtitle="Review farmer-reported issues, respond, and track them through resolution." />
+    <Card className="support-toolbar"><label>Status<select value={status} onChange={event => setStatus(event.target.value)}><option value="">All tickets</option><option value="open">Open</option><option value="in_progress">In progress</option><option value="waiting_for_farmer">Waiting for farmer</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select></label><button className="secondary-button" onClick={() => void state.reload()}>Refresh</button></Card>
+    <Resource state={state}>{page => page.items.length ? <div className="support-grid">{page.items.map(ticket => <Card key={ticket.id} className="support-ticket"><div className="support-ticket-head"><div><small>{ticket.farmer_ref ?? 'Farmer reference unavailable'} · {ticket.category.replaceAll('_', ' ')}</small><h2>{ticket.subject}</h2></div><span className={`ticket-priority ${ticket.priority}`}>{ticket.priority}</span></div><p>{ticket.description}</p><div className="ticket-meta"><strong>{ticket.status.replaceAll('_', ' ')}</strong><span>{formatDate(ticket.created_at)}</span>{ticket.app_version && <span>App {ticket.app_version}</span>}</div>{ticket.messages.length > 1 && <div className="ticket-thread">{ticket.messages.slice(1).map(message => <p key={message.id}><strong>{message.author_type === 'admin' ? 'Support' : 'Farmer'}:</strong> {message.message}</p>)}</div>}{active === ticket.id ? <div className="support-response"><textarea rows={4} value={response} onChange={event => setResponse(event.target.value)} placeholder="Write a clear response for the farmer" maxLength={4000}/><div><button disabled={!response.trim()} onClick={() => void update(ticket, 'waiting_for_farmer')}>Send reply</button><button className="secondary-button" onClick={() => { setActive(null); setResponse(''); }}>Cancel</button></div></div> : <div className="ticket-actions"><button onClick={() => setActive(ticket.id)}>Reply</button><button className="secondary-button" onClick={() => void update(ticket, 'in_progress')}>Start work</button><button className="secondary-button" onClick={() => void update(ticket, 'resolved')}>Resolve</button></div>}</Card>)}</div> : <Empty title="No support tickets" body="No farmer issues matched this status." />}</Resource>
+  </>;
 }
 
-function AiCosts() {
-  const state = useResource(() => api<JsonRecord>('/admin/ai-costs?window_days=30'));
-  return <Resource state={state}>{data => <Card><h2>AI cost — last 30 days</h2><div className="metrics compact"><Metric label="requests" value={String(data.total_requests ?? '—')}/><Metric label="cost INR" value={String(data.total_cost_inr ?? '—')}/></div></Card>}</Resource>;
-}
+export { CropIntelligencePage } from './CropIntelligence';
 
-export function AiPage({ canViewCosts }: { canViewCosts: boolean }) {
-  const state = useResource(() => api<JsonRecord>('/admin/ai'));
-  return <><PageTitle title="AI monitoring" subtitle="Production requests, abstentions and service health—not model accuracy." /><Resource state={state}>{data => <div className="metrics">{Object.entries(data).filter(([,v]) => typeof v !== 'object').map(([k,v]) => <Metric key={k} label={k} value={String(v ?? '—')} />)}</div>}</Resource>{canViewCosts&&<AiCosts/>}</>;
-}
+export { AiPage } from './AiMonitoring';
 
-export function AuditPage() {
-  const state = useResource(() => api<Page<AuditRow>>('/admin/audit?page=1&page_size=50'));
-  return <><PageTitle title="Audit records" subtitle="Immutable record of privileged access and operational actions." /><Resource state={state}>{data => <Card><DataTable columns={['Time','Role','Action','Target','Reference']} rows={data.items.map(x => [formatDate(x.created_at), x.role ?? 'System', x.action.replaceAll('_',' '), x.target ?? '—', x.target_id ?? '—'])} /></Card>}</Resource></>;
-}
+export { AuditPage } from './AuditRecords';
 
-export function FarmsPage() {
-  const state = useResource(() => api<JsonRecord>('/admin/analytics'));
-  return <><PageTitle title="Farms" subtitle="Crop and geographic distribution across registered farms." /><Resource state={state}>{data => <div className="split">{['crop_distribution','farmer_growth','produce_by_crop'].map(key => <Card key={key}><h2>{key.replaceAll('_',' ')}</h2><DataTable columns={['Label','Count']} rows={((data[key] ?? []) as JsonRecord[]).map(x => [String(x.label),String(x.count)])} /></Card>)}</div>}</Resource></>;
-}
+export { FarmsPage } from './Farms';
 
-export function TeamPage() {
+export { TeamPage } from './TeamPermissions';
+
+function LegacyTeamPage() {
   type TeamMember = { id:string; full_name:string|null; email:string|null; role:string; status:string; created_at:string };
   const state = useResource(() => api<TeamMember[]>('/admin/team'));
   const [email,setEmail]=useState('');

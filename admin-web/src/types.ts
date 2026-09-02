@@ -2,7 +2,8 @@ export type Permission =
   | 'view_dashboard' | 'view_analytics' | 'manage_farmers'
   | 'view_crop_intelligence'
   | 'manage_procurement' | 'view_ai' | 'view_audit'
-  | 'manage_admins' | 'reveal_buyer_contact' | 'view_revenue' | 'view_ai_costs';
+  | 'manage_admins' | 'reveal_buyer_contact' | 'view_revenue' | 'view_ai_costs'
+  | 'manage_support';
 
 export interface AdminMe {
   id: string;
@@ -34,8 +35,18 @@ export interface Procurement {
   pickup_location?: string | null; pickup_available?: boolean;
 }
 export interface AuditRow {
+  admin_id?: string | null;
   id: string; role: string | null; action: string; target: string | null;
   target_id: string | null; created_at: string;
+}
+
+export interface SupportTicket {
+  id: string; farmer_ref: string | null; category: string; subject: string;
+  description: string; priority: 'normal' | 'high' | 'urgent';
+  status: 'open' | 'in_progress' | 'waiting_for_farmer' | 'resolved' | 'closed';
+  app_version: string | null; device_context: string | null;
+  created_at: string; updated_at: string;
+  messages: Array<{ id: string; author_type: 'farmer' | 'admin'; message: string; created_at: string }>;
 }
 
 export type JsonRecord = Record<string, unknown>;
