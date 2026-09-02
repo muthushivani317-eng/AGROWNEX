@@ -91,3 +91,10 @@ investigate-*.md
 redesign-status-report.md
 test_disease_registry.py
 test_legacy_joint_local_signal.py
+.codex-work/
+_to_delete_outer/
+*.db
+*.db-journal
+logcat*.txt
+/*.xml
+/*.png
