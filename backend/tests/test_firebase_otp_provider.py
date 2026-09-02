@@ -17,7 +17,7 @@ def production_settings(**overrides: object) -> Settings:
         "database_url": "postgresql+asyncpg://user:pass@db.internal/agrowai",
         "redis_url": "redis://redis.internal:6379/0",
         "session_secret": "production-test-secret-at-least-32-characters",
-        "cors_origins": ["https://app.example.invalid"],
+        "cors_origins": ["https://app.example.invalid", "https://admin.example.invalid"],
         "admin_web_origins": ["https://admin.example.invalid"],
         "admin_session_cookie_name": "__Host-agrowai_admin_session",
         "admin_require_mfa": True,
