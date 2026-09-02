@@ -78,6 +78,8 @@ class Settings(BaseSettings):
     admin_session_cookie_name: str = "agrowai_admin_session"
     admin_session_ttl_hours: int = Field(default=8, ge=1, le=24 * 14)
     admin_require_mfa: bool = False
+    # Optional single-owner lockdown. Empty retains normal team RBAC.
+    admin_owner_firebase_uid: str = Field(default="", max_length=128, pattern=r"^\S*$")
     admin_sensitive_reauth_minutes: int = Field(default=15, ge=5, le=60)
 
     # Server-side pepper for hashing refresh tokens / OTP fingerprints. MUST be

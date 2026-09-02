@@ -21,6 +21,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.logging import get_logger
 from app.modules.admin.constants import (
     ROLE_PERMISSIONS,
@@ -151,8 +152,15 @@ class AdminService:
     # Auth + permissions + audit
     # ----------------------------------------------------------------- #
     async def resolve_admin(self, user: User, *, ip_address: str | None = None) -> AdminContext:
+        # Shared by session creation and every authenticated admin API request.
+        # Existing cookies and bearer tokens cannot bypass a changed lockdown.
+        owner_uid = settings.admin_owner_firebase_uid
+        if owner_uid and user.firebase_uid != owner_uid:
+            raise NotAnAdminError()
         admin = await self.repo.get_admin_by_user(user.id)
         if admin is None:
+            raise NotAnAdminError()
+        if owner_uid and admin.role != AdminRole.OWNER.value:
             raise NotAnAdminError()
         if admin.status != AdminUserStatus.ACTIVE.value:
             raise AdminSuspendedError()
@@ -164,6 +172,8 @@ class AdminService:
         district_scope: str | None = None, expires_in_hours: int = 48
     ) -> tuple[AdminInvitation, str]:
         """Create an expiring one-time invitation; only the owner can grant access."""
+        if settings.admin_owner_firebase_uid:
+            raise PermissionDeniedError("Admin invitations are disabled in owner-only mode.")
         self._require(ctx, AdminPermission.MANAGE_ADMINS)
         if ctx.admin.role != AdminRole.OWNER.value:
             raise PermissionDeniedError()
@@ -193,6 +203,8 @@ class AdminService:
         return invitation, raw_token
 
     async def accept_admin_invitation(self, user: User, token: str) -> AdminUser:
+        if settings.admin_owner_firebase_uid:
+            raise PermissionDeniedError("Admin invitations are disabled in owner-only mode.")
         token_hash = hashlib.sha256(token.encode()).hexdigest()
         invitation = (
             await self.session.execute(

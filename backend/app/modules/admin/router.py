@@ -29,7 +29,7 @@ from pydantic import BaseModel
 from app.core.config import settings
 from app.core.exceptions import UnauthorizedError
 from app.core.security import create_session_cookie, verify_id_token
-from app.modules.admin.constants import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
+from app.modules.admin.constants import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, ROLE_PERMISSIONS, AdminPermission
 from app.modules.admin.dependencies import AdminContextDep, AdminServiceDep
 from app.modules.admin.schemas import (
     AdminMeOut,
@@ -220,6 +220,19 @@ async def delete_admin_web_session(response: Response, ctx: AdminContextDep):
 # --------------------------------------------------------------------------- #
 # Identity
 # --------------------------------------------------------------------------- #
+@router.get("/team/access-policy", response_model=SuccessResponse[dict])
+async def get_team_access_policy(ctx: AdminContextDep):
+    """Read-only policy metadata; never exposes the pinned owner's Firebase UID."""
+    if AdminPermission.MANAGE_ADMINS.value not in ctx.permissions or ctx.admin.role != "owner":
+        from app.modules.admin.exceptions import PermissionDeniedError
+        raise PermissionDeniedError()
+    return success({
+        "owner_only": bool(settings.admin_owner_firebase_uid),
+        "mfa_required": settings.admin_require_mfa,
+        "roles": {role: [permission.value for permission in permissions] for role, permissions in ROLE_PERMISSIONS.items()},
+    })
+
+
 @router.get("/me", response_model=SuccessResponse[AdminMeOut])
 async def get_me(ctx: AdminContextDep):
     """The caller's admin identity, role and granted permissions."""
