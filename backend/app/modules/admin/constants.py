@@ -44,6 +44,7 @@ class AdminPermission(StrEnum):
     REVEAL_BUYER_CONTACT = "reveal_buyer_contact"
     VIEW_REVENUE = "view_revenue"
     VIEW_AI_COSTS = "view_ai_costs"
+    MANAGE_SUPPORT = "manage_support"
 
 
 _ALL = tuple(AdminPermission)
@@ -78,6 +79,7 @@ ROLE_PERMISSIONS: dict[str, tuple[AdminPermission, ...]] = {
     AdminRole.CUSTOMER_SUPPORT.value: (
         AdminPermission.VIEW_DASHBOARD,
         AdminPermission.MANAGE_FARMERS,
+        AdminPermission.MANAGE_SUPPORT,
     ),
 }
 

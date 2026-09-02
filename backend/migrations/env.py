@@ -3,6 +3,7 @@
 Every schema change goes through a reversible migration (docs/DATABASE_SCHEMA.md,
 docs/DEPLOYMENT.md). Never edit production tables manually.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -24,6 +25,7 @@ from app.modules.farms import models as _farm_models  # noqa: F401
 from app.modules.intelligence import models as _intelligence_models  # noqa: F401
 from app.modules.memory import models as _memory_models  # noqa: F401
 from app.modules.nutrient import models as _nutrient_models  # noqa: F401
+from app.modules.support import models as _support_models  # noqa: F401
 from app.shared.base_model import Base
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
@@ -50,9 +52,7 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection) -> None:
-    context.configure(
-        connection=connection, target_metadata=target_metadata, compare_type=True
-    )
+    context.configure(connection=connection, target_metadata=target_metadata, compare_type=True)
     with context.begin_transaction():
         context.run_migrations()
 

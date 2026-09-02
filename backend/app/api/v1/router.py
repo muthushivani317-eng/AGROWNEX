@@ -48,6 +48,8 @@ from app.modules.produce.traceability_router import router as traceability_route
 from app.modules.satellite.router import router as satellite_router
 from app.modules.schemes.router import router as schemes_router
 from app.modules.soil.router import router as soil_router
+from app.modules.support.router import admin_router as admin_support_router
+from app.modules.support.router import router as support_router
 from app.modules.weather.router import router as weather_router
 from app.plant_identifier.router import router as plant_identifier_router
 from app.restricted_crops.api_router import router as restricted_crops_router
@@ -89,8 +91,10 @@ api_router.include_router(notifications_router)
 api_router.include_router(experts_router)
 api_router.include_router(consultations_router)
 api_router.include_router(soil_router)
+api_router.include_router(support_router)
 api_router.include_router(satellite_router)
 api_router.include_router(nutrient_router)
 api_router.include_router(intelligence_router)
 api_router.include_router(memory_router)
 api_router.include_router(admin_router)
+api_router.include_router(admin_support_router)
