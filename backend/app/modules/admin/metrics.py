@@ -440,7 +440,11 @@ class AdminMetrics:
                     )
                 ).scalars()
             )
-        window_offers = [offer for offer in offers if start <= offer.expected_harvest_date <= end]
+        window_offers = [
+            offer for offer in offers
+            if offer.expected_harvest_date is not None
+            and start <= offer.expected_harvest_date <= end
+        ]
         quantities: dict[str, float] = {}
         for offer in offers:
             amount = (
@@ -477,6 +481,21 @@ class AdminMetrics:
             },
             "by_crop": by_crop,
             "by_location": by_location,
+            "farm_records": [
+                {
+                    "farm_id": str(farm.id),
+                    "name": farm.name,
+                    "crop": farm.crop,
+                    "district": getattr(locations.get(farm.id), "district", None),
+                    "area_hectares": float(farm.area_hectares) if farm.area_hectares is not None else None,
+                    "recorded_stage": stage_by_farm.get(farm.id),
+                    "harvest_dates": sorted({
+                        offer.expected_harvest_date for offer in offers
+                        if offer.farm_id == farm.id and offer.expected_harvest_date is not None
+                    }),
+                }
+                for farm in farms
+            ],
             "crop_stages": [
                 {"label": label, "farm_count": count}
                 for label, count in sorted(

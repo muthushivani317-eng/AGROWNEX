@@ -99,3 +99,26 @@ async def test_crop_intelligence_answers_location_crop_and_harvest_window(db_ses
         {"unit": "tonne", "quantity": 2.0},
     ]
     assert data["by_location"][0]["label"] == "Tirunelveli / Ambasamudram"
+    assert {r["farm_id"] for r in data["farm_records"]} == {str(first.id), str(second.id)}
+    assert next(r for r in data["farm_records"] if r["farm_id"] == str(first.id))["recorded_stage"] == "fruiting"
+
+
+@pytest.mark.asyncio
+async def test_available_now_without_harvest_date_does_not_break_intelligence(db_session):
+    user, farm = await _farm(db_session, "undated", crop="Paddy", village="Village", area=None)
+    db_session.add(ProduceOffer(
+        user_id=user.id, farm_id=farm.id, crop_name="Paddy", quantity=15,
+        unit="kg", expected_harvest_date=None, availability_type="available_now",
+        status="submitted",
+    ))
+    await db_session.flush()
+    data = await AdminMetrics(db_session, now=NOW).crop_intelligence()
+    assert data["summary"]["sale_listing_count"] == 1
+    assert data["summary"]["harvest_window_listing_count"] == 0
+    assert data["offered_quantities"] == [{"unit": "kg", "quantity": 15.0}]
+    assert data["farm_records"][0]["harvest_dates"] == []
+    assert data["farm_records"][0]["area_hectares"] is None
+    from app.modules.admin.schemas import CropIntelligenceOut
+    response = CropIntelligenceOut(**data).model_dump(mode="json")
+    assert response["farm_records"][0]["farm_id"] == str(farm.id)
+    assert response["farm_records"][0]["harvest_dates"] == []

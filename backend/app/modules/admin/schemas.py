@@ -199,6 +199,16 @@ class HarvestWindowOut(BaseModel):
     listing_count: int
 
 
+class FarmIntelligenceRecordOut(BaseModel):
+    farm_id: str
+    name: str | None
+    crop: str | None
+    district: str | None
+    area_hectares: float | None
+    recorded_stage: str | None
+    harvest_dates: list[date]
+
+
 class CropIntelligenceOut(BaseModel):
     generated_at: datetime
     filters: CropIntelligenceFiltersOut
@@ -208,6 +218,7 @@ class CropIntelligenceOut(BaseModel):
     crop_stages: list[CropStageCountOut]
     offered_quantities: list[OfferedQuantityOut]
     harvest_window: HarvestWindowOut
+    farm_records: list[FarmIntelligenceRecordOut] = Field(default_factory=list)
 
 
 # --------------------------------------------------------------------------- #
