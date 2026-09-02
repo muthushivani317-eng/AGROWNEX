@@ -2,17 +2,20 @@
 
 This directory is the **only** place that feeds `ACTIVE_RULE_REGISTRY`
 (`app/modules/disease_risk/service.py`, loaded via
-`app/modules/disease_risk/registry.py`'s `load_active_registry()`). It is
-empty on purpose right now.
+`app/modules/disease_risk/registry.py`'s `load_active_registry()`). As of
+2026-09-02 it holds 3 active packs, all `SOURCED_PUBLIC_REFERENCE`:
+`paddy_bacterial_leaf_blight.json`, `paddy_sheath_blight.json`, and
+`chilli_damping_off.json`. Every other crop/disease combination the app
+supports for detection is still unblocked by a pack and stays gated.
 
-## Why it's empty
+## Why most crop/disease combinations are still gated
 
 Disease Risk Alerts refuses to raise an alert for a crop/disease until a rule
 pack here has real, source-cited epidemiological thresholds behind it. That's
 a deliberate safety gate — the app would rather show "no verified guidance
 available" than tell a farmer "conditions favour blast this week" based on a
-guessed threshold. Nobody has populated this directory with real, cited
-content yet, so every crop/disease combination is blocked.
+guessed threshold. Only the 3 packs above have real, cited content so far;
+every other combination remains blocked until someone adds one.
 
 **Do not add an entry here unless the conditions come from a genuine,
 checkable agronomic/epidemiological source** (a KVK, ICAR, a state
