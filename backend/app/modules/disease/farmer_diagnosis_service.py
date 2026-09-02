@@ -146,11 +146,13 @@ def _decode_image(payload: bytes, content_type: str | None) -> Image.Image:
     try:
         image = Image.open(io.BytesIO(payload))
         image.load()
-        require_safe_image(image)
-    except (UnidentifiedImageError, OSError, ValueError) as exc:
-        raise DiseaseDiagnosisError("IMAGE_UNUSABLE") from exc
+        # Farmer photos can contain strongly textured leaves/backgrounds.
+        # Keep controlled-model routes on their existing strict policy.
+        require_safe_image(image, texture_policy="spatial")
     except UnsafeImageError as exc:
         raise DiseaseDiagnosisError(exc.reason_code) from exc
+    except (UnidentifiedImageError, OSError, ValueError) as exc:
+        raise DiseaseDiagnosisError("IMAGE_UNUSABLE") from exc
     return image
 
 
