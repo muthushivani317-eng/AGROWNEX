@@ -365,3 +365,18 @@ async def test_mock_provider_delivers_in_app_and_skips_external() -> None:
     by_channel = {r.channel: r.status for r in results}
     assert by_channel["in_app"] == "delivered"
     assert by_channel["sms"] == "skipped"  # never claims sent for unwired channels
+
+
+def test_produce_no_harvest_date_is_skipped_not_crashed() -> None:
+    # 2026-09-03 regression: a produce offer with no expected_harvest_date
+    # crashed the whole notifications source with a TypeError. It should
+    # instead just skip the harvest-timing events for that offer.
+    events = collect_produce(ProduceOfferView("o1", "f1", "Paddy", days_to_harvest=None))
+    assert events == []
+
+
+def test_produce_no_harvest_date_still_reports_submission() -> None:
+    events = collect_produce(
+        ProduceOfferView("o1", "f1", "Paddy", days_to_harvest=None, is_submitted=True)
+    )
+    assert [e.event_type for e in events] == ["offer_submitted"]

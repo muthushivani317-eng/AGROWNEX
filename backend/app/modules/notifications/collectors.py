@@ -404,7 +404,7 @@ class ProduceOfferView:
     offer_id: str
     farm_id: str | None
     crop: str
-    days_to_harvest: int
+    days_to_harvest: int | None
     is_submitted: bool = False
 
 
@@ -420,6 +420,11 @@ def collect_produce(view: ProduceOfferView) -> list[CandidateEvent]:
                 farm_id=view.farm_id,
             )
         )
+    # No harvest date on record (e.g. a produce offer created before it was
+    # collected, or left blank) -- there is no "days to harvest" to evaluate,
+    # so skip the timing events without dropping the offer_submitted one above.
+    if view.days_to_harvest is None:
+        return events
     if 0 <= view.days_to_harvest <= HARVEST_APPROACHING_WINDOW_DAYS:
         events.append(
             CandidateEvent(

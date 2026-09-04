@@ -346,7 +346,11 @@ class NotificationSources:
         )
         events: list[CandidateEvent] = []
         for offer in offers:
-            days = (offer.expected_harvest_date - self.today).days
+            days = (
+                (offer.expected_harvest_date - self.today).days
+                if offer.expected_harvest_date
+                else None
+            )
             events.extend(
                 collect_produce(
                     ProduceOfferView(
