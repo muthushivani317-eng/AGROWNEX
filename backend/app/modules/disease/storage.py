@@ -7,6 +7,7 @@ remains available only through explicit test/development opt-in.
 
 from __future__ import annotations
 
+import asyncio
 import datetime as _dt
 import hashlib
 import hmac
@@ -143,9 +144,19 @@ class R2Client:
                 response.raise_for_status()
                 # An authenticated PUT can succeed while the configured public
                 # domain is wrong/private. Never persist an URL the app cannot read.
+                # R2's public/CDN read path can briefly lag the write (2026-09-03:
+                # observed a 404 ~1s after a 200 PUT) -- retry a few times before
+                # concluding the URL is genuinely unreadable.
                 public_response = await client.get(
                     public_url, headers={"Range": "bytes=0-0"}, follow_redirects=True
                 )
+                for attempt in range(2):
+                    if public_response.status_code in {200, 206}:
+                        break
+                    await asyncio.sleep(0.3 * (attempt + 1))
+                    public_response = await client.get(
+                        public_url, headers={"Range": "bytes=0-0"}, follow_redirects=True
+                    )
                 if public_response.status_code not in {200, 206}:
                     raise StorageError()
                 public_type = public_response.headers.get("content-type", "")
