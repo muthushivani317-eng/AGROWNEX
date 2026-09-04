@@ -144,8 +144,20 @@ class NutrientService:
             requested_crop = normalize_nutrient_crop(req.crop) if req.crop else None
             farm_crop = normalize_nutrient_crop(farm.crop) if farm.crop else None
         except ValueError as exc:
+            logger.warning(
+                "nutrient crop unsupported at request time: req_crop=%r farm_crop=%r farm_id=%s",
+                req.crop,
+                farm.crop,
+                farm.id,
+            )
             raise NutrientUnsupportedCropError() from exc
         if requested_crop and farm_crop and requested_crop != farm_crop:
+            logger.warning(
+                "nutrient crop mismatch at request time: requested=%r farm=%r farm_id=%s",
+                requested_crop,
+                farm_crop,
+                farm.id,
+            )
             raise NutrientCropMismatchError()
         # Pass a bounded canonical value, never raw user-controlled spelling,
         # into the model prompt.
@@ -201,8 +213,23 @@ class NutrientService:
                 observed_crop = normalize_observed_nutrient_crop(observation.crop)
                 expected_crop = normalize_nutrient_crop(selected_crop)
             except ValueError as exc:
+                logger.warning(
+                    "nutrient crop unsupported from model output: raw_observed=%r "
+                    "selected_crop=%r farm_id=%s",
+                    observation.crop,
+                    selected_crop,
+                    farm.id,
+                )
                 raise NutrientUnsupportedCropError() from exc
             if observed_crop != expected_crop:
+                logger.warning(
+                    "nutrient crop mismatch: raw_observed=%r normalized_observed=%r "
+                    "expected=%r farm_id=%s",
+                    observation.crop,
+                    observed_crop,
+                    expected_crop,
+                    farm.id,
+                )
                 raise NutrientCropMismatchError()
 
         # STEP 3 — gather corroborating signals from the other modules.

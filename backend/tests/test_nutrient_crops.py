@@ -27,3 +27,23 @@ def test_normalize_nutrient_crop_rejects_invalid_values(value) -> None:
 
 def test_observed_crop_allows_parenthesized_scientific_name() -> None:
     assert normalize_observed_nutrient_crop("Sugarcane (Saccharum officinarum)") == "sugarcane"
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("Banana plant", "banana"),
+        ("banana tree", "banana"),
+        ("Banana Plant (Musa spp.)", "banana"),
+        ("Paddy crop", "paddy"),
+        ("Sugarcane", "sugarcane"),
+    ],
+)
+def test_observed_crop_strips_generic_descriptor_suffix(value, expected) -> None:
+    assert normalize_observed_nutrient_crop(value) == expected
+
+
+def test_observed_crop_does_not_strip_a_bare_generic_word() -> None:
+    # "tree" alone stays "tree" -- we only drop a trailing descriptor when it
+    # follows an actual crop name, never strip down to nothing.
+    assert normalize_observed_nutrient_crop("Tree") == "tree"

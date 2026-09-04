@@ -17,6 +17,32 @@ _ALIASES = {
     "sugar cane": "sugarcane",
 }
 _SEPARATORS = frozenset({" ", "-", "_", "'", "’"})
+# The vision model sometimes appends a generic botanical word to an otherwise
+# correct crop name (e.g. "banana plant" instead of "banana"). Stripped only from
+# the *observed* value below so a wording difference is never treated as a
+# different crop than the one the farmer/farm actually selected.
+_GENERIC_SUFFIXES = frozenset(
+    {
+        "plant",
+        "plants",
+        "tree",
+        "trees",
+        "crop",
+        "crops",
+        "leaf",
+        "leaves",
+        "sapling",
+        "saplings",
+        "seedling",
+        "seedlings",
+        "shrub",
+        "shrubs",
+        "vine",
+        "vines",
+        "sprout",
+        "sprouts",
+    }
+)
 
 
 def normalize_nutrient_crop(value: str) -> str:
@@ -42,6 +68,13 @@ def normalize_nutrient_crop(value: str) -> str:
 
 
 def normalize_observed_nutrient_crop(value: str) -> str:
-    """Normalize model output, tolerating a parenthesized scientific name."""
+    """Normalize model output, tolerating a parenthesized scientific name and a
+    trailing generic descriptor word (the model sometimes says "banana plant"
+    where "banana" was meant -- same crop, not a mismatch).
+    """
     common_name = re.sub(r"\s*\([^()]{1,80}\)\s*$", "", value or "")
-    return normalize_nutrient_crop(common_name)
+    normalized = normalize_nutrient_crop(common_name)
+    words = normalized.split(" ")
+    while len(words) > 1 and words[-1] in _GENERIC_SUFFIXES:
+        words.pop()
+    return " ".join(words)
