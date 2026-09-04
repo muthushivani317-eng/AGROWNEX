@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime, timedelta
 
 from app.modules.auth.models import User
-from app.modules.farms.models import Farm
+from app.modules.farms.models import Farm, FarmLocation
 from app.modules.market.jobs import refresh_market_prices
 from app.modules.market.models import MarketFavourite
 from app.modules.market.provider import PriceQuery, ProviderPrice
@@ -76,6 +76,96 @@ async def test_refresh_market_prices_refreshes_tracked_favourites(db_session):
 
 
 async def test_refresh_market_prices_no_favourites_is_noop(db_session):
+    result = await refresh_market_prices(db_session, provider=FakeMarketProvider())
+    assert result == {"targets": 0, "refreshed_targets": 0, "prices": 0}
+
+
+async def test_refresh_market_prices_also_warms_active_farms_own_crop_district(
+    db_session,
+):
+    # 2026-09 regression: a small/growing user base has almost nothing
+    # favourited, so a farmer's own crop/district was never pre-warmed and
+    # every first view of Market Prices hit a live (often slow) provider call.
+    user = await _user(db_session, "fb-market-job-farm")
+    farm = Farm(user_id=user.id, name="Home Field", crop="Banana")
+    db_session.add(farm)
+    await db_session.flush()
+    db_session.add(FarmLocation(farm_id=farm.id, district="Trichy", source="gps"))
+    await db_session.flush()
+
+    provider = FakeMarketProvider()
+    result = await refresh_market_prices(db_session, provider=provider)
+
+    assert result["targets"] == 1
+    assert result["prices"] >= 1
+    assert provider.queries[0].commodity == "Banana"
+    assert provider.queries[0].district == "Trichy"
+    assert provider.queries[0].market is None
+
+
+async def test_refresh_market_prices_dedupes_farms_sharing_a_crop_and_district(
+    db_session,
+):
+    # Two different farms (different owners) growing the same crop in the same
+    # district must only be fetched once, not once per farm.
+    user_a = await _user(db_session, "fb-market-job-dedupe-a")
+    user_b = await _user(db_session, "fb-market-job-dedupe-b")
+    farm_a = Farm(user_id=user_a.id, name="Field A", crop="Paddy")
+    farm_b = Farm(user_id=user_b.id, name="Field B", crop="Paddy")
+    db_session.add_all([farm_a, farm_b])
+    await db_session.flush()
+    db_session.add(FarmLocation(farm_id=farm_a.id, district="Thanjavur", source="gps"))
+    db_session.add(FarmLocation(farm_id=farm_b.id, district="Thanjavur", source="gps"))
+    await db_session.flush()
+
+    provider = FakeMarketProvider()
+    result = await refresh_market_prices(db_session, provider=provider)
+
+    assert result["targets"] == 1
+    assert len(provider.queries) == 1
+    assert result["prices"] >= 1
+
+
+async def test_refresh_market_prices_combines_favourites_and_farm_targets(
+    db_session,
+):
+    # A favourite (full crop+market+district+state) and an unrelated farm's own
+    # crop/district are both refreshed -- one target each, not deduped away.
+    user = await _user(db_session, "fb-market-job-combined")
+    farm = Farm(user_id=user.id, name="Home Field", crop="Banana")
+    db_session.add(farm)
+    await db_session.flush()
+    db_session.add(FarmLocation(farm_id=farm.id, district="Trichy", source="gps"))
+    db_session.add(
+        MarketFavourite(
+            user_id=user.id,
+            commodity="Paddy",
+            market_name="Thanjavur",
+            district="Thanjavur",
+            state="Tamil Nadu",
+        )
+    )
+    await db_session.flush()
+
+    provider = FakeMarketProvider()
+    result = await refresh_market_prices(db_session, provider=provider)
+
+    assert result["targets"] == 2
+    queried_commodities = {q.commodity for q in provider.queries}
+    assert queried_commodities == {"Banana", "Paddy"}
+
+
+async def test_refresh_market_prices_ignores_farms_missing_crop_or_district(
+    db_session,
+):
+    user = await _user(db_session, "fb-market-job-incomplete")
+    no_crop = Farm(user_id=user.id, name="No Crop Field")
+    no_location = Farm(user_id=user.id, name="No Location Field", crop="Onion")
+    db_session.add_all([no_crop, no_location])
+    await db_session.flush()
+    db_session.add(FarmLocation(farm_id=no_crop.id, district="Salem", source="gps"))
+    await db_session.flush()
+
     result = await refresh_market_prices(db_session, provider=FakeMarketProvider())
     assert result == {"targets": 0, "refreshed_targets": 0, "prices": 0}
 

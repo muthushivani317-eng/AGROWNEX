@@ -11,6 +11,7 @@ from typing import Any
 
 from sqlalchemy import Select, func, select
 
+from app.modules.farms.constants import FarmStatus
 from app.modules.farms.models import Farm, FarmLocation, FarmMedia
 from app.shared.base_repository import BaseRepository
 
@@ -56,6 +57,27 @@ class FarmRepository(BaseRepository[Farm]):
             select(Farm.user_id).where(Farm.is_deleted.is_(False)).distinct()
         )
         return [row[0] for row in result.all()]
+
+    async def distinct_crop_district_targets(self) -> list[tuple[str, str]]:
+        """Distinct (crop, district) pairs across every active farm with both on
+        file -- the audience the market-price background refresh job keeps warm
+        in addition to explicit favourites, so a farmer's own crop in their own
+        district already has *something* stored before they ever open the
+        Market Prices screen, instead of depending on a live provider call the
+        first time (docs: 2026-09 market reliability -- most first-time queries
+        aren't for a favourited combo, they're for the farmer's own farm)."""
+        result = await self.session.execute(
+            select(Farm.crop, FarmLocation.district)
+            .join(FarmLocation, FarmLocation.farm_id == Farm.id)
+            .where(
+                Farm.is_deleted.is_(False),
+                Farm.status == FarmStatus.ACTIVE.value,
+                Farm.crop.is_not(None),
+                FarmLocation.district.is_not(None),
+            )
+            .distinct()
+        )
+        return [(crop, district) for crop, district in result.all()]
 
     async def list_for_user(
         self,
