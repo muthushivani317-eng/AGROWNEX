@@ -12,7 +12,7 @@ from typing import Any
 from sqlalchemy import Select, func, select
 
 from app.modules.farms.constants import FarmStatus
-from app.modules.farms.models import Farm, FarmLocation, FarmMedia
+from app.modules.farms.models import Farm, FarmBoundary, FarmLocation, FarmMedia
 from app.shared.base_repository import BaseRepository
 
 _SORT_COLUMNS: dict[str, Any] = {
@@ -57,6 +57,20 @@ class FarmRepository(BaseRepository[Farm]):
             select(Farm.user_id).where(Farm.is_deleted.is_(False)).distinct()
         )
         return [row[0] for row in result.all()]
+
+    async def list_active_farms_with_boundary(self) -> list[Farm]:
+        """Active, non-deleted farms that have a saved field boundary -- the
+        audience for satellite-derived background jobs (added for the Daily
+        Task advisory layer's overnight generation job; mirrors the sibling
+        `distinct_crop_district_targets` / `list_owner_ids` query pattern
+        above rather than querying Farm directly from the job itself)."""
+        result = await self.session.execute(
+            select(Farm)
+            .join(FarmBoundary, FarmBoundary.farm_id == Farm.id)
+            .where(Farm.is_deleted.is_(False), Farm.status == FarmStatus.ACTIVE.value)
+            .distinct()
+        )
+        return list(result.scalars().all())
 
     async def distinct_crop_district_targets(self) -> list[tuple[str, str]]:
         """Distinct (crop, district) pairs across every active farm with both on

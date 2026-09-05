@@ -114,8 +114,8 @@ class Settings(BaseSettings):
     disease_max_image_pixels: int = 25_000_000
 
     # --- Per-farmer daily AI quota (protects the Gemini budget from abuse) ---
-    ai_daily_disease_quota: int = 30
-    ai_daily_chat_quota: int = 100
+    ai_daily_disease_quota: int = Field(default=5, ge=1)
+    ai_daily_chat_quota: int = Field(default=10, ge=1)
     ai_daily_plant_identifier_quota: int = 15
     ai_daily_growth_quota: int = 10
     ai_daily_nutrient_quota: int = 10
@@ -157,6 +157,35 @@ class Settings(BaseSettings):
     msg91_sender_id: str = Field(default="AGROAI")
     msg91_template_id: str = Field(default="")
     msg91_base_url: str = Field(default="https://control.msg91.com/api/v5")
+
+    # --- Today's Farm Task advisory layer (2026-09) ---
+    # Master switch for the whole daily-task feature (signal generation +
+    # farmer-facing cards). Off by default until a pilot cohort is enabled,
+    # matching the same "release decision is a config change" pattern as
+    # `openai_vision_diagnosis_enabled` above.
+    daily_tasks_enabled: bool = Field(default=False)
+    # Sub-flag: the uneven-growth zonal tracking signal. Today's Farm Task
+    # can launch with this off -- the other MVP task types are unaffected
+    # (see app/modules/daily_task/zonal_analysis.py).
+    uneven_growth_enabled: bool = Field(default=False)
+    # Evidence Pack generation (the on-demand damage-evidence record). Can
+    # launch independently of daily_tasks_enabled and independently of the
+    # PDF export below (text/data-only pack).
+    evidence_pack_enabled: bool = Field(default=False)
+    # PDF export for an Evidence Pack. Off by default: no Tamil-capable font
+    # is bundled yet, so the PDF is English-only (see evidence_pack.py) --
+    # this flag lets that ship later without touching the pack itself.
+    evidence_pack_pdf_enabled: bool = Field(default=False)
+    # Present for forward compatibility with a future satellite-side "zonal
+    # analysis" concept distinct from the daily-task zone tracker above.
+    # Currently unused by any code path; kept so a later split does not need
+    # a new flag name.
+    zonal_analysis_enabled: bool = Field(default=False)
+    # Gate on the drainage/waterlogging daily-task signal specifically. Must
+    # stay off (or the underlying satellite waterlogging policy gate must
+    # stay in place) until the caution-language review is signed off --
+    # see app/modules/satellite/waterlogging.py and daily_task/signal_providers.py.
+    cautious_waterlogging_tasks_enabled: bool = Field(default=False)
 
     # --- Observability (Phase 4) ---
     sentry_dsn: str = Field(default="")

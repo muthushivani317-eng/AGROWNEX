@@ -15,6 +15,7 @@ from app.modules.auth.constants import RoleName
 from app.modules.auth.rbac_models import Role
 from app.modules.calendar import models as _calendar_models  # noqa: F401
 from app.modules.consents import models as _consent_models  # noqa: F401
+from app.modules.daily_task import models as _daily_task_models  # noqa: F401
 from app.modules.disease import models as _disease_models  # noqa: F401
 from app.modules.experts import models as _expert_models  # noqa: F401
 from app.modules.farms import models as _farm_models  # noqa: F401

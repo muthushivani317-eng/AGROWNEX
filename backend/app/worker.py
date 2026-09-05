@@ -32,6 +32,8 @@ from app.modules.notifications.jobs import (
     retry_failed_notifications as _retry_failed_notifications,
 )
 from app.modules.produce.jobs import expire_stale_offers as _expire_stale_offers
+from app.modules.daily_task.jobs import generate_daily_tasks as _generate_daily_tasks
+from app.modules.daily_task.jobs import send_verification_followups as _send_verification_followups
 from app.modules.satellite.jobs import render_satellite_images as _render_satellite_images
 
 logger = get_logger("worker")
@@ -65,6 +67,14 @@ async def expire_stale_offers(ctx: dict[str, Any]) -> dict:
     return await _run(_expire_stale_offers)
 
 
+async def generate_daily_tasks_job(ctx: dict[str, Any]) -> dict:
+    return await _run(_generate_daily_tasks)
+
+
+async def send_verification_followups_job(ctx: dict[str, Any]) -> dict:
+    return await _run(_send_verification_followups)
+
+
 async def render_satellite_images_job(
     ctx: dict[str, Any], session_id: str, user_id: str, force: bool = False
 ) -> dict[str, Any]:
@@ -89,10 +99,17 @@ class WorkerSettings:
         retry_failed_notifications,
         expire_stale_offers,
         render_satellite_images_job,
+        generate_daily_tasks_job,
+        send_verification_followups_job,
     ]
     cron_jobs = [
         cron(refresh_market_prices, hour=set(range(0, 24, 2)), minute=0),
         cron(evaluate_weather_alerts, minute={0, 30}),
         cron(retry_failed_notifications, minute=set(range(0, 60, 5))),
         cron(expire_stale_offers, hour={3}, minute=0),
+        # Fires well after the satellite/weather refresh cadence above so
+        # its signal providers always read same-day already-computed data
+        # (docs: app/modules/daily_task/jobs.py module docstring).
+        cron(generate_daily_tasks_job, hour={4}, minute=0),
+        cron(send_verification_followups_job, minute={15, 45}),
     ]

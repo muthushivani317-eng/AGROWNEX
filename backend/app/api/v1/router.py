@@ -25,6 +25,8 @@ from app.modules.calendar.router import router as calendar_router
 from app.modules.community.router import router as community_router
 from app.modules.consents.router import router as consents_router
 from app.modules.crop_recommendation.router import router as crop_recommendation_router
+from app.modules.daily_task.router import evidence_pack_router as evidence_pack_router
+from app.modules.daily_task.router import router as daily_task_router
 from app.modules.disease.router import router as disease_router
 from app.modules.disease_comparison.router import router as disease_comparison_router
 from app.modules.disease_risk.router import router as disease_risk_router
@@ -98,3 +100,5 @@ api_router.include_router(intelligence_router)
 api_router.include_router(memory_router)
 api_router.include_router(admin_router)
 api_router.include_router(admin_support_router)
+api_router.include_router(daily_task_router)
+api_router.include_router(evidence_pack_router)
