@@ -46,6 +46,15 @@ class DailyTaskRepository:
         result = await self.session.execute(select(DailyTask).where(DailyTask.id == task_id))
         return result.scalar_one_or_none()
 
+    async def get_task_by_signal_id(self, signal_id: uuid.UUID) -> DailyTask | None:
+        """`daily_tasks.signal_id` is unique (one card per signal) -- used by
+        `DailyTaskService.generate_tasks_for_farm` to make a same-day re-run
+        (worker restart, manual retrigger) a genuine no-op for a signal that
+        already produced a card, instead of hitting that unique constraint.
+        """
+        result = await self.session.execute(select(DailyTask).where(DailyTask.signal_id == signal_id))
+        return result.scalar_one_or_none()
+
     async def get_active_tasks_for_user(self, user_id: uuid.UUID) -> list[DailyTask]:
         result = await self.session.execute(
             select(DailyTask)

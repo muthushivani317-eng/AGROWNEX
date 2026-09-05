@@ -41,7 +41,8 @@ def upgrade() -> None:
         sa.Column("policy_flags", sa.JSON(), nullable=False, server_default="[]"),
         sa.Column("recommended_task_type", sa.String(64), nullable=False),
         sa.Column("dedupe_key", sa.String(256), nullable=False),
-        sa.Column("status", sa.String(32), nullable=False, server_default="candidate"),
+        # 64, not 32: see app/modules/daily_task/models.py::DailySignal.status
+        sa.Column("status", sa.String(64), nullable=False, server_default="candidate"),
         sa.Column("status_reason", sa.Text(), nullable=True),
         sa.Column("rank_score", sa.Float(), nullable=True),
         *_timestamps(),
@@ -146,7 +147,8 @@ def upgrade() -> None:
         sa.Column("run_id", GUID(), nullable=False),
         sa.Column("farm_id", GUID(), nullable=False),
         sa.Column("signal_id", GUID(), nullable=True),
-        sa.Column("decision", sa.String(32), nullable=False),
+        # 64, not 32: see app/modules/daily_task/models.py::DailyTaskAuditLog.decision
+        sa.Column("decision", sa.String(64), nullable=False),
         sa.Column("decision_detail", sa.JSON(), nullable=False, server_default="{}"),
         *_timestamps(),
     )

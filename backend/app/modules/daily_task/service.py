@@ -69,8 +69,18 @@ class DailyTaskService:
             if existing is not None:
                 # Idempotency: re-running generation for the same farm/day
                 # (a scheduler retry) must never create a second row for the
-                # same real-world event.
-                persisted.append(candidate)
+                # same real-world event. The freshly-collected `candidate`
+                # carries a new random EvidenceSignal.id (providers never set
+                # one explicitly -- see signal_providers.py), which is NOT the
+                # id already persisted in `daily_signals`. Re-pointing it at
+                # `existing.id` keeps the rest of the freshly-collected content
+                # (evidence, urgency, etc.) for ranking while ensuring any
+                # DailyTask this ranks into references a signal_id that
+                # actually exists -- otherwise a same-day re-run (worker
+                # restart, manual retrigger) raises a daily_tasks_signal_id_fkey
+                # IntegrityError instead of being the safe no-op this comment
+                # already promised.
+                persisted.append(candidate.model_copy(update={"id": existing.id}))
                 continue
             await self._repo.create_signal(
                 id=candidate.id,
@@ -99,6 +109,15 @@ class DailyTaskService:
         for position, ranked in enumerate(
             sorted(result.shown, key=lambda rc: rc.rank_score, reverse=True), start=1
         ):
+            # Idempotency (continued): a same-day re-run reaches this point
+            # for a signal that already produced a card on the first run --
+            # `_check_cooldown` deliberately does not suppress it (an
+            # unresolved active task must not be hidden just because
+            # generation re-ran). `daily_tasks.signal_id` is unique, so
+            # without this check a retry would hit that constraint instead
+            # of being the safe no-op the module's docstring promises.
+            if await self._repo.get_task_by_signal_id(ranked.signal.id) is not None:
+                continue
             copy = render_task_copy(ranked.signal)
             await self._repo.create_task(
                 farm_id=farm.id,

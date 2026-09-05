@@ -70,7 +70,12 @@ class DailySignal(UUIDMixin, TimestampMixin, Base):
 
     dedupe_key: Mapped[str] = mapped_column(String(256), nullable=False, index=True)
 
-    status: Mapped[str] = mapped_column(String(32), nullable=False, default="candidate", index=True)
+    # 64, not 32: `status` can be set to a ranking-engine decision string
+    # (service.py -> update_signal_status), and some of those --
+    # "suppressed_policy_blocked_definitive_flood_claim" is the longest at 48
+    # chars -- exceed 32 (see daily_task_audit_log.decision below for the
+    # same reason).
+    status: Mapped[str] = mapped_column(String(64), nullable=False, default="candidate", index=True)
     status_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     rank_score: Mapped[float | None] = mapped_column(Float, nullable=True)
 
@@ -233,5 +238,11 @@ class DailyTaskAuditLog(UUIDMixin, TimestampMixin, Base):
     run_id: Mapped[uuid.UUID] = mapped_column(GUID(), nullable=False, index=True)
     farm_id: Mapped[uuid.UUID] = mapped_column(GUID(), nullable=False, index=True)
     signal_id: Mapped[uuid.UUID | None] = mapped_column(GUID(), nullable=True)
-    decision: Mapped[str] = mapped_column(String(32), nullable=False)
+    # 64, not 32: ranking_engine._suppressed() writes f"suppressed_{reason}",
+    # and several `reason` values push the result past 32 chars -- longest
+    # observed is "suppressed_policy_blocked_definitive_flood_claim" (48) and
+    # "suppressed_merged_into_sowing_germination_check" (47). Found via a
+    # real-Postgres run (StringDataRightTruncationError); SQLite's test
+    # fixture doesn't enforce VARCHAR length so this was previously silent.
+    decision: Mapped[str] = mapped_column(String(64), nullable=False)
     decision_detail: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)

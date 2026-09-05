@@ -176,4 +176,21 @@ async def test_generate_tasks_for_farm_is_idempotent_for_same_dedupe_key_and_day
     from sqlalchemy import select
 
     result = await db_session.execute(select(DailySignal).where(DailySignal.dedupe_key == dedupe_key))
-    assert len(result.scalars().all()) == 1
+    signals = result.scalars().all()
+    assert len(signals) == 1
+
+    # The regression this guards: EvidenceSignal.id is a fresh uuid4() every
+    # time a provider's collect() runs (see signal_providers.py -- no
+    # provider sets `id=` explicitly), so the *second* generate call's
+    # candidate carries an id that was never persisted. If the service ever
+    # ranks that second-run candidate into a shown task using its own
+    # (unpersisted) id rather than the already-persisted `existing.id`, the
+    # created DailyTask.signal_id points at a DailySignal row that doesn't
+    # exist -- silently tolerated by this suite's SQLite fixture (FK
+    # enforcement is off), but a real daily_tasks_signal_id_fkey
+    # IntegrityError against the real Postgres schema. Assert the referential
+    # link explicitly so this suite catches it even without FK enforcement.
+    tasks_result = await db_session.execute(select(DailyTask).where(DailyTask.farm_id == farm_id))
+    tasks = tasks_result.scalars().all()
+    assert len(tasks) == 1
+    assert tasks[0].signal_id == signals[0].id
