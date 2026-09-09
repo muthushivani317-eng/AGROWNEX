@@ -37,6 +37,7 @@
         },
         {
           "code": "apply_organic_manure_and_biofertilizer",
+          "organic_practice": true,
           "activity_type": "land_preparation",
           "label_key": "calendar.verified.chilli.apply_organic_manure_and_biofertilizer.title",
           "description_key": "calendar.verified.chilli.apply_organic_manure_and_biofertilizer.description",
@@ -179,5 +180,5 @@
   "review_date": "2027-08-18",
   "version": "1.1.0",
   "status": "SOURCED_PUBLIC_REFERENCE",
-  "content_hash": "53184f403760a4f501476649f08792867979b6c705c5ff5e11b9c3a6345bd179"
+  "content_hash": "a804d50df9c0e319d19a56869ffa4cc7e87ce9efe49cac5df525b5ac1bcb05cc"
 }

@@ -16,6 +16,7 @@ import uuid
 
 from fastapi import APIRouter, Query
 
+from app.modules.action_verification.schemas import ActionOut
 from app.modules.calendar.dependencies import CalendarServiceDep, CurrentUser
 from app.modules.calendar.schemas import (
     CalendarEventOut,
@@ -116,6 +117,7 @@ async def calendar_timeline(
     status: str | None = Query(None, pattern="^(pending|done|skipped)$"),
     page: int = Query(1, ge=1),
     page_size: int = Query(100, ge=1, le=200),
+    organic_only: bool = Query(False),
 ):
     """Full activity timeline (filterable by farm, crop and status), paginated."""
     events = await service.timeline(
@@ -125,8 +127,17 @@ async def calendar_timeline(
         status=status,
         page=page,
         page_size=page_size,
+        organic_only=organic_only,
     )
     return success(_out(events))
+
+
+@router.post("/events/{event_id}/organic-action", response_model=SuccessResponse[ActionOut])
+async def register_organic_action(
+    event_id: uuid.UUID, current_user: CurrentUser, service: CalendarServiceDep
+):
+    row = await service.register_organic_action(current_user, event_id)
+    return success(ActionOut.from_row(row), message="Organic calendar action registered")
 
 
 @router.put("/events/{event_id}", response_model=SuccessResponse[CalendarEventOut])

@@ -13,6 +13,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.core.timezone import today_ist
+from app.modules.action_verification.service import ActionVerificationService
+from app.modules.action_verification.source_adapter import SourceAction
 from app.modules.auth.models import User
 from app.modules.calendar.constants import (
     DEFAULT_REMINDER_HOUR,
@@ -118,6 +120,7 @@ class CalendarService:
                 registry_content_hash=schedule.content_hash,
                 registry_verification_status=schedule.status.value,
                 registry_source_reference=schedule.document_reference,
+                organic_practice=g.organic_practice,
             )
             for g in generated
         ]
@@ -140,6 +143,7 @@ class CalendarService:
         status: str | None = None,
         page: int = 1,
         page_size: int = 100,
+        organic_only: bool = False,
     ) -> list[AnnotatedEvent]:
         if farm_id is not None:
             await self._require_farm(user, farm_id)
@@ -151,7 +155,29 @@ class CalendarService:
             limit=page_size,
             offset=(page - 1) * page_size,
         )
+        if organic_only:
+            events = [event for event in events if event.organic_practice]
         return await self._annotate(user, events)
+
+    async def register_organic_action(self, user: User, event_id: uuid.UUID):
+        event = await self.events.get_for_user(event_id, user.id)
+        if event is None:
+            raise CalendarEventNotFoundError()
+        if not self._is_current_verified(event) or not event.organic_practice:
+            raise StageDataUnavailableError()
+        schedule = self.stage_registry.resolve(event.crop)
+        source = SourceAction(
+            source_feature="organic_calendar",
+            source_record_id=str(event.id),
+            source_version=f"{event.registry_version}:{event.registry_content_hash}",
+            action_code=event.code,
+            suggestion_time=datetime.now(UTC),
+            crop_cycle_id=str(event.crop_session_id) if event.crop_session_id else None,
+            source_verified=schedule is not None and schedule.status == ScheduleStatus.VERIFIED,
+        )
+        return await ActionVerificationService(self.session).register_source_action(
+            user, event.farm_id, source
+        )
 
     async def for_farm(
         self, user: User, farm_id: uuid.UUID, *, page: int = 1, page_size: int = 100

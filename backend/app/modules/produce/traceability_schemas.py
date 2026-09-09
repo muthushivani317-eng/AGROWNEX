@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, HttpUrl, field_validator
 
 
 class TraceEventType(StrEnum):
@@ -18,12 +18,19 @@ class TraceEventType(StrEnum):
     HANDOVER = "handover"
 
 
+class CultivationClassification(StrEnum):
+    CONVENTIONAL = "conventional"
+    ORGANIC_PRACTICES_UNVERIFIED = "organic_practices_unverified"
+    TRANSITIONING = "transitioning"
+    CERTIFIED_ORGANIC = "certified_organic"
+
+
 class TraceEventCreate(BaseModel):
     event_type: TraceEventType
     occurred_at: datetime
     location_text: str | None = Field(default=None, max_length=160)
     notes: str | None = Field(default=None, max_length=1000)
-    evidence_url: str | None = Field(default=None, max_length=512)
+    evidence_url: HttpUrl | None = Field(default=None, max_length=512)
 
     @field_validator("occurred_at")
     @classmethod
@@ -50,6 +57,10 @@ class TraceTimelineOut(BaseModel):
     batch_id: uuid.UUID
     offer_id: uuid.UUID
     batch_code: str
+    cultivation_classification: CultivationClassification
+    organic_profile_snapshot: dict | None
+    certification_verified_snapshot: bool
+    classification_snapshotted_at: datetime
     events: list[TraceEventOut]
     test_mode: bool = True
     public_certificate: bool = False

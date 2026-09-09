@@ -16,6 +16,7 @@ from app.modules.auth.dependencies import ControlledTester
 from app.modules.produce.models import ProduceTraceBatch, ProduceTraceEvent
 from app.modules.produce.repository import ProduceRepository
 from app.modules.produce.traceability_schemas import (
+    CultivationClassification,
     TraceEventCreate,
     TraceEventOut,
     TraceTimelineOut,
@@ -61,6 +62,10 @@ async def _timeline(session: AsyncSession, batch: ProduceTraceBatch) -> TraceTim
         batch_id=batch.id,
         offer_id=batch.offer_id,
         batch_code=batch.batch_code,
+        cultivation_classification=batch.cultivation_classification,
+        organic_profile_snapshot=batch.organic_profile_snapshot,
+        certification_verified_snapshot=batch.certification_verified_snapshot,
+        classification_snapshotted_at=batch.classification_snapshotted_at,
         events=[TraceEventOut.model_validate(row, from_attributes=True) for row in events],
         disclaimer=DISCLAIMER,
     )
@@ -72,15 +77,54 @@ async def _timeline(session: AsyncSession, batch: ProduceTraceBatch) -> TraceTim
     status_code=201,
 )
 async def initialize_traceability(
-    offer_id: uuid.UUID, tester: ControlledTester, session: SessionDep
+    offer_id: uuid.UUID,
+    tester: ControlledTester,
+    session: SessionDep,
+    cultivation_classification: CultivationClassification = CultivationClassification.CONVENTIONAL,
 ):
-    await _offer(session, offer_id, tester.user.id)
+    offer = await _offer(session, offer_id, tester.user.id)
     batch = await _batch(session, offer_id)
     if batch is None:
+        from app.modules.organic.repositories import OrganicRepository
+
+        profile = await OrganicRepository(session).profile_for_farm(offer.farm_id)
+        snapshot = None
+        verified = False
+        if profile is not None:
+            verified = bool(
+                profile.certification_status == "verified"
+                and profile.certification_verified_at is not None
+                and profile.certificate_expires_on is not None
+                and profile.certificate_expires_on >= datetime.now(UTC).date()
+            )
+            snapshot = {
+                "profile_id": str(profile.id),
+                "mode": profile.mode,
+                "plan_version": profile.plan_version,
+                "certification_status": profile.certification_status,
+                "certification_scheme": profile.certification_scheme,
+                "certificate_expires_on": (
+                    profile.certificate_expires_on.isoformat()
+                    if profile.certificate_expires_on else None
+                ),
+                "certification_verified_at": (
+                    profile.certification_verified_at.isoformat()
+                    if profile.certification_verified_at else None
+                ),
+            }
+        if (
+            cultivation_classification == CultivationClassification.CERTIFIED_ORGANIC
+            and not verified
+        ):
+            raise HTTPException(409, detail={"code": "CERTIFIED_ORGANIC_REQUIRES_VERIFICATION"})
         batch = ProduceTraceBatch(
             offer_id=offer_id,
             owner_user_id=tester.user.id,
             batch_code=f"AGW-{datetime.now(UTC):%Y%m%d}-{secrets.token_hex(4).upper()}",
+            cultivation_classification=cultivation_classification.value,
+            organic_profile_snapshot=snapshot,
+            certification_verified_snapshot=verified,
+            classification_snapshotted_at=datetime.now(UTC),
         )
         session.add(batch)
         await session.flush()
@@ -135,7 +179,7 @@ async def add_trace_event(
             "occurred_at": payload.occurred_at.astimezone(UTC).isoformat(),
             "location_text": payload.location_text,
             "notes": payload.notes,
-            "evidence_url": payload.evidence_url,
+            "evidence_url": str(payload.evidence_url) if payload.evidence_url else None,
             "previous_hash": previous.event_hash if previous else None,
         },
         sort_keys=True,
@@ -146,7 +190,11 @@ async def add_trace_event(
         actor_user_id=tester.user.id,
         previous_hash=previous.event_hash if previous else None,
         event_hash=hashlib.sha256(canonical.encode()).hexdigest(),
-        **payload.model_dump(),
+        event_type=payload.event_type.value,
+        occurred_at=payload.occurred_at,
+        location_text=payload.location_text,
+        notes=payload.notes,
+        evidence_url=str(payload.evidence_url) if payload.evidence_url else None,
     )
     session.add(row)
     await session.flush()

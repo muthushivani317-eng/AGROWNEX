@@ -80,6 +80,7 @@
         },
         {
           "code": "apply_organic_manure_and_neem_cake",
+          "organic_practice": true,
           "activity_type": "land_preparation",
           "label_key": "calendar.verified.tomato.apply_organic_manure_and_neem_cake.title",
           "description_key": "calendar.verified.tomato.apply_organic_manure_and_neem_cake.description",
@@ -251,5 +252,5 @@
   "review_date": "2027-08-18",
   "version": "1.1.0",
   "status": "SOURCED_PUBLIC_REFERENCE",
-  "content_hash": "b4508e1fbe727544d56da8d989383ab8bf1f8204e77717ac67c6bb6b3801f18e"
+  "content_hash": "1d9491cf793c7fa2edf80b54d0c0271a1623e3e496de9f791c16343688465d0f"
 }

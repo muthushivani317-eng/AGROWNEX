@@ -58,6 +58,7 @@ class CalendarEventOut(BaseModel):
     registry_version: str | None
     registry_verification_status: str | None
     registry_source_reference: str | None
+    organic_practice: bool
     created_at: datetime
 
     @classmethod
@@ -90,6 +91,7 @@ class CalendarEventOut(BaseModel):
             registry_version=event.registry_version,
             registry_verification_status=event.registry_verification_status,
             registry_source_reference=event.registry_source_reference,
+            organic_practice=event.organic_practice,
             created_at=event.created_at,
         )
 

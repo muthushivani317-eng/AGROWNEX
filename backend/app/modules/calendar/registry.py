@@ -52,6 +52,7 @@ class VerifiedActivity(BaseModel):
     notification_eligible: bool = False
     priority: str = Field(default="medium", pattern="^(low|medium|high)$")
     weather_dependency: str = Field(default="none", pattern="^(none|irrigation|spraying)$")
+    organic_practice: bool = False
 
 
 class VerifiedStage(BaseModel):

@@ -7,13 +7,15 @@ import pytest
 from app.modules.auth.dependencies import TesterContext as ControlledTesterContext
 from app.modules.auth.models import User
 from app.modules.farms.models import Farm
+from app.modules.organic.models import OrganicFarmProfile
 from app.modules.produce.models import ProduceOffer
 from app.modules.produce.traceability_router import (
     add_trace_event,
     get_traceability,
     initialize_traceability,
 )
-from app.modules.produce.traceability_schemas import TraceEventCreate
+from app.modules.produce.traceability_schemas import CultivationClassification, TraceEventCreate
+from fastapi import HTTPException
 
 
 @pytest.mark.asyncio
@@ -70,3 +72,36 @@ async def test_farmer_trace_events_are_append_only_hash_chained_and_unverified(d
 def test_trace_event_timestamp_requires_timezone():
     with pytest.raises(ValueError):
         TraceEventCreate(event_type="stored", occurred_at=datetime(2026, 8, 13, 9))
+
+
+@pytest.mark.asyncio
+async def test_certified_classification_requires_current_verified_profile(db_session):
+    user = User(firebase_uid=f"cert-trace-{uuid.uuid4()}", status="active")
+    db_session.add(user)
+    await db_session.flush()
+    farm = Farm(user_id=user.id, name="Certified trace farm")
+    db_session.add(farm)
+    await db_session.flush()
+    offer = ProduceOffer(user_id=user.id, farm_id=farm.id, crop_name="Paddy", quantity=1,
+                         unit="quintal", currency="INR", status="submitted")
+    db_session.add(offer)
+    await db_session.flush()
+    tester = ControlledTesterContext(user=user, role="kvk_reviewer")
+    with pytest.raises(HTTPException) as exc:
+        await initialize_traceability(
+            offer.id, tester, db_session, CultivationClassification.CERTIFIED_ORGANIC
+        )
+    assert exc.value.detail["code"] == "CERTIFIED_ORGANIC_REQUIRES_VERIFICATION"
+
+    profile = OrganicFarmProfile(
+        farm_id=farm.id, mode="fully_organic", certification_status="verified",
+        certificate_expires_on=date.today() + timedelta(days=30),
+        certification_verified_at=datetime.now(UTC), plan_version=2,
+    )
+    db_session.add(profile)
+    await db_session.flush()
+    result = await initialize_traceability(
+        offer.id, tester, db_session, CultivationClassification.CERTIFIED_ORGANIC
+    )
+    assert result.data.certification_verified_snapshot is True
+    assert result.data.organic_profile_snapshot["plan_version"] == 2

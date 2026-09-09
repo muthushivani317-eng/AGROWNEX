@@ -33,6 +33,7 @@ class GeneratedEvent:
     weather_dependency: WeatherDependency
     reminder_enabled: bool
     day_offset: int
+    organic_practice: bool = False
 
 
 def derive_season(sowing_date: date) -> Season:
@@ -118,6 +119,7 @@ def generate_verified_events(
                         and not (rainfed and activity.weather_dependency == "irrigation")
                     ),
                     day_offset=activity.day_offset,
+                    organic_practice=activity.organic_practice,
                 )
             )
     return sorted(events, key=lambda event: (event.scheduled_date, event.code))

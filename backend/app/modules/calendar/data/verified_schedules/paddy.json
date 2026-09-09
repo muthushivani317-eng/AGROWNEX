@@ -36,6 +36,7 @@
         },
         {
           "code": "apply_organic_manure_basal",
+          "organic_practice": true,
           "activity_type": "land_preparation",
           "label_key": "calendar.verified.paddy.apply_organic_manure_basal.title",
           "description_key": "calendar.verified.paddy.apply_organic_manure_basal.description",
@@ -241,5 +242,5 @@
   "review_date": "2027-08-18",
   "version": "1.1.0",
   "status": "SOURCED_PUBLIC_REFERENCE",
-  "content_hash": "047a95f670409b8387d6434837f6df00d5c14facdb61ad0cfdc205817d7fa500"
+  "content_hash": "f8931db07e776a30335b0782dfa5dbcff4da419bb857e496bdd25a2932d43514"
 }

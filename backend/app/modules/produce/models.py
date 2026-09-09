@@ -20,7 +20,7 @@ the authenticated user, matching the docs' ``farmer_id`` concept.
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 
 from sqlalchemy import (
     JSON,
@@ -271,6 +271,16 @@ class ProduceTraceBatch(UUIDMixin, TimestampMixin, Base):
         GUID(), ForeignKey("users.id"), index=True, nullable=False
     )
     batch_code: Mapped[str] = mapped_column(String(40), unique=True, index=True)
+    cultivation_classification: Mapped[str] = mapped_column(
+        String(40), nullable=False, default="conventional"
+    )
+    organic_profile_snapshot: Mapped[dict | None] = mapped_column(JSON)
+    certification_verified_snapshot: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False
+    )
+    classification_snapshotted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
 
 
 class ProduceTraceEvent(UUIDMixin, TimestampMixin, Base):
