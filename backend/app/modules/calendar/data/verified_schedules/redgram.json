@@ -1,0 +1,156 @@
+{
+  "schema_version": "1.0",
+  "canonical_crop_id": "redgram",
+  "aliases": [
+    "red_gram",
+    "pigeonpea",
+    "pigeon_pea"
+  ],
+  "variety_or_duration_group": "medium_duration_120_130_day",
+  "stages": [
+    {
+      "code": "sowing",
+      "label_key": "calendar.stages.sowing",
+      "start_offset": 0,
+      "end_offset": 3,
+      "activities": [
+        {
+          "code": "prepare_land",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.redgram.prepare_land.title",
+          "description_key": "calendar.verified.redgram.prepare_land.description",
+          "day_offset": -7,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none",
+          "organic_practice": true
+        },
+        {
+          "code": "sow_seed",
+          "activity_type": "sowing",
+          "label_key": "calendar.verified.redgram.sow_seed.title",
+          "description_key": "calendar.verified.redgram.sow_seed.description",
+          "day_offset": 0,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none",
+          "organic_practice": true
+        },
+        {
+          "code": "establishment_irrigation",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.redgram.establishment_irrigation.title",
+          "description_key": "calendar.verified.redgram.establishment_irrigation.description",
+          "day_offset": 3,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation",
+          "organic_practice": true
+        }
+      ]
+    },
+    {
+      "code": "weed_management",
+      "label_key": "calendar.stages.establishment_and_weed_management",
+      "start_offset": 15,
+      "end_offset": 30,
+      "activities": [
+        {
+          "code": "hand_weeding_15",
+          "activity_type": "weed_management",
+          "label_key": "calendar.verified.redgram.hand_weeding_15.title",
+          "description_key": "calendar.verified.redgram.hand_weeding_15.description",
+          "day_offset": 15,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none",
+          "organic_practice": true
+        },
+        {
+          "code": "hand_weeding_30",
+          "activity_type": "weed_management",
+          "label_key": "calendar.verified.redgram.hand_weeding_30.title",
+          "description_key": "calendar.verified.redgram.hand_weeding_30.description",
+          "day_offset": 30,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none",
+          "organic_practice": true
+        }
+      ]
+    },
+    {
+      "code": "disease_and_pest_scouting",
+      "label_key": "calendar.stages.disease_and_pest_scouting",
+      "start_offset": 15,
+      "end_offset": 115,
+      "activities": [
+        {
+          "code": "field_scouting",
+          "activity_type": "field_scouting",
+          "label_key": "calendar.verified.redgram.field_scouting.title",
+          "description_key": "calendar.verified.redgram.field_scouting.description",
+          "day_offset": 30,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none",
+          "organic_practice": true
+        }
+      ]
+    },
+    {
+      "code": "harvest",
+      "label_key": "calendar.stages.harvest",
+      "start_offset": 120,
+      "end_offset": 130,
+      "activities": [
+        {
+          "code": "check_maturity",
+          "activity_type": "harvest_preparation",
+          "label_key": "calendar.verified.redgram.check_maturity.title",
+          "description_key": "calendar.verified.redgram.check_maturity.description",
+          "day_offset": 122,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none",
+          "organic_practice": true
+        },
+        {
+          "code": "harvest_and_dry",
+          "activity_type": "harvest",
+          "label_key": "calendar.verified.redgram.harvest_and_dry.title",
+          "description_key": "calendar.verified.redgram.harvest_and_dry.description",
+          "day_offset": 125,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none",
+          "organic_practice": true
+        }
+      ]
+    }
+  ],
+  "geographic_limitations": [
+    "Tamil Nadu"
+  ],
+  "season_limitations": [
+    "kharif",
+    "rabi",
+    "summer"
+  ],
+  "source_organization": "Tamil Nadu Agricultural University (TNAU), Coimbatore",
+  "document_reference": "TNAU Agritech Portal -- Crop Production: Pulses: redgram (https://www.agritech.tnau.ac.in/agriculture/CropProduction/Pulses/pulses_redgram.html)",
+  "reviewer": "AgrowAI content team -- compiled from cited public source, not independently agronomist-reviewed",
+  "approval_date": "2026-09-10",
+  "review_date": "2027-09-10",
+  "version": "1.0.0",
+  "status": "SOURCED_PUBLIC_REFERENCE",
+  "content_hash": "217ad028350300f946df4425a187bbc07b3d8a414fe2c59333ae200c72cd6949"
+}

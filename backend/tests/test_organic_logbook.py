@@ -5,7 +5,9 @@ from app.api.v1.router import api_router
 from app.modules.action_verification.schemas import ActionCreateIn, ActionRespondIn
 from app.modules.action_verification.service import ActionVerificationService
 from app.modules.auth.models import User
+from app.modules.disease.storage import MockStorage
 from app.modules.farms.models import Farm
+from app.modules.organic.certification_receipt import LOGBOOK_EVIDENCE, store_and_attest_upload
 from app.modules.organic_logbook.exceptions import (
     OrganicLogEntryNotFoundError,
     OrganicLogReferenceError,
@@ -41,12 +43,25 @@ def _payload(farm, **overrides):
 async def test_manual_log_is_farmer_reported_and_idempotent(db_session):
     user, farm = await _owner(db_session)
     service = OrganicLogbookService(db_session)
+    attestation, receipt = await store_and_attest_upload(
+        db_session,
+        MockStorage(),
+        user_id=user.id,
+        farm_id=farm.id,
+        purpose=LOGBOOK_EVIDENCE,
+        data=b"photo",
+        mime_type="image/jpeg",
+        file_suffix="jpg",
+    )
     payload = _payload(
         farm,
-        evidence=[OrganicEvidenceIn(
-            evidence_type="photo",
-            storage_ref=f"organic-evidence/{user.id}/{farm.id}/photo-1.jpg",
-        )],
+        evidence=[
+            OrganicEvidenceIn(
+                evidence_type="photo",
+                upload_attestation_id=attestation.id,
+                upload_receipt=receipt,
+            )
+        ],
     )
 
     first = await service.create(user, payload)
@@ -79,8 +94,10 @@ async def test_linked_action_preserves_source_but_not_expert_verification(db_ses
         user,
         action.id,
         ActionRespondIn(
-            event="done", expected_version=1,
-            idempotency_key="action-done-0001", request_id="request-1",
+            event="done",
+            expected_version=1,
+            idempotency_key="action-done-0001",
+            request_id="request-1",
         ),
     )
 
@@ -117,6 +134,17 @@ def test_organic_logbook_routes_are_registered():
 @pytest.mark.asyncio
 async def test_evidence_cannot_reference_another_storage_namespace(db_session):
     user, farm = await _owner(db_session, "evidence-scope")
+    other, other_farm = await _owner(db_session, "evidence-other")
+    attestation, receipt = await store_and_attest_upload(
+        db_session,
+        MockStorage(),
+        user_id=other.id,
+        farm_id=other_farm.id,
+        purpose=LOGBOOK_EVIDENCE,
+        data=b"photo",
+        mime_type="image/jpeg",
+        file_suffix="jpg",
+    )
     with pytest.raises(OrganicLogReferenceError):
         await OrganicLogbookService(db_session).create(
             user,
@@ -125,8 +153,68 @@ async def test_evidence_cannot_reference_another_storage_namespace(db_session):
                 evidence=[
                     OrganicEvidenceIn(
                         evidence_type="photo",
-                        storage_ref="organic-evidence/other/farm/photo.jpg",
+                        upload_attestation_id=attestation.id,
+                        upload_receipt=receipt,
                     )
                 ],
             ),
         )
+
+
+@pytest.mark.asyncio
+async def test_completing_source_organic_action_automatically_creates_one_log_entry(db_session):
+    user, farm = await _owner(db_session, "completion-bridge")
+    actions = ActionVerificationService(db_session)
+    action = await actions.create(
+        user,
+        ActionCreateIn(
+            farm_id=farm.id,
+            source_feature="organic_soil_plan",
+            source_record_id="soil-plan:compost",
+            source_version="source-v1",
+            action_code="organic_input.compost",
+            suggestion_time=datetime.now(UTC),
+        ),
+    )
+    payload = ActionRespondIn(
+        event="done",
+        expected_version=1,
+        idempotency_key="complete-organic-action-1",
+        request_id="completion-request-1",
+    )
+    await actions.respond(user, action.id, payload)
+    await actions.respond(user, action.id, payload)
+
+    rows = await OrganicLogbookService(db_session).list(user, farm_id=farm.id)
+    assert len(rows) == 1
+    assert rows[0].action_workflow_id == action.id
+    assert rows[0].source_feature == "organic_soil_plan"
+    assert rows[0].verification_status == "farmer_reported"
+
+
+@pytest.mark.parametrize(
+    ("action_code", "expected"),
+    [
+        ("organic.disease.confirm_symptoms", "scouting"),
+        ("organic.disease.request_expert_review", "custom"),
+        ("organic.disease.no_approved_treatment", "custom"),
+        ("organic.disease.reinspect", "scouting"),
+        ("organic_input.neem", "biological_treatment"),
+    ],
+)
+async def test_disease_completion_preserves_practice_semantics(db_session, action_code, expected):
+    user, farm = await _owner(db_session, action_code.replace(".", "-"))
+    action = await ActionVerificationService(db_session).create(
+        user,
+        ActionCreateIn(
+            farm_id=farm.id,
+            source_feature="organic_disease_plan",
+            source_record_id=f"semantic-{action_code}",
+            source_version="1",
+            action_code=action_code,
+            suggestion_time=datetime.now(UTC),
+        ),
+    )
+    action.status = "farmer_reported_done"
+    row = await OrganicLogbookService(db_session).record_completed_action(user, action)
+    assert row.practice_type == expected

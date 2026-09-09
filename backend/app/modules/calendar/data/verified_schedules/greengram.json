@@ -1,0 +1,156 @@
+{
+  "schema_version": "1.0",
+  "canonical_crop_id": "greengram",
+  "aliases": [
+    "green_gram",
+    "mung",
+    "mungbean"
+  ],
+  "variety_or_duration_group": "short_duration_60_75_day",
+  "stages": [
+    {
+      "code": "sowing",
+      "label_key": "calendar.stages.sowing",
+      "start_offset": 0,
+      "end_offset": 3,
+      "activities": [
+        {
+          "code": "prepare_land",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.greengram.prepare_land.title",
+          "description_key": "calendar.verified.greengram.prepare_land.description",
+          "day_offset": -7,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none",
+          "organic_practice": true
+        },
+        {
+          "code": "sow_seed",
+          "activity_type": "sowing",
+          "label_key": "calendar.verified.greengram.sow_seed.title",
+          "description_key": "calendar.verified.greengram.sow_seed.description",
+          "day_offset": 0,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none",
+          "organic_practice": true
+        },
+        {
+          "code": "establishment_irrigation",
+          "activity_type": "irrigation",
+          "label_key": "calendar.verified.greengram.establishment_irrigation.title",
+          "description_key": "calendar.verified.greengram.establishment_irrigation.description",
+          "day_offset": 3,
+          "notification_offset_days": 0,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "irrigation",
+          "organic_practice": true
+        }
+      ]
+    },
+    {
+      "code": "weed_management",
+      "label_key": "calendar.stages.establishment_and_weed_management",
+      "start_offset": 15,
+      "end_offset": 30,
+      "activities": [
+        {
+          "code": "hand_weeding_15",
+          "activity_type": "weed_management",
+          "label_key": "calendar.verified.greengram.hand_weeding_15.title",
+          "description_key": "calendar.verified.greengram.hand_weeding_15.description",
+          "day_offset": 15,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none",
+          "organic_practice": true
+        },
+        {
+          "code": "hand_weeding_30",
+          "activity_type": "weed_management",
+          "label_key": "calendar.verified.greengram.hand_weeding_30.title",
+          "description_key": "calendar.verified.greengram.hand_weeding_30.description",
+          "day_offset": 30,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none",
+          "organic_practice": true
+        }
+      ]
+    },
+    {
+      "code": "disease_and_pest_scouting",
+      "label_key": "calendar.stages.disease_and_pest_scouting",
+      "start_offset": 15,
+      "end_offset": 57,
+      "activities": [
+        {
+          "code": "field_scouting",
+          "activity_type": "field_scouting",
+          "label_key": "calendar.verified.greengram.field_scouting.title",
+          "description_key": "calendar.verified.greengram.field_scouting.description",
+          "day_offset": 30,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none",
+          "organic_practice": true
+        }
+      ]
+    },
+    {
+      "code": "harvest",
+      "label_key": "calendar.stages.harvest",
+      "start_offset": 62,
+      "end_offset": 72,
+      "activities": [
+        {
+          "code": "check_maturity",
+          "activity_type": "harvest_preparation",
+          "label_key": "calendar.verified.greengram.check_maturity.title",
+          "description_key": "calendar.verified.greengram.check_maturity.description",
+          "day_offset": 64,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none",
+          "organic_practice": true
+        },
+        {
+          "code": "harvest_and_dry",
+          "activity_type": "harvest",
+          "label_key": "calendar.verified.greengram.harvest_and_dry.title",
+          "description_key": "calendar.verified.greengram.harvest_and_dry.description",
+          "day_offset": 67,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "high",
+          "weather_dependency": "none",
+          "organic_practice": true
+        }
+      ]
+    }
+  ],
+  "geographic_limitations": [
+    "Tamil Nadu"
+  ],
+  "season_limitations": [
+    "kharif",
+    "rabi",
+    "summer"
+  ],
+  "source_organization": "Tamil Nadu Agricultural University (TNAU), Coimbatore",
+  "document_reference": "TNAU Agritech Portal -- Crop Production: Pulses: greengram (https://agritech.tnau.ac.in/agriculture/pulses_greengram.html)",
+  "reviewer": "AgrowAI content team -- compiled from cited public source, not independently agronomist-reviewed",
+  "approval_date": "2026-09-10",
+  "review_date": "2027-09-10",
+  "version": "1.0.0",
+  "status": "SOURCED_PUBLIC_REFERENCE",
+  "content_hash": "fd7855ee17f2bb88c894dc857dceb5efec4255f05360b06db4c05d199697a461"
+}

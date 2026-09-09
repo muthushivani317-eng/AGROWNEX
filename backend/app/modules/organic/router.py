@@ -3,23 +3,141 @@ from __future__ import annotations
 import math
 import uuid
 
-from fastapi import APIRouter, Header, Query, status
+from fastapi import APIRouter, File, Form, Header, Query, Response, UploadFile, status
 
+from app.modules.action_verification.schemas import ActionOut
+from app.modules.admin.dependencies import AdminContextDep
 from app.modules.auth.dependencies import CurrentUser
-from app.modules.organic.dependencies import OrganicServiceDep
+from app.modules.disease.storage import get_private_storage
+from app.modules.organic.dependencies import OrganicAdminServiceDep, OrganicServiceDep
 from app.modules.organic.schemas import (
     CertificationDocumentCreate,
     CertificationDocumentOut,
+    CertificationReviewIn,
     DiseaseOrganicPlanOut,
+    OrganicCatalogueCoverageOut,
     OrganicFarmSummaryOut,
     OrganicInputOut,
+    OrganicInputPromotionIn,
+    OrganicPlanBundleOut,
     OrganicProfileOut,
     OrganicProfileWrite,
+    OrganicUploadAttestationOut,
+    RegisterPlanActionIn,
     SoilOrganicMatterPlanOut,
 )
 from app.schemas.response import PaginatedData, SuccessResponse, success
 
 router = APIRouter(tags=["organic"])
+
+
+@router.get("/admin/organic-certification-documents/{document_id}/content")
+async def review_certification_document_content(
+    document_id: uuid.UUID,
+    admin_context: AdminContextDep,
+    service: OrganicAdminServiceDep,
+):
+    data, mime_type, file_name = await service.certification_document_bytes(
+        admin_context, document_id, get_private_storage()
+    )
+    safe_name = file_name.replace('"', "")
+    return Response(
+        content=data,
+        media_type=mime_type,
+        headers={
+            "Content-Disposition": f'inline; filename="{safe_name}"',
+            "Cache-Control": "private, no-store",
+        },
+    )
+
+
+@router.post(
+    "/farms/{farm_id}/organic-uploads",
+    response_model=SuccessResponse[OrganicUploadAttestationOut],
+    status_code=status.HTTP_201_CREATED,
+)
+async def upload_organic_evidence(
+    farm_id: uuid.UUID,
+    current_user: CurrentUser,
+    service: OrganicServiceDep,
+    purpose: str = Form(...),
+    file: UploadFile = File(...),
+):
+    data = await file.read(15_000_001)
+    suffix = (file.filename or "upload.bin").rsplit(".", 1)[-1]
+    row, receipt = await service.upload_and_attest(
+        current_user,
+        farm_id,
+        purpose=purpose,
+        data=data,
+        mime_type=file.content_type or "application/octet-stream",
+        file_suffix=suffix,
+        storage=get_private_storage(),
+    )
+    return success(
+        OrganicUploadAttestationOut(
+            id=row.id,
+            purpose=row.purpose,
+            object_version=row.object_version,
+            issued_at=row.issued_at,
+            expires_at=row.expires_at,
+            mime_type=row.mime_type,
+            file_size=row.file_size,
+            sha256=row.sha256,
+            upload_receipt=receipt,
+        )
+    )
+
+
+@router.post(
+    "/admin/organic-inputs/{input_id}/promote", response_model=SuccessResponse[OrganicInputOut]
+)
+async def promote_organic_input(
+    input_id: uuid.UUID,
+    payload: OrganicInputPromotionIn,
+    admin_context: AdminContextDep,
+    service: OrganicAdminServiceDep,
+):
+    return success(
+        OrganicInputOut.model_validate(
+            await service.promote_input(admin_context, input_id, reason=payload.reason)
+        )
+    )
+
+
+@router.get("/organic-inputs/coverage", response_model=SuccessResponse[OrganicCatalogueCoverageOut])
+async def organic_catalogue_coverage(current_user: CurrentUser, service: OrganicServiceDep):
+    del current_user
+    return success(await service.catalogue_coverage())
+
+
+@router.get(
+    "/farms/{farm_id}/organic-plan",
+    response_model=SuccessResponse[OrganicPlanBundleOut],
+)
+async def organic_plan(farm_id: uuid.UUID, current_user: CurrentUser, service: OrganicServiceDep):
+    plan = await service.farm_plan(current_user, farm_id)
+    return success(OrganicPlanBundleOut.model_validate(plan))
+
+
+@router.post(
+    "/admin/organic-certifications/{profile_id}/review",
+    response_model=SuccessResponse[OrganicProfileOut],
+)
+async def review_organic_certification(
+    profile_id: uuid.UUID,
+    payload: CertificationReviewIn,
+    admin_context: AdminContextDep,
+    service: OrganicAdminServiceDep,
+):
+    profile = await service.review_certification(
+        admin_context,
+        profile_id,
+        decision=payload.decision,
+        reason=payload.reason,
+        expected_plan_version=payload.expected_plan_version,
+    )
+    return success(OrganicProfileOut.model_validate(profile), message="Certification reviewed")
 
 
 @router.get(
@@ -132,3 +250,35 @@ async def soil_organic_matter_plan(
     return success(
         SoilOrganicMatterPlanOut.model_validate(await service.soil_plan(current_user, farm_id))
     )
+
+
+@router.post(
+    "/disease-reports/{report_id}/organic-actions",
+    response_model=SuccessResponse[ActionOut],
+)
+async def register_disease_action(
+    report_id: uuid.UUID,
+    payload: RegisterPlanActionIn,
+    current_user: CurrentUser,
+    service: OrganicServiceDep,
+):
+    row = await service.register_disease_action(
+        current_user, report_id, payload.action_code, payload.source_record_id
+    )
+    return success(ActionOut.from_row(row))
+
+
+@router.post(
+    "/farms/{farm_id}/soil-organic-actions",
+    response_model=SuccessResponse[ActionOut],
+)
+async def register_soil_action(
+    farm_id: uuid.UUID,
+    payload: RegisterPlanActionIn,
+    current_user: CurrentUser,
+    service: OrganicServiceDep,
+):
+    row = await service.register_soil_action(
+        current_user, farm_id, payload.action_code, payload.source_record_id
+    )
+    return success(ActionOut.from_row(row))

@@ -1,0 +1,22 @@
+{
+  "slug": "tnau-tomato-organic-soil-fertility",
+  "category": "soil_fertility",
+  "name_en": "Tomato organic soil-fertility practices",
+  "name_ta": "தக்காளி இயற்கை மண் வள நடைமுறைகள்",
+  "purpose_en": "Public-reference practices for maintaining soil fertility in organic tomato.",
+  "purpose_ta": "இயற்கை தக்காளி சாகுபடியில் மண் வளத்தை பராமரிப்பதற்கான பொது ஆதார நடைமுறைகள்.",
+  "guidance": {"practices": ["compost", "green_manure", "mulching"]},
+  "applicable_crops": ["tomato"],
+  "applicable_stages": [],
+  "applicable_regions": ["Tamil Nadu"],
+  "limitations": {"requires_local_soil_assessment": true, "application_rates": []},
+  "source_organization": "Tamil Nadu Agricultural University (TNAU) Agritech Portal",
+  "document_reference": "Organic Farming — Managing Soil Fertility (Tomato)",
+  "source_url": "https://agritech.tnau.ac.in/org_farm/orgfarm_tomato_soil.html",
+  "source_version": "public-page-snapshot-2026-09-10-v1",
+  "review_status": "sourced_public_reference",
+  "reviewed_by": null,
+  "reviewed_at": null,
+  "effective_from": "2026-09-10",
+  "review_due_on": "2027-09-10"
+}

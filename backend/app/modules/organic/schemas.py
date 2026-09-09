@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -49,13 +50,18 @@ class OrganicProfileOut(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+    @model_validator(mode="after")
+    def expire_stale_verification(self):
+        if self.certification_status == "verified" and (
+            self.certificate_expires_on is None or self.certificate_expires_on < date.today()
+        ):
+            self.certification_status = "expired"
+        return self
+
 
 class CertificationDocumentCreate(BaseModel):
-    object_key: str = Field(min_length=1, max_length=512)
+    upload_attestation_id: uuid.UUID
     file_name: str = Field(min_length=1, max_length=255)
-    mime_type: str = Field(pattern=r"^(application/pdf|image/(jpeg|png))$")
-    file_size: int = Field(gt=0, le=15_000_000)
-    sha256: str = Field(pattern=r"^[0-9a-fA-F]{64}$")
     upload_receipt: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
@@ -96,6 +102,19 @@ class OrganicInputOut(BaseModel):
     review_due_on: date | None
 
 
+class OrganicInputPromotionIn(BaseModel):
+    reason: str = Field(min_length=3, max_length=500)
+
+
+class OrganicCatalogueCoverageOut(BaseModel):
+    total: int
+    approved: int
+    awaiting_human_review: int
+    draft: int
+    categories: dict[str, int]
+    crops: dict[str, int]
+
+
 class SourceActionOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     source_feature: str
@@ -105,6 +124,45 @@ class SourceActionOut(BaseModel):
     suggestion_time: datetime
     source_verified: bool
     crop_cycle_id: str | None = None
+
+
+class RegisterPlanActionIn(BaseModel):
+    action_code: str = Field(min_length=1, max_length=120)
+    source_record_id: str = Field(min_length=1, max_length=100)
+
+
+class OrganicPlanActionOut(BaseModel):
+    id: uuid.UUID
+    action_type: Literal["disease", "soil", "calendar", "weather", "satellite"]
+    title: str
+    description: str
+    priority: int
+    state: Literal["ready", "waiting_for_weather", "needs_confirmation", "completed"]
+    due_at: datetime | None
+    source_organization: str
+    source_reference: str
+    source_url: str | None = None
+    review_status: Literal["verified", "sourced_public_reference", "unverified", "farmer_reported"]
+    source_action_id: str
+    scouting_only: bool = False
+
+
+class OrganicUploadAttestationOut(BaseModel):
+    id: uuid.UUID
+    purpose: str
+    object_version: str
+    issued_at: datetime
+    expires_at: datetime
+    mime_type: str
+    file_size: int
+    sha256: str
+    upload_receipt: str
+
+
+class OrganicPlanBundleOut(BaseModel):
+    farm_id: uuid.UUID
+    generated_at: datetime
+    actions: list[OrganicPlanActionOut]
 
 
 class DiseasePlanStepOut(BaseModel):
@@ -142,6 +200,10 @@ class SoilOrganicMatterPlanOut(BaseModel):
     organic_carbon: float | None
     organic_carbon_evidence_type: str
     is_estimate: bool
+    organic_carbon_trend: str | None = None
+    organic_carbon_change: float | None = None
+    trend_is_causal: bool = False
+    retest_on: date | None = None
     options: list[SoilAmendmentOptionOut]
 
 
@@ -157,3 +219,9 @@ class OrganicFarmSummaryOut(BaseModel):
     satellite_advisory_available: bool
     traceability_ready: bool
     traceability_batch_count: int
+
+
+class CertificationReviewIn(BaseModel):
+    decision: str = Field(pattern=r"^(verified|rejected)$")
+    reason: str = Field(min_length=3, max_length=500)
+    expected_plan_version: int = Field(ge=1)

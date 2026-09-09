@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
+from pathlib import Path
 
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import select
@@ -29,7 +30,7 @@ class OrganicInputManifest(BaseModel):
     document_reference: str = Field(min_length=1, max_length=255)
     source_url: str = Field(pattern=r"^https://", max_length=512)
     source_version: str = Field(min_length=1, max_length=80)
-    review_status: str = Field(pattern=r"^(draft|approved)$")
+    review_status: str = Field(pattern=r"^(draft|sourced_public_reference|approved)$")
     reviewed_by: uuid.UUID | None = None
     reviewed_at: datetime | None = None
     effective_from: date | None = None
@@ -61,3 +62,24 @@ async def ingest_versioned_input(
     session.add(row)
     await session.flush()
     return row
+
+
+async def seed_public_source_pack(
+    session: AsyncSession, pack_dir: Path | None = None
+) -> list[OrganicInput]:
+    """Idempotently load reviewed-for-citation manifests, never approve them."""
+    root = pack_dir or Path(__file__).with_name("data") / "source_packs"
+    created: list[OrganicInput] = []
+    for path in sorted(root.glob("*.json")):
+        manifest = OrganicInputManifest.model_validate_json(path.read_text(encoding="utf-8"))
+        if manifest.review_status != "sourced_public_reference":
+            raise ValueError("SOURCE_PACK_MUST_REQUIRE_HUMAN_REVIEW")
+        existing = await session.scalar(
+            select(OrganicInput).where(
+                OrganicInput.slug == manifest.slug,
+                OrganicInput.source_version == manifest.source_version,
+            )
+        )
+        if existing is None:
+            created.append(await ingest_versioned_input(session, manifest))
+    return created

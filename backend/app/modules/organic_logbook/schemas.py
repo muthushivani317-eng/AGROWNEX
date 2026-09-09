@@ -9,18 +9,27 @@ from pydantic import BaseModel, Field, model_validator
 from .models import OrganicPracticeEvidence, OrganicPracticeLogEntry
 
 PracticeType = Literal[
-    "amendment", "seed_treatment", "biological_treatment", "botanical_spray",
-    "trap", "mechanical_weeding", "mulching", "green_manure", "crop_rotation",
-    "irrigation_drainage", "scouting", "harvest", "custom",
+    "amendment",
+    "seed_treatment",
+    "biological_treatment",
+    "botanical_spray",
+    "trap",
+    "mechanical_weeding",
+    "mulching",
+    "green_manure",
+    "crop_rotation",
+    "irrigation_drainage",
+    "scouting",
+    "harvest",
+    "custom",
 ]
 OutcomeStatus = Literal["not_reported", "improved", "no_change", "worse", "unknown"]
 
 
 class OrganicEvidenceIn(BaseModel):
     evidence_type: Literal["photo", "voice_note", "receipt", "document", "other"]
-    storage_ref: str = Field(min_length=1, max_length=512)
-    content_hash: str | None = Field(default=None, pattern=r"^[0-9a-fA-F]{64}$")
-    mime_type: str | None = Field(default=None, max_length=80)
+    upload_attestation_id: uuid.UUID
+    upload_receipt: str = Field(pattern=r"^[0-9a-f]{64}$")
     captured_at: datetime | None = None
     retention_consent: bool = False
 

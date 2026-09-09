@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import hashlib
 import re
 import uuid
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 from app.modules.action_verification.source_adapter import SourceAction
 from app.modules.disease.models import DiseaseReport
@@ -15,6 +16,11 @@ from app.modules.soil.models import SoilIndicatorEvidence, SoilProfile
 
 def _code(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", value.strip().lower()).strip("_")
+
+
+def _source_identity(parent_id: uuid.UUID, *parts: object) -> str:
+    digest = hashlib.sha256(":".join(str(part) for part in parts).encode()).hexdigest()[:24]
+    return f"{parent_id}:{digest}"
 
 
 def _governed(item: OrganicInput, today) -> bool:
@@ -70,7 +76,9 @@ def build_disease_plan(
                 organic_input=item,
                 source_action=SourceAction(
                     source_feature="organic_disease_plan",
-                    source_record_id=str(report.id),
+                    source_record_id=_source_identity(
+                        report.id, order, title_code, item.slug if item else kind
+                    ),
                     source_version=version,
                     action_code=(f"organic_input.{item.slug}" if item else title_code),
                     suggestion_time=generated_at,
@@ -120,7 +128,27 @@ class SoilOrganicMatterPlan:
     organic_carbon: float | None
     organic_carbon_evidence_type: str
     is_estimate: bool
+    organic_carbon_trend: str | None
+    organic_carbon_change: float | None
+    trend_is_causal: bool
+    retest_on: date | None
     options: list[SoilAmendmentOption]
+
+
+def convert_area(value: float, from_unit: str, to_unit: str) -> float:
+    """Convert supported farm-area units with deterministic six-decimal output."""
+    factors = {"hectare": 1.0, "acre": 0.40468564224}
+    if from_unit not in factors or to_unit not in factors:
+        raise ValueError("UNSUPPORTED_AREA_UNIT")
+    return round(float(value) * factors[from_unit] / factors[to_unit], 6)
+
+
+def convert_mass(value: float, from_unit: str, to_unit: str) -> float:
+    """Convert supported amendment mass units."""
+    factors = {"kg": 1.0, "tonne": 1000.0}
+    if from_unit not in factors or to_unit not in factors:
+        raise ValueError("UNSUPPORTED_MASS_UNIT")
+    return round(float(value) * factors[from_unit] / factors[to_unit], 6)
 
 
 def build_soil_plan(
@@ -141,6 +169,26 @@ def build_soil_plan(
     )
     estimated_types = {"AI_ESTIMATED", "RISK_INFERRED", "estimate", "satellite"}
     is_estimate = evidence_type in estimated_types
+    verified_lab = [
+        row
+        for row in carbon_rows
+        if row.evidence_type == "LAB_MEASURED" and row.verification_state == "verified"
+    ]
+    carbon_change = None
+    carbon_trend = None
+    retest_on = None
+    if verified_lab:
+        latest = verified_lab[0]
+        retest_on = date(
+            latest.collected_at.year + (latest.collected_at.month + 5) // 12,
+            (latest.collected_at.month + 5) % 12 + 1,
+            latest.collected_at.day,
+        )
+    if len(verified_lab) >= 2:
+        carbon_change = round(verified_lab[0].numeric_value - verified_lab[1].numeric_value, 4)
+        carbon_trend = (
+            "improving" if carbon_change > 0 else "declining" if carbon_change < 0 else "stable"
+        )
     options: list[SoilAmendmentOption] = []
     crop = _code(farm.crop or "")
     for item in approved_inputs:
@@ -170,7 +218,7 @@ def build_soil_plan(
                 calculated_unit=rate_unit.removesuffix("/ha") if calculated is not None else None,
                 source_action=SourceAction(
                     source_feature="organic_soil_plan",
-                    source_record_id=str(farm.id),
+                    source_record_id=_source_identity(farm.id, item.slug),
                     source_version=item.source_version,
                     action_code=f"organic_input.{item.slug}",
                     suggestion_time=generated_at,
@@ -184,5 +232,9 @@ def build_soil_plan(
         organic_carbon=value,
         organic_carbon_evidence_type=evidence_type,
         is_estimate=is_estimate,
+        organic_carbon_trend=carbon_trend,
+        organic_carbon_change=carbon_change,
+        trend_is_causal=False,
+        retest_on=retest_on,
         options=options,
     )

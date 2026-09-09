@@ -41,6 +41,23 @@ class ActionVerificationService:
         await self._farm(user, row.farm_id)
         return row
 
+    async def _action_for_update(self, user: User, action_id: uuid.UUID) -> ActionWorkflow:
+        row = (
+            await self.session.execute(
+                select(ActionWorkflow)
+                .where(
+                    ActionWorkflow.id == action_id,
+                    ActionWorkflow.user_id == user.id,
+                    ActionWorkflow.is_deleted.is_(False),
+                )
+                .with_for_update()
+            )
+        ).scalar_one_or_none()
+        if row is None:
+            raise ActionNotFoundError()
+        await self._farm(user, row.farm_id)
+        return row
+
     async def create(self, user: User, payload: ActionCreateIn) -> ActionWorkflow:
         await self._farm(user, payload.farm_id)
         existing = (
@@ -210,7 +227,10 @@ class ActionVerificationService:
         return await self._action(user, action_id)
 
     async def respond(self, user: User, action_id: uuid.UUID, payload: ActionRespondIn):
-        row = await self._action(user, action_id)
+        # Serialize competing transitions for the same action. The version check
+        # below then remains meaningful under concurrent requests on databases
+        # that support row-level locks (PostgreSQL in production).
+        row = await self._action_for_update(user, action_id)
         duplicate = (
             await self.session.execute(
                 select(ActionAuditEvent).where(
@@ -252,6 +272,12 @@ class ActionVerificationService:
         )
         await self.session.flush()
         await self.session.refresh(row)
+        if row.status == ActionStatus.FARMER_REPORTED_DONE.value:
+            # The logbook is a downstream audit projection of this canonical
+            # workflow, not an expert or efficacy verification.
+            from app.modules.organic_logbook.service import OrganicLogbookService
+
+            await OrganicLogbookService(self.session).record_completed_action(user, row)
         return row
 
     async def history(self, user: User, action_id: uuid.UUID):

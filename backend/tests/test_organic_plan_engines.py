@@ -7,7 +7,12 @@ from app.modules.disease.models import DiseaseReport
 from app.modules.farms.models import Farm
 from app.modules.organic.governance import canonical_input_hash
 from app.modules.organic.models import OrganicInput
-from app.modules.organic.plan_engine import build_disease_plan, build_soil_plan
+from app.modules.organic.plan_engine import (
+    build_disease_plan,
+    build_soil_plan,
+    convert_area,
+    convert_mass,
+)
 from app.modules.organic.schemas import DiseaseOrganicPlanOut, SoilOrganicMatterPlanOut
 from app.modules.soil.models import SoilIndicatorEvidence, SoilProfile
 
@@ -133,3 +138,49 @@ def test_soil_plan_rejects_unrecognized_rate_units():
         [_input(rate={"value": 10, "unit": "bags/acre"})],
     )
     assert plan.options == []
+
+
+def test_soil_plan_reports_measured_progress_and_retest_without_causal_claim():
+    user_id = uuid.uuid4()
+    farm_id = uuid.uuid4()
+    farm = Farm(id=farm_id, user_id=user_id, name="Trend", crop="paddy", area_hectares=1)
+    evidence = [
+        SoilIndicatorEvidence(
+            user_id=user_id,
+            farm_id=farm_id,
+            indicator="organic_carbon",
+            numeric_value=0.48,
+            unit="%",
+            evidence_type="LAB_MEASURED",
+            collection_method="lab",
+            collected_at=date(2026, 9, 1),
+            source_reference="lab-2",
+            spatial_coverage="farm",
+            verification_state="verified",
+        ),
+        SoilIndicatorEvidence(
+            user_id=user_id,
+            farm_id=farm_id,
+            indicator="organic_carbon",
+            numeric_value=0.40,
+            unit="%",
+            evidence_type="LAB_MEASURED",
+            collection_method="lab",
+            collected_at=date(2026, 3, 1),
+            source_reference="lab-1",
+            spatial_coverage="farm",
+            verification_state="verified",
+        ),
+    ]
+    plan = build_soil_plan(farm, None, evidence, [], now=datetime(2026, 9, 10, tzinfo=UTC))
+    assert plan.organic_carbon_trend == "improving"
+    assert plan.organic_carbon_change == 0.08
+    assert plan.trend_is_causal is False
+    assert plan.retest_on == date(2027, 3, 1)
+
+
+def test_supported_unit_conversions_are_deterministic():
+    assert convert_area(1, "acre", "hectare") == 0.404686
+    assert convert_area(1, "hectare", "acre") == 2.471054
+    assert convert_mass(1, "tonne", "kg") == 1000
+    assert convert_mass(1250, "kg", "tonne") == 1.25

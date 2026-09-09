@@ -301,3 +301,24 @@ class ProduceTraceEvent(UUIDMixin, TimestampMixin, Base):
     evidence_url: Mapped[str | None] = mapped_column(String(512))
     previous_hash: Mapped[str | None] = mapped_column(String(64))
     event_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+
+
+class ProduceTraceShare(UUIDMixin, TimestampMixin, Base):
+    """Revocable public view; raw bearer tokens are never stored."""
+
+    __tablename__ = "produce_trace_shares"
+    batch_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(),
+        ForeignKey("produce_trace_batches.id", ondelete="CASCADE"),
+        unique=True,
+        index=True,
+        nullable=False,
+    )
+    owner_user_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("users.id"), index=True, nullable=False
+    )
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    consent_fields: Mapped[list] = mapped_column(JSON, nullable=False)
+    create_idempotency_key: Mapped[str] = mapped_column(String(100), nullable=False)
+    revoke_idempotency_key: Mapped[str | None] = mapped_column(String(100))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

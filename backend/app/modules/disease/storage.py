@@ -46,21 +46,36 @@ class StorageUnavailableError(AppError):
 class ObjectStorage(Protocol):
     async def put(self, *, key: str, data: bytes, content_type: str) -> str: ...
 
+    async def get(self, *, key: str) -> bytes: ...
+
 
 class MockStorage:
     """Deterministic storage fixture for explicit development/tests only."""
 
     base = "https://r2.mock.local"
 
+    def __init__(self) -> None:
+        self.objects: dict[str, bytes] = {}
+
     async def put(self, *, key: str, data: bytes, content_type: str) -> str:
         logger.info("mock storage put key=%s (%d bytes)", key, len(data))
+        self.objects[key] = data
         return f"{self.base}/{key}"
+
+    async def get(self, *, key: str) -> bytes:
+        try:
+            return self.objects[key]
+        except KeyError as exc:
+            raise StorageError() from exc
 
 
 class UnavailableStorage:
     """Production-safe null provider that never fabricates an object URL."""
 
     async def put(self, *, key: str, data: bytes, content_type: str) -> str:
+        raise StorageUnavailableError()
+
+    async def get(self, *, key: str) -> bytes:
         raise StorageUnavailableError()
 
 
@@ -83,6 +98,7 @@ class R2Client:
         region: str = R2_REGION,
         public_base_url: str = R2_PUBLIC_BASE_URL,
         timeout: float = 20.0,
+        require_public_read: bool = True,
     ) -> None:
         self.host = f"{account_id}.r2.cloudflarestorage.com"
         self.access_key = access_key
@@ -91,6 +107,7 @@ class R2Client:
         self.region = region
         self.public_base_url = public_base_url.rstrip("/")
         self.timeout = timeout
+        self.require_public_read = require_public_read
 
     def _authorization(
         self, key: str, data: bytes, content_type: str, amz_date: str, stamp: str
@@ -105,7 +122,7 @@ class R2Client:
         )
         signed_headers = "content-type;host;x-amz-content-sha256;x-amz-date"
         canonical_request = (
-            f"PUT\n{canonical_uri}\n\n{canonical_headers}\n" f"{signed_headers}\n{payload_hash}"
+            f"PUT\n{canonical_uri}\n\n{canonical_headers}\n{signed_headers}\n{payload_hash}"
         )
         scope = f"{stamp}/{self.region}/{self.service}/aws4_request"
         string_to_sign = (
@@ -147,25 +164,64 @@ class R2Client:
                 # R2's public/CDN read path can briefly lag the write (2026-09-03:
                 # observed a 404 ~1s after a 200 PUT) -- retry a few times before
                 # concluding the URL is genuinely unreadable.
-                public_response = await client.get(
-                    public_url, headers={"Range": "bytes=0-0"}, follow_redirects=True
-                )
-                for attempt in range(2):
-                    if public_response.status_code in {200, 206}:
-                        break
-                    await asyncio.sleep(0.3 * (attempt + 1))
+                if self.require_public_read:
                     public_response = await client.get(
                         public_url, headers={"Range": "bytes=0-0"}, follow_redirects=True
                     )
-                if public_response.status_code not in {200, 206}:
-                    raise StorageError()
-                public_type = public_response.headers.get("content-type", "")
-                if public_type and not public_type.startswith("image/"):
-                    raise StorageError()
+                    for attempt in range(2):
+                        if public_response.status_code in {200, 206}:
+                            break
+                        await asyncio.sleep(0.3 * (attempt + 1))
+                        public_response = await client.get(
+                            public_url, headers={"Range": "bytes=0-0"}, follow_redirects=True
+                        )
+                    if public_response.status_code not in {200, 206}:
+                        raise StorageError()
+                    public_type = public_response.headers.get("content-type", "")
+                    if public_type and public_type.split(";", 1)[0] != content_type:
+                        raise StorageError()
         except httpx.HTTPError as exc:
             logger.warning("R2 upload failed: %s", exc)
             raise StorageError() from exc
         return public_url
+
+    async def get(self, *, key: str) -> bytes:
+        now = _dt.datetime.now(_dt.UTC)
+        amz_date = now.strftime("%Y%m%dT%H%M%SZ")
+        stamp = now.strftime("%Y%m%d")
+        payload_hash = hashlib.sha256(b"").hexdigest()
+        canonical_uri = "/" + quote(f"{self.bucket}/{key}", safe="/")
+        canonical_headers = (
+            f"host:{self.host}\nx-amz-content-sha256:{payload_hash}\nx-amz-date:{amz_date}\n"
+        )
+        signed_headers = "host;x-amz-content-sha256;x-amz-date"
+        request = f"GET\n{canonical_uri}\n\n{canonical_headers}\n{signed_headers}\n{payload_hash}"
+        scope = f"{stamp}/{self.region}/{self.service}/aws4_request"
+        string_to_sign = (
+            f"AWS4-HMAC-SHA256\n{amz_date}\n{scope}\n{hashlib.sha256(request.encode()).hexdigest()}"
+        )
+        key_date = _sign(f"AWS4{self.secret_key}".encode(), stamp)
+        key_region = _sign(key_date, self.region)
+        key_service = _sign(key_region, self.service)
+        signing_key = _sign(key_service, "aws4_request")
+        signature = hmac.new(signing_key, string_to_sign.encode(), hashlib.sha256).hexdigest()
+        headers = {
+            "Host": self.host,
+            "x-amz-content-sha256": payload_hash,
+            "x-amz-date": amz_date,
+            "Authorization": (
+                f"AWS4-HMAC-SHA256 Credential={self.access_key}/{scope}, "
+                f"SignedHeaders={signed_headers}, Signature={signature}"
+            ),
+        }
+        url = f"https://{self.host}/{quote(f'{self.bucket}/{key}', safe='/')}"
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.get(url, headers=headers)
+                response.raise_for_status()
+                return response.content
+        except httpx.HTTPError as exc:
+            raise StorageError() from exc
 
 
 def get_default_storage() -> ObjectStorage:
@@ -185,4 +241,13 @@ def get_default_storage() -> ObjectStorage:
         logger.info("object storage: explicit development/test mock")
         return MockStorage()
     logger.warning("object storage unavailable: R2 credentials are not configured")
+    return UnavailableStorage()
+
+
+def get_private_storage() -> ObjectStorage:
+    """Authenticated-write-only storage used for private evidence and certificates."""
+    if R2_ACCOUNT_ID and R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY:
+        return R2Client(require_public_read=False)
+    if test_mocks_enabled():
+        return MockStorage()
     return UnavailableStorage()

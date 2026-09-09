@@ -40,9 +40,7 @@ class OrganicPracticeLogEntry(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     treated_area_hectares: Mapped[float | None] = mapped_column(Float)
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     note: Mapped[str | None] = mapped_column(Text)
-    outcome_status: Mapped[str] = mapped_column(
-        String(40), nullable=False, default="not_reported"
-    )
+    outcome_status: Mapped[str] = mapped_column(String(40), nullable=False, default="not_reported")
     source_feature: Mapped[str] = mapped_column(String(40), nullable=False)
     source_record_id: Mapped[str] = mapped_column(String(100), nullable=False)
     source_version: Mapped[str] = mapped_column(String(80), nullable=False)
@@ -67,8 +65,13 @@ class OrganicPracticeEvidence(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "organic_practice_evidence"
 
     entry_id: Mapped[uuid.UUID] = mapped_column(
-        GUID(), ForeignKey("organic_practice_log_entries.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        GUID(),
+        ForeignKey("organic_practice_log_entries.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    upload_attestation_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID(), ForeignKey("organic_upload_attestations.id"), unique=True
     )
     evidence_type: Mapped[str] = mapped_column(String(20), nullable=False)
     storage_ref: Mapped[str] = mapped_column(String(512), nullable=False)

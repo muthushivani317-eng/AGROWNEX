@@ -130,3 +130,36 @@ def test_registry_reports_active_and_unverified_counts_without_activation() -> N
     assert registry.active_count == 1
     assert registry.unverified_count == 1
     assert registry.resolve("cotton") is None
+
+
+def test_phase4_crop_coverage_has_source_backed_pulse_and_millet_packs() -> None:
+    coverage = ACTIVE_CROP_STAGE_REGISTRY.coverage(
+        ["blackgram", "greengram", "redgram", "pearl_millet"]
+    )
+    assert coverage["pearl_millet"] == "available"
+    assert coverage["blackgram"] == "available"
+    assert coverage["greengram"] == "available"
+    assert coverage["redgram"] == "available"
+
+
+@pytest.mark.parametrize("crop", ["blackgram", "greengram", "redgram"])
+def test_phase4_pulse_packs_are_sourced_low_risk_and_organic(crop: str) -> None:
+    schedule = ACTIVE_CROP_STAGE_REGISTRY.resolve(crop)
+    assert schedule is not None
+    assert schedule.status is ScheduleStatus.SOURCED_PUBLIC_REFERENCE
+    assert "agritech.tnau.ac.in" in schedule.document_reference
+    activities = [activity for stage in schedule.stages for activity in stage.activities]
+    assert activities
+    assert all(activity.organic_practice for activity in activities)
+    assert {activity.activity_type for activity in activities} <= {
+        "land_preparation", "sowing", "irrigation", "weed_management",
+        "field_scouting", "harvest_preparation", "harvest",
+    }
+    text = " ".join(activity.code for activity in activities).lower()
+    assert not any(term in text for term in ("pesticide", "fungicide", "fertilizer", "spray"))
+
+
+def test_pearl_millet_alias_remains_resolvable() -> None:
+    schedule = ACTIVE_CROP_STAGE_REGISTRY.resolve("pearl millet")
+    assert schedule is not None
+    assert schedule.canonical_crop_id == "millet"

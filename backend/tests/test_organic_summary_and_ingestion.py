@@ -7,7 +7,11 @@ from app.modules.auth.models import User
 from app.modules.farms.exceptions import FarmNotFoundError
 from app.modules.farms.models import Farm
 from app.modules.organic.governance import input_hash_is_valid
-from app.modules.organic.ingestion import OrganicInputManifest, ingest_versioned_input
+from app.modules.organic.ingestion import (
+    OrganicInputManifest,
+    ingest_versioned_input,
+    seed_public_source_pack,
+)
 from app.modules.organic.router import router
 from app.modules.organic.schemas import OrganicProfileWrite
 from app.modules.organic.service import OrganicService
@@ -52,6 +56,17 @@ async def test_summary_empty_state_and_ownership(db_session):
     }
     with pytest.raises(FarmNotFoundError):
         await service.farm_summary(other, farm.id)
+
+
+async def test_organic_plan_bundle_matches_mobile_contract(db_session):
+    owner = await _user(db_session, "plan-owner", "+919000000205")
+    farm = Farm(user_id=owner.id, name="Plan farm")
+    db_session.add(farm)
+    await db_session.flush()
+    bundle = await OrganicService(db_session).farm_plan(owner, farm.id)
+    assert bundle["farm_id"] == farm.id
+    assert bundle["generated_at"].tzinfo is not None
+    assert bundle["actions"] == []
 
 
 async def test_traceability_readiness_requires_profile_and_real_log_entry(db_session):
@@ -142,3 +157,23 @@ def test_farmer_router_has_no_input_publish_endpoint():
         and bool(set(route.methods or ()) & {"POST", "PUT", "PATCH", "DELETE"})
     ]
     assert input_write_routes == []
+
+
+async def test_public_source_pack_is_bilingual_and_fails_closed_until_promoted(db_session):
+    created = await seed_public_source_pack(db_session)
+    assert len(created) >= 2
+    assert all(row.review_status == "sourced_public_reference" for row in created)
+    assert all(row.name_en and row.name_ta and row.purpose_en and row.purpose_ta for row in created)
+    assert all(input_hash_is_valid(row) for row in created)
+    assert all(not row.guidance.get("target_diseases") for row in created)
+    assert all(not row.limitations.get("application_rates") for row in created)
+
+    approved, total = await OrganicService(db_session).list_inputs(
+        category=None, crop=None, search=None, page=1, page_size=100
+    )
+    assert approved == [] and total == 0
+    coverage = await OrganicService(db_session).catalogue_coverage()
+    assert coverage["awaiting_human_review"] == len(created)
+    assert coverage["approved"] == 0
+
+    assert await seed_public_source_pack(db_session) == []

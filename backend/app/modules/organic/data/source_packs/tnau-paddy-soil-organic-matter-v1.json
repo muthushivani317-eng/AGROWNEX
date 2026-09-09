@@ -1,0 +1,22 @@
+{
+  "slug": "tnau-paddy-organic-soil-fertility",
+  "category": "soil_fertility",
+  "name_en": "Paddy organic soil-fertility practices",
+  "name_ta": "நெல் இயற்கை மண் வள நடைமுறைகள்",
+  "purpose_en": "Public-reference practices for maintaining soil fertility in organic paddy.",
+  "purpose_ta": "இயற்கை நெல் சாகுபடியில் மண் வளத்தை பராமரிப்பதற்கான பொது ஆதார நடைமுறைகள்.",
+  "guidance": {"practices": ["green_manure", "compost", "crop_residue_recycling"]},
+  "applicable_crops": ["paddy"],
+  "applicable_stages": [],
+  "applicable_regions": ["Tamil Nadu"],
+  "limitations": {"requires_local_soil_assessment": true, "application_rates": []},
+  "source_organization": "Tamil Nadu Agricultural University (TNAU) Agritech Portal",
+  "document_reference": "Organic Farming — Managing Soil Fertility (Paddy)",
+  "source_url": "https://agritech.tnau.ac.in/org_farm/orgfarm_prac_agri_paddy_soil.html",
+  "source_version": "public-page-snapshot-2026-09-10-v1",
+  "review_status": "sourced_public_reference",
+  "reviewed_by": null,
+  "reviewed_at": null,
+  "effective_from": "2026-09-10",
+  "review_due_on": "2027-09-10"
+}

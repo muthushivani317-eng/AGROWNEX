@@ -130,6 +130,13 @@ class CropStageRegistry:
         canonical = self._aliases.get(normalized)
         return self._active.get(canonical) if canonical else None
 
+    def coverage(self, crops: list[str]) -> dict[str, str]:
+        """Fail-closed coverage audit; absence never falls back to invented content."""
+        return {
+            crop: ("available" if self.resolve(crop) is not None else "source_pack_required")
+            for crop in crops
+        }
+
     @property
     def active_count(self) -> int:
         return len(self._active)

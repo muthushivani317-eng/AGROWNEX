@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import BaseModel, Field, HttpUrl, field_validator
 
@@ -64,4 +65,35 @@ class TraceTimelineOut(BaseModel):
     events: list[TraceEventOut]
     test_mode: bool = True
     public_certificate: bool = False
+    disclaimer: str
+
+
+class TraceShareCreate(BaseModel):
+    consent_fields: list[Literal["classification", "events"]] = Field(min_length=1, max_length=2)
+    idempotency_key: str = Field(min_length=8, max_length=100)
+
+
+class TraceShareRevoke(BaseModel):
+    idempotency_key: str = Field(min_length=8, max_length=100)
+
+
+class TraceShareOut(BaseModel):
+    share_url: HttpUrl
+    qr_payload: HttpUrl
+    consent_fields: list[str]
+
+
+class PublicTraceEventOut(BaseModel):
+    event_type: TraceEventType
+    occurred_at: datetime
+
+
+class PublicTraceTimelineOut(BaseModel):
+    batch_code: str
+    cultivation_classification: CultivationClassification | None = None
+    certification_verified: bool | None = None
+    certification_as_of: datetime | None = None
+    certificate_expires_on: str | None = None
+    certification_current: bool | None = None
+    events: list[PublicTraceEventOut] | None = None
     disclaimer: str

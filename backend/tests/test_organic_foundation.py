@@ -4,8 +4,12 @@ from datetime import UTC, date, datetime, timedelta
 
 import pytest
 from app.modules.auth.models import User
+from app.modules.disease.storage import MockStorage
 from app.modules.farms.models import Farm
-from app.modules.organic.certification_receipt import issue_upload_receipt
+from app.modules.organic.certification_receipt import (
+    CERTIFICATION_DOCUMENT,
+    store_and_attest_upload,
+)
 from app.modules.organic.exceptions import (
     InvalidCertificationUploadError,
     OrganicInputNotFoundError,
@@ -101,6 +105,32 @@ async def test_farmer_cannot_mutate_verified_certificate_fields(db_session):
         )
 
 
+async def test_profile_write_preserves_omitted_pending_certification_fields(db_session):
+    owner = await _user(db_session, "pending-cert-owner", "+919000000199")
+    farm = await _farm(db_session, owner, "Pending certificate field")
+    service = OrganicService(db_session)
+    await service.upsert_profile(
+        owner,
+        farm.id,
+        OrganicProfileWrite(
+            mode="transitioning",
+            certification_status="document_submitted",
+            certification_scheme="NPOP",
+            certification_identifier="PENDING-1",
+        ),
+        "pending-cert-create",
+    )
+    updated = await service.upsert_profile(
+        owner,
+        farm.id,
+        OrganicProfileWrite(mode="fully_organic"),
+        "pending-cert-profile-edit",
+    )
+    assert updated.certification_status == "document_submitted"
+    assert updated.certification_scheme == "NPOP"
+    assert updated.certification_identifier == "PENDING-1"
+
+
 async def test_certificate_metadata_is_idempotent_and_safe(db_session):
     owner = await _user(db_session, "cert-owner", "+919000000103")
     farm = await _farm(db_session, owner, "Certificate field")
@@ -108,26 +138,31 @@ async def test_certificate_metadata_is_idempotent_and_safe(db_session):
     await service.upsert_profile(
         owner, farm.id, OrganicProfileWrite(mode="fully_organic"), "profile-cert-001"
     )
-    payload = CertificationDocumentCreate(
-        object_key=f"organic-certificates/{owner.id}/{farm.id}/a.pdf",
-        file_name="certificate.pdf",
+    attestation, receipt = await store_and_attest_upload(
+        db_session,
+        MockStorage(),
+        user_id=owner.id,
+        farm_id=farm.id,
+        purpose=CERTIFICATION_DOCUMENT,
+        data=b"a" * 512,
         mime_type="application/pdf",
-        file_size=512,
-        sha256="a" * 64,
-        upload_receipt=issue_upload_receipt(
-            user_id=owner.id,
-            farm_id=farm.id,
-            object_key=f"organic-certificates/{owner.id}/{farm.id}/a.pdf",
-            sha256="a" * 64,
-            file_size=512,
-        ),
+        file_suffix="pdf",
+    )
+    payload = CertificationDocumentCreate(
+        upload_attestation_id=attestation.id,
+        file_name="certificate.pdf",
+        upload_receipt=receipt,
     )
     first = await service.add_document(owner, farm.id, payload, "document-request-001")
     second = await service.add_document(owner, farm.id, payload, "document-request-001")
     assert first.id == second.id
     assert first.object_key.startswith("organic-certificates/")
 
-    bad = payload.model_copy(update={"object_key": "private/arbitrary/a.pdf"})
+    bad = payload.model_copy(
+        update={
+            "upload_receipt": "0" * 64,
+        }
+    )
     with pytest.raises(InvalidCertificationUploadError):
         await service.add_document(owner, farm.id, bad, "document-request-002")
 

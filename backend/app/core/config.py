@@ -46,6 +46,7 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("environment", "APP_ENV"),
     )
     debug: bool = Field(default=True)
+    organic_trusted_weather_enabled: bool = Field(default=True)
     api_v1_prefix: str = "/api/v1"
     public_api_url: str = Field(default="")
     trusted_hosts: list[str] = Field(default_factory=lambda: ["localhost", "testserver"])

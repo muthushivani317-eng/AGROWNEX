@@ -58,6 +58,9 @@ class OrganicCertificationDocument(UUIDMixin, TimestampMixin, Base):
     uploaded_by: Mapped[uuid.UUID] = mapped_column(
         GUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
+    upload_attestation_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID(), ForeignKey("organic_upload_attestations.id"), unique=True
+    )
     object_key: Mapped[str] = mapped_column(String(512), nullable=False)
     file_name: Mapped[str] = mapped_column(String(255), nullable=False)
     mime_type: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -69,6 +72,24 @@ class OrganicCertificationDocument(UUIDMixin, TimestampMixin, Base):
     )
 
     profile: Mapped[OrganicFarmProfile] = relationship(back_populates="documents")
+
+
+class OrganicUploadAttestation(UUIDMixin, TimestampMixin, Base):
+    """Immutable server observation of bytes successfully written to object storage."""
+
+    __tablename__ = "organic_upload_attestations"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(GUID(), ForeignKey("users.id"), index=True)
+    farm_id: Mapped[uuid.UUID] = mapped_column(GUID(), ForeignKey("farms.id"), index=True)
+    purpose: Mapped[str] = mapped_column(String(40), nullable=False)
+    object_key: Mapped[str] = mapped_column(String(512), nullable=False, unique=True)
+    object_version: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    file_size: Mapped[int] = mapped_column(Integer, nullable=False)
+    mime_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    issued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class OrganicInput(UUIDMixin, TimestampMixin, Base):

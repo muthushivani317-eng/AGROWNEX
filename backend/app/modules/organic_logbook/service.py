@@ -4,6 +4,7 @@ import uuid
 from datetime import UTC, datetime
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.action_verification.models import ActionWorkflow
@@ -11,6 +12,8 @@ from app.modules.auth.models import User
 from app.modules.daily_task.models import DailyTask
 from app.modules.farms.exceptions import FarmNotFoundError
 from app.modules.farms.repositories import FarmRepository
+from app.modules.organic.certification_receipt import LOGBOOK_EVIDENCE, upload_receipt_is_valid
+from app.modules.organic.models import OrganicUploadAttestation
 
 from .exceptions import OrganicLogEntryNotFoundError, OrganicLogReferenceError
 from .models import OrganicPracticeEvidence, OrganicPracticeLogEntry
@@ -32,7 +35,9 @@ class OrganicLogbookService:
         if payload.action_workflow_id:
             action = await self.session.get(ActionWorkflow, payload.action_workflow_id)
             if (
-                action is None or action.is_deleted or action.user_id != user.id
+                action is None
+                or action.is_deleted
+                or action.user_id != user.id
                 or action.farm_id != payload.farm_id
             ):
                 raise OrganicLogReferenceError()
@@ -44,9 +49,6 @@ class OrganicLogbookService:
 
     async def create(self, user: User, payload: OrganicLogCreateIn) -> OrganicPracticeLogEntry:
         await self._owned_farm(user, payload.farm_id)
-        expected_prefix = f"organic-evidence/{user.id}/{payload.farm_id}/"
-        if any(not item.storage_ref.startswith(expected_prefix) for item in payload.evidence):
-            raise OrganicLogReferenceError()
         existing = (
             await self.session.execute(
                 select(OrganicPracticeLogEntry).where(
@@ -63,8 +65,8 @@ class OrganicLogbookService:
 
         # Provenance comes from the server-owned workflow when one is linked;
         # manual records remain explicitly farmer sourced and unverified.
-        source_feature = action.source_module if action else (
-            "daily_task" if task else "farmer_logbook"
+        source_feature = (
+            action.source_module if action else ("daily_task" if task else "farmer_logbook")
         )
         source_record_id = (
             action.source_record_id if action else str(task.id) if task else payload.idempotency_key
@@ -93,14 +95,110 @@ class OrganicLogbookService:
             expert_reviewed=False,
             idempotency_key=payload.idempotency_key,
         )
-        row.evidence = [
-            OrganicPracticeEvidence(
-                **item.model_dump(), farmer_reported=True, expert_reviewed=False
+        evidence_rows = []
+        for item in payload.evidence:
+            attestation = await self.session.get(
+                OrganicUploadAttestation, item.upload_attestation_id
             )
-            for item in payload.evidence
-        ]
+            if attestation is None or not upload_receipt_is_valid(
+                attestation=attestation,
+                user_id=user.id,
+                farm_id=payload.farm_id,
+                purpose=LOGBOOK_EVIDENCE,
+                receipt=item.upload_receipt,
+            ):
+                raise OrganicLogReferenceError()
+            attestation.consumed_at = datetime.now(UTC)
+            evidence_rows.append(
+                OrganicPracticeEvidence(
+                    upload_attestation_id=attestation.id,
+                    evidence_type=item.evidence_type,
+                    storage_ref=attestation.object_key,
+                    content_hash=attestation.sha256,
+                    mime_type=attestation.mime_type,
+                    captured_at=item.captured_at,
+                    retention_consent=item.retention_consent,
+                    farmer_reported=True,
+                    expert_reviewed=False,
+                )
+            )
+        row.evidence = evidence_rows
         self.session.add(row)
         await self.session.flush()
+        await self.session.refresh(row, attribute_names=["evidence"])
+        return row
+
+    async def record_completed_action(
+        self, user: User, action: ActionWorkflow
+    ) -> OrganicPracticeLogEntry | None:
+        """Bridge a farmer-reported workflow completion into the unified log.
+
+        This records workflow completion only. It does not assert efficacy,
+        expert review, certification, or that a satellite observation diagnosed
+        the cause of a field condition.
+        """
+        supported_source = action.source_module.startswith("organic_") or action.source_module in {
+            "satellite_field_scouting", "satellite_scouting_followup"
+        }
+        if not supported_source or action.status != "farmer_reported_done":
+            return None
+        key = f"completed-action:{action.id}"
+        existing = (
+            await self.session.execute(
+                select(OrganicPracticeLogEntry).where(
+                    OrganicPracticeLogEntry.user_id == user.id,
+                    OrganicPracticeLogEntry.idempotency_key == key,
+                )
+            )
+        ).scalar_one_or_none()
+        if existing is not None:
+            return existing
+        practice_type = {
+            "organic_soil_plan": "amendment",
+            "organic_disease_plan": (
+                "biological_treatment" if action.action_code.startswith("organic_input.")
+                else "scouting" if action.action_code in {
+                    "organic.disease.confirm_symptoms", "organic.disease.reinspect"
+                } else "custom"
+            ),
+            "organic_calendar": "custom",
+            "organic_weather_gate": "custom",
+            "satellite_field_scouting": "scouting",
+            "satellite_scouting_followup": "custom",
+        }.get(action.source_module, "custom")
+        row = OrganicPracticeLogEntry(
+            user_id=user.id,
+            farm_id=action.farm_id,
+            crop_cycle_id=action.crop_cycle_id,
+            action_workflow_id=action.id,
+            practice_type=practice_type,
+            practice_code=action.action_code,
+            occurred_at=datetime.now(UTC),
+            outcome_status="not_reported",
+            source_feature=action.source_module,
+            source_record_id=action.source_record_id,
+            source_version=action.source_version,
+            source_verified=action.source_verified,
+            verification_status="farmer_reported",
+            expert_reviewed=False,
+            idempotency_key=key,
+        )
+        try:
+            async with self.session.begin_nested():
+                self.session.add(row)
+                await self.session.flush()
+        except IntegrityError:
+            existing = (
+                await self.session.execute(
+                    select(OrganicPracticeLogEntry).where(
+                        OrganicPracticeLogEntry.user_id == user.id,
+                        OrganicPracticeLogEntry.idempotency_key == key,
+                    )
+                )
+            ).scalar_one_or_none()
+            if existing is not None:
+                return existing
+            raise
         await self.session.refresh(row, attribute_names=["evidence"])
         return row
 
