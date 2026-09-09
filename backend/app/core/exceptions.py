@@ -19,12 +19,18 @@ class AppError(Exception):
         *,
         error_code: str | None = None,
         status_code: int | None = None,
+        details: dict[str, str] | None = None,
     ) -> None:
         self.message = message or self.message
         if error_code is not None:
             self.error_code = error_code
         if status_code is not None:
             self.status_code = status_code
+        # Optional small string map for a client to build a more specific,
+        # localized message than the fixed `message` field allows (e.g. which
+        # crop was expected vs observed) -- never anything sensitive, always
+        # safe to surface directly to the end user.
+        self.details = details
         super().__init__(self.message)
 
 

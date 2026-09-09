@@ -30,11 +30,13 @@ def _envelope(
     error_code: str,
     errors: list[FieldError] | None = None,
     headers: dict[str, str] | None = None,
+    details: dict[str, str] | None = None,
 ) -> JSONResponse:
     body = ErrorResponse(
         message=message,
         error_code=error_code,
         errors=errors or [],
+        details=details,
         request_id=_request_id(request),
     )
     return JSONResponse(
@@ -69,6 +71,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             status_code=exc.status_code,
             message=exc.message,
             error_code=exc.error_code,
+            details=getattr(exc, "details", None),
         )
 
     @app.exception_handler(RequestValidationError)

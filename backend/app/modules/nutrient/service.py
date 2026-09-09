@@ -158,7 +158,9 @@ class NutrientService:
                 farm_crop,
                 farm.id,
             )
-            raise NutrientCropMismatchError()
+            raise NutrientCropMismatchError(
+                details={"expected_crop": farm_crop, "observed_crop": requested_crop}
+            )
         # Pass a bounded canonical value, never raw user-controlled spelling,
         # into the model prompt.
         selected_crop = requested_crop or farm_crop
@@ -230,7 +232,9 @@ class NutrientService:
                     expected_crop,
                     farm.id,
                 )
-                raise NutrientCropMismatchError()
+                raise NutrientCropMismatchError(
+                    details={"expected_crop": expected_crop, "observed_crop": observed_crop}
+                )
 
         # STEP 3 — gather corroborating signals from the other modules.
         soil_ref = await self._soil_reference(user, farm.id)

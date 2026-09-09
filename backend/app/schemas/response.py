@@ -35,6 +35,11 @@ class ErrorResponse(BaseModel):
     message: str
     error_code: str
     errors: list[FieldError] = Field(default_factory=list)
+    # Optional small string map giving a client enough structure to build a
+    # more specific, localized message than `message` alone (e.g. which crop
+    # was expected vs observed on a nutrient-analysis crop mismatch). Absent
+    # for the vast majority of errors -- never anything sensitive.
+    details: dict[str, str] | None = None
     timestamp: str = Field(default_factory=_now_iso)
     request_id: str = ""
 
