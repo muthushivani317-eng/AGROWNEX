@@ -44,6 +44,9 @@ from app.modules.market.router import router as market_router
 from app.modules.memory.router import router as memory_router
 from app.modules.notifications.router import router as notifications_router
 from app.modules.nutrient.router import router as nutrient_router
+from app.modules.organic.router import router as organic_router
+from app.modules.organic_advisory.router import router as organic_advisory_router
+from app.modules.organic_logbook.router import router as organic_logbook_router
 from app.modules.produce.harvest_readiness_router import router as harvest_readiness_router
 from app.modules.produce.router import router as produce_router
 from app.modules.produce.traceability_router import router as traceability_router
@@ -90,6 +93,9 @@ api_router.include_router(produce_router)
 api_router.include_router(harvest_readiness_router)
 api_router.include_router(traceability_router)
 api_router.include_router(notifications_router)
+api_router.include_router(organic_advisory_router)
+api_router.include_router(organic_router)
+api_router.include_router(organic_logbook_router)
 api_router.include_router(experts_router)
 api_router.include_router(consultations_router)
 api_router.include_router(soil_router)

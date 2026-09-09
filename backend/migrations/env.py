@@ -25,6 +25,8 @@ from app.modules.farms import models as _farm_models  # noqa: F401
 from app.modules.intelligence import models as _intelligence_models  # noqa: F401
 from app.modules.memory import models as _memory_models  # noqa: F401
 from app.modules.nutrient import models as _nutrient_models  # noqa: F401
+from app.modules.organic import models as _organic_models  # noqa: F401
+from app.modules.organic_logbook import models as _organic_logbook_models  # noqa: F401
 from app.modules.support import models as _support_models  # noqa: F401
 from app.shared.base_model import Base
 from sqlalchemy import pool

@@ -1,0 +1,1 @@
+"""Organic practice logbook domain."""
