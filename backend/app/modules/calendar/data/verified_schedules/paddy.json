@@ -33,6 +33,17 @@
           "notification_eligible": true,
           "priority": "medium",
           "weather_dependency": "irrigation"
+        },
+        {
+          "code": "apply_organic_manure_basal",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.paddy.apply_organic_manure_basal.title",
+          "description_key": "calendar.verified.paddy.apply_organic_manure_basal.description",
+          "day_offset": 20,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
         }
       ]
     },
@@ -224,11 +235,11 @@
     "kharif"
   ],
   "source_organization": "Tamil Nadu Agricultural University (TNAU) Agritech Portal",
-  "document_reference": "Crop Production Guide 2020 -- Rice section, https://agritech.tnau.ac.in/pdf/AGRICULTURE.pdf",
+  "document_reference": "Crop Production Guide 2020 -- Rice section, https://agritech.tnau.ac.in/pdf/AGRICULTURE.pdf ; organic reference: TNAU Agritech Portal, Organic Farming -- Managing Soil Fertility (Paddy), https://agritech.tnau.ac.in/org_farm/orgfarm_prac_agri_paddy_soil.html",
   "reviewer": "AgrowAI content team -- compiled from cited public source, not independently agronomist-reviewed",
-  "approval_date": "2026-08-18",
+  "approval_date": "2026-09-09",
   "review_date": "2027-08-18",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "status": "SOURCED_PUBLIC_REFERENCE",
-  "content_hash": "7c6c94e1da9a0784bbccc3c06c01508a2d7bf857b7e71127f755379e0a93abaf"
+  "content_hash": "047a95f670409b8387d6434837f6df00d5c14facdb61ad0cfdc205817d7fa500"
 }

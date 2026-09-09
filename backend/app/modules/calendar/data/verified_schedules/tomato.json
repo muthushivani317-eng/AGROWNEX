@@ -77,6 +77,17 @@
           "notification_eligible": true,
           "priority": "high",
           "weather_dependency": "irrigation"
+        },
+        {
+          "code": "apply_organic_manure_and_neem_cake",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.tomato.apply_organic_manure_and_neem_cake.title",
+          "description_key": "calendar.verified.tomato.apply_organic_manure_and_neem_cake.description",
+          "day_offset": -6,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
         }
       ]
     },
@@ -234,11 +245,11 @@
     "rabi"
   ],
   "source_organization": "Tamil Nadu Agricultural University (TNAU) - Agritech Portal",
-  "document_reference": "TNAU Agritech Portal - Horticulture: Vegetables - Tomato Cultural Practices (https://agritech.tnau.ac.in/horticulture/horti_vegetables_tomato_cultural%20practices.html); Tomato Fertigation Schedule (https://agritech.tnau.ac.in/horticulture/horti_vegetables_tomato_fertigation.html); Seed: Vegetables - Tomato / Nursery (https://agritech.tnau.ac.in/horticulture/horti_vegetables_tomato_seed.html); Organic Farming - Tomato Cultivation and Harvest (https://agritech.tnau.ac.in/org_farm/orgfarm_tomato_cultivation.html, https://agritech.tnau.ac.in/org_farm/orgfarm_tomato_harvest.html); Crop Protection - Fruit Borer (https://agritech.tnau.ac.in/crop_protection/tomato/tomato_1.html); Crop Protection - Early Blight (https://agritech.tnau.ac.in/crop_protection/tomato_diseases_2.html); Crop Protection - Late Blight (https://agritech.tnau.ac.in/crop_protection/tomato_diseases_8.html)",
+  "document_reference": "TNAU Agritech Portal - Horticulture: Vegetables - Tomato Cultural Practices (https://agritech.tnau.ac.in/horticulture/horti_vegetables_tomato_cultural%20practices.html); Tomato Fertigation Schedule (https://agritech.tnau.ac.in/horticulture/horti_vegetables_tomato_fertigation.html); Seed: Vegetables - Tomato / Nursery (https://agritech.tnau.ac.in/horticulture/horti_vegetables_tomato_seed.html); Organic Farming - Tomato Cultivation and Harvest (https://agritech.tnau.ac.in/org_farm/orgfarm_tomato_cultivation.html, https://agritech.tnau.ac.in/org_farm/orgfarm_tomato_harvest.html); Crop Protection - Fruit Borer (https://agritech.tnau.ac.in/crop_protection/tomato/tomato_1.html); Crop Protection - Early Blight (https://agritech.tnau.ac.in/crop_protection/tomato_diseases_2.html); Crop Protection - Late Blight (https://agritech.tnau.ac.in/crop_protection/tomato_diseases_8.html) ; organic reference: TNAU Agritech Portal, Organic Farming -- Managing Soil Fertility (Tomato), https://agritech.tnau.ac.in/org_farm/orgfarm_tomato_soil.html",
   "reviewer": "AgrowAI content team -- compiled from cited public source, not independently agronomist-reviewed",
-  "approval_date": "2026-08-18",
+  "approval_date": "2026-09-09",
   "review_date": "2027-08-18",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "status": "SOURCED_PUBLIC_REFERENCE",
-  "content_hash": "82ea623cde607eef1b5f165a7273d5d99c9609ba66105af5c00b9a31fa49d3a0"
+  "content_hash": "b4508e1fbe727544d56da8d989383ab8bf1f8204e77717ac67c6bb6b3801f18e"
 }

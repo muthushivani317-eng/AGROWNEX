@@ -34,6 +34,17 @@
           "notification_eligible": true,
           "priority": "medium",
           "weather_dependency": "irrigation"
+        },
+        {
+          "code": "apply_organic_manure_and_biofertilizer",
+          "activity_type": "land_preparation",
+          "label_key": "calendar.verified.chilli.apply_organic_manure_and_biofertilizer.title",
+          "description_key": "calendar.verified.chilli.apply_organic_manure_and_biofertilizer.description",
+          "day_offset": 38,
+          "notification_offset_days": 1,
+          "notification_eligible": true,
+          "priority": "medium",
+          "weather_dependency": "none"
         }
       ]
     },
@@ -162,11 +173,11 @@
     "rabi"
   ],
   "source_organization": "Tamil Nadu Agricultural University (TNAU) Agritech Portal; ICAR-Central Coastal Agricultural Research Institute (CCARI)",
-  "document_reference": "TNAU Agritech Portal -- Horticulture: Vegetables: Chilli (Cultural Practices, https://agritech.tnau.ac.in/horticulture/horti_vegetables_chilli_cultural.html; Yield, https://agritech.tnau.ac.in/horticulture/horti_vegetables_chilli_Yield_new.html); ICAR-CCARI Decision Support System -- Chilli, https://ccari.icar.gov.in/dss/chilli.html",
+  "document_reference": "TNAU Agritech Portal -- Horticulture: Vegetables: Chilli (Cultural Practices, https://agritech.tnau.ac.in/horticulture/horti_vegetables_chilli_cultural.html; Yield, https://agritech.tnau.ac.in/horticulture/horti_vegetables_chilli_Yield_new.html); ICAR-CCARI Decision Support System -- Chilli, https://ccari.icar.gov.in/dss/chilli.html ; organic reference: TNAU Agritech Portal, Model Bankable Scheme for Organic Cultivation of Chilli, https://agritech.tnau.ac.in/banking/pdf/Chilli.pdf",
   "reviewer": "AgrowAI content team -- compiled from cited public source, not independently agronomist-reviewed",
-  "approval_date": "2026-08-18",
+  "approval_date": "2026-09-09",
   "review_date": "2027-08-18",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "status": "SOURCED_PUBLIC_REFERENCE",
-  "content_hash": "6f1a5c4af44687d27c451148fed3f2b95e1c7456c2128ac722792f67061b5ce6"
+  "content_hash": "53184f403760a4f501476649f08792867979b6c705c5ff5e11b9c3a6345bd179"
 }
