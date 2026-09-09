@@ -56,6 +56,12 @@ class DiseaseReport(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     causes: Mapped[list | None] = mapped_column(JSON)
     recommendations: Mapped[list | None] = mapped_column(JSON)
     prevention: Mapped[list | None] = mapped_column(JSON)
+    # Category-level-only conventional (non-organic) guidance -- e.g. "a
+    # protectant or systemic fungicide" -- never a specific product, brand,
+    # or dose (app.disease_recommendations.registry.CHEMICAL_WITHHELD policy).
+    # Null for a healthy result or when no category-level text was produced.
+    conventional_category_english: Mapped[str | None] = mapped_column(Text)
+    conventional_category_tamil: Mapped[str | None] = mapped_column(Text)
     visible_parts: Mapped[list | None] = mapped_column(JSON)
     needs_expert_review: Mapped[bool] = mapped_column(Boolean, default=False)
     review_status: Mapped[str | None] = mapped_column(String(20), index=True)

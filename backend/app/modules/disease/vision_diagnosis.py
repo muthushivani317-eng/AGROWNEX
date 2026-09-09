@@ -44,6 +44,13 @@ class VisionDiagnosis(BaseModel):
     severity: Literal["mild", "moderate", "severe", "unknown"]
     general_care_recommendations: list[str] = Field(default_factory=list, max_length=6)
     prevention_tips: list[str] = Field(default_factory=list, max_length=6)
+    # Category-level-only conventional guidance (e.g. "a protectant or
+    # systemic fungicide"), never a specific product, brand, or dose --
+    # mirrors app.disease_recommendations.registry's CHEMICAL_WITHHELD
+    # policy for the six-crop curated registry, applied here to the general
+    # (any-crop) AI vision path. Null when plant_health is not "diseased".
+    conventional_care_category: str | None = Field(default=None, max_length=300)
+    conventional_care_category_tamil: str | None = Field(default=None, max_length=300)
     needs_expert_review: bool
     expert_review_reason: str | None = Field(default=None, max_length=200)
     farmer_summary: str = Field(min_length=1, max_length=600)
@@ -80,13 +87,25 @@ example: remove and destroy affected leaves, improve spacing and airflow,
 avoid overhead watering, sanitize tools, rotate crops). Never name,
 recommend, or imply a dosage for any specific pesticide, fungicide, or
 chemical brand -- always defer chemical treatment decisions to the farmer's
-local Agriculture Officer or Krishi Vigyan Kendra (KVK). Write farmer_summary
-in simple, plain language a smallholder farmer can act on. Then write
-farmer_summary_tamil: the same explanation in simple, natural, plain Tamil --
-a faithful rendering of the same facts and advice for a Tamil-reading
-smallholder farmer, not a literal word-for-word translation. Both fields must
-convey identical medical/agricultural content; only the language differs.
-Return only the required JSON schema."""
+local Agriculture Officer or Krishi Vigyan Kendra (KVK). When plant_health is
+"diseased", also set conventional_care_category to ONE short sentence naming
+only the general CLASS of conventional treatment typically used for that
+type of problem (for example "A protectant or systemic fungicide labelled
+for this crop and disease is commonly used" for a fungal-looking issue, or
+"No chemical product cures a viral infection; conventional management
+targets the insect vector that spreads it" for a virus-like pattern) --
+still never a specific product, active ingredient, brand, or dose, and still
+end by directing the farmer to their local Agriculture Officer or KVK for
+the exact product and dose. Leave conventional_care_category null when
+plant_health is not "diseased". Write farmer_summary in simple, plain
+language a smallholder farmer can act on. Then write farmer_summary_tamil:
+the same explanation in simple, natural, plain Tamil -- a faithful rendering
+of the same facts and advice for a Tamil-reading smallholder farmer, not a
+literal word-for-word translation. When conventional_care_category is set,
+also write conventional_care_category_tamil as the same faithful Tamil
+rendering of it (null when conventional_care_category is null). All English
+fields and their Tamil counterparts must convey identical content; only the
+language differs. Return only the required JSON schema."""
 
 
 def _output_text(payload: dict[str, Any]) -> str:

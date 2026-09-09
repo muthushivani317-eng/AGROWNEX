@@ -53,6 +53,68 @@ STATUS_UNVERIFIED = "RECOMMENDATION_NOT_VERIFIED"
 STATUS_UNMAPPED = "RUNTIME_LABEL_UNMAPPED"
 CHEMICAL_WITHHELD = "CHEMICAL_RECOMMENDATION_WITHHELD"
 
+# Category-level-only conventional-treatment guidance, keyed by the same
+# `category` tag every LABELS entry already carries (fungal/bacterial/viral/
+# healthy -- no pest/insect category exists in the current 20-label set).
+# This deliberately names only the general CLASS of treatment a farmer would
+# typically be given for that category of problem -- never a specific
+# product, active ingredient, brand, or dose, consistent with
+# CHEMICAL_WITHHELD above (dose/registration data hasn't been independently
+# verified per crop+disease against the official regulator). Always paired
+# with a line sending the farmer to their local Agriculture Officer / KVK for
+# the actual product and dose.
+_CONVENTIONAL_CATEGORY_EN: dict[str, str] = {
+    "fungal": (
+        "A protectant or systemic fungicide labelled for this crop and "
+        "disease is commonly used. Ask your local Agriculture Officer or "
+        "Krishi Vigyan Kendra (KVK) for the specific product and dose."
+    ),
+    "bacterial": (
+        "A copper-based bactericide labelled for this crop is commonly "
+        "used, though bacterial diseases are harder to cure chemically once "
+        "established -- removing infected material matters as much as any "
+        "spray. Ask your local Agriculture Officer or KVK for the specific "
+        "product and dose."
+    ),
+    "viral": (
+        "No chemical product cures a viral disease. Conventional management "
+        "instead controls the insect vector that spreads it (for example an "
+        "insecticide against whitefly or leafhopper) and removes infected "
+        "plants. Ask your local Agriculture Officer or KVK which vector "
+        "control fits this crop."
+    ),
+}
+
+# Direct Tamil translations of the English text above (not the generic
+# "verify against official source" _ta() fallback used for untranslated
+# per-disease PDF content -- these are original, hand-written sentences with
+# no PDF source to verify against, so a disclaimer prefix would be
+# misleading rather than honest).
+_CONVENTIONAL_CATEGORY_TA: dict[str, str] = {
+    "fungal": (
+        "இந்தப் பயிருக்கும் நோய்க்கும் ஏற்ற பாதுகாப்பு (protectant) அல்லது "
+        "உட்புகு (systemic) பூஞ்சைக்கொல்லி பொதுவாகப் பயன்படுத்தப்படுகிறது. "
+        "குறிப்பிட்ட பொருள் மற்றும் அளவுக்கு உங்கள் உள்ளூர் வேளாண் அலுவலர் "
+        "அல்லது கிருஷி விஞ்ஞான கேந்திரத்தை (KVK) அணுகவும்."
+    ),
+    "bacterial": (
+        "இந்தப் பயிருக்கு ஏற்ற காப்பர் அடிப்படையிலான பாக்டீரியாக் கொல்லி "
+        "(bactericide) பொதுவாகப் பயன்படுத்தப்படுகிறது; எனினும் பாக்டீரியா "
+        "நோய்கள் ஏற்கனவே பரவிவிட்டால் மருந்தால் மட்டும் குணப்படுத்துவது "
+        "கடினம் -- பாதிக்கப்பட்ட பகுதிகளை அகற்றுவதும் அதே அளவு முக்கியம். "
+        "குறிப்பிட்ட பொருள் மற்றும் அளவுக்கு உங்கள் உள்ளூர் வேளாண் அலுவலர் "
+        "அல்லது KVK-ஐ அணுகவும்."
+    ),
+    "viral": (
+        "வைரஸ் நோய்க்கு எந்த மருந்தும் குணப்படுத்தாது. இதைப் பரப்பும் "
+        "பூச்சியைக் கட்டுப்படுத்துவதே (எடுத்துக்காட்டாக வெள்ளை ஈ அல்லது "
+        "இலைத்தத்துப் பூச்சிக்கு எதிரான பூச்சிக்கொல்லி) மற்றும் பாதிக்கப்பட்ட "
+        "செடிகளை அகற்றுவதே வழக்கமான நிர்வாகம். இந்தப் பயிருக்கு எந்த பூச்சிக் "
+        "கட்டுப்பாடு பொருந்தும் என்பதை உங்கள் உள்ளூர் வேளாண் அலுவலர் அல்லது "
+        "KVK-இடம் கேட்கவும்."
+    ),
+}
+
 OFFICIAL_SOURCES = [
     {
         "source_id": "icar_crop_management_11",
@@ -967,6 +1029,8 @@ def get_recommendation(
         "biological_options_ta": content.get("biological_options_ta") or _ta(biological),
         "nutrient_correction_en": [], "nutrient_correction_ta": [],
         "chemical_options": [], "chemical_recommendation_status": CHEMICAL_WITHHELD,
+        "conventional_category_en": _CONVENTIONAL_CATEGORY_EN.get(category),
+        "conventional_category_ta": _CONVENTIONAL_CATEGORY_TA.get(category),
         "prevention_en": prevention,
         "prevention_ta": (
             content.get("prevention_ta") if content.get("prevention_en")

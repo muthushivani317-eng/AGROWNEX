@@ -374,6 +374,18 @@ async def diagnose_for_farmer(
         if registry_content["prevention_en"]:
             prevention = registry_content["prevention_en"]
 
+    # Category-level-only conventional (non-organic) guidance -- the curated
+    # registry's per-disease-category text (fungal/bacterial/viral) takes
+    # precedence over the AI's own free-form category text, same precedence
+    # rule as recommendations/prevention above. Never a specific product,
+    # brand, or dose either way -- see CHEMICAL_WITHHELD in
+    # app.disease_recommendations.registry.
+    conventional_category_en = diagnosis.conventional_care_category
+    conventional_category_ta = diagnosis.conventional_care_category_tamil
+    if registry_content is not None and registry_content.get("conventional_category_en"):
+        conventional_category_en = registry_content["conventional_category_en"]
+        conventional_category_ta = registry_content.get("conventional_category_ta")
+
     # official_sources always starts with the 2 base ICAR references (see
     # OFFICIAL_SOURCES in the registry module); anything after that is the
     # extension source(s) matched to this specific disease. Computed once,
@@ -445,6 +457,8 @@ async def diagnose_for_farmer(
         causes=diagnosis.likely_causes,
         recommendations=recommendations,
         prevention=prevention,
+        conventional_category_english=conventional_category_en,
+        conventional_category_tamil=conventional_category_ta,
         needs_expert_review=needs_expert_review,
         explanation_english=" ".join(explanation_parts),
         explanation_tamil=" ".join(explanation_parts_tamil),

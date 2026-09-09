@@ -46,6 +46,8 @@ class DiseaseReportOut(BaseModel):
     causes: list[str]
     recommendations: list[str]
     prevention: list[str]
+    conventional_category_english: str | None
+    conventional_category_tamil: str | None
     visible_parts: list[str]
     needs_expert_review: bool
     explanation_tamil: str | None
@@ -81,6 +83,8 @@ class DiseaseReportOut(BaseModel):
             causes=report.causes or [],
             recommendations=report.recommendations or [],
             prevention=report.prevention or [],
+            conventional_category_english=report.conventional_category_english,
+            conventional_category_tamil=report.conventional_category_tamil,
             visible_parts=report.visible_parts or [],
             needs_expert_review=report.needs_expert_review,
             explanation_tamil=report.explanation_tamil,
