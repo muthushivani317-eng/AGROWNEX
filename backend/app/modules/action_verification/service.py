@@ -4,6 +4,7 @@ import uuid
 from datetime import UTC, datetime
 
 from sqlalchemy import or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.auth.models import User
@@ -124,8 +125,39 @@ class ActionVerificationService:
             version=1,
             pending_sync=False,
         )
-        self.session.add(row)
-        await self.session.flush()
+        try:
+            # The SELECT above is only a fast path, not the real guarantee --
+            # two concurrent requests (e.g. the home-screen weather widget and
+            # a /notifications sync, both landing on the same farm within the
+            # same day) can both see "no existing row" and both reach this
+            # insert. Scope the insert to its own SAVEPOINT so a lost race
+            # only unwinds this nested block, not the whole request's
+            # transaction: without this, the IntegrityError from the unique
+            # constraint (uq_action_source_identity) left the outer session's
+            # transaction in a "pending rollback" state, and the very next
+            # query on that same session -- often unrelated, e.g. notification
+            # preference checks -- raised PendingRollbackError and turned a
+            # harmless duplicate into a real 500 for the caller (observed in
+            # production logs, 2026-09-08: GET /notifications 500 caused by a
+            # weather-sourced action losing exactly this race).
+            async with self.session.begin_nested():
+                self.session.add(row)
+                await self.session.flush()
+        except IntegrityError:
+            existing = (
+                await self.session.execute(
+                    select(ActionWorkflow).where(
+                        ActionWorkflow.user_id == user.id,
+                        ActionWorkflow.farm_id == farm_id,
+                        ActionWorkflow.source_module == source.source_feature,
+                        ActionWorkflow.source_record_id == source.source_record_id,
+                        ActionWorkflow.is_deleted.is_(False),
+                    )
+                )
+            ).scalar_one_or_none()
+            if existing is not None:
+                return existing
+            raise
         self.session.add(
             self._event(row, user, "suggest", None, "source-created", source.source_record_id)
         )
