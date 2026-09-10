@@ -3,6 +3,7 @@
 Registered on the FastAPI app so every failure returns the documented shape with
 a request id, and unexpected errors are logged (never swallowed).
 """
+
 from __future__ import annotations
 
 from fastapi import FastAPI, HTTPException, Request
@@ -41,7 +42,10 @@ def _envelope(
     )
     return JSONResponse(
         status_code=status_code,
-        content=body.model_dump(),
+        # Optional diagnostic details are part of the contract only when an
+        # AppError actually supplies them; do not add a new `details: null`
+        # key to every existing HTTP error response.
+        content=body.model_dump(exclude_none=True),
         headers=headers,
     )
 
@@ -75,9 +79,7 @@ def register_exception_handlers(app: FastAPI) -> None:
         )
 
     @app.exception_handler(RequestValidationError)
-    async def _validation_error(
-        request: Request, exc: RequestValidationError
-    ) -> JSONResponse:
+    async def _validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
         errors = [
             FieldError(field=".".join(str(p) for p in e["loc"]), message=e["msg"])
             for e in exc.errors()

@@ -24,6 +24,7 @@ Bundling a Noto Sans Tamil TTF and registering it with reportlab would
 remove this limitation without any other code change -- see the delivery
 report's "Remaining risks" section.
 """
+
 from __future__ import annotations
 
 import io
@@ -62,8 +63,12 @@ class EvidencePackService:
         self._weather = weather_service
         self._storage = storage
 
-    async def generate(self, user: User, farm: Farm, request: EvidencePackTriggerRequest) -> EvidencePack:
-        pre_row, post_row = await self._surrounding_history_rows(user, farm.id, request.event_date_start)
+    async def generate(
+        self, user: User, farm: Farm, request: EvidencePackTriggerRequest
+    ) -> EvidencePack:
+        pre_row, post_row = await self._surrounding_history_rows(
+            user, farm.id, request.event_date_start
+        )
 
         pre_trend_ta = self._trend_summary_ta(pre_row, "before")
         post_trend_ta = self._trend_summary_ta(post_row, "after") if post_row else None
@@ -71,12 +76,15 @@ class EvidencePackService:
         standing_water_ta = None
         if request.event_type in ("heavy_rain", "cyclone"):
             assessment = await self._satellite.latest_waterlogging(user, farm.id)
-            if assessment is not None and assessment.decision not in (None, "insufficient_data", "clear"):
+            if assessment is not None and assessment.decision not in (
+                None,
+                "insufficient_data",
+                "clear",
+            ):
                 # Cautious wording ONLY -- see schemas.EvidencePackContent
                 # docstring. Never rendered as a flood confirmation.
                 standing_water_ta = (
-                    "சாத்தியமான தண்ணீர் தேக்க மாற்றம் கண்டறியப்பட்டது. "
-                    "இது இறுதி வெள்ள உறுதிப்படுத்தல் அல்ல."
+                    "சாத்தியமான தண்ணீர் தேக்க மாற்றம் கண்டறியப்பட்டது. இது இறுதி வெள்ள உறுதிப்படுத்தல் அல்ல."
                 )
 
         rain_context_ta = await self._weather_context_ta(user, farm.id, request.event_date_start)
@@ -126,7 +134,8 @@ class EvidencePackService:
             event_date_start=request.event_date_start,
             event_date_end=request.event_date_end,
             confidence_level=confidence.value,
-            has_pre_event_imagery=False,  # see module docstring: rendered-image lookup not wired at MVP
+            # See module docstring: rendered-image lookup is not wired at MVP.
+            has_pre_event_imagery=False,
             has_post_event_imagery=False,
             imagery_degraded_reason=degraded_reason,
             content=content.model_dump(mode="json"),
@@ -144,7 +153,9 @@ class EvidencePackService:
             content.farmer_photo_object_ids.append(photo_object_id)
         if voice_note_object_id:
             content.farmer_voice_note_object_ids.append(voice_note_object_id)
-        await self._repo.update_evidence_pack_content(pack.id, content=content.model_dump(mode="json"))
+        await self._repo.update_evidence_pack_content(
+            pack.id, content=content.model_dump(mode="json")
+        )
         return pack
 
     # ------------------------------------------------------------------ #
@@ -194,7 +205,9 @@ class EvidencePackService:
             return EvidencePackConfidence.LIMITED
         return EvidencePackConfidence.LIMITED
 
-    async def _render_and_store_pdf(self, content: EvidencePackContent) -> tuple[str | None, str | None]:
+    async def _render_and_store_pdf(
+        self, content: EvidencePackContent
+    ) -> tuple[str | None, str | None]:
         """Returns (pdf_url, degraded_reason). Never raises -- any render or
         upload failure degrades the pack to text/data-only, per the module
         docstring's requirement #1.
@@ -205,7 +218,8 @@ class EvidencePackService:
             return None, "pdf_export_disabled"
         try:
             pdf_bytes = render_evidence_pack_pdf(content)
-            key = f"evidence_pack/{content.farm_id}/{content.event_date_start.date()}-{uuid.uuid4().hex[:8]}.pdf"
+            filename = f"{content.event_date_start.date()}-{uuid.uuid4().hex[:8]}.pdf"
+            key = f"evidence_pack/{content.farm_id}/{filename}"
             url = await self._storage.put(key=key, data=pdf_bytes, content_type="application/pdf")
             return url, None
         except (StorageError, StorageUnavailableError):
@@ -240,18 +254,25 @@ def render_evidence_pack_pdf(content: EvidencePackContent) -> bytes:
 
     line("AgrowAI -- Field Evidence Pack", size=16, bold=True, gap=10 * mm)
     line(f"Farm: {content.farmer_name}")
-    line(f"Event type: {content.event_type}   Event date: {content.event_date_start.date().isoformat()}")
+    event_date = content.event_date_start.date().isoformat()
+    line(f"Event type: {content.event_type}   Event date: {event_date}")
     line(f"Confidence: {content.confidence_level.value}")
     y -= 4 * mm
     line("Before the event:", bold=True)
-    line(
-        f"Scan date: {content.pre_event_scan_date.date().isoformat() if content.pre_event_scan_date else 'not available'}"
+    pre_scan_date = (
+        content.pre_event_scan_date.date().isoformat()
+        if content.pre_event_scan_date
+        else "not available"
     )
+    line(f"Scan date: {pre_scan_date}")
     y -= 4 * mm
     line("After the event:", bold=True)
-    line(
-        f"Scan date: {content.post_event_scan_date.date().isoformat() if content.post_event_scan_date else 'not available'}"
+    post_scan_date = (
+        content.post_event_scan_date.date().isoformat()
+        if content.post_event_scan_date
+        else "not available"
     )
+    line(f"Scan date: {post_scan_date}")
     if content.standing_water_note_ta:
         y -= 4 * mm
         line("Note: a possible standing-water change was detected near this date.", bold=True)

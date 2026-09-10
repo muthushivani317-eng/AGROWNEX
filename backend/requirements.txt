@@ -11,12 +11,15 @@ redis==5.2.1
 # Background worker (Phase 3): ARQ (Redis-based, async, lightweight).
 arq==0.26.3
 firebase-admin==6.6.0
-python-multipart==0.0.20
+python-multipart==0.0.31
 httpx==0.28.1
 # Error monitoring (Phase 4). Imported lazily; a missing SDK degrades to no-op.
 sentry-sdk==2.19.2
 # Optional image-quality metrics (imported lazily; module degrades gracefully).
-pillow==11.1.0
+pillow==12.3.0
+# Evidence-pack PDF generation. Keep this explicit so enabling the production
+# feature flag cannot silently degrade every export to `render_failed`.
+reportlab==5.0.1
 # Frozen CPU inference runtime. Versions match the captured training runtime.
 --extra-index-url https://download.pytorch.org/whl/cpu
 torch==2.11.0+cpu
