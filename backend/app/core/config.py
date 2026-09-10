@@ -56,6 +56,7 @@ class Settings(BaseSettings):
     database_url: str = Field(
         default="postgresql+asyncpg://agrowai:agrowai@localhost:5432/agrowai",
     )
+    migration_database_url: str | None = Field(default=None)
     db_echo: bool = Field(default=False)
     # Connection pool sizing (docs/DEPLOYMENT.md → scaling).
     db_pool_size: int = Field(default=10)
@@ -209,6 +210,17 @@ class Settings(BaseSettings):
         return normalize_async_database_url(self.database_url)
 
     @property
+    def migration_async_database_url(self) -> str:
+        """Connection used for Alembic migrations only (needs DDL privileges).
+
+        Falls back to the runtime DATABASE_URL if MIGRATION_DATABASE_URL is unset,
+        so nothing breaks in environments that have not set it up.
+        """
+        if self.migration_database_url:
+            return normalize_async_database_url(self.migration_database_url)
+        return self.async_database_url
+
+    @property
     def openai_vision_diagnosis_enabled(self) -> bool:
         return bool(self.openai_vision_diagnosis_api_key and self.openai_vision_diagnosis_model)
 
@@ -270,3 +282,5 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
+
+
