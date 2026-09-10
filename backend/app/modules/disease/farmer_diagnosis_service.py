@@ -393,7 +393,9 @@ async def diagnose_for_farmer(
     extension_titles: list[str] = []
     if registry_content is not None:
         extension_titles = [
-            source["title"] for source in registry_content["official_sources"][2:] if source.get("title")
+            source["title"]
+            for source in registry_content["official_sources"][2:]
+            if source.get("title")
         ]
 
     explanation_parts = [diagnosis.farmer_summary]
@@ -435,14 +437,17 @@ async def diagnose_for_farmer(
         content_type, "jpg"
     )
     image_url = None
-    try:
-        image_url = await get_default_storage().put(
-            key=f"{DISEASE_IMAGE_PREFIX}/farmer/{user.id}/{uuid.uuid4().hex}.{extension}",
-            data=image_bytes,
-            content_type=content_type,
-        )
-    except Exception:
-        logger.warning("disease image storage failed; continuing without image_url", exc_info=True)
+    if not settings.private_disease_images_enabled:
+        try:
+            image_url = await get_default_storage().put(
+                key=f"{DISEASE_IMAGE_PREFIX}/farmer/{user.id}/{uuid.uuid4().hex}.{extension}",
+                data=image_bytes,
+                content_type=content_type,
+            )
+        except Exception:
+            logger.warning(
+                "disease image storage failed; continuing without image_url", exc_info=True
+            )
 
     image_key = None
     try:
@@ -450,7 +455,9 @@ async def diagnose_for_farmer(
         await get_private_storage().put(key=image_key, data=image_bytes, content_type=content_type)
     except Exception:
         image_key = None
-        logger.warning("disease private image storage failed; continuing without image_key", exc_info=True)
+        logger.warning(
+            "disease private image storage failed; continuing without image_key", exc_info=True
+        )
 
     report = DiseaseReport(
         user_id=user.id,

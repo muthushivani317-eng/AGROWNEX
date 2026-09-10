@@ -23,6 +23,7 @@ from app.modules.disease.constants import (
     R2_ACCESS_KEY_ID,
     R2_ACCOUNT_ID,
     R2_BUCKET,
+    R2_PRIVATE_BUCKET,
     R2_PUBLIC_BASE_URL,
     R2_REGION,
     R2_SECRET_ACCESS_KEY,
@@ -245,9 +246,23 @@ def get_default_storage() -> ObjectStorage:
 
 
 def get_private_storage() -> ObjectStorage:
-    """Authenticated-write-only storage used for private evidence and certificates."""
+    """Use a separate non-public bucket; never fall back to the public bucket.
+
+    Operators must disable r2.dev and custom-domain access on this bucket and
+    migrate existing private objects before enabling this configuration.
+    """
     if R2_ACCOUNT_ID and R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY:
-        return R2Client(require_public_read=False)
+        if not R2_PRIVATE_BUCKET or R2_PRIVATE_BUCKET == R2_BUCKET:
+            logger.warning("private storage unavailable: separate private bucket required")
+            return UnavailableStorage()
+        return R2Client(
+            account_id=R2_ACCOUNT_ID,
+            access_key=R2_ACCESS_KEY_ID,
+            secret_key=R2_SECRET_ACCESS_KEY,
+            bucket=R2_PRIVATE_BUCKET,
+            public_base_url="",
+            require_public_read=False,
+        )
     if test_mocks_enabled():
         return MockStorage()
     return UnavailableStorage()

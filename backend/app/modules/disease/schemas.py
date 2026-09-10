@@ -8,6 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
+from app.core.config import settings
 from app.modules.disease.models import DiseaseReport
 
 
@@ -53,6 +54,7 @@ class DiseaseReportOut(BaseModel):
     explanation_tamil: str | None
     explanation_english: str | None
     image_url: str | None
+    private_image_available: bool
     thumbnail_url: str | None
     model_used: str | None
     review_status: str | None
@@ -89,7 +91,12 @@ class DiseaseReportOut(BaseModel):
             needs_expert_review=report.needs_expert_review,
             explanation_tamil=report.explanation_tamil,
             explanation_english=report.explanation_english,
-            image_url=report.image_url,
+            image_url=(
+                None
+                if settings.private_disease_images_enabled and report.image_key
+                else report.image_url
+            ),
+            private_image_available=bool(report.image_key),
             thumbnail_url=report.thumbnail_url,
             model_used=report.model_used,
             review_status=report.review_status,
@@ -117,10 +124,18 @@ class DiseaseReportSummaryOut(BaseModel):
     confidence: int | None
     severity: str | None
     image_url: str | None
+    private_image_available: bool = False
     needs_expert_review: bool
     test_mode: dict | None
     verification_level: str | None
     created_at: datetime
+
+    @classmethod
+    def from_report(cls, report: DiseaseReport) -> DiseaseReportSummaryOut:
+        updates = {"private_image_available": bool(report.image_key)}
+        if settings.private_disease_images_enabled and report.image_key:
+            updates["image_url"] = None
+        return cls.model_validate(report).model_copy(update=updates)
 
 
 class DiseaseReviewRequest(BaseModel):

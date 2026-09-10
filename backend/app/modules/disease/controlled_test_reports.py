@@ -5,6 +5,7 @@ import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.modules.disease.constants import DISEASE_IMAGE_PREFIX
 from app.modules.disease.models import DiseaseReport
 from app.modules.disease.repositories import DiseaseReportRepository
@@ -41,13 +42,17 @@ async def persist_controlled_test_report(
     image_url = None
     image_key = None
     if retain_for_review:
-        image_url = await get_default_storage().put(
-            key=f"{DISEASE_IMAGE_PREFIX}/controlled-test/{user_id}/{uuid.uuid4().hex}.{extension}",
-            data=image,
-            content_type=content_type,
-        )
+        if not settings.private_disease_images_enabled:
+            image_url = await get_default_storage().put(
+                key=f"{DISEASE_IMAGE_PREFIX}/controlled-test/{user_id}/{uuid.uuid4().hex}.{extension}",
+                data=image,
+                content_type=content_type,
+            )
         try:
-            image_key = f"{DISEASE_IMAGE_PREFIX}/controlled-test/{user_id}/{uuid.uuid4().hex}.{extension}"
+            image_key = (
+                f"{DISEASE_IMAGE_PREFIX}/controlled-test/{user_id}/"
+                f"{uuid.uuid4().hex}.{extension}"
+            )
             await get_private_storage().put(key=image_key, data=image, content_type=content_type)
         except Exception:
             image_key = None

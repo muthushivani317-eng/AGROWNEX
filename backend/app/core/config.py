@@ -47,6 +47,9 @@ class Settings(BaseSettings):
     )
     debug: bool = Field(default=True)
     organic_trusted_weather_enabled: bool = Field(default=True)
+    # Two-release private-photo rollout. Keep false until the authenticated-image
+    # mobile release is installed and legacy objects have been copied/verified.
+    private_disease_images_enabled: bool = Field(default=False)
     api_v1_prefix: str = "/api/v1"
     public_api_url: str = Field(default="")
     trusted_hosts: list[str] = Field(default_factory=lambda: ["localhost", "testserver"])

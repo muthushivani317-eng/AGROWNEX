@@ -11,9 +11,34 @@ from app.modules.disease.storage import (
     StorageUnavailableError,
     UnavailableStorage,
     get_default_storage,
+    get_private_storage,
 )
 from app.modules.growth.service import GrowthService
 from app.modules.nutrient.service import NutrientService
+
+
+@pytest.mark.parametrize("bucket", ["", "public-photos"])
+def test_private_storage_rejects_missing_or_public_bucket(monkeypatch, bucket):
+    monkeypatch.setattr(storage_module, "R2_ACCOUNT_ID", "account")
+    monkeypatch.setattr(storage_module, "R2_ACCESS_KEY_ID", "access")
+    monkeypatch.setattr(storage_module, "R2_SECRET_ACCESS_KEY", "secret")
+    monkeypatch.setattr(storage_module, "R2_BUCKET", "public-photos")
+    monkeypatch.setattr(storage_module, "R2_PRIVATE_BUCKET", bucket)
+    monkeypatch.setenv("APP_ENV", "production")
+    assert isinstance(get_private_storage(), UnavailableStorage)
+
+
+def test_private_storage_does_not_use_public_domain(monkeypatch):
+    monkeypatch.setattr(storage_module, "R2_ACCOUNT_ID", "account")
+    monkeypatch.setattr(storage_module, "R2_ACCESS_KEY_ID", "access")
+    monkeypatch.setattr(storage_module, "R2_SECRET_ACCESS_KEY", "secret")
+    monkeypatch.setattr(storage_module, "R2_BUCKET", "public-photos")
+    monkeypatch.setattr(storage_module, "R2_PRIVATE_BUCKET", "private-evidence")
+    selected = get_private_storage()
+    assert isinstance(selected, R2Client)
+    assert selected.bucket == "private-evidence"
+    assert selected.public_base_url == ""
+    assert selected.require_public_read is False
 
 
 @pytest.mark.parametrize("environment", ["production", "kvk_field_test", "internal_testing"])
