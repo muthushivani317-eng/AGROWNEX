@@ -52,7 +52,7 @@ from app.modules.disease.constants import (
 )
 from app.modules.disease.models import DiseaseReport
 from app.modules.disease.repositories import DiseaseReportRepository
-from app.modules.disease.storage import get_default_storage
+from app.modules.disease.storage import get_default_storage, get_private_storage
 from app.modules.disease.vision_diagnosis import (
     OpenAIVisionDiagnosisProvider,
     VisionDiagnosisError,
@@ -431,11 +431,11 @@ async def diagnose_for_farmer(
             "கொண்டது: " + "; ".join(extension_titles) + "."
         )
 
+    extension = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}.get(
+        content_type, "jpg"
+    )
     image_url = None
     try:
-        extension = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}.get(
-            content_type, "jpg"
-        )
         image_url = await get_default_storage().put(
             key=f"{DISEASE_IMAGE_PREFIX}/farmer/{user.id}/{uuid.uuid4().hex}.{extension}",
             data=image_bytes,
@@ -444,10 +444,19 @@ async def diagnose_for_farmer(
     except Exception:
         logger.warning("disease image storage failed; continuing without image_url", exc_info=True)
 
+    image_key = None
+    try:
+        image_key = f"{DISEASE_IMAGE_PREFIX}/farmer/{user.id}/{uuid.uuid4().hex}.{extension}"
+        await get_private_storage().put(key=image_key, data=image_bytes, content_type=content_type)
+    except Exception:
+        image_key = None
+        logger.warning("disease private image storage failed; continuing without image_key", exc_info=True)
+
     report = DiseaseReport(
         user_id=user.id,
         farm_id=farm_id,
         image_url=image_url,
+        image_key=image_key,
         capture_method="gallery",
         crop=crop_id,
         disease=disease_label,

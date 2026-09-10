@@ -10,7 +10,7 @@ from __future__ import annotations
 import math
 import uuid
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Response, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session
@@ -26,6 +26,7 @@ from app.modules.disease.farmer_diagnosis_service import (
     diagnose_for_farmer,
 )
 from app.modules.disease.ml_runtime import get_model_runtime
+from app.modules.disease.storage import get_private_storage
 from app.modules.disease.review import review_redgram_report
 from app.modules.disease.schemas import (
     DiseaseReportOut,
@@ -160,6 +161,26 @@ async def get_report(report_id: uuid.UUID, current_user: CurrentUser, service: D
     """Fetch a full disease report."""
     report = await service.get_report(current_user, report_id)
     return success(DiseaseReportOut.from_report(report))
+
+
+@router.get("/{report_id}/image")
+async def get_report_image(
+    report_id: uuid.UUID, current_user: CurrentUser, service: DiseaseServiceDep
+):
+    """Serve the report photo from private storage (ownership-checked via get_report).
+
+    Inert for now: mobile still uses the public `image_url` field until it can
+    send an auth header on image requests.
+    """
+    report = await service.get_report(current_user, report_id)
+    if not report.image_key:
+        raise HTTPException(404, detail={"code": "IMAGE_NOT_AVAILABLE"})
+    ext = report.image_key.rsplit(".", 1)[-1].lower()
+    media_type = {
+        "jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp",
+    }.get(ext, "application/octet-stream")
+    data = await get_private_storage().get(key=report.image_key)
+    return Response(content=data, media_type=media_type, headers={"Cache-Control": "private, no-store"})
 
 
 @router.delete("/{report_id}", response_model=SuccessResponse[None])

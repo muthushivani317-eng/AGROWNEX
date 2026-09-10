@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.modules.disease.constants import DISEASE_IMAGE_PREFIX
 from app.modules.disease.models import DiseaseReport
 from app.modules.disease.repositories import DiseaseReportRepository
-from app.modules.disease.storage import get_default_storage
+from app.modules.disease.storage import get_default_storage, get_private_storage
 from app.modules.farms.repositories import FarmRepository
 
 
@@ -39,16 +39,23 @@ async def persist_controlled_test_report(
         content_type, "jpg"
     )
     image_url = None
+    image_key = None
     if retain_for_review:
         image_url = await get_default_storage().put(
             key=f"{DISEASE_IMAGE_PREFIX}/controlled-test/{user_id}/{uuid.uuid4().hex}.{extension}",
             data=image,
             content_type=content_type,
         )
+        try:
+            image_key = f"{DISEASE_IMAGE_PREFIX}/controlled-test/{user_id}/{uuid.uuid4().hex}.{extension}"
+            await get_private_storage().put(key=image_key, data=image, content_type=content_type)
+        except Exception:
+            image_key = None
     report = DiseaseReport(
         user_id=user_id,
         farm_id=farm_id,
         image_url=image_url,
+        image_key=image_key,
         capture_method=capture_method,
         crop=crop,
         disease=disease,

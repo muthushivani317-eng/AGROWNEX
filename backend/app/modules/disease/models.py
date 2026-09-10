@@ -43,6 +43,7 @@ class DiseaseReport(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     crop_session_id: Mapped[uuid.UUID | None] = mapped_column(GUID())
 
     image_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    image_key: Mapped[str | None] = mapped_column(String(512), nullable=True)
     thumbnail_url: Mapped[str | None] = mapped_column(String(512))
     capture_method: Mapped[str] = mapped_column(String(20), default="gallery")
 
