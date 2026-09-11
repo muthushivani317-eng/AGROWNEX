@@ -98,6 +98,14 @@ class Settings(BaseSettings):
     railway_api_token: str = Field(default="")
     railway_workspace_id: str = Field(default="")
     railway_project_id: str = Field(default="")
+    # Organization Costs API access normally requires an OpenAI Admin API key.
+    # If omitted, the existing inference key is tried and degrades safely on 403.
+    openai_admin_api_key: str = Field(default="")
+    openai_organization_id: str = Field(default="")
+    cloudflare_api_token: str = Field(default="")
+    cloudflare_account_id: str = Field(default="")
+    cloudflare_r2_bucket_names: list[str] = Field(default_factory=list)
+    billing_usd_to_inr_rate: float = Field(default=0.0, ge=0)
 
     # Server-side pepper for hashing refresh tokens / OTP fingerprints. MUST be
     # overridden in production via env; never commit a real secret.

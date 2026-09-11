@@ -29,6 +29,10 @@ class CloudSpend:
     currency: str | None
     last_usage_at: datetime | None
     message: str | None = None
+    gross_spend_inr: float | None = None
+    credits_inr: float | None = None
+    gemini_spend_inr: float | None = None
+    gemini_credits_inr: float | None = None
 
 
 class CloudBillingProvider:
@@ -86,6 +90,22 @@ class CloudBillingProvider:
               ANY_VALUE(currency) AS currency,
               COUNT(DISTINCT currency) AS currency_count,
               MAX(usage_start_time) AS last_usage_at
+              ,COALESCE(SUM(cost), 0) AS gross_spend
+              ,COALESCE(SUM(IFNULL(
+                (SELECT SUM(credit.amount) FROM UNNEST(credits) AS credit), 0
+              )), 0) AS credits
+              ,COALESCE(SUM(IF(
+                REGEXP_CONTAINS(LOWER(CONCAT(service.description, ' ', sku.description)),
+                  r'gemini|generative language|vertex ai'),
+                cost + IFNULL((SELECT SUM(credit.amount) FROM UNNEST(credits) AS credit), 0),
+                0
+              )), 0) AS gemini_spend
+              ,COALESCE(SUM(IF(
+                REGEXP_CONTAINS(LOWER(CONCAT(service.description, ' ', sku.description)),
+                  r'gemini|generative language|vertex ai'),
+                IFNULL((SELECT SUM(credit.amount) FROM UNNEST(credits) AS credit), 0),
+                0
+              )), 0) AS gemini_credits
             FROM `{settings.gcp_billing_export_table}`
             WHERE project.id = @project_id
               AND usage_start_time >= TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MONTH, 'Asia/Kolkata')
@@ -126,6 +146,10 @@ class CloudBillingProvider:
             if len(values) > 3 and values[3]
             else None
         )
+        gross_spend = float(values[4] or 0) if len(values) > 4 else None
+        credits = float(values[5] or 0) if len(values) > 5 else None
+        gemini_spend = float(values[6] or 0) if len(values) > 6 else None
+        gemini_credits = float(values[7] or 0) if len(values) > 7 else None
         if currency_count > 1 or (currency and currency != "INR"):
             return CloudSpend(
                 status="unavailable",
@@ -139,6 +163,10 @@ class CloudBillingProvider:
             spend_inr=round(spend, 2),
             currency=currency or "INR",
             last_usage_at=last_usage,
+            gross_spend_inr=round(gross_spend, 2) if gross_spend is not None else None,
+            credits_inr=round(credits, 2) if credits is not None else None,
+            gemini_spend_inr=round(gemini_spend, 2) if gemini_spend is not None else None,
+            gemini_credits_inr=round(gemini_credits, 2) if gemini_credits is not None else None,
         )
 
 

@@ -40,6 +40,7 @@ from app.modules.admin.schemas import (
     AdminMeOut,
     AICostsOut,
     AIMonitoringOut,
+    AllExpensesOut,
     AnalyticsOut,
     AnnouncementIn,
     AnnouncementOut,
@@ -110,9 +111,7 @@ class AdminStatusIn(BaseModel):
 
 
 @router.post("/invitations", response_model=SuccessResponse[dict], status_code=201)
-async def invite_admin(
-    payload: AdminInvitationIn, ctx: AdminContextDep, service: AdminServiceDep
-):
+async def invite_admin(payload: AdminInvitationIn, ctx: AdminContextDep, service: AdminServiceDep):
     invitation, token = await service.invite_admin(
         ctx,
         email=payload.email,
@@ -158,14 +157,20 @@ async def set_admin_status(
 @router.get("/team", response_model=SuccessResponse[list[dict]])
 async def list_admin_team(ctx: AdminContextDep, service: AdminServiceDep):
     admins = await service.list_admins(ctx)
-    return success([
-        {
-            "id": str(admin.id), "full_name": admin.full_name, "email": admin.email,
-            "role": admin.role, "status": admin.status, "created_at": admin.created_at,
-            "district_scope": admin.district_scope,
-        }
-        for admin in admins
-    ])
+    return success(
+        [
+            {
+                "id": str(admin.id),
+                "full_name": admin.full_name,
+                "email": admin.email,
+                "role": admin.role,
+                "status": admin.status,
+                "created_at": admin.created_at,
+                "district_scope": admin.district_scope,
+            }
+            for admin in admins
+        ]
+    )
 
 
 @router.post("/web-session", response_model=SuccessResponse[dict])
@@ -232,15 +237,18 @@ async def get_team_access_policy(ctx: AdminContextDep):
     """Read-only policy metadata; never exposes the pinned owner's Firebase UID."""
     if AdminPermission.MANAGE_ADMINS.value not in ctx.permissions or ctx.admin.role != "owner":
         from app.modules.admin.exceptions import PermissionDeniedError
+
         raise PermissionDeniedError()
-    return success({
-        "owner_only": bool(settings.admin_owner_firebase_uid),
-        "mfa_required": settings.admin_require_mfa,
-        "roles": {
-            role: [permission.value for permission in permissions]
-            for role, permissions in ROLE_PERMISSIONS.items()
-        },
-    })
+    return success(
+        {
+            "owner_only": bool(settings.admin_owner_firebase_uid),
+            "mfa_required": settings.admin_require_mfa,
+            "roles": {
+                role: [permission.value for permission in permissions]
+                for role, permissions in ROLE_PERMISSIONS.items()
+            },
+        }
+    )
 
 
 @router.get("/me", response_model=SuccessResponse[AdminMeOut])
@@ -283,6 +291,12 @@ async def get_cloud_billing(ctx: AdminContextDep, service: AdminServiceDep):
 @router.get("/railway-billing", response_model=SuccessResponse[RailwayBillingSpendOut])
 async def get_railway_billing(ctx: AdminContextDep, service: AdminServiceDep):
     return success(RailwayBillingSpendOut(**await service.railway_billing_spend(ctx)))
+
+
+@router.get("/all-expenses", response_model=SuccessResponse[AllExpensesOut])
+async def get_all_expenses(ctx: AdminContextDep, service: AdminServiceDep):
+    """Unified provider costs; only admins with cost visibility may access it."""
+    return success(AllExpensesOut(**await service.all_expenses(ctx)))
 
 
 # --------------------------------------------------------------------------- #

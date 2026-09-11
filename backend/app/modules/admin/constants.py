@@ -111,6 +111,7 @@ class AuditAction(StrEnum):
     VIEW_AI = "view_ai"
     VIEW_CLOUD_BILLING = "view_cloud_billing"
     VIEW_RAILWAY_BILLING = "view_railway_billing"
+    VIEW_ALL_EXPENSES = "view_all_expenses"
     VIEW_NOTIFICATIONS = "view_notifications"
     BROADCAST_SENT = "broadcast_sent"
     ANNOUNCEMENT_CREATED = "announcement_created"

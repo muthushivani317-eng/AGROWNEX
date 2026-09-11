@@ -76,6 +76,29 @@ class RailwayBillingSpendOut(BaseModel):
     message: str | None = None
 
 
+class ExpenseProviderOut(BaseModel):
+    key: str
+    label: str
+    status: Literal["available", "not_configured", "unavailable"]
+    amount: float | None
+    currency: str
+    amount_inr: float | None
+    included_in_total: bool
+    estimated: bool
+    details: dict[str, float | int | str | None]
+    message: str | None = None
+
+
+class AllExpensesOut(BaseModel):
+    month: str
+    total_monthly_inr: float | None
+    total_is_complete: bool
+    usd_to_inr_rate: float | None
+    providers: list[ExpenseProviderOut]
+    generated_at: datetime
+    message: str | None = None
+
+
 # --------------------------------------------------------------------------- #
 # Farmer management
 # --------------------------------------------------------------------------- #

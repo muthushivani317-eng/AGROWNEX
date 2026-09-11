@@ -9,6 +9,7 @@ lives here; routes stay thin.
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import secrets
@@ -59,8 +60,10 @@ from app.modules.admin.models import (
     ProcurementTransaction,
     SystemAnnouncement,
 )
+from app.modules.admin.openai_billing import OpenAIBillingProvider, openai_billing_provider
 from app.modules.admin.provider import BroadcastProvider, get_default_broadcast_provider
 from app.modules.admin.queries import AdminQueries
+from app.modules.admin.r2_billing import R2BillingProvider, r2_billing_provider
 from app.modules.admin.railway_billing import RailwayBillingProvider, railway_billing_provider
 from app.modules.admin.repository import AdminRepository, normalize_procurement_status
 from app.modules.admin.schemas import (
@@ -123,6 +126,8 @@ class AdminService:
         broadcast_provider: BroadcastProvider | None = None,
         billing_provider: CloudBillingProvider | None = None,
         railway_provider: RailwayBillingProvider | None = None,
+        openai_billing: OpenAIBillingProvider | None = None,
+        r2_billing: R2BillingProvider | None = None,
     ) -> None:
         self.session = session
         self.repo = AdminRepository(session)
@@ -131,6 +136,8 @@ class AdminService:
         self.broadcast_provider = broadcast_provider or get_default_broadcast_provider()
         self.billing_provider = billing_provider or cloud_billing_provider
         self.railway_provider = railway_provider or railway_billing_provider
+        self.openai_billing = openai_billing or openai_billing_provider
+        self.r2_billing = r2_billing or r2_billing_provider
         self._now = now
 
     def _now_dt(self) -> datetime:
@@ -174,8 +181,13 @@ class AdminService:
         return AdminContext(admin=admin, permissions=perms, ip_address=ip_address)
 
     async def invite_admin(
-        self, ctx: AdminContext, *, email: str, role: str,
-        district_scope: str | None = None, expires_in_hours: int = 48
+        self,
+        ctx: AdminContext,
+        *,
+        email: str,
+        role: str,
+        district_scope: str | None = None,
+        expires_in_hours: int = 48,
     ) -> tuple[AdminInvitation, str]:
         """Create an expiring one-time invitation; only the owner can grant access."""
         if settings.admin_owner_firebase_uid:
@@ -280,12 +292,16 @@ class AdminService:
         if ctx.admin.role != AdminRole.OWNER.value:
             raise PermissionDeniedError()
         rows = (
-            await self.session.execute(
-                select(AdminUser)
-                .where(AdminUser.is_deleted.is_(False))
-                .order_by(AdminUser.created_at.desc())
+            (
+                await self.session.execute(
+                    select(AdminUser)
+                    .where(AdminUser.is_deleted.is_(False))
+                    .order_by(AdminUser.created_at.desc())
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         return list(rows)
 
     def _require(self, ctx: AdminContext, permission: AdminPermission) -> None:
@@ -361,6 +377,125 @@ class AdminService:
             "status": result.status,
             "generated_at": self._now_dt(),
             "message": result.message,
+        }
+
+    async def all_expenses(self, ctx: AdminContext) -> dict:
+        """One month-to-date cost ledger; Gemini is included in GCP, never double-counted."""
+        self._require(ctx, AdminPermission.VIEW_AI_COSTS)
+        cloud, railway, openai, r2 = await asyncio.gather(
+            self.billing_provider.current_month_spend(),
+            self.railway_provider.current_usage(),
+            self.openai_billing.current_month_spend(),
+            self.r2_billing.current_month_spend(),
+        )
+        rate = settings.billing_usd_to_inr_rate
+        usd_total = sum(
+            value
+            for value in (railway.spend_usd, openai.spend_usd, r2.spend_usd)
+            if value is not None
+        )
+        required_available = all(
+            item.status == "available" for item in (cloud, railway, openai, r2)
+        )
+        total = (
+            round((cloud.spend_inr or 0) + usd_total * rate, 2)
+            if required_available and rate > 0 and cloud.spend_inr is not None
+            else None
+        )
+        providers = [
+            {
+                "key": "gcp",
+                "label": "Firebase / GCP",
+                "status": cloud.status,
+                "amount": cloud.spend_inr,
+                "currency": "INR",
+                "amount_inr": cloud.spend_inr,
+                "included_in_total": True,
+                "estimated": False,
+                "details": {
+                    "gross_spend_inr": cloud.gross_spend_inr,
+                    "credits_inr": cloud.credits_inr,
+                },
+                "message": cloud.message,
+            },
+            {
+                "key": "gemini",
+                "label": "Gemini / AI Studio",
+                "status": cloud.status,
+                "amount": cloud.gemini_spend_inr,
+                "currency": "INR",
+                "amount_inr": cloud.gemini_spend_inr,
+                "included_in_total": False,
+                "estimated": False,
+                "details": {
+                    "credits_applied_inr": cloud.gemini_credits_inr,
+                    "account_credit_balance": None,
+                    "included_under": "gcp",
+                },
+                "message": cloud.message
+                or (
+                    "Included in Firebase / GCP total; AI Studio does not expose "
+                    "a credit-balance API."
+                ),
+            },
+            {
+                "key": "railway",
+                "label": "Railway",
+                "status": railway.status,
+                "amount": railway.spend_usd,
+                "currency": "USD",
+                "amount_inr": round(railway.spend_usd * rate, 2)
+                if railway.spend_usd is not None and rate
+                else None,
+                "included_in_total": True,
+                "estimated": True,
+                "details": railway.breakdown_usd,
+                "message": railway.message,
+            },
+            {
+                "key": "openai",
+                "label": "OpenAI",
+                "status": openai.status,
+                "amount": openai.spend_usd,
+                "currency": "USD",
+                "amount_inr": round(openai.spend_usd * rate, 2)
+                if openai.spend_usd is not None and rate
+                else None,
+                "included_in_total": True,
+                "estimated": False,
+                "details": {},
+                "message": openai.message,
+            },
+            {
+                "key": "cloudflare_r2",
+                "label": "Cloudflare R2",
+                "status": r2.status,
+                "amount": r2.spend_usd,
+                "currency": "USD",
+                "amount_inr": round(r2.spend_usd * rate, 2)
+                if r2.spend_usd is not None and rate
+                else None,
+                "included_in_total": True,
+                "estimated": True,
+                "details": {
+                    "storage_gb_month": r2.storage_gb_month,
+                    "class_a_operations": r2.class_a_operations,
+                    "class_b_operations": r2.class_b_operations,
+                },
+                "message": r2.message,
+            },
+        ]
+        await self._audit(ctx, AuditAction.VIEW_ALL_EXPENSES)
+        return {
+            "month": self._now_dt().strftime("%Y-%m"),
+            "total_monthly_inr": total,
+            "total_is_complete": total is not None,
+            "usd_to_inr_rate": rate or None,
+            "providers": providers,
+            "generated_at": self._now_dt(),
+            "message": None
+            if total is not None
+            else "Combined total needs all providers and BILLING_USD_TO_INR_RATE.",
         }
 
     async def business_dashboard(self, ctx: AdminContext) -> dict:

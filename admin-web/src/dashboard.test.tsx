@@ -30,8 +30,8 @@ describe('Command Centre', () => {
     expect(html).toContain('No registration history available');
     expect(html).toContain('Pending Payments');
     expect(html).toContain('Not monitored');
-    expect(html).toContain('Firebase / GCP spend');
-    expect(html).toContain('Railway resource spend');
+    expect(html).toContain('All Expenses');
+    expect(html).toContain('Unified provider ledger');
     expect(html).not.toContain('Healthy');
   });
 });
