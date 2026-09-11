@@ -21,6 +21,7 @@ from app.modules.disease import models as _disease_models  # noqa: F401
 from app.modules.experts import models as _expert_models  # noqa: F401
 from app.modules.farms import models as _farm_models  # noqa: F401
 from app.modules.growth import models as _growth_models  # noqa: F401
+from app.modules.inputs_marketplace import models as _inputs_marketplace_models  # noqa: F401
 from app.modules.intelligence import models as _intelligence_models  # noqa: F401
 from app.modules.market import models as _market_models  # noqa: F401
 from app.modules.memory import models as _memory_models  # noqa: F401
