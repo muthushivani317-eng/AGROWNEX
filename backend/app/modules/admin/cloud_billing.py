@@ -108,9 +108,14 @@ class CloudBillingProvider:
               )), 0) AS gemini_credits
             FROM `{settings.gcp_billing_export_table}`
             WHERE project.id = @project_id
-              AND usage_start_time >= TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MONTH, 'Asia/Kolkata')
-              AND usage_start_time < TIMESTAMP_ADD(
-                TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MONTH, 'Asia/Kolkata'), INTERVAL 1 MONTH
+              AND usage_start_time >= TIMESTAMP(
+                DATE_TRUNC(CURRENT_DATE('Asia/Kolkata'), MONTH), 'Asia/Kolkata'
+              )
+              AND usage_start_time < TIMESTAMP(
+                DATE_ADD(
+                  DATE_TRUNC(CURRENT_DATE('Asia/Kolkata'), MONTH), INTERVAL 1 MONTH
+                ),
+                'Asia/Kolkata'
               )
         """
         payload: dict[str, Any] = {
