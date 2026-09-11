@@ -9,6 +9,7 @@ import { useResource } from './useResource';
 
 type Overview = { cards: MetricCard[]; procurement_status_counts: Record<string, number>; generated_at: string };
 type Growth = { label: string; count: number };
+type CloudBilling = { project_id: string; month: string; budget_inr: number; spend_inr: number | null; remaining_inr: number | null; percent_used: number | null; status: 'available' | 'not_configured' | 'unavailable'; currency: string | null; last_usage_at: string | null; generated_at: string; message: string | null };
 export function formatDashboardValue(value: unknown, money = false): string {
   if (value == null || value === '' || !['number', 'string'].includes(typeof value) || !Number.isFinite(Number(value))) return '—';
   return new Intl.NumberFormat('en-IN', money ? { style: 'currency', currency: 'INR', maximumFractionDigits: 2 } : {}).format(Number(value));
@@ -45,6 +46,15 @@ function RevenueStats() {
   if (state.error) return <div className="revenue-error" role="alert">Revenue metrics unavailable. <button onClick={() => void state.reload()}>Retry</button></div>;
   return <>{[['New Today','new_farmers_today',UserPlus,'Registered today',false],['Active Farmers','active_farmers_30d',UserCheck,'Last 30 days',false],['GMV','gmv',IndianRupee,'All-time transactions',true],['Pending Payments','payment_outstanding',FileCheck2,'Outstanding amount',true]].map(([label,key,icon,note,money]) => <Stat key={String(key)} label={String(label)} icon={icon as LucideIcon} note={state.loading ? 'Loading…' : String(note)} value={formatDashboardValue(state.data?.[String(key)], Boolean(money))}/>)}</>;
 }
+function CloudBillingCard() {
+  const state = useResource(() => api<CloudBilling>('/admin/cloud-billing'));
+  const data = state.data;
+  const used = Math.min(100, Math.max(0, data?.percent_used ?? 0));
+  const tone = (data?.percent_used ?? 0) >= 100 ? 'danger' : (data?.percent_used ?? 0) >= 80 ? 'warning' : 'safe';
+  return <Card className="billing-panel"><div className="section-head"><div><h2>Firebase / GCP spend</h2><small>{data?.project_id || 'agrow-ai-8ba58'} · Current month</small></div><IndianRupee size={19} aria-hidden="true"/></div>
+    {state.loading ? <p className="panel-message" role="status">Loading Cloud Billing export…</p> : state.error ? <ErrorPanel message={state.error} retry={() => void state.reload()}/> : data?.status !== 'available' ? <div className="billing-unavailable" role="status"><strong>Spend unavailable</strong><p>{data?.message ?? 'Cloud Billing export is not configured.'}</p><small>Budget: {formatDashboardValue(data?.budget_inr ?? 2000, true)}</small></div> : <><div className="billing-values"><div><span>Month-to-date spend</span><strong>{formatDashboardValue(data.spend_inr, true)}</strong></div><div><span>Monthly budget</span><strong>{formatDashboardValue(data.budget_inr, true)}</strong></div><div><span>Remaining</span><strong>{formatDashboardValue(data.remaining_inr, true)}</strong></div></div><div className={`billing-progress ${tone}`}><div><span style={{width:`${used}%`}}/></div><p><strong>{formatDashboardValue(data.percent_used)}%</strong> of budget used</p></div><small className="billing-freshness">Billing exports can lag. Latest usage: {data.last_usage_at ? new Date(data.last_usage_at).toLocaleString('en-IN') : 'not reported'}.</small></>}
+  </Card>;
+}
 export function DashboardPage({ me }: { me: AdminMe }) {
   const [search, setSearch] = useState('');
   const [epoch, setEpoch] = useState(0);
@@ -59,6 +69,7 @@ export function DashboardPage({ me }: { me: AdminMe }) {
       <div className="dashboard-grid">{can('view_analytics') ? <MonthlyGrowth/> : <Card className="growth-panel"><h2>Farmer Growth</h2><div className="dashboard-placeholder"><ShieldCheck/><strong>Analytics access required</strong><p>Your current role does not include registration history.</p></div></Card>}
       <Card className="attention-panel"><div className="section-head"><h2>Operations Attention</h2><span>Work queues</span></div><div className="dashboard-rows">{can('manage_procurement') && <AttentionRow icon={ShoppingBasket} label="New Produce Listings" note="New in procurement pipeline" value={formatDashboardValue(state.data?.procurement_status_counts.new)} to="/produce"/>}{can('view_ai') && <AttentionRow icon={Leaf} label="Disease Reports" note="Total reports · not a review queue" value={value('disease_reports')} to="/ai" tone="amber"/>}{can('manage_support') && <AttentionRow icon={CircleHelp} label="Farmer Support" note="Review issues raised by farmers" value="" to="/support"/>}{!can('manage_procurement') && !can('view_ai') && !can('manage_support') && <p className="panel-message">No work queues are available for your role.</p>}</div></Card>
       {can('manage_procurement') && <RecentListings/>}
+      {can('view_ai_costs') && <CloudBillingCard/>}
       <Card className="health-panel"><div className="section-head"><h2>Platform Health</h2><ShieldCheck size={18}/></div><div className="dashboard-rows">{[[Cpu,'AI Service Status','Service health is not instrumented'],[Mail,'Notification Delivery','Delivery health is not instrumented'],[FileCheck2,'Report Processing','Processing health is not instrumented']].map(([icon,label,note]) => { const Icon = icon as LucideIcon; return <div className="health-row" key={String(label)}><span className="dashboard-icon"><Icon size={21}/></span><div><strong>{String(label)}</strong><small>{String(note)}</small></div><span className="health-status">Not monitored</span></div>; })}</div></Card></div>
       <div className="dashboard-bottom">{[[Tractor,'Total Farms','total_farms'],[ShieldCheck,'Disease Reports','disease_reports'],[Satellite,'Satellite Reports','satellite_reports'],[BrainCircuit,'Intelligence Reports','intelligence_reports'],[Bell,'Notifications Sent','notifications_sent']].map(([icon,label,key]) => { const Icon=icon as LucideIcon; return <div key={String(key)}><span className="dashboard-icon"><Icon size={26}/></span><div><span>{String(label)}</span><strong>{value(String(key))}</strong></div></div>; })}</div>
       <p className="dashboard-updated">Snapshot updated {state.data?.generated_at ? new Date(state.data.generated_at).toLocaleString('en-IN') : 'just now'} · Each metric shows its own reporting period.</p>

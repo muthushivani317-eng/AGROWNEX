@@ -14,6 +14,8 @@ import uuid
 from datetime import UTC, date, datetime
 
 import pytest
+from app.core.config import settings
+from app.modules.admin.cloud_billing import CloudSpend
 from app.modules.admin.constants import AdminRole, ProcurementStatus
 from app.modules.admin.exceptions import (
     AdminSuspendedError,
@@ -162,6 +164,45 @@ async def test_dashboard_counts_and_audits(db_session):
     # The dashboard view itself was audited.
     audit = await service.audit(ctx, action="view_dashboard", target=None, page=1, page_size=10)
     assert audit.total >= 1
+
+
+@pytest.mark.asyncio
+async def test_cloud_billing_spend_is_real_permission_checked_and_audited(
+    db_session, monkeypatch
+):
+    class BillingProvider:
+        async def current_month_spend(self):
+            return CloudSpend(
+                status="available",
+                spend_inr=750.0,
+                currency="INR",
+                last_usage_at=NOW,
+            )
+
+    monkeypatch.setattr(settings, "gcp_billing_project_id", "agrow-ai-8ba58")
+    monkeypatch.setattr(settings, "gcp_billing_budget_inr", 2000.0)
+    service = AdminService(db_session, now=NOW, billing_provider=BillingProvider())
+    ctx = await _admin_ctx(db_session, service, role=AdminRole.OWNER.value)
+
+    result = await service.cloud_billing_spend(ctx)
+
+    assert result["spend_inr"] == 750.0
+    assert result["remaining_inr"] == 1250.0
+    assert result["percent_used"] == 37.5
+    audit = await service.audit(
+        ctx, action="view_cloud_billing", target=None, page=1, page_size=10
+    )
+    assert audit.total == 1
+
+
+@pytest.mark.asyncio
+async def test_cloud_billing_requires_cost_permission(db_session):
+    service = _service(db_session)
+    ctx = await _admin_ctx(
+        db_session, service, role=AdminRole.PROCUREMENT_MANAGER.value
+    )
+    with pytest.raises(PermissionDeniedError):
+        await service.cloud_billing_spend(ctx)
 
 
 @pytest.mark.asyncio

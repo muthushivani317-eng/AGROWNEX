@@ -24,12 +24,13 @@ describe('Command Centre', () => {
     expect(html).toContain('Analytics access required');
   });
   it('shows authorised widgets with honest empty and unmonitored states', () => {
-    const html = render({ ...me, permissions: ['view_dashboard', 'view_analytics', 'manage_procurement', 'view_revenue', 'manage_support'] });
+    const html = render({ ...me, permissions: ['view_dashboard', 'view_analytics', 'manage_procurement', 'view_revenue', 'view_ai_costs', 'manage_support'] });
     expect(html).toContain('Recent Produce Listings');
     expect(html).toContain('No produce listings yet');
     expect(html).toContain('No registration history available');
     expect(html).toContain('Pending Payments');
     expect(html).toContain('Not monitored');
+    expect(html).toContain('Firebase / GCP spend');
     expect(html).not.toContain('Healthy');
   });
 });

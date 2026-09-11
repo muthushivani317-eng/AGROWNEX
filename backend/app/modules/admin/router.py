@@ -29,7 +29,12 @@ from pydantic import BaseModel
 from app.core.config import settings
 from app.core.exceptions import UnauthorizedError
 from app.core.security import create_session_cookie, verify_id_token
-from app.modules.admin.constants import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, ROLE_PERMISSIONS, AdminPermission
+from app.modules.admin.constants import (
+    DEFAULT_PAGE_SIZE,
+    MAX_PAGE_SIZE,
+    ROLE_PERMISSIONS,
+    AdminPermission,
+)
 from app.modules.admin.dependencies import AdminContextDep, AdminServiceDep
 from app.modules.admin.schemas import (
     AdminMeOut,
@@ -41,6 +46,7 @@ from app.modules.admin.schemas import (
     AuditRowOut,
     BroadcastIn,
     BroadcastOut,
+    CloudBillingSpendOut,
     CommissionLedgerIn,
     CostBucketOut,
     CropIntelligenceOut,
@@ -229,7 +235,10 @@ async def get_team_access_policy(ctx: AdminContextDep):
     return success({
         "owner_only": bool(settings.admin_owner_firebase_uid),
         "mfa_required": settings.admin_require_mfa,
-        "roles": {role: [permission.value for permission in permissions] for role, permissions in ROLE_PERMISSIONS.items()},
+        "roles": {
+            role: [permission.value for permission in permissions]
+            for role, permissions in ROLE_PERMISSIONS.items()
+        },
     })
 
 
@@ -262,6 +271,12 @@ async def get_dashboard(ctx: AdminContextDep, service: AdminServiceDep):
             generated_at=data["generated_at"],
         )
     )
+
+
+@router.get("/cloud-billing", response_model=SuccessResponse[CloudBillingSpendOut])
+async def get_cloud_billing(ctx: AdminContextDep, service: AdminServiceDep):
+    """Actual month-to-date GCP spend from the configured BigQuery billing export."""
+    return success(CloudBillingSpendOut(**await service.cloud_billing_spend(ctx)))
 
 
 # --------------------------------------------------------------------------- #

@@ -53,6 +53,20 @@ class DashboardOut(BaseModel):
     generated_at: datetime
 
 
+class CloudBillingSpendOut(BaseModel):
+    project_id: str
+    month: str
+    budget_inr: float
+    spend_inr: float | None
+    remaining_inr: float | None
+    percent_used: float | None
+    status: Literal["available", "not_configured", "unavailable"]
+    currency: str | None
+    last_usage_at: datetime | None
+    generated_at: datetime
+    message: str | None = None
+
+
 # --------------------------------------------------------------------------- #
 # Farmer management
 # --------------------------------------------------------------------------- #

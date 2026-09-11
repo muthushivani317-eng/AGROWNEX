@@ -87,6 +87,15 @@ class Settings(BaseSettings):
     admin_owner_firebase_uid: str = Field(default="", max_length=128, pattern=r"^\S*$")
     admin_sensitive_reauth_minutes: int = Field(default=15, ge=5, le=60)
 
+    # --- Admin cloud billing visibility (BigQuery Cloud Billing export) ---
+    # Fully-qualified export table: project.dataset.gcp_billing_export_v1_XXXXXX.
+    # Empty means the dashboard reports "not configured" rather than estimating.
+    gcp_billing_project_id: str = Field(default="")
+    gcp_billing_export_table: str = Field(default="")
+    gcp_billing_query_project_id: str = Field(default="")
+    gcp_billing_location: str = Field(default="US")
+    gcp_billing_budget_inr: float = Field(default=2000.0, gt=0)
+
     # Server-side pepper for hashing refresh tokens / OTP fingerprints. MUST be
     # overridden in production via env; never commit a real secret.
     session_secret: str = Field(default=DEV_SESSION_SECRET)

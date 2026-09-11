@@ -23,6 +23,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.logging import get_logger
+from app.modules.admin.cloud_billing import CloudBillingProvider, cloud_billing_provider
 from app.modules.admin.constants import (
     ROLE_PERMISSIONS,
     AdminPermission,
@@ -119,12 +120,14 @@ class AdminService:
         *,
         now: datetime | None = None,
         broadcast_provider: BroadcastProvider | None = None,
+        billing_provider: CloudBillingProvider | None = None,
     ) -> None:
         self.session = session
         self.repo = AdminRepository(session)
         self.queries = AdminQueries(session)
         self.metrics = AdminMetrics(session, now=now)
         self.broadcast_provider = broadcast_provider or get_default_broadcast_provider()
+        self.billing_provider = billing_provider or cloud_billing_provider
         self._now = now
 
     def _now_dt(self) -> datetime:
@@ -321,6 +324,27 @@ class AdminService:
             "counts": counts,
             "procurement_status_counts": procurement_counts,
             "generated_at": self._now_dt(),
+        }
+
+    async def cloud_billing_spend(self, ctx: AdminContext) -> dict:
+        """Actual calendar-month GCP spend, restricted to cost-authorized admins."""
+        self._require(ctx, AdminPermission.VIEW_AI_COSTS)
+        result = await self.billing_provider.current_month_spend()
+        budget = settings.gcp_billing_budget_inr
+        spend = result.spend_inr
+        await self._audit(ctx, AuditAction.VIEW_CLOUD_BILLING)
+        return {
+            "project_id": settings.gcp_billing_project_id,
+            "month": self._now_dt().strftime("%Y-%m"),
+            "budget_inr": budget,
+            "spend_inr": spend,
+            "remaining_inr": round(max(0.0, budget - spend), 2) if spend is not None else None,
+            "percent_used": round(spend / budget * 100, 2) if spend is not None else None,
+            "status": result.status,
+            "currency": result.currency,
+            "last_usage_at": result.last_usage_at,
+            "generated_at": self._now_dt(),
+            "message": result.message,
         }
 
     async def business_dashboard(self, ctx: AdminContext) -> dict:
