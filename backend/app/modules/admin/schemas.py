@@ -67,6 +67,15 @@ class CloudBillingSpendOut(BaseModel):
     message: str | None = None
 
 
+class RailwayBillingSpendOut(BaseModel):
+    project_id: str
+    spend_usd: float | None
+    breakdown_usd: dict[str, float]
+    status: Literal["available", "not_configured", "unavailable"]
+    generated_at: datetime
+    message: str | None = None
+
+
 # --------------------------------------------------------------------------- #
 # Farmer management
 # --------------------------------------------------------------------------- #

@@ -61,6 +61,7 @@ from app.modules.admin.models import (
 )
 from app.modules.admin.provider import BroadcastProvider, get_default_broadcast_provider
 from app.modules.admin.queries import AdminQueries
+from app.modules.admin.railway_billing import RailwayBillingProvider, railway_billing_provider
 from app.modules.admin.repository import AdminRepository, normalize_procurement_status
 from app.modules.admin.schemas import (
     CommissionLedgerIn,
@@ -121,6 +122,7 @@ class AdminService:
         now: datetime | None = None,
         broadcast_provider: BroadcastProvider | None = None,
         billing_provider: CloudBillingProvider | None = None,
+        railway_provider: RailwayBillingProvider | None = None,
     ) -> None:
         self.session = session
         self.repo = AdminRepository(session)
@@ -128,6 +130,7 @@ class AdminService:
         self.metrics = AdminMetrics(session, now=now)
         self.broadcast_provider = broadcast_provider or get_default_broadcast_provider()
         self.billing_provider = billing_provider or cloud_billing_provider
+        self.railway_provider = railway_provider or railway_billing_provider
         self._now = now
 
     def _now_dt(self) -> datetime:
@@ -343,6 +346,19 @@ class AdminService:
             "status": result.status,
             "currency": result.currency,
             "last_usage_at": result.last_usage_at,
+            "generated_at": self._now_dt(),
+            "message": result.message,
+        }
+
+    async def railway_billing_spend(self, ctx: AdminContext) -> dict:
+        self._require(ctx, AdminPermission.VIEW_AI_COSTS)
+        result = await self.railway_provider.current_usage()
+        await self._audit(ctx, AuditAction.VIEW_RAILWAY_BILLING)
+        return {
+            "project_id": settings.railway_project_id,
+            "spend_usd": result.spend_usd,
+            "breakdown_usd": result.breakdown_usd,
+            "status": result.status,
             "generated_at": self._now_dt(),
             "message": result.message,
         }

@@ -95,6 +95,9 @@ class Settings(BaseSettings):
     gcp_billing_query_project_id: str = Field(default="")
     gcp_billing_location: str = Field(default="US")
     gcp_billing_budget_inr: float = Field(default=2000.0, gt=0)
+    railway_api_token: str = Field(default="")
+    railway_workspace_id: str = Field(default="")
+    railway_project_id: str = Field(default="")
 
     # Server-side pepper for hashing refresh tokens / OTP fingerprints. MUST be
     # overridden in production via env; never commit a real secret.

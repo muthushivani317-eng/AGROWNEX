@@ -60,6 +60,7 @@ from app.modules.admin.schemas import (
     ProcurementCaseUpdateIn,
     ProcurementRowOut,
     ProcurementStatusIn,
+    RailwayBillingSpendOut,
     TransactionIn,
 )
 from app.modules.admin.web_security import InvalidAdminOriginError, require_admin_origin
@@ -277,6 +278,11 @@ async def get_dashboard(ctx: AdminContextDep, service: AdminServiceDep):
 async def get_cloud_billing(ctx: AdminContextDep, service: AdminServiceDep):
     """Actual month-to-date GCP spend from the configured BigQuery billing export."""
     return success(CloudBillingSpendOut(**await service.cloud_billing_spend(ctx)))
+
+
+@router.get("/railway-billing", response_model=SuccessResponse[RailwayBillingSpendOut])
+async def get_railway_billing(ctx: AdminContextDep, service: AdminServiceDep):
+    return success(RailwayBillingSpendOut(**await service.railway_billing_spend(ctx)))
 
 
 # --------------------------------------------------------------------------- #

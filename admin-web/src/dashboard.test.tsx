@@ -31,6 +31,7 @@ describe('Command Centre', () => {
     expect(html).toContain('Pending Payments');
     expect(html).toContain('Not monitored');
     expect(html).toContain('Firebase / GCP spend');
+    expect(html).toContain('Railway resource spend');
     expect(html).not.toContain('Healthy');
   });
 });

@@ -110,6 +110,7 @@ class AuditAction(StrEnum):
     COMMISSION_LEDGER_RECORDED = "commission_ledger_recorded"
     VIEW_AI = "view_ai"
     VIEW_CLOUD_BILLING = "view_cloud_billing"
+    VIEW_RAILWAY_BILLING = "view_railway_billing"
     VIEW_NOTIFICATIONS = "view_notifications"
     BROADCAST_SENT = "broadcast_sent"
     ANNOUNCEMENT_CREATED = "announcement_created"
