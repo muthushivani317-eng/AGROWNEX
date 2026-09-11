@@ -40,6 +40,7 @@ from app.modules.farms.router import router as farms_router
 from app.modules.farms.team_router import router as farm_team_router
 from app.modules.growth.router import router as growth_router
 from app.modules.intelligence.router import router as intelligence_router
+from app.modules.lcc.router import router as lcc_router
 from app.modules.market.router import router as market_router
 from app.modules.memory.router import router as memory_router
 from app.modules.notifications.router import router as notifications_router
@@ -102,6 +103,7 @@ api_router.include_router(soil_router)
 api_router.include_router(support_router)
 api_router.include_router(satellite_router)
 api_router.include_router(nutrient_router)
+api_router.include_router(lcc_router)
 api_router.include_router(intelligence_router)
 api_router.include_router(memory_router)
 api_router.include_router(admin_router)
