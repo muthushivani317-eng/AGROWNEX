@@ -41,6 +41,11 @@ class UserOut(BaseModel):
 
     id: uuid.UUID
     firebase_uid: str
+    # Stable, farmer-facing reference code (e.g. "AGF-000123456"). This is
+    # what a farmer gives an FPO/organization so it can request read access
+    # to their data (see organic_mvp.partner_router) — surfaced here so it
+    # reaches the mobile app through /auth/otp/verify and /auth/profile.
+    farmer_ref: str
     phone_number: str | None
     email: str | None
     is_phone_verified: bool
