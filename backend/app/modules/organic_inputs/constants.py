@@ -9,6 +9,7 @@ reach INSPECTION_REQUIRED and then sits there until the QC phase adds the
 inspection/testing endpoints that move it further; nothing in this phase can
 skip straight to APPROVED/RELEASED_FOR_SALE.
 """
+
 from __future__ import annotations
 
 from enum import StrEnum

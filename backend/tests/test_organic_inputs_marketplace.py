@@ -4,6 +4,7 @@ Covers: state-machine guards (no skipping straight to APPROVED without QC),
 ownership isolation (one supplier can never touch another's profile/batch),
 and staff-permission gating (Field Verifier vs Quality Control vs Catalog).
 """
+
 from __future__ import annotations
 
 import uuid
@@ -68,13 +69,15 @@ async def _seed_catalog(db_session, owner_ctx):
     )
     product_type = await create_product_type(
         ProductTypeIn(category_id=category.id, slug="fish-amino-acid", name="Fish amino acid"),
-        db_session, owner_ctx,
+        db_session,
+        owner_ctx,
     )
     product_type_id = uuid.UUID(product_type["id"])
     await publish_product_type_version(
         product_type_id,
         ProductTypeVersionIn(unit_of_measurement="litre", allowed_pack_sizes=["1L", "5L"]),
-        db_session, owner_ctx,
+        db_session,
+        owner_ctx,
     )
     await set_product_type_status(
         product_type_id, CatalogStatusIn(status=CatalogStatus.ACTIVE), db_session, owner_ctx
@@ -90,10 +93,16 @@ async def _approve_supplier(db_session, farmer: User, owner_ctx) -> None:
         profile.id, SupplierDecisionIn(status=SupplierStatus.UNDER_REVIEW), db_session, owner_ctx
     )
     await decide_supplier(
-        profile.id, SupplierDecisionIn(status=SupplierStatus.INSPECTION_SCHEDULED), db_session, owner_ctx
+        profile.id,
+        SupplierDecisionIn(status=SupplierStatus.INSPECTION_SCHEDULED),
+        db_session,
+        owner_ctx,
     )
     await decide_supplier(
-        profile.id, SupplierDecisionIn(status=SupplierStatus.INSPECTION_COMPLETED), db_session, owner_ctx
+        profile.id,
+        SupplierDecisionIn(status=SupplierStatus.INSPECTION_COMPLETED),
+        db_session,
+        owner_ctx,
     )
     await decide_supplier(
         profile.id, SupplierDecisionIn(status=SupplierStatus.APPROVED), db_session, owner_ctx
@@ -132,14 +141,16 @@ async def test_batch_cannot_skip_qc_and_only_approved_supplier_may_submit(db_ses
     with pytest.raises(ForbiddenError):
         await create_batch(
             BatchCreateIn(product_type_id=product_type_id, batch_quantity="50", unit="litre"),
-            db_session, farmer,
+            db_session,
+            farmer,
         )
 
     await _approve_supplier(db_session, farmer, owner_ctx)
 
     batch = await create_batch(
         BatchCreateIn(product_type_id=product_type_id, batch_quantity="50", unit="litre"),
-        db_session, farmer,
+        db_session,
+        farmer,
     )
     assert batch.status == BatchStatus.DRAFT.value
     await submit_batch(batch.id, db_session, farmer)
@@ -175,7 +186,8 @@ async def test_supplier_and_batch_ownership_isolation(db_session):
     await _approve_supplier(db_session, farmer_a, owner_ctx)
     batch = await create_batch(
         BatchCreateIn(product_type_id=product_type_id, batch_quantity="20", unit="litre"),
-        db_session, farmer_a,
+        db_session,
+        farmer_a,
     )
 
     # farmer_b has no supplier profile at all.
@@ -193,7 +205,8 @@ async def test_supplier_and_batch_ownership_isolation(db_session):
         await add_batch_document(
             batch.id,
             BatchDocumentIn(document_type="photo", file_url="https://example.test/x.jpg"),
-            db_session, farmer_b,
+            db_session,
+            farmer_b,
         )
 
     # farmer_a still can.
@@ -215,7 +228,9 @@ async def test_staff_permission_gating(db_session):
 
     # Field Verifier and Quality Control cannot manage the catalogue.
     with pytest.raises(ForbiddenError):
-        await create_category(CategoryIn(slug="oil-cakes", name="Oil cakes"), db_session, field_verifier_ctx)
+        await create_category(
+            CategoryIn(slug="oil-cakes", name="Oil cakes"), db_session, field_verifier_ctx
+        )
     with pytest.raises(ForbiddenError):
         await create_category(CategoryIn(slug="oil-cakes", name="Oil cakes"), db_session, qc_ctx)
 
@@ -232,7 +247,10 @@ async def test_staff_permission_gating(db_session):
         )
     # Field Verifier can.
     await decide_supplier(
-        profile.id, SupplierDecisionIn(status=SupplierStatus.UNDER_REVIEW), db_session, field_verifier_ctx
+        profile.id,
+        SupplierDecisionIn(status=SupplierStatus.UNDER_REVIEW),
+        db_session,
+        field_verifier_ctx,
     )
 
 
@@ -251,8 +269,11 @@ async def test_new_product_type_request_never_auto_sellable(db_session):
 
     await decide_new_product_request(
         request.id,
-        NewProductTypeRequestDecisionIn(status=NewProductRequestStatus.APPROVED, review_note="Looks good"),
-        db_session, owner_ctx,
+        NewProductTypeRequestDecisionIn(
+            status=NewProductRequestStatus.APPROVED, review_note="Looks good"
+        ),
+        db_session,
+        owner_ctx,
     )
     # Approval only clears the request queue -- it does not itself create a
     # sellable MarketplaceProductType (an admin still creates that deliberately).

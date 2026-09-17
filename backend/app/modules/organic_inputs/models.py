@@ -9,6 +9,7 @@ Money is not modelled in this phase (no procurement offers yet); wherever a
 future phase adds it, use ``Numeric`` fixed-precision columns, never floats --
 see ``ProductionBatch.expected_procurement_price`` for the convention.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -328,7 +329,9 @@ class BatchInspection(UUIDMixin, TimestampMixin, Base):
 
     __tablename__ = "organic_inputs_batch_inspections"
     __table_args__ = (
-        CheckConstraint("outcome IN ('passed', 'failed')", name="ck_organic_inputs_inspection_outcome"),
+        CheckConstraint(
+            "outcome IN ('passed', 'failed')", name="ck_organic_inputs_inspection_outcome"
+        ),
     )
 
     batch_id: Mapped[uuid.UUID] = mapped_column(

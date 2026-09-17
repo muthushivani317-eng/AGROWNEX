@@ -3,6 +3,7 @@
 No session/IO here on purpose -- these are unit-testable in isolation (see
 backend/tests/test_organic_inputs_marketplace.py) without a database.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -20,9 +21,7 @@ def generate_sample_code() -> str:
     return f"SMP-{uuid.uuid4().hex[:10].upper()}"
 
 
-def assert_transition_allowed(
-    current: str, target: str, allowed: dict[str, set[str]]
-) -> None:
+def assert_transition_allowed(current: str, target: str, allowed: dict[str, set[str]]) -> None:
     """Raise unless ``current -> target`` is an edge in ``allowed``.
 
     ``allowed`` keys/values are expected to be the plain string ``.value`` of

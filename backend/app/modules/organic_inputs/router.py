@@ -18,6 +18,7 @@ per action by ``AdminPermission.MANAGE_MARKETPLACE_CATALOG`` (catalogue),
 ``MANAGE_MARKETPLACE_QC`` (batch review -- Quality Control); Owner/Super Admin
 hold every permission already.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -62,7 +63,6 @@ from app.modules.organic_inputs.schemas import (
     BatchDecisionIn,
     BatchDocumentIn,
     BatchInspectionIn,
-    BatchInspectionOut,
     BatchOut,
     BatchSampleIn,
     BatchSampleOut,
@@ -123,7 +123,9 @@ async def _my_supplier_profile(session: AsyncSession, user_id: uuid.UUID) -> Sup
     return profile
 
 
-async def _my_batch(session: AsyncSession, user_id: uuid.UUID, batch_id: uuid.UUID) -> ProductionBatch:
+async def _my_batch(
+    session: AsyncSession, user_id: uuid.UUID, batch_id: uuid.UUID
+) -> ProductionBatch:
     batch = await session.scalar(
         select(ProductionBatch)
         .join(SupplierProfile, SupplierProfile.id == ProductionBatch.supplier_id)
@@ -149,9 +151,17 @@ async def create_category(body: CategoryIn, session: Session, admin: AdminContex
         raise ConflictError("A category with this slug already exists.")
     row = MarketplaceCategory(**body.model_dump())
     session.add(row)
-    session.add(AuditLog(admin_id=admin.admin.id, role=admin.admin.role,
-        action="organic_inputs_category_created", target="organic_inputs_category",
-        target_id=str(row.id), ip_address=admin.ip_address, meta={"slug": body.slug}))
+    session.add(
+        AuditLog(
+            admin_id=admin.admin.id,
+            role=admin.admin.role,
+            action="organic_inputs_category_created",
+            target="organic_inputs_category",
+            target_id=str(row.id),
+            ip_address=admin.ip_address,
+            meta={"slug": body.slug},
+        )
+    )
     await session.commit()
     return CategoryOut.model_validate(row)
 
@@ -169,9 +179,17 @@ async def create_product_type(body: ProductTypeIn, session: Session, admin: Admi
         raise ConflictError("A product type with this slug already exists.")
     row = MarketplaceProductType(**body.model_dump(), status=CatalogStatus.DRAFT.value)
     session.add(row)
-    session.add(AuditLog(admin_id=admin.admin.id, role=admin.admin.role,
-        action="organic_inputs_product_type_created", target="organic_inputs_product_type",
-        target_id=str(row.id), ip_address=admin.ip_address, meta={"slug": body.slug}))
+    session.add(
+        AuditLog(
+            admin_id=admin.admin.id,
+            role=admin.admin.role,
+            action="organic_inputs_product_type_created",
+            target="organic_inputs_product_type",
+            target_id=str(row.id),
+            ip_address=admin.ip_address,
+            meta={"slug": body.slug},
+        )
+    )
     await session.commit()
     return {"id": str(row.id), "slug": row.slug, "status": row.status}
 
@@ -196,15 +214,23 @@ async def publish_product_type_version(
     if previous:
         previous.is_current = False
     row = ProductTypeVersion(
-        product_type_id=product_type_id, version=next_version, is_current=True,
+        product_type_id=product_type_id,
+        version=next_version,
+        is_current=True,
         **body.model_dump(),
     )
     session.add(row)
-    session.add(AuditLog(admin_id=admin.admin.id, role=admin.admin.role,
-        action="organic_inputs_product_type_version_published",
-        target="organic_inputs_product_type_version", target_id=str(row.id),
-        ip_address=admin.ip_address,
-        meta={"product_type_id": str(product_type_id), "version": next_version}))
+    session.add(
+        AuditLog(
+            admin_id=admin.admin.id,
+            role=admin.admin.role,
+            action="organic_inputs_product_type_version_published",
+            target="organic_inputs_product_type_version",
+            target_id=str(row.id),
+            ip_address=admin.ip_address,
+            meta={"product_type_id": str(product_type_id), "version": next_version},
+        )
+    )
     await session.commit()
     return {"id": str(row.id), "version": row.version}
 
@@ -221,18 +247,25 @@ async def set_product_type_status(
         raise NotFoundError("Product type not found.")
     old_status = product_type.status
     product_type.status = body.status.value
-    session.add(AuditLog(admin_id=admin.admin.id, role=admin.admin.role,
-        action="organic_inputs_product_type_status_changed",
-        target="organic_inputs_product_type", target_id=str(product_type.id),
-        ip_address=admin.ip_address,
-        meta={"old_status": old_status, "new_status": body.status.value}))
+    session.add(
+        AuditLog(
+            admin_id=admin.admin.id,
+            role=admin.admin.role,
+            action="organic_inputs_product_type_status_changed",
+            target="organic_inputs_product_type",
+            target_id=str(product_type.id),
+            ip_address=admin.ip_address,
+            meta={"old_status": old_status, "new_status": body.status.value},
+        )
+    )
     await session.commit()
     return {"status": product_type.status}
 
 
 @admin_router.get("/product-type-requests")
 async def list_new_product_requests(
-    session: Session, admin: AdminContextDep,
+    session: Session,
+    admin: AdminContextDep,
     status_filter: Annotated[NewProductRequestStatus | None, Query(alias="status")] = None,
 ):
     _require_permission(admin, AdminPermission.MANAGE_MARKETPLACE_CATALOG)
@@ -245,7 +278,10 @@ async def list_new_product_requests(
 
 @admin_router.post("/product-type-requests/{request_id}/decision")
 async def decide_new_product_request(
-    request_id: uuid.UUID, body: NewProductTypeRequestDecisionIn, session: Session, admin: AdminContextDep
+    request_id: uuid.UUID,
+    body: NewProductTypeRequestDecisionIn,
+    session: Session,
+    admin: AdminContextDep,
 ):
     _require_permission(admin, AdminPermission.MANAGE_MARKETPLACE_CATALOG)
     row = await session.get(NewProductTypeRequest, request_id)
@@ -255,10 +291,17 @@ async def decide_new_product_request(
     row.review_note = body.review_note
     row.reviewed_by_admin_id = admin.admin.id
     row.reviewed_at = datetime.now(UTC)
-    session.add(AuditLog(admin_id=admin.admin.id, role=admin.admin.role,
-        action="organic_inputs_product_request_decided",
-        target="organic_inputs_new_product_request", target_id=str(row.id),
-        ip_address=admin.ip_address, meta={"status": body.status.value}))
+    session.add(
+        AuditLog(
+            admin_id=admin.admin.id,
+            role=admin.admin.role,
+            action="organic_inputs_product_request_decided",
+            target="organic_inputs_new_product_request",
+            target_id=str(row.id),
+            ip_address=admin.ip_address,
+            meta={"status": body.status.value},
+        )
+    )
     await session.commit()
     return {"status": row.status}
 
@@ -270,17 +313,23 @@ async def decide_new_product_request(
 
 @router.get("/categories")
 async def list_categories(session: Session, _user: CurrentUser):
-    rows = (await session.scalars(
-        select(MarketplaceCategory)
-        .where(MarketplaceCategory.status == CatalogStatus.ACTIVE.value, MarketplaceCategory.is_deleted.is_(False))
-        .order_by(MarketplaceCategory.display_order, MarketplaceCategory.name)
-    )).all()
+    rows = (
+        await session.scalars(
+            select(MarketplaceCategory)
+            .where(
+                MarketplaceCategory.status == CatalogStatus.ACTIVE.value,
+                MarketplaceCategory.is_deleted.is_(False),
+            )
+            .order_by(MarketplaceCategory.display_order, MarketplaceCategory.name)
+        )
+    ).all()
     return [CategoryOut.model_validate(row) for row in rows]
 
 
 @router.get("/product-types")
 async def list_product_types(
-    session: Session, _user: CurrentUser,
+    session: Session,
+    _user: CurrentUser,
     category_id: uuid.UUID | None = None,
 ):
     stmt = select(MarketplaceProductType).where(
@@ -302,23 +351,33 @@ async def get_product_type(product_type_id: uuid.UUID, session: Session, _user: 
 
 
 @router.post("/product-type-requests")
-async def submit_new_product_request(body: NewProductTypeRequestIn, session: Session, user: CurrentUser):
+async def submit_new_product_request(
+    body: NewProductTypeRequestIn, session: Session, user: CurrentUser
+):
     row = NewProductTypeRequest(requested_by_user_id=user.id, **body.model_dump())
     session.add(row)
-    session.add(AuditLog(role="farmer", action="organic_inputs_product_request_submitted",
-        target="organic_inputs_new_product_request", target_id=str(row.id),
-        meta={"actor_user_id": str(user.id)}))
+    session.add(
+        AuditLog(
+            role="farmer",
+            action="organic_inputs_product_request_submitted",
+            target="organic_inputs_new_product_request",
+            target_id=str(row.id),
+            meta={"actor_user_id": str(user.id)},
+        )
+    )
     await session.commit()
     return NewProductTypeRequestOut.model_validate(row)
 
 
 @router.get("/my-product-type-requests")
 async def my_product_type_requests(session: Session, user: CurrentUser):
-    rows = (await session.scalars(
-        select(NewProductTypeRequest)
-        .where(NewProductTypeRequest.requested_by_user_id == user.id)
-        .order_by(NewProductTypeRequest.created_at.desc())
-    )).all()
+    rows = (
+        await session.scalars(
+            select(NewProductTypeRequest)
+            .where(NewProductTypeRequest.requested_by_user_id == user.id)
+            .order_by(NewProductTypeRequest.created_at.desc())
+        )
+    ).all()
     return [NewProductTypeRequestOut.model_validate(row) for row in rows]
 
 
@@ -329,7 +388,9 @@ async def my_product_type_requests(session: Session, user: CurrentUser):
 
 @router.post("/supplier-profile")
 async def apply_as_supplier(body: SupplierApplyIn, session: Session, user: CurrentUser):
-    existing = await session.scalar(select(SupplierProfile).where(SupplierProfile.user_id == user.id))
+    existing = await session.scalar(
+        select(SupplierProfile).where(SupplierProfile.user_id == user.id)
+    )
     if existing and existing.status != SupplierStatus.DRAFT.value:
         raise ConflictError("A supplier application already exists.")
     if existing:
@@ -337,12 +398,20 @@ async def apply_as_supplier(body: SupplierApplyIn, session: Session, user: Curre
             setattr(existing, key, value)
         row = existing
     else:
-        row = SupplierProfile(user_id=user.id, status=SupplierStatus.DRAFT.value, **body.model_dump())
+        row = SupplierProfile(
+            user_id=user.id, status=SupplierStatus.DRAFT.value, **body.model_dump()
+        )
         row.documents = []
         session.add(row)
-    session.add(AuditLog(role="farmer", action="organic_inputs_supplier_drafted",
-        target="organic_inputs_supplier_profile", target_id=str(row.id),
-        meta={"actor_user_id": str(user.id)}))
+    session.add(
+        AuditLog(
+            role="farmer",
+            action="organic_inputs_supplier_drafted",
+            target="organic_inputs_supplier_profile",
+            target_id=str(row.id),
+            meta={"actor_user_id": str(user.id)},
+        )
+    )
     await session.commit()
     return SupplierProfileOut.model_validate(row)
 
@@ -357,14 +426,21 @@ async def my_supplier_profile(session: Session, user: CurrentUser):
 async def submit_supplier_profile(session: Session, user: CurrentUser):
     profile = await _my_supplier_profile(session, user.id)
     assert_transition_allowed(
-        profile.status, SupplierStatus.SUBMITTED.value,
+        profile.status,
+        SupplierStatus.SUBMITTED.value,
         {SupplierStatus.DRAFT.value: {SupplierStatus.SUBMITTED.value}},
     )
     profile.status = SupplierStatus.SUBMITTED.value
     profile.submitted_at = datetime.now(UTC)
-    session.add(AuditLog(role="farmer", action="organic_inputs_supplier_submitted",
-        target="organic_inputs_supplier_profile", target_id=str(profile.id),
-        meta={"actor_user_id": str(user.id)}))
+    session.add(
+        AuditLog(
+            role="farmer",
+            action="organic_inputs_supplier_submitted",
+            target="organic_inputs_supplier_profile",
+            target_id=str(profile.id),
+            meta={"actor_user_id": str(user.id)},
+        )
+    )
     await session.commit()
     return {"status": profile.status}
 
@@ -391,10 +467,13 @@ async def list_supplier_documents(session: Session, user: CurrentUser):
 
 @admin_router.get("/suppliers")
 async def list_suppliers(
-    session: Session, admin: AdminContextDep,
+    session: Session,
+    admin: AdminContextDep,
     status_filter: Annotated[SupplierStatus | None, Query(alias="status")] = None,
 ):
-    _require_permission(admin, AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS, AdminPermission.MANAGE_MARKETPLACE_QC)
+    _require_permission(
+        admin, AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS, AdminPermission.MANAGE_MARKETPLACE_QC
+    )
     stmt = select(SupplierProfile)
     if status_filter:
         stmt = stmt.where(SupplierProfile.status == status_filter.value)
@@ -404,7 +483,9 @@ async def list_suppliers(
 
 @admin_router.get("/suppliers/{supplier_id}")
 async def get_supplier(supplier_id: uuid.UUID, session: Session, admin: AdminContextDep):
-    _require_permission(admin, AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS, AdminPermission.MANAGE_MARKETPLACE_QC)
+    _require_permission(
+        admin, AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS, AdminPermission.MANAGE_MARKETPLACE_QC
+    )
     profile = await session.get(SupplierProfile, supplier_id)
     if profile is None:
         raise NotFoundError("Supplier not found.")
@@ -422,7 +503,8 @@ async def decide_supplier(
     if profile is None:
         raise NotFoundError("Supplier not found.")
     assert_transition_allowed(
-        profile.status, body.status.value,
+        profile.status,
+        body.status.value,
         {k.value: {v.value for v in vs} for k, vs in SUPPLIER_ADMIN_DECISIONS.items()},
     )
     profile.status = body.status.value
@@ -432,10 +514,17 @@ async def decide_supplier(
         profile.rejection_reason = body.note
     if body.status == SupplierStatus.SUSPENDED:
         profile.suspension_reason = body.note
-    session.add(AuditLog(admin_id=admin.admin.id, role=admin.admin.role,
-        action="organic_inputs_supplier_decided", target="organic_inputs_supplier_profile",
-        target_id=str(profile.id), ip_address=admin.ip_address,
-        meta={"status": body.status.value, "note": body.note}))
+    session.add(
+        AuditLog(
+            admin_id=admin.admin.id,
+            role=admin.admin.role,
+            action="organic_inputs_supplier_decided",
+            target="organic_inputs_supplier_profile",
+            target_id=str(profile.id),
+            ip_address=admin.ip_address,
+            meta={"status": body.status.value, "note": body.note},
+        )
+    )
     await session.commit()
     return {"status": profile.status}
 
@@ -458,28 +547,38 @@ async def create_batch(body: BatchCreateIn, session: Session, user: CurrentUser)
         raise ValidationError("This product type has no published definition yet.")
     payload = body.model_dump(exclude={"ingredients"})
     row = ProductionBatch(
-        batch_code=generate_batch_code(), supplier_id=profile.id,
-        product_type_version_id=current_version.id, status=BatchStatus.DRAFT.value,
+        batch_code=generate_batch_code(),
+        supplier_id=profile.id,
+        product_type_version_id=current_version.id,
+        status=BatchStatus.DRAFT.value,
         **payload,
     )
     row.ingredients = [BatchIngredient(**i.model_dump()) for i in body.ingredients]
     row.documents = []
     session.add(row)
-    session.add(AuditLog(role="farmer", action="organic_inputs_batch_created",
-        target="organic_inputs_production_batch", target_id=str(row.id),
-        meta={"actor_user_id": str(user.id), "product_type_id": str(body.product_type_id)}))
+    session.add(
+        AuditLog(
+            role="farmer",
+            action="organic_inputs_batch_created",
+            target="organic_inputs_production_batch",
+            target_id=str(row.id),
+            meta={"actor_user_id": str(user.id), "product_type_id": str(body.product_type_id)},
+        )
+    )
     await session.commit()
     return BatchOut.model_validate(row)
 
 
 @router.get("/batches")
 async def list_my_batches(session: Session, user: CurrentUser):
-    rows = (await session.scalars(
-        select(ProductionBatch)
-        .join(SupplierProfile, SupplierProfile.id == ProductionBatch.supplier_id)
-        .where(SupplierProfile.user_id == user.id, ProductionBatch.is_deleted.is_(False))
-        .order_by(ProductionBatch.created_at.desc())
-    )).all()
+    rows = (
+        await session.scalars(
+            select(ProductionBatch)
+            .join(SupplierProfile, SupplierProfile.id == ProductionBatch.supplier_id)
+            .where(SupplierProfile.user_id == user.id, ProductionBatch.is_deleted.is_(False))
+            .order_by(ProductionBatch.created_at.desc())
+        )
+    ).all()
     return [BatchOut.model_validate(row) for row in rows]
 
 
@@ -490,7 +589,9 @@ async def get_my_batch(batch_id: uuid.UUID, session: Session, user: CurrentUser)
 
 
 @router.patch("/batches/{batch_id}")
-async def update_batch_draft(batch_id: uuid.UUID, body: BatchUpdateIn, session: Session, user: CurrentUser):
+async def update_batch_draft(
+    batch_id: uuid.UUID, body: BatchUpdateIn, session: Session, user: CurrentUser
+):
     batch = await _my_batch(session, user.id, batch_id)
     if batch.status != BatchStatus.DRAFT.value:
         raise ConflictError("Only a draft batch can be edited.")
@@ -501,7 +602,9 @@ async def update_batch_draft(batch_id: uuid.UUID, body: BatchUpdateIn, session: 
 
 
 @router.post("/batches/{batch_id}/documents")
-async def add_batch_document(batch_id: uuid.UUID, body: BatchDocumentIn, session: Session, user: CurrentUser):
+async def add_batch_document(
+    batch_id: uuid.UUID, body: BatchDocumentIn, session: Session, user: CurrentUser
+):
     batch = await _my_batch(session, user.id, batch_id)
     if batch.status != BatchStatus.DRAFT.value:
         raise ConflictError("Documents can only be added to a draft batch.")
@@ -515,14 +618,21 @@ async def add_batch_document(batch_id: uuid.UUID, body: BatchDocumentIn, session
 async def submit_batch(batch_id: uuid.UUID, session: Session, user: CurrentUser):
     batch = await _my_batch(session, user.id, batch_id)
     assert_transition_allowed(
-        batch.status, BatchStatus.SUBMITTED.value,
+        batch.status,
+        BatchStatus.SUBMITTED.value,
         {BatchStatus.DRAFT.value: {BatchStatus.SUBMITTED.value}},
     )
     batch.status = BatchStatus.SUBMITTED.value
     batch.submission_date = datetime.now(UTC)
-    session.add(AuditLog(role="farmer", action="organic_inputs_batch_submitted",
-        target="organic_inputs_production_batch", target_id=str(batch.id),
-        meta={"actor_user_id": str(user.id)}))
+    session.add(
+        AuditLog(
+            role="farmer",
+            action="organic_inputs_batch_submitted",
+            target="organic_inputs_production_batch",
+            target_id=str(batch.id),
+            meta={"actor_user_id": str(user.id)},
+        )
+    )
     await session.commit()
     return {"status": batch.status}
 
@@ -534,10 +644,13 @@ async def submit_batch(batch_id: uuid.UUID, session: Session, user: CurrentUser)
 
 @admin_router.get("/batches")
 async def list_batches(
-    session: Session, admin: AdminContextDep,
+    session: Session,
+    admin: AdminContextDep,
     status_filter: Annotated[BatchStatus | None, Query(alias="status")] = None,
 ):
-    _require_permission(admin, AdminPermission.MANAGE_MARKETPLACE_QC, AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS)
+    _require_permission(
+        admin, AdminPermission.MANAGE_MARKETPLACE_QC, AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS
+    )
     stmt = select(ProductionBatch).where(ProductionBatch.is_deleted.is_(False))
     if status_filter:
         stmt = stmt.where(ProductionBatch.status == status_filter.value)
@@ -547,7 +660,9 @@ async def list_batches(
 
 @admin_router.get("/batches/{batch_id}")
 async def get_batch(batch_id: uuid.UUID, session: Session, admin: AdminContextDep):
-    _require_permission(admin, AdminPermission.MANAGE_MARKETPLACE_QC, AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS)
+    _require_permission(
+        admin, AdminPermission.MANAGE_MARKETPLACE_QC, AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS
+    )
     batch = await session.get(ProductionBatch, batch_id)
     if batch is None:
         raise NotFoundError("Batch not found.")
@@ -555,14 +670,18 @@ async def get_batch(batch_id: uuid.UUID, session: Session, admin: AdminContextDe
 
 
 @admin_router.post("/batches/{batch_id}/decision")
-async def decide_batch(batch_id: uuid.UUID, body: BatchDecisionIn, session: Session, admin: AdminContextDep):
+async def decide_batch(
+    batch_id: uuid.UUID, body: BatchDecisionIn, session: Session, admin: AdminContextDep
+):
     """Review-stage decisions (docs: acceptance criteria #5 -- a batch cannot
     be sold without inspection/QC approval) AND the final testing-outcome
     decision (TESTING -> RETEST_REQUIRED/APPROVED/PARTIALLY_APPROVED/REJECTED).
     The testing outcome requires at least one real BatchTestResult already
     recorded via POST .../samples/{sample_id}/test-results -- it can never be
     granted from nothing."""
-    _require_permission(admin, AdminPermission.MANAGE_MARKETPLACE_QC, AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS)
+    _require_permission(
+        admin, AdminPermission.MANAGE_MARKETPLACE_QC, AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS
+    )
     batch = await session.get(ProductionBatch, batch_id)
     if batch is None:
         raise NotFoundError("Batch not found.")
@@ -575,7 +694,8 @@ async def decide_batch(batch_id: uuid.UUID, body: BatchDecisionIn, session: Sess
                 "Cannot decide a testing outcome without at least one recorded test result."
             )
     assert_transition_allowed(
-        batch.status, body.status.value,
+        batch.status,
+        body.status.value,
         {k.value: {v.value for v in vs} for k, vs in BATCH_ADMIN_DECISIONS.items()},
     )
     batch.status = body.status.value
@@ -584,10 +704,17 @@ async def decide_batch(batch_id: uuid.UUID, body: BatchDecisionIn, session: Sess
         batch.approved_quantity = body.approved_quantity
     if body.rejected_quantity is not None:
         batch.rejected_quantity = body.rejected_quantity
-    session.add(AuditLog(admin_id=admin.admin.id, role=admin.admin.role,
-        action="organic_inputs_batch_decided", target="organic_inputs_production_batch",
-        target_id=str(batch.id), ip_address=admin.ip_address,
-        meta={"status": body.status.value, "note": body.note}))
+    session.add(
+        AuditLog(
+            admin_id=admin.admin.id,
+            role=admin.admin.role,
+            action="organic_inputs_batch_decided",
+            target="organic_inputs_production_batch",
+            target_id=str(batch.id),
+            ip_address=admin.ip_address,
+            meta={"status": body.status.value, "note": body.note},
+        )
+    )
     await session.commit()
     return {"status": batch.status}
 
@@ -599,37 +726,57 @@ async def decide_batch(batch_id: uuid.UUID, body: BatchDecisionIn, session: Sess
 
 @admin_router.post("/batches/{batch_id}/inspection")
 async def record_batch_inspection(
-    batch_id: uuid.UUID, body: BatchInspectionIn, session: Session, admin: AdminContextDep,
+    batch_id: uuid.UUID,
+    body: BatchInspectionIn,
+    session: Session,
+    admin: AdminContextDep,
 ):
     """Records the one physical/site inspection a batch gets and drives the
     INSPECTION_REQUIRED -> INSPECTION_COMPLETED/REJECTED transition from it --
     this is the only way to leave INSPECTION_REQUIRED; decide_batch cannot."""
-    _require_permission(admin, AdminPermission.MANAGE_MARKETPLACE_QC, AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS)
+    _require_permission(
+        admin, AdminPermission.MANAGE_MARKETPLACE_QC, AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS
+    )
     batch = await session.get(ProductionBatch, batch_id)
     if batch is None:
         raise NotFoundError("Batch not found.")
     if batch.status != BatchStatus.INSPECTION_REQUIRED.value:
         raise ConflictError("This batch is not awaiting inspection.")
     row = BatchInspection(
-        batch_id=batch.id, inspector_admin_id=admin.admin.id,
-        inspected_at=datetime.now(UTC), outcome=body.outcome, findings_note=body.findings_note,
+        batch_id=batch.id,
+        inspector_admin_id=admin.admin.id,
+        inspected_at=datetime.now(UTC),
+        outcome=body.outcome,
+        findings_note=body.findings_note,
     )
     session.add(row)
-    target_status = BatchStatus.INSPECTION_COMPLETED if body.outcome == "passed" else BatchStatus.REJECTED
+    target_status = (
+        BatchStatus.INSPECTION_COMPLETED if body.outcome == "passed" else BatchStatus.REJECTED
+    )
     batch.status = target_status.value
     if target_status == BatchStatus.REJECTED:
         batch.latest_review_note = body.findings_note
-    session.add(AuditLog(admin_id=admin.admin.id, role=admin.admin.role,
-        action="organic_inputs_batch_inspected", target="organic_inputs_production_batch",
-        target_id=str(batch.id), ip_address=admin.ip_address,
-        meta={"outcome": body.outcome}))
+    session.add(
+        AuditLog(
+            admin_id=admin.admin.id,
+            role=admin.admin.role,
+            action="organic_inputs_batch_inspected",
+            target="organic_inputs_production_batch",
+            target_id=str(batch.id),
+            ip_address=admin.ip_address,
+            meta={"outcome": body.outcome},
+        )
+    )
     await session.commit()
     return {"status": batch.status, "inspection_id": str(row.id)}
 
 
 @admin_router.post("/batches/{batch_id}/samples")
 async def collect_batch_sample(
-    batch_id: uuid.UUID, body: BatchSampleIn, session: Session, admin: AdminContextDep,
+    batch_id: uuid.UUID,
+    body: BatchSampleIn,
+    session: Session,
+    admin: AdminContextDep,
 ):
     """Records a physical sample drawn for lab testing and drives
     INSPECTION_COMPLETED/RETEST_REQUIRED -> SAMPLE_COLLECTED -- the only way
@@ -638,36 +785,60 @@ async def collect_batch_sample(
     batch = await session.get(ProductionBatch, batch_id)
     if batch is None:
         raise NotFoundError("Batch not found.")
-    if batch.status not in {BatchStatus.INSPECTION_COMPLETED.value, BatchStatus.RETEST_REQUIRED.value}:
-        raise ConflictError("A sample can only be collected after inspection or when a retest is required.")
+    if batch.status not in {
+        BatchStatus.INSPECTION_COMPLETED.value,
+        BatchStatus.RETEST_REQUIRED.value,
+    }:
+        raise ConflictError(
+            "A sample can only be collected after inspection or when a retest is required."
+        )
     row = BatchSample(
-        batch_id=batch.id, sample_code=generate_sample_code(), collected_by_admin_id=admin.admin.id,
-        collected_at=datetime.now(UTC), **body.model_dump(),
+        batch_id=batch.id,
+        sample_code=generate_sample_code(),
+        collected_by_admin_id=admin.admin.id,
+        collected_at=datetime.now(UTC),
+        **body.model_dump(),
     )
     row.test_results = []
     session.add(row)
     batch.status = BatchStatus.SAMPLE_COLLECTED.value
-    session.add(AuditLog(admin_id=admin.admin.id, role=admin.admin.role,
-        action="organic_inputs_sample_collected", target="organic_inputs_production_batch",
-        target_id=str(batch.id), ip_address=admin.ip_address,
-        meta={"sample_id": str(row.id), "sample_code": row.sample_code}))
+    session.add(
+        AuditLog(
+            admin_id=admin.admin.id,
+            role=admin.admin.role,
+            action="organic_inputs_sample_collected",
+            target="organic_inputs_production_batch",
+            target_id=str(batch.id),
+            ip_address=admin.ip_address,
+            meta={"sample_id": str(row.id), "sample_code": row.sample_code},
+        )
+    )
     await session.commit()
     return BatchSampleOut.model_validate(row)
 
 
 @admin_router.get("/batches/{batch_id}/samples")
 async def list_batch_samples(batch_id: uuid.UUID, session: Session, admin: AdminContextDep):
-    _require_permission(admin, AdminPermission.MANAGE_MARKETPLACE_QC, AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS)
-    rows = (await session.scalars(
-        select(BatchSample).where(BatchSample.batch_id == batch_id).order_by(BatchSample.created_at)
-    )).all()
+    _require_permission(
+        admin, AdminPermission.MANAGE_MARKETPLACE_QC, AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS
+    )
+    rows = (
+        await session.scalars(
+            select(BatchSample)
+            .where(BatchSample.batch_id == batch_id)
+            .order_by(BatchSample.created_at)
+        )
+    ).all()
     return [BatchSampleOut.model_validate(row) for row in rows]
 
 
 @admin_router.post("/batches/{batch_id}/samples/{sample_id}/test-results")
 async def add_batch_test_result(
-    batch_id: uuid.UUID, sample_id: uuid.UUID, body: BatchTestResultIn,
-    session: Session, admin: AdminContextDep,
+    batch_id: uuid.UUID,
+    sample_id: uuid.UUID,
+    body: BatchTestResultIn,
+    session: Session,
+    admin: AdminContextDep,
 ):
     """Records one lab-tested parameter result and drives
     SAMPLE_COLLECTED -> TESTING (first result only; further results while
@@ -683,16 +854,29 @@ async def add_batch_test_result(
     if batch.status not in {BatchStatus.SAMPLE_COLLECTED.value, BatchStatus.TESTING.value}:
         raise ConflictError("Test results can only be recorded once a sample has been collected.")
     row = BatchTestResult(
-        sample_id=sample.id, batch_id=batch.id, entered_by_admin_id=admin.admin.id,
+        sample_id=sample.id,
+        batch_id=batch.id,
+        entered_by_admin_id=admin.admin.id,
         tested_at=body.tested_at or datetime.now(UTC),
         **body.model_dump(exclude={"tested_at"}),
     )
     session.add(row)
     if batch.status == BatchStatus.SAMPLE_COLLECTED.value:
         batch.status = BatchStatus.TESTING.value
-    session.add(AuditLog(admin_id=admin.admin.id, role=admin.admin.role,
-        action="organic_inputs_test_result_recorded", target="organic_inputs_production_batch",
-        target_id=str(batch.id), ip_address=admin.ip_address,
-        meta={"sample_id": str(sample.id), "parameter_name": body.parameter_name, "pass_fail": body.pass_fail}))
+    session.add(
+        AuditLog(
+            admin_id=admin.admin.id,
+            role=admin.admin.role,
+            action="organic_inputs_test_result_recorded",
+            target="organic_inputs_production_batch",
+            target_id=str(batch.id),
+            ip_address=admin.ip_address,
+            meta={
+                "sample_id": str(sample.id),
+                "parameter_name": body.parameter_name,
+                "pass_fail": body.pass_fail,
+            },
+        )
+    )
     await session.commit()
     return BatchTestResultOut.model_validate(row)

@@ -1,4 +1,5 @@
 """Organic Inputs Marketplace request/response schemas — foundation phase."""
+
 from __future__ import annotations
 
 import uuid
