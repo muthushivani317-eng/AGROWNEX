@@ -21,12 +21,24 @@ from app.modules.auth.dependencies import (
 from app.modules.auth.models import User
 from app.modules.auth.rbac_models import Role, UserRole
 from fastapi import FastAPI, HTTPException
-from internal_challenge_sets.crop_identity_v1.tools.challenge_framework import (
-    ChallengeError,
-    make_backend_pipeline_adapter,
-)
 from PIL import Image
 from sqlalchemy import select
+
+try:
+    # internal_challenge_sets/ is gitignored (local-only, not shipped to CI);
+    # the tests that need it are skipped there instead of failing collection.
+    from internal_challenge_sets.crop_identity_v1.tools.challenge_framework import (
+        ChallengeError,
+        make_backend_pipeline_adapter,
+    )
+except ModuleNotFoundError:
+    ChallengeError = None
+    make_backend_pipeline_adapter = None
+
+requires_challenge_framework = pytest.mark.skipif(
+    make_backend_pipeline_adapter is None,
+    reason="internal_challenge_sets is not available in this environment",
+)
 
 
 def png_bytes() -> bytes:
@@ -236,6 +248,7 @@ async def test_disabled_or_deleted_user_rejected(monkeypatch, status):
         await resolve(SimpleNamespace(credentials="redacted"), Service())
 
 
+@requires_challenge_framework
 @pytest.mark.parametrize(
     "role",
     ["farmer", "admin", "", "unknown", "INTERNAL_TESTER", "*"],
@@ -249,6 +262,7 @@ def test_backend_challenge_adapter_rejects_non_tester_roles(role):
         )
 
 
+@requires_challenge_framework
 def test_backend_adapter_redacts_token_and_records_auth(tmp_path):
     token = "secret-fixture-token"
     image = tmp_path / "image.png"
@@ -286,6 +300,7 @@ def test_backend_adapter_redacts_token_and_records_auth(tmp_path):
     assert token not in str(result)
 
 
+@requires_challenge_framework
 def test_backend_adapter_fails_when_token_unavailable(tmp_path):
     adapter = make_backend_pipeline_adapter(
         base_url="http://test",

@@ -2,12 +2,13 @@ from datetime import UTC, datetime
 from types import SimpleNamespace
 from uuid import uuid4
 
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
 from app.banana_v3 import api_router as api
 from app.banana_v3.api_router import require_banana_controlled_tester, router
 from app.banana_v3.schemas import DiseaseBlock, GateBlock, PredictionResponse, ResultBlock
 from app.core.database import get_session
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
 
 
 def _response() -> PredictionResponse:

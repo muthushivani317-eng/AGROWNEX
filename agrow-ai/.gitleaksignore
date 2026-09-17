@@ -1,0 +1,5 @@
+# Verified 2026-09-10: synthetic test idempotency keys, not credentials.
+9e371aba2a166de0659fcbf243820ff270518c9e:features/growth/__tests__/stageWorkflow.test.ts:generic-api-key:19
+9e371aba2a166de0659fcbf243820ff270518c9e:features/growth/__tests__/stageWorkflow.test.ts:generic-api-key:65
+# Verified historical value: growth.stage.pending.v1 (local storage namespace).
+f9d9137e462bee78aaaa4852211b2ab6ba8bda67:features/growth/services/stageOfflineQueue.ts:generic-api-key:5

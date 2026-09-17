@@ -13,11 +13,11 @@ from PIL import Image, UnidentifiedImageError
 
 from app.core.logging import get_logger
 from app.field_testing import field_test_logger
-from app.image_safety import UnsafeImageError, require_safe_image
 from app.gemini_crop_identification.confirmation import (
     ConfirmationError,
     confirmation_store,
 )
+from app.image_safety import UnsafeImageError, require_safe_image
 from app.modules.auth.dependencies import ControlledTester
 
 from .pipeline import run_controlled_crop_identity_pipeline

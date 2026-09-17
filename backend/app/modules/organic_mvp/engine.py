@@ -36,7 +36,13 @@ def score_readiness(answers: dict, rules: dict) -> dict:
     match = next((band for band in bands if band["min"] <= score <= band["max"]), None)
     if match is None:
         raise ValidationError("Readiness scoring rules are incomplete.")
-    return {"score": score, "pathway": match["pathway"], "recommendation_ta": match["recommendation_ta"], "recommendation_en": match.get("recommendation_en"), "risk_flags": flags}
+    return {
+        "score": score,
+        "pathway": match["pathway"],
+        "recommendation_ta": match["recommendation_ta"],
+        "recommendation_en": match.get("recommendation_en"),
+        "risk_flags": flags,
+    }
 
 
 def validate_pgs_transition(*, requested: str, partial_conversion: bool,

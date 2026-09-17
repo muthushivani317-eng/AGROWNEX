@@ -105,7 +105,13 @@ def create_app() -> FastAPI:
         default_limit=settings.rate_limit_default,
         auth_limit=settings.rate_limit_auth,
         window=settings.rate_limit_window_seconds,
-        auth_prefixes=(f"{settings.api_v1_prefix}/auth",),
+        # Admin login/logout is not under /auth but is just as brute-force-
+        # sensitive (it mints an HttpOnly session cookie), so it gets the same
+        # stricter limit as the farmer auth endpoints (docs/SECURITY.md).
+        auth_prefixes=(
+            f"{settings.api_v1_prefix}/auth",
+            f"{settings.api_v1_prefix}/admin/web-session",
+        ),
         trust_proxy_headers=settings.trust_proxy_headers,
     )
     app.add_middleware(SecurityHeadersMiddleware)

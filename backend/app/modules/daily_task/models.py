@@ -15,20 +15,20 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     DateTime,
     Float,
     ForeignKey,
     Index,
     Integer,
-    JSON,
     String,
     Text,
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.shared.base_model import Base, GUID, TimestampMixin, UUIDMixin
+from app.shared.base_model import GUID, Base, TimestampMixin, UUIDMixin
 
 
 class DailySignal(UUIDMixin, TimestampMixin, Base):
@@ -79,7 +79,7 @@ class DailySignal(UUIDMixin, TimestampMixin, Base):
     status_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     rank_score: Mapped[float | None] = mapped_column(Float, nullable=True)
 
-    task: Mapped["DailyTask | None"] = relationship(back_populates="signal", uselist=False)
+    task: Mapped[DailyTask | None] = relationship(back_populates="signal", uselist=False)
 
     __table_args__ = (
         UniqueConstraint("dedupe_key", "observed_at", name="uq_daily_signal_dedupe_observed"),
@@ -129,8 +129,8 @@ class DailyTask(UUIDMixin, TimestampMixin, Base):
         DateTime(timezone=True), nullable=True
     )
 
-    signal: Mapped["DailySignal"] = relationship(back_populates="task")
-    responses: Mapped[list["DailyTaskResponse"]] = relationship(
+    signal: Mapped[DailySignal] = relationship(back_populates="task")
+    responses: Mapped[list[DailyTaskResponse]] = relationship(
         back_populates="task", order_by="DailyTaskResponse.created_at"
     )
 
@@ -156,7 +156,7 @@ class DailyTaskResponse(UUIDMixin, TimestampMixin, Base):
     voice_note_object_id: Mapped[str | None] = mapped_column(String(512), nullable=True)
     note_text: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    task: Mapped["DailyTask"] = relationship(back_populates="responses")
+    task: Mapped[DailyTask] = relationship(back_populates="responses")
 
 
 class DailyTaskZone(UUIDMixin, TimestampMixin, Base):

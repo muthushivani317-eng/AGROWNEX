@@ -20,8 +20,13 @@ from app.modules.auth.models import User
 from app.modules.auth.security import generate_refresh_token, hash_token
 from app.modules.farms.models import Farm
 from app.modules.organic_mvp.models import (
-    OrganicFpo, OrganicPartnerApiKey, OrganicPartnerFarmerLink, OrganicPartnerOrganization,
-    OrganicPartnerStaff, OrganicPlot, OrganicReadiness,
+    OrganicFpo,
+    OrganicPartnerApiKey,
+    OrganicPartnerFarmerLink,
+    OrganicPartnerOrganization,
+    OrganicPartnerStaff,
+    OrganicPlot,
+    OrganicReadiness,
 )
 from app.modules.organic_mvp.schemas import FpoIn
 

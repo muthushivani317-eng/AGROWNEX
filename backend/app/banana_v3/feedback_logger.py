@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from .prediction_logger import JsonlLogger
@@ -20,5 +20,5 @@ class FeedbackLogger:
             notes = re.sub(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", "[REDACTED_EMAIL]", notes)
             notes = re.sub(r"(?<!\d)(?:\+?\d[\d -]{7,}\d)(?!\d)", "[REDACTED_PHONE]", notes)
             record["notes"] = notes
-        record["timestamp"] = datetime.now(timezone.utc).isoformat()
+        record["timestamp"] = datetime.now(UTC).isoformat()
         self.logger.append(record)

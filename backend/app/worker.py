@@ -24,6 +24,8 @@ from app.core.config import settings
 from app.core.database import SessionLocal
 from app.core.logging import get_logger
 from app.core.metrics import metrics  # noqa: F401  (import warms the registry)
+from app.modules.daily_task.jobs import generate_daily_tasks as _generate_daily_tasks
+from app.modules.daily_task.jobs import send_verification_followups as _send_verification_followups
 from app.modules.market.jobs import refresh_market_prices as _refresh_market_prices
 from app.modules.notifications.jobs import (
     evaluate_weather_alerts as _evaluate_weather_alerts,
@@ -32,8 +34,6 @@ from app.modules.notifications.jobs import (
     retry_failed_notifications as _retry_failed_notifications,
 )
 from app.modules.produce.jobs import expire_stale_offers as _expire_stale_offers
-from app.modules.daily_task.jobs import generate_daily_tasks as _generate_daily_tasks
-from app.modules.daily_task.jobs import send_verification_followups as _send_verification_followups
 from app.modules.satellite.jobs import render_satellite_images as _render_satellite_images
 
 logger = get_logger("worker")

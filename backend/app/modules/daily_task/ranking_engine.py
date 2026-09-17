@@ -23,8 +23,8 @@ from datetime import UTC, datetime, timedelta
 from app.modules.daily_task.constants import (
     MAX_TASKS_PER_FARMER_PER_DAY,
     TASK_COOLDOWN_DAYS_DEFAULT,
-    TASK_COOLDOWN_DAYS_NOT_RELEVANT,
     TASK_COOLDOWN_DAYS_NO_ISSUE,
+    TASK_COOLDOWN_DAYS_NOT_RELEVANT,
     TASK_TIER,
     Confidence,
     TaskType,

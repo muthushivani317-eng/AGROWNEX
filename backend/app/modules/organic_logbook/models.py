@@ -2,8 +2,19 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from decimal import Decimal
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, String, Text, UniqueConstraint
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.shared.base_model import GUID, Base, SoftDeleteMixin, TimestampMixin, UUIDMixin
@@ -40,6 +51,8 @@ class OrganicPracticeLogEntry(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     treated_area_hectares: Mapped[float | None] = mapped_column(Float)
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     note: Mapped[str | None] = mapped_column(Text)
+    expense_amount_inr: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
+    voice_transcript: Mapped[str | None] = mapped_column(Text)
     outcome_status: Mapped[str] = mapped_column(String(40), nullable=False, default="not_reported")
     source_feature: Mapped[str] = mapped_column(String(40), nullable=False)
     source_record_id: Mapped[str] = mapped_column(String(100), nullable=False)

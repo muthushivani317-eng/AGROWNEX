@@ -5,7 +5,7 @@ description = "AgrowAI backend API (FastAPI)"
 requires-python = ">=3.12"
 
 [tool.ruff]
-line-length = 100
+line-length = 160
 target-version = "py312"
 src = ["app"]
 
@@ -13,8 +13,15 @@ src = ["app"]
 select = ["E", "F", "I", "B", "UP", "N", "ASYNC"]
 ignore = ["B008"]  # FastAPI Depends() in defaults is idiomatic.
 
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.ruff.lint.per-file-ignores]
+# Bilingual (English/Tamil) disease-fact strings; wrapping would corrupt content.
+"app/disease_recommendations/registry.py" = ["E501"]
+
 [tool.black]
-line-length = 100
+line-length = 160
 target-version = ["py312"]
 
 [tool.pytest.ini_options]

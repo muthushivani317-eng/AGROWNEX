@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, date, datetime, time, timedelta
-from zoneinfo import ZoneInfo
 from typing import Annotated
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
@@ -17,21 +17,42 @@ from app.modules.admin.dependencies import AdminContextDep
 from app.modules.admin.models import AuditLog
 from app.modules.auth.dependencies import CurrentUser
 from app.modules.farms.models import Farm
-from app.modules.organic.models import OrganicCertificationDocument, OrganicFarmProfile
 from app.modules.notifications.models import FutureNotificationQueue
+from app.modules.organic.models import OrganicCertificationDocument, OrganicFarmProfile
 from app.modules.organic_mvp.engine import (
-    TRIAL_NOTICE, forecast_gate, schedule_reviewed_tasks, score_readiness,
+    TRIAL_NOTICE,
+    forecast_gate,
+    schedule_reviewed_tasks,
+    score_readiness,
     validate_pgs_transition,
 )
 from app.modules.organic_mvp.models import (
-    OrganicCropCycle, OrganicFpo, OrganicPeerAppraisal, OrganicPgsCase, OrganicPilot,
-    OrganicPilotEnrollment, OrganicPlot, OrganicReadiness, OrganicReadinessRules,
-    OrganicScheduledTask, OrganicTaskTemplate,
+    OrganicCropCycle,
+    OrganicFpo,
+    OrganicPeerAppraisal,
+    OrganicPgsCase,
+    OrganicPilot,
+    OrganicPilotEnrollment,
+    OrganicPlot,
+    OrganicReadiness,
+    OrganicReadinessRules,
+    OrganicScheduledTask,
+    OrganicTaskTemplate,
 )
 from app.modules.organic_mvp.schemas import (
-    AppraisalCompleteIn, AppraisalIn, CropCycleIn, EnrollIn, FpoIn, PgsFarmerIn,
-    PgsReviewIn, PilotSetupIn, PlotIn, ReadinessAnswersIn, ReadinessRulesIn,
-    ReviewIn, TemplateIn,
+    AppraisalCompleteIn,
+    AppraisalIn,
+    CropCycleIn,
+    EnrollIn,
+    FpoIn,
+    PgsFarmerIn,
+    PgsReviewIn,
+    PilotSetupIn,
+    PlotIn,
+    ReadinessAnswersIn,
+    ReadinessRulesIn,
+    ReviewIn,
+    TemplateIn,
 )
 
 router = APIRouter(prefix="/organic-mvp", tags=["organic-mvp"])
@@ -126,7 +147,11 @@ async def list_crop_cycles(plot_id: uuid.UUID, session: Session, user: CurrentUs
 
 @router.get("/readiness/questions")
 async def readiness_questions(session: Session, user: CurrentUser):
-    rules = await session.scalar(select(OrganicReadinessRules).where(OrganicReadinessRules.status == "approved").order_by(OrganicReadinessRules.approved_at.desc()))
+    rules = await session.scalar(
+        select(OrganicReadinessRules)
+        .where(OrganicReadinessRules.status == "approved")
+        .order_by(OrganicReadinessRules.approved_at.desc())
+    )
     return {"status": "ready" if rules else "Pilot setup required", "version": rules.version if rules else None,
             "questions": rules.questions if rules else []}
 
@@ -134,7 +159,11 @@ async def readiness_questions(session: Session, user: CurrentUser):
 @router.post("/farms/{farm_id}/readiness")
 async def assess_readiness(farm_id: uuid.UUID, body: ReadinessAnswersIn, session: Session, user: CurrentUser):
     await _farm(session, farm_id, user.id)
-    rules = await session.scalar(select(OrganicReadinessRules).where(OrganicReadinessRules.status == "approved").order_by(OrganicReadinessRules.approved_at.desc()))
+    rules = await session.scalar(
+        select(OrganicReadinessRules)
+        .where(OrganicReadinessRules.status == "approved")
+        .order_by(OrganicReadinessRules.approved_at.desc())
+    )
     if rules is None:
         raise ConflictError("Readiness questions await expert review.")
     result = score_readiness(body.answers, {"questions": rules.questions, **rules.scoring})
@@ -210,7 +239,13 @@ async def crop_plan(cycle_id: uuid.UUID, session: Session, user: CurrentUser):
     if cycle is None:
         raise NotFoundError("Crop cycle not found.")
     await _plot(session, cycle.plot_id, user.id)
-    tasks = (await session.scalars(select(OrganicScheduledTask).where(OrganicScheduledTask.crop_cycle_id == cycle_id).order_by(OrganicScheduledTask.due_on))).all()
+    tasks = (
+        await session.scalars(
+            select(OrganicScheduledTask)
+            .where(OrganicScheduledTask.crop_cycle_id == cycle_id)
+            .order_by(OrganicScheduledTask.due_on)
+        )
+    ).all()
     return {"status": "ready" if tasks else "Crop plan awaiting agronomist approval",
             "tasks": [{"id": str(t.id), "due_on": t.due_on, "title_ta": t.title_ta,
                        "body_ta": t.body_ta, "title_en": t.title_en, "body_en": t.body_en,
@@ -228,7 +263,18 @@ async def setup_pilot(body: PilotSetupIn, session: Session, admin: AdminContextD
     values = body.model_dump()
     values["fpo_name"] = fpo.name if fpo else None
     values["district"] = fpo.district if fpo else body.district
-    pilot = OrganicPilot(**values, status="setup_required" if not (fpo and values["district"] and body.crop_ids and body.agronomist_user_id and body.certification_pathway) else "configured")
+    pilot = OrganicPilot(
+        **values,
+        status="setup_required"
+        if not (
+            fpo
+            and values["district"]
+            and body.crop_ids
+            and body.agronomist_user_id
+            and body.certification_pathway
+        )
+        else "configured",
+    )
     session.add(pilot)
     await session.commit()
     return {"id": str(pilot.id), "statuses": _pilot_status(pilot)}
@@ -280,7 +326,17 @@ async def update_pilot(pilot_id: uuid.UUID, body: PilotSetupIn, session: Session
     values["district"] = fpo.district if fpo else body.district
     for key, value in values.items():
         setattr(pilot, key, value)
-    pilot.status = "configured" if (pilot.fpo_id and pilot.district and pilot.crop_ids and pilot.agronomist_user_id and pilot.certification_pathway) else "setup_required"
+    pilot.status = (
+        "configured"
+        if (
+            pilot.fpo_id
+            and pilot.district
+            and pilot.crop_ids
+            and pilot.agronomist_user_id
+            and pilot.certification_pathway
+        )
+        else "setup_required"
+    )
     await session.commit()
     return {"id": str(pilot.id), "statuses": _pilot_status(pilot)}
 
@@ -307,7 +363,12 @@ async def enroll(pilot_id: uuid.UUID, body: EnrollIn, session: Session, admin: A
     farm = await _farm(session, body.farm_id, body.farmer_user_id)
     if not body.consent_confirmed:
         raise ValidationError("Farmer consent is required.")
-    existing = await session.scalar(select(OrganicPilotEnrollment).where(OrganicPilotEnrollment.pilot_id == pilot_id, OrganicPilotEnrollment.farm_id == farm.id))
+    existing = await session.scalar(
+        select(OrganicPilotEnrollment).where(
+            OrganicPilotEnrollment.pilot_id == pilot_id,
+            OrganicPilotEnrollment.farm_id == farm.id,
+        )
+    )
     if existing:
         raise ConflictError("Farm is already enrolled.")
     row = OrganicPilotEnrollment(pilot_id=pilot_id, farm_id=farm.id, farmer_user_id=body.farmer_user_id,
@@ -576,7 +637,14 @@ async def harvest_dashboard(pilot_id: uuid.UUID, session: Session, admin: AdminC
     if pilot is None:
         raise NotFoundError("Pilot not found.")
     statuses = _pilot_status(pilot)
-    enrolled = (await session.scalars(select(OrganicPilotEnrollment).where(OrganicPilotEnrollment.pilot_id == pilot_id, OrganicPilotEnrollment.status == "enrolled"))).all()
+    enrolled = (
+        await session.scalars(
+            select(OrganicPilotEnrollment).where(
+                OrganicPilotEnrollment.pilot_id == pilot_id,
+                OrganicPilotEnrollment.status == "enrolled",
+            )
+        )
+    ).all()
     rows = []
     for enrollment in enrolled:
         plots = (await session.scalars(select(OrganicPlot).where(OrganicPlot.farm_id == enrollment.farm_id))).all()

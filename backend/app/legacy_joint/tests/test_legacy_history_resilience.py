@@ -1,12 +1,13 @@
 from types import SimpleNamespace
 
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+from PIL import Image
+
 from app.core.database import get_session
 from app.legacy_joint import api_router as api
 from app.legacy_joint.api_router import require_legacy_joint_controlled_tester, router
 from app.legacy_joint.runtime import JointPrediction
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
-from PIL import Image
 
 
 def test_prediction_is_returned_when_history_persistence_fails(monkeypatch) -> None:

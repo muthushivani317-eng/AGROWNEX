@@ -1,0 +1,80 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+dist-check/
+web-build/
+expo-env.d.ts
+
+# tests
+coverage/
+
+# env
+.env
+
+# Native
+.kotlin/
+*.orig.*
+
+# Firebase native config (real files are per-project; keep only *.example in git).
+# Download the real google-services.json / GoogleService-Info.plist from the
+# Firebase Console and place them next to app.json.
+/google-services.json
+/GoogleService-Info.plist
+
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# iOS remains Expo-generated and untracked.
+/ios
+
+# Android is maintained as a tracked bare native project.
+# The existing global rules above (*.jks, *.p12, *.p8, *.key, *.pem)
+# already protect any keystore/certificate file under android/ too.
+# Only the Firebase config copy needs its own explicit rule, since the
+# existing /google-services.json rule only matches the root copy.
+/android/app/google-services.json
+
+# Local stale native-project backups must never be committed.
+/android.backup-before-standalone-*/
+
+# --- Root-level scratch / debug artifacts (never real source) ---
+.codex-work/
+.codex_tmp/
+.codex_tmp_*
+.codex_*.txt
+.codex-*.xml
+.env.backup-*
+.tmp-web-export/
+_to_delete/
+/*.xml
+/*.png
+/*.log
+/*.txt
+/artifacts/
+/dist-*/
