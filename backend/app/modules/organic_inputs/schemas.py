@@ -346,3 +346,74 @@ class BatchSampleOut(BaseModel):
     unit: str | None
     storage_condition: str | None
     test_results: list[BatchTestResultOut] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# Procurement / inventory (Phase 3)
+# ---------------------------------------------------------------------------
+
+
+class ProcurementOfferIn(BaseModel):
+    offered_quantity: Decimal = Field(gt=0, max_digits=14, decimal_places=3)
+    unit: str = Field(min_length=1, max_length=32)
+    offered_unit_price: Decimal = Field(gt=0, max_digits=14, decimal_places=2)
+
+
+class ProcurementOfferOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    batch_id: uuid.UUID
+    offered_quantity: Decimal
+    unit: str
+    offered_unit_price: Decimal
+    status: str
+    offered_at: datetime
+    decided_at: datetime | None
+    rejection_reason: str | None
+
+
+class ProcurementOfferDecisionIn(BaseModel):
+    accept: bool
+    rejection_reason: str | None = Field(default=None, max_length=2000)
+
+
+class BatchReceiptIn(BaseModel):
+    received_quantity: Decimal = Field(gt=0, max_digits=14, decimal_places=3)
+    unit: str = Field(min_length=1, max_length=32)
+    condition_note: str | None = Field(default=None, max_length=2000)
+
+
+class BatchReceiptOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    received_quantity: Decimal
+    unit: str
+    received_at: datetime
+    condition_note: str | None
+
+
+class InventoryMovementIn(BaseModel):
+    movement_type: Literal["adjustment", "withdrawal"]
+    quantity_delta: Decimal = Field(max_digits=14, decimal_places=3)
+    note: str | None = Field(default=None, max_length=2000)
+
+
+class InventoryMovementOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    movement_type: str
+    quantity_delta: Decimal
+    note: str | None
+    created_at: datetime
+
+
+class InventoryLotOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    batch_id: uuid.UUID
+    product_type_id: uuid.UUID
+    quantity_available: Decimal
+    unit: str
+    unit_cost: Decimal
+    created_at: datetime
+    movements: list[InventoryMovementOut] = Field(default_factory=list)

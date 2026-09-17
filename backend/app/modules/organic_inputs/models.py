@@ -1,13 +1,15 @@
-"""Organic Inputs Marketplace ORM models — foundation phase.
+"""Organic Inputs Marketplace ORM models.
 
 Dynamic catalogue (category → product type → versioned definition), supplier
-onboarding, and production batches. Procurement, inventory, cart/orders and
-traceability are later phases and have no tables here yet (docs:
+onboarding, production batches, QC (inspection/sampling/testing), and now
+procurement (offer/accept/receive) + inventory tracking off received batches.
+Cart/orders (selling inventory onward to farmer-buyers) and traceability are
+still later phases with no tables here yet (docs:
 AGROWAI_ORGANIC_INPUTS_MARKETPLACE).
 
-Money is not modelled in this phase (no procurement offers yet); wherever a
-future phase adds it, use ``Numeric`` fixed-precision columns, never floats --
-see ``ProductionBatch.expected_procurement_price`` for the convention.
+Money uses ``Numeric`` fixed-precision columns, never floats -- see
+``ProductionBatch.expected_procurement_price`` and
+``BatchProcurementOffer.offered_unit_price`` for the convention.
 """
 
 from __future__ import annotations
@@ -35,6 +37,7 @@ from app.modules.organic_inputs.constants import (
     BatchStatus,
     CatalogStatus,
     NewProductRequestStatus,
+    OfferStatus,
     SupplierStatus,
 )
 from app.shared.base_model import GUID, Base, SoftDeleteMixin, TimestampMixin, UUIDMixin
@@ -408,3 +411,133 @@ class BatchTestResult(UUIDMixin, TimestampMixin, Base):
     notes: Mapped[str | None] = mapped_column(Text)
 
     sample: Mapped[BatchSample] = relationship(back_populates="test_results")
+
+
+class BatchProcurementOffer(UUIDMixin, TimestampMixin, Base):
+    """AgrowAI's offer to buy a quantity of an APPROVED/PARTIALLY_APPROVED batch.
+
+    Modelled as its own table (not columns on ProductionBatch) matching the
+    inspection/sample/test-result convention -- but unlike those, a batch can
+    only ever have ONE offer in this phase: BATCH_TRANSITIONS has no edge back
+    out of OFFER_REJECTED into a fresh PROCUREMENT_OFFERED, so there is no
+    renegotiation loop yet (an existing constraint from the foundation phase's
+    enum, not invented here). Money uses ``Numeric``, per this module's
+    convention (see ``ProductionBatch.expected_procurement_price``).
+    """
+
+    __tablename__ = "organic_inputs_batch_procurement_offers"
+    __table_args__ = (
+        UniqueConstraint("batch_id", name="uq_organic_inputs_offer_batch"),
+        CheckConstraint("offered_quantity > 0", name="ck_organic_inputs_offer_quantity_positive"),
+        CheckConstraint("offered_unit_price > 0", name="ck_organic_inputs_offer_price_positive"),
+    )
+
+    batch_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("organic_inputs_production_batches.id"), nullable=False, index=True
+    )
+    offered_quantity: Mapped[Decimal] = mapped_column(Numeric(14, 3), nullable=False)
+    unit: Mapped[str] = mapped_column(String(32), nullable=False)
+    offered_unit_price: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(16), nullable=False, default=OfferStatus.OFFERED.value, index=True
+    )
+    offered_by_admin_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID(), ForeignKey("admin_users.id")
+    )
+    offered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    rejection_reason: Mapped[str | None] = mapped_column(Text)
+
+
+class BatchReceipt(UUIDMixin, TimestampMixin, Base):
+    """Physical receipt of a batch AgrowAI has procured.
+
+    Creating this is the only way OFFER_ACCEPTED -> RECEIVED happens --
+    decide_batch cannot grant it directly, matching the evidence-gated
+    pattern from the QC phase (inspection/sample/test-result). This is also
+    what creates the batch's InventoryLot.
+    """
+
+    __tablename__ = "organic_inputs_batch_receipts"
+    __table_args__ = (
+        UniqueConstraint("offer_id", name="uq_organic_inputs_receipt_offer"),
+        CheckConstraint(
+            "received_quantity > 0", name="ck_organic_inputs_receipt_quantity_positive"
+        ),
+    )
+
+    batch_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("organic_inputs_production_batches.id"), nullable=False, index=True
+    )
+    offer_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("organic_inputs_batch_procurement_offers.id"), nullable=False
+    )
+    received_quantity: Mapped[Decimal] = mapped_column(Numeric(14, 3), nullable=False)
+    unit: Mapped[str] = mapped_column(String(32), nullable=False)
+    received_by_admin_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID(), ForeignKey("admin_users.id")
+    )
+    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    condition_note: Mapped[str | None] = mapped_column(Text)
+
+
+class InventoryLot(UUIDMixin, TimestampMixin, Base):
+    """AgrowAI-owned stock created when a procured batch is received.
+
+    One-to-one with ProductionBatch. This repo has no cart/orders yet (docs
+    section 1), so a lot deliberately does NOT carry its own status column --
+    its lifecycle (RECEIVED/QUARANTINED/RELEASED_FOR_SALE/SOLD_OUT/EXPIRED/
+    RECALLED) is read off the batch's own ``status`` (see decide_batch), which
+    avoids running two state machines for what is, in this phase, one batch
+    to one lot. ``quantity_available`` is this table's own mutable state,
+    changed only through an InventoryMovement row -- never edited directly.
+    """
+
+    __tablename__ = "organic_inputs_inventory_lots"
+    __table_args__ = (
+        UniqueConstraint("batch_id", name="uq_organic_inputs_inventory_lot_batch"),
+        CheckConstraint("quantity_available >= 0", name="ck_organic_inputs_lot_quantity_nonneg"),
+    )
+
+    batch_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("organic_inputs_production_batches.id"), nullable=False, index=True
+    )
+    product_type_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("organic_inputs_product_types.id"), nullable=False, index=True
+    )
+    receipt_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("organic_inputs_batch_receipts.id"), nullable=False
+    )
+    quantity_available: Mapped[Decimal] = mapped_column(Numeric(14, 3), nullable=False)
+    unit: Mapped[str] = mapped_column(String(32), nullable=False)
+    unit_cost: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
+
+    movements: Mapped[list[InventoryMovement]] = relationship(
+        back_populates="lot", lazy="selectin", cascade="all, delete-orphan"
+    )
+
+
+class InventoryMovement(UUIDMixin, TimestampMixin, Base):
+    """An audit-trail entry of a change to an InventoryLot's available quantity.
+
+    ``quantity_delta`` is signed (positive for the opening RECEIPT, negative
+    for a WITHDRAWAL); the lot's ``quantity_available`` is always the running
+    sum of its movements, never edited independently of one.
+    """
+
+    __tablename__ = "organic_inputs_inventory_movements"
+    __table_args__ = (
+        CheckConstraint("quantity_delta != 0", name="ck_organic_inputs_movement_delta_nonzero"),
+    )
+
+    lot_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("organic_inputs_inventory_lots.id"), nullable=False, index=True
+    )
+    movement_type: Mapped[str] = mapped_column(String(16), nullable=False)
+    quantity_delta: Mapped[Decimal] = mapped_column(Numeric(14, 3), nullable=False)
+    note: Mapped[str | None] = mapped_column(Text)
+    performed_by_admin_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID(), ForeignKey("admin_users.id")
+    )
+
+    lot: Mapped[InventoryLot] = relationship(back_populates="movements")
