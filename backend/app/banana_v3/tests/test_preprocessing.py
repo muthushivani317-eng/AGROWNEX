@@ -1,8 +1,9 @@
 from io import BytesIO
 
 import numpy as np
-from app.banana_v3.preprocessing import preprocess
 from PIL import Image
+
+from app.banana_v3.preprocessing import preprocess
 
 
 def test_preprocessing_is_nchw_float32():

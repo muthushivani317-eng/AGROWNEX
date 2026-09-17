@@ -1,8 +1,9 @@
 from io import BytesIO
 
 import numpy as np
-from app.banana_v3.inference_service import InferenceService
 from PIL import Image
+
+from app.banana_v3.inference_service import InferenceService
 
 
 class FakeRuntime:
