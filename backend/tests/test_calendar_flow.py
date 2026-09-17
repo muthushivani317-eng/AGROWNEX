@@ -6,6 +6,9 @@ import uuid
 from datetime import UTC, date, datetime
 
 import pytest
+from tests.weather_fixture import build_raw
+
+from app.core.timezone import today_ist
 from app.modules.auth.models import User
 from app.modules.calendar.constants import EventStatus, WeatherAdvisory, WeatherDependency
 from app.modules.calendar.exceptions import (
@@ -26,8 +29,6 @@ from app.modules.notifications.sources import NotificationSources
 from app.modules.weather.cache import WeatherCache
 from app.modules.weather.service import WeatherService
 
-from tests.weather_fixture import build_raw
-
 
 class FakeProvider:
     def __init__(self, raw: dict) -> None:
@@ -46,7 +47,9 @@ def _heavy_rain_raw() -> dict:
 
 
 def _today() -> date:
-    return datetime.now(UTC).date()
+    # Match CalendarService's day-boundary (IST, not UTC) — see
+    # app.core.timezone for why plain datetime.now(UTC).date() is wrong here.
+    return today_ist()
 
 
 async def _make_user(db_session, uid: str = "fb-cal-1") -> User:
