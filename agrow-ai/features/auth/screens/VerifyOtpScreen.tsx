@@ -120,7 +120,7 @@ export function VerifyOtpScreen() {
           <AgOtpInput light value={code} onChange={(value) => {
             setCode(value);
             if (showError) verify.reset();
-          }} onComplete={submit} error={showError} />
+          }} error={showError} />
 
           {showError ? <AuthErrorBanner testID="otp-verification-error" message={errorMessage} /> : null}
           {resendErrorMessage ? (

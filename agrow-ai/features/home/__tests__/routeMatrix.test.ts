@@ -21,6 +21,8 @@ describe("authenticated Home feature route matrix", () => {
       plantIdentifier: "/plant-identifier",
       soil: "/soil",
       nutrient: "/nutrient",
+      lcc: "/lcc",
+      inputs: "/inputs",
       intelligence: "/intelligence",
       memory: "/memory",
       cropRecommendation: "/crop-recommendation",

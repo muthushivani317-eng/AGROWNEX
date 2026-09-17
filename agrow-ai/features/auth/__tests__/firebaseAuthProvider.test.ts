@@ -414,6 +414,10 @@ describe('phone sign-in still enforces the admin allowlist', () => {
   });
 });
 jest.mock('@/services/apiClient', () => ({
-  api: { post: jest.fn(() => Promise.resolve({ data: {} })) },
+  api: {
+    post: jest.fn(() =>
+      Promise.resolve({ user: { farmer_ref: 'farmer_test_1' }, profile: null }),
+    ),
+  },
   configureApiAuth: jest.fn(),
 }));
