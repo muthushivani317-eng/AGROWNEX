@@ -48,6 +48,8 @@ from app.modules.memory.router import router as memory_router
 from app.modules.notifications.router import router as notifications_router
 from app.modules.nutrient.router import router as nutrient_router
 from app.modules.organic.router import router as organic_router
+from app.modules.organic_inputs.router import admin_router as organic_inputs_admin_router
+from app.modules.organic_inputs.router import router as organic_inputs_router
 from app.modules.organic_advisory.router import router as organic_advisory_router
 from app.modules.organic_logbook.router import router as organic_logbook_router
 from app.modules.organic_mvp.router import admin_router as organic_mvp_admin_router
@@ -109,6 +111,8 @@ api_router.include_router(organic_mvp_admin_router)
 api_router.include_router(organic_partner_router)
 api_router.include_router(organic_partner_admin_router)
 api_router.include_router(organic_partner_feed_router)
+api_router.include_router(organic_inputs_router)
+api_router.include_router(organic_inputs_admin_router)
 api_router.include_router(experts_router)
 api_router.include_router(consultations_router)
 api_router.include_router(soil_router)

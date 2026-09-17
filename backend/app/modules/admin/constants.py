@@ -26,6 +26,9 @@ class AdminRole(StrEnum):
     PROCUREMENT_MANAGER = "procurement_manager"
     AGRICULTURE_OFFICER = "agriculture_officer"
     CUSTOMER_SUPPORT = "customer_support"
+    # Organic Inputs Marketplace staff roles (docs: AGROWAI_ORGANIC_INPUTS_MARKETPLACE).
+    FIELD_VERIFIER = "field_verifier"
+    QUALITY_CONTROL = "quality_control"
 
 
 class AdminPermission(StrEnum):
@@ -45,6 +48,10 @@ class AdminPermission(StrEnum):
     VIEW_REVENUE = "view_revenue"
     VIEW_AI_COSTS = "view_ai_costs"
     MANAGE_SUPPORT = "manage_support"
+    # Organic Inputs Marketplace (docs: AGROWAI_ORGANIC_INPUTS_MARKETPLACE).
+    MANAGE_MARKETPLACE_CATALOG = "manage_marketplace_catalog"
+    MANAGE_MARKETPLACE_SUPPLIERS = "manage_marketplace_suppliers"
+    MANAGE_MARKETPLACE_QC = "manage_marketplace_qc"
 
 
 _ALL = tuple(AdminPermission)
@@ -80,6 +87,14 @@ ROLE_PERMISSIONS: dict[str, tuple[AdminPermission, ...]] = {
         AdminPermission.VIEW_DASHBOARD,
         AdminPermission.MANAGE_FARMERS,
         AdminPermission.MANAGE_SUPPORT,
+    ),
+    AdminRole.FIELD_VERIFIER.value: (
+        AdminPermission.VIEW_DASHBOARD,
+        AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS,
+    ),
+    AdminRole.QUALITY_CONTROL.value: (
+        AdminPermission.VIEW_DASHBOARD,
+        AdminPermission.MANAGE_MARKETPLACE_QC,
     ),
 }
 
