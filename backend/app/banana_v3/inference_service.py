@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from PIL import Image
@@ -80,7 +80,7 @@ class InferenceService:
             requires_human_review=True,
             runtime_backend=runtime,
             processing_time_ms=max(0, round((time.perf_counter() - started) * 1000)),
-            timestamp_utc=datetime.now(timezone.utc),
+            timestamp_utc=datetime.now(UTC),
         )
 
     def predict(
@@ -136,7 +136,7 @@ class InferenceService:
                 requires_human_review=status != ResultStatus.accepted,
                 runtime_backend=self.runtime.backend,
                 processing_time_ms=max(0, round((time.perf_counter() - started) * 1000)),
-                timestamp_utc=datetime.now(timezone.utc),
+                timestamp_utc=datetime.now(UTC),
             )
         except ImageValidationError as exc:
             response = self._error(request_id, exc.code, started)

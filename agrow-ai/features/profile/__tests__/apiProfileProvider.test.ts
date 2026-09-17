@@ -23,6 +23,7 @@ const apiGet = api.get as jest.Mock;
 
 const baseUser: AuthUser = {
   id: 'u1',
+  farmerRef: null,
   phone: '+919876543210',
   name: 'Muthu Kumar',
   email: null,

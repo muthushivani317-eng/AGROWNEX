@@ -204,7 +204,7 @@ def build_soil_plan(
             continue
         rate_value = rate.get("value")
         rate_unit = rate.get("unit")
-        if not isinstance(rate_value, (int, float)) or rate_value <= 0:
+        if not isinstance(rate_value, int | float) or rate_value <= 0:
             continue
         if rate_unit not in {"kg/ha", "tonne/ha"}:
             continue

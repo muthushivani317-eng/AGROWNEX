@@ -25,7 +25,7 @@ def load_image(source: bytes | str | Path | Image.Image) -> Image.Image:
             if len(source) > MAX_UPLOAD_BYTES:
                 raise ImageValidationError(DecisionCode.BV3_IMAGE_FORMAT_UNSUPPORTED)
             image = Image.open(BytesIO(source))
-        elif isinstance(source, (str, Path)):
+        elif isinstance(source, str | Path):
             image = Image.open(source)
         elif isinstance(source, Image.Image):
             image = source.copy()

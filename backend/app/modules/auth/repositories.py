@@ -8,8 +8,6 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import select
-
 from app.modules.auth.models import (
     LoginHistory,
     OtpRequest,
@@ -19,6 +17,7 @@ from app.modules.auth.models import (
 from app.modules.auth.profile_models import FarmerProfile
 from app.modules.auth.rbac_models import Role, UserRole
 from app.shared.base_repository import BaseRepository
+from sqlalchemy import select
 
 
 class OtpRepository(BaseRepository[OtpRequest]):

@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Query, status
-
 from app.modules.admin.dependencies import AdminContextDep
 from app.modules.auth.dependencies import CurrentUser
 from app.modules.inputs_marketplace.dependencies import InputsServiceDep
@@ -16,6 +14,7 @@ from app.modules.inputs_marketplace.schemas import (
     PlaceOrderIn,
 )
 from app.schemas.response import SuccessResponse, success
+from fastapi import APIRouter, Query, status
 
 router = APIRouter(prefix="/inputs", tags=["inputs-marketplace"])
 admin_router = APIRouter(prefix="/admin/inputs", tags=["admin-inputs-marketplace"])

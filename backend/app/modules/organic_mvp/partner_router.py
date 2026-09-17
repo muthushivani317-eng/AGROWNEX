@@ -5,11 +5,6 @@ import uuid
 from datetime import UTC, datetime
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel, Field, field_validator
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.database import get_session
 from app.core.exceptions import ConflictError, ForbiddenError, NotFoundError, ValidationError
 from app.modules.admin.constants import AdminRole
@@ -20,10 +15,19 @@ from app.modules.auth.models import User
 from app.modules.auth.security import generate_refresh_token, hash_token
 from app.modules.farms.models import Farm
 from app.modules.organic_mvp.models import (
-    OrganicFpo, OrganicPartnerApiKey, OrganicPartnerFarmerLink, OrganicPartnerOrganization,
-    OrganicPartnerStaff, OrganicPlot, OrganicReadiness,
+    OrganicFpo,
+    OrganicPartnerApiKey,
+    OrganicPartnerFarmerLink,
+    OrganicPartnerOrganization,
+    OrganicPartnerStaff,
+    OrganicPlot,
+    OrganicReadiness,
 )
 from app.modules.organic_mvp.schemas import FpoIn
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel, Field, field_validator
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/organic-partner", tags=["organic-partner"])
 admin_router = APIRouter(prefix="/admin/organic-partner", tags=["organic-partner-admin"])

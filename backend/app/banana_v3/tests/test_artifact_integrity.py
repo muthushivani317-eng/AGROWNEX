@@ -2,7 +2,6 @@ import hashlib
 import json
 
 import pytest
-
 from app.banana_v3.artifact_integrity import ArtifactIntegrityError, verify_artifacts
 
 

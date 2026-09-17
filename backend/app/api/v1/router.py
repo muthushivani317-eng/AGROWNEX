@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter
-
 from app.api.v1.health import router as health_router
 from app.banana_v3.api_router import router as banana_v3_router
 from app.crop_identity.router import router as crop_identity_router
@@ -48,15 +46,15 @@ from app.modules.memory.router import router as memory_router
 from app.modules.notifications.router import router as notifications_router
 from app.modules.nutrient.router import router as nutrient_router
 from app.modules.organic.router import router as organic_router
+from app.modules.organic_advisory.router import router as organic_advisory_router
 from app.modules.organic_inputs.router import admin_router as organic_inputs_admin_router
 from app.modules.organic_inputs.router import router as organic_inputs_router
-from app.modules.organic_advisory.router import router as organic_advisory_router
 from app.modules.organic_logbook.router import router as organic_logbook_router
-from app.modules.organic_mvp.router import admin_router as organic_mvp_admin_router
-from app.modules.organic_mvp.router import router as organic_mvp_router
 from app.modules.organic_mvp.partner_feed_router import router as organic_partner_feed_router
 from app.modules.organic_mvp.partner_router import admin_router as organic_partner_admin_router
 from app.modules.organic_mvp.partner_router import router as organic_partner_router
+from app.modules.organic_mvp.router import admin_router as organic_mvp_admin_router
+from app.modules.organic_mvp.router import router as organic_mvp_router
 from app.modules.produce.harvest_readiness_router import router as harvest_readiness_router
 from app.modules.produce.router import router as produce_router
 from app.modules.produce.traceability_router import router as traceability_router
@@ -68,6 +66,7 @@ from app.modules.support.router import router as support_router
 from app.modules.weather.router import router as weather_router
 from app.plant_identifier.router import router as plant_identifier_router
 from app.restricted_crops.api_router import router as restricted_crops_router
+from fastapi import APIRouter
 
 api_router = APIRouter()
 api_router.include_router(action_verification_router)

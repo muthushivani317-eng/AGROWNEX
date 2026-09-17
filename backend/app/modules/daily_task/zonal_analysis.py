@@ -24,7 +24,6 @@ types stay on.
 """
 from __future__ import annotations
 
-import uuid
 from datetime import UTC, datetime
 
 from app.modules.auth.models import User

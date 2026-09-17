@@ -6,8 +6,6 @@ handler is thin — all logic lives in `AuthService`.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, status
-
 from app.modules.auth.dependencies import AuthServiceDep, CurrentUser
 from app.modules.auth.schemas import (
     OtpSendRequest,
@@ -21,6 +19,7 @@ from app.modules.auth.schemas import (
 )
 from app.modules.auth.service import SessionResult
 from app.schemas.response import SuccessResponse, success
+from fastapi import APIRouter, status
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 

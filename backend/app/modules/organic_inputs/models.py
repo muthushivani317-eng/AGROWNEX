@@ -18,6 +18,14 @@ import uuid
 from datetime import date, datetime
 from decimal import Decimal
 
+from app.modules.organic_inputs.constants import (
+    BatchStatus,
+    CatalogStatus,
+    NewProductRequestStatus,
+    OfferStatus,
+    SupplierStatus,
+)
+from app.shared.base_model import GUID, Base, SoftDeleteMixin, TimestampMixin, UUIDMixin
 from sqlalchemy import (
     JSON,
     Boolean,
@@ -32,15 +40,6 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from app.modules.organic_inputs.constants import (
-    BatchStatus,
-    CatalogStatus,
-    NewProductRequestStatus,
-    OfferStatus,
-    SupplierStatus,
-)
-from app.shared.base_model import GUID, Base, SoftDeleteMixin, TimestampMixin, UUIDMixin
 
 
 class MarketplaceCategory(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):

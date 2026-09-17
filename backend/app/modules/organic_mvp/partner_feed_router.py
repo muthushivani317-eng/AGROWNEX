@@ -21,10 +21,6 @@ from __future__ import annotations
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.database import get_session
 from app.core.exceptions import NotFoundError
 from app.modules.auth.models import User
@@ -33,6 +29,9 @@ from app.modules.disease_risk.models import DiseaseRiskAlert
 from app.modules.farms.models import Farm
 from app.modules.organic_mvp.models import OrganicPartnerFarmerLink
 from app.modules.organic_mvp.partner_api_auth import PartnerApiKeyDep
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/partner-feed", tags=["partner-feed"])
 Session = Annotated[AsyncSession, Depends(get_session)]

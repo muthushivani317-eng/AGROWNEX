@@ -4,9 +4,8 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, Field
-
 from app.modules.inputs_marketplace.constants import InputCategory, InputOrderStatus
+from pydantic import BaseModel, Field
 
 
 class CatalogItemOut(BaseModel):

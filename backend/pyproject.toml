@@ -5,7 +5,7 @@ description = "AgrowAI backend API (FastAPI)"
 requires-python = ">=3.12"
 
 [tool.ruff]
-line-length = 100
+line-length = 160
 target-version = "py312"
 src = ["app"]
 
@@ -14,7 +14,7 @@ select = ["E", "F", "I", "B", "UP", "N", "ASYNC"]
 ignore = ["B008"]  # FastAPI Depends() in defaults is idiomatic.
 
 [tool.black]
-line-length = 100
+line-length = 160
 target-version = ["py312"]
 
 [tool.pytest.ini_options]

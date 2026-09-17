@@ -9,9 +9,6 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, FetchedValue, ForeignKey, Integer, String, event
-from sqlalchemy.orm import Mapped, mapped_column
-
 from app.modules.auth.constants import UserStatus
 from app.shared.base_model import (
     GUID,
@@ -20,6 +17,8 @@ from app.shared.base_model import (
     TimestampMixin,
     UUIDMixin,
 )
+from sqlalchemy import Boolean, DateTime, FetchedValue, ForeignKey, Integer, String, event
+from sqlalchemy.orm import Mapped, mapped_column
 
 
 class User(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):

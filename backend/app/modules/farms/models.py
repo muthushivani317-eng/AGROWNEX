@@ -12,6 +12,14 @@ from __future__ import annotations
 import uuid
 from datetime import date
 
+from app.modules.farms.constants import AreaSource, FarmStatus
+from app.shared.base_model import (
+    GUID,
+    Base,
+    SoftDeleteMixin,
+    TimestampMixin,
+    UUIDMixin,
+)
 from sqlalchemy import (
     JSON,
     Float,
@@ -22,15 +30,6 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from app.modules.farms.constants import AreaSource, FarmStatus
-from app.shared.base_model import (
-    GUID,
-    Base,
-    SoftDeleteMixin,
-    TimestampMixin,
-    UUIDMixin,
-)
 
 
 class Farm(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):

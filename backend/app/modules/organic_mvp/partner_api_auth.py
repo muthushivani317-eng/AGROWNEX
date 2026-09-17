@@ -14,14 +14,13 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import Depends, Header
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.database import get_session
 from app.core.exceptions import UnauthorizedError
 from app.modules.auth.security import verify_token
 from app.modules.organic_mvp.models import OrganicPartnerApiKey, OrganicPartnerOrganization
+from fastapi import Depends, Header
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @dataclass(frozen=True)

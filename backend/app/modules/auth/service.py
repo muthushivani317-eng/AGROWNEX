@@ -14,9 +14,6 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.logging import get_logger
 from app.core.security import verify_id_token
 from app.modules.auth.constants import (
@@ -57,6 +54,8 @@ from app.modules.auth.repositories import (
 from app.modules.auth.repository import UserRepository
 from app.modules.auth.schemas import ProfileUpdateRequest
 from app.modules.auth.security import generate_refresh_token, hash_token
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = get_logger("auth.service")
 

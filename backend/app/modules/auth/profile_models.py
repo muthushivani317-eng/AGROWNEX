@@ -8,9 +8,6 @@ from __future__ import annotations
 
 import uuid
 
-from sqlalchemy import Boolean, ForeignKey, Integer, String
-from sqlalchemy.orm import Mapped, mapped_column
-
 from app.shared.base_model import (
     GUID,
     Base,
@@ -18,6 +15,8 @@ from app.shared.base_model import (
     TimestampMixin,
     UUIDMixin,
 )
+from sqlalchemy import Boolean, ForeignKey, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column
 
 
 class FarmerProfile(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):

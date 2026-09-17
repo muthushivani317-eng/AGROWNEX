@@ -4,10 +4,20 @@ from __future__ import annotations
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import JSON, Boolean, Date, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
+from app.shared.base_model import GUID, Base, TimestampMixin, UUIDMixin
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Date,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column
-
-from app.shared.base_model import Base, GUID, TimestampMixin, UUIDMixin
 
 
 class OrganicFpo(UUIDMixin, TimestampMixin, Base):

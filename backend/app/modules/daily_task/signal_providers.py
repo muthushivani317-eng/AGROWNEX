@@ -23,13 +23,13 @@ from typing import Protocol
 from app.modules.auth.models import User
 from app.modules.calendar.service import CalendarService
 from app.modules.daily_task.constants import (
-    Confidence,
     DRAINAGE_HEAVY_RAIN_MM_24H,
     IRRIGATION_SUPPRESS_IF_RAIN_FORECAST_MM,
     IRRIGATION_SUPPRESS_IF_RAIN_WITHIN_MM,
     SIGNAL_VALIDITY_HOURS,
     SOWING_EXPECTED_EMERGENCE_DAYS_DEFAULT,
     SOWING_GRACE_PERIOD_DAYS,
+    Confidence,
     Severity,
     SignalType,
     SourceModule,

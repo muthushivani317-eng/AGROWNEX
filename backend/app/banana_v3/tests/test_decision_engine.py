@@ -1,5 +1,4 @@
 import numpy as np
-
 from app.banana_v3.decision_engine import disease_decision, healthy_decision
 
 

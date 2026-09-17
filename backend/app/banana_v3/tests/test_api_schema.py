@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from app.banana_v3.schemas import DiseaseBlock, GateBlock, PredictionResponse, ResultBlock
 
@@ -17,6 +17,6 @@ def test_response_schema_matches_contract():
         requires_human_review=True,
         runtime_backend="pytorch",
         processing_time_ms=1,
-        timestamp_utc=datetime.now(timezone.utc),
+        timestamp_utc=datetime.now(UTC),
     )
     assert response.result.class_id is None

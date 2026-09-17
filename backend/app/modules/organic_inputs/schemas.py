@@ -7,14 +7,13 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
-
 from app.modules.organic_inputs.constants import (
     BatchStatus,
     CatalogStatus,
     NewProductRequestStatus,
     SupplierStatus,
 )
+from pydantic import BaseModel, ConfigDict, Field
 
 # ---------------------------------------------------------------------------
 # Catalogue (admin write / public read)
