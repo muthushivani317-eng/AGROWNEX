@@ -50,9 +50,7 @@ def upgrade():
         sa.CheckConstraint(
             "offered_quantity > 0", name="ck_organic_inputs_offer_quantity_positive"
         ),
-        sa.CheckConstraint(
-            "offered_unit_price > 0", name="ck_organic_inputs_offer_price_positive"
-        ),
+        sa.CheckConstraint("offered_unit_price > 0", name="ck_organic_inputs_offer_price_positive"),
     )
     op.create_index(
         "ix_organic_inputs_offer_batch_id",
@@ -119,13 +117,9 @@ def upgrade():
         sa.Column("unit", sa.String(32), nullable=False),
         sa.Column("unit_cost", sa.Numeric(14, 2), nullable=False),
         sa.UniqueConstraint("batch_id", name="uq_organic_inputs_inventory_lot_batch"),
-        sa.CheckConstraint(
-            "quantity_available >= 0", name="ck_organic_inputs_lot_quantity_nonneg"
-        ),
+        sa.CheckConstraint("quantity_available >= 0", name="ck_organic_inputs_lot_quantity_nonneg"),
     )
-    op.create_index(
-        "ix_organic_inputs_lot_batch_id", "organic_inputs_inventory_lots", ["batch_id"]
-    )
+    op.create_index("ix_organic_inputs_lot_batch_id", "organic_inputs_inventory_lots", ["batch_id"])
     op.create_index(
         "ix_organic_inputs_lot_product_type_id",
         "organic_inputs_inventory_lots",
@@ -142,9 +136,7 @@ def upgrade():
         sa.Column("quantity_delta", sa.Numeric(14, 3), nullable=False),
         sa.Column("note", sa.Text()),
         sa.Column("performed_by_admin_id", GUID(), sa.ForeignKey("admin_users.id")),
-        sa.CheckConstraint(
-            "quantity_delta != 0", name="ck_organic_inputs_movement_delta_nonzero"
-        ),
+        sa.CheckConstraint("quantity_delta != 0", name="ck_organic_inputs_movement_delta_nonzero"),
     )
     op.create_index(
         "ix_organic_inputs_movement_lot_id", "organic_inputs_inventory_movements", ["lot_id"]

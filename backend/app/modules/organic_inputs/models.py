@@ -428,12 +428,8 @@ class BatchProcurementOffer(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "organic_inputs_batch_procurement_offers"
     __table_args__ = (
         UniqueConstraint("batch_id", name="uq_organic_inputs_offer_batch"),
-        CheckConstraint(
-            "offered_quantity > 0", name="ck_organic_inputs_offer_quantity_positive"
-        ),
-        CheckConstraint(
-            "offered_unit_price > 0", name="ck_organic_inputs_offer_price_positive"
-        ),
+        CheckConstraint("offered_quantity > 0", name="ck_organic_inputs_offer_quantity_positive"),
+        CheckConstraint("offered_unit_price > 0", name="ck_organic_inputs_offer_price_positive"),
     )
 
     batch_id: Mapped[uuid.UUID] = mapped_column(
@@ -500,9 +496,7 @@ class InventoryLot(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "organic_inputs_inventory_lots"
     __table_args__ = (
         UniqueConstraint("batch_id", name="uq_organic_inputs_inventory_lot_batch"),
-        CheckConstraint(
-            "quantity_available >= 0", name="ck_organic_inputs_lot_quantity_nonneg"
-        ),
+        CheckConstraint("quantity_available >= 0", name="ck_organic_inputs_lot_quantity_nonneg"),
     )
 
     batch_id: Mapped[uuid.UUID] = mapped_column(

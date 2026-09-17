@@ -992,9 +992,7 @@ async def create_procurement_offer(
     if batch.status not in {BatchStatus.APPROVED.value, BatchStatus.PARTIALLY_APPROVED.value}:
         raise ConflictError("An offer can only be made on an approved batch.")
     existing = await session.scalar(
-        select(BatchProcurementOffer.id)
-        .where(BatchProcurementOffer.batch_id == batch.id)
-        .limit(1)
+        select(BatchProcurementOffer.id).where(BatchProcurementOffer.batch_id == batch.id).limit(1)
     )
     if existing is not None:
         raise ConflictError("This batch already has a procurement offer.")

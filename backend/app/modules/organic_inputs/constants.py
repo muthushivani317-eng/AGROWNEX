@@ -186,6 +186,7 @@ BATCH_ADMIN_DECISIONS: dict[BatchStatus, set[BatchStatus]] = {
     },
 }
 
+
 class OfferStatus(StrEnum):
     """Status of a single AgrowAI-to-supplier procurement offer.
 
