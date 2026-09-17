@@ -20,18 +20,6 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from app.modules.admin.constants import (
-    DEFAULT_LANGUAGE,
-    AdminUserStatus,
-    BroadcastStatus,
-)
-from app.shared.base_model import (
-    GUID,
-    Base,
-    SoftDeleteMixin,
-    TimestampMixin,
-    UUIDMixin,
-)
 from sqlalchemy import (
     JSON,
     Boolean,
@@ -48,6 +36,19 @@ from sqlalchemy import (
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column
+
+from app.modules.admin.constants import (
+    DEFAULT_LANGUAGE,
+    AdminUserStatus,
+    BroadcastStatus,
+)
+from app.shared.base_model import (
+    GUID,
+    Base,
+    SoftDeleteMixin,
+    TimestampMixin,
+    UUIDMixin,
+)
 
 
 class AdminRoleModel(UUIDMixin, TimestampMixin, Base):

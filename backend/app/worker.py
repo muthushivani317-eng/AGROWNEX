@@ -16,6 +16,10 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from typing import Any
 
+from arq import cron
+from arq.connections import RedisSettings
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.config import settings
 from app.core.database import SessionLocal
 from app.core.logging import get_logger
@@ -31,9 +35,6 @@ from app.modules.notifications.jobs import (
 )
 from app.modules.produce.jobs import expire_stale_offers as _expire_stale_offers
 from app.modules.satellite.jobs import render_satellite_images as _render_satellite_images
-from arq import cron
-from arq.connections import RedisSettings
-from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = get_logger("worker")
 

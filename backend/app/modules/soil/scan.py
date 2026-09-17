@@ -239,9 +239,9 @@ def build_scan(inputs: ScanInputs) -> SoilScan:
     # (app/modules/satellite/constants.py) -- none of those strings ever
     # matched, so Soil Moisture silently showed "not enough data" even when a
     # usable satellite session existed for the farm.
-    _MOISTURE_STATUSES = {"very_dry", "dry", "adequate", "moist", "wet"}
+    _moisture_statuses = {"very_dry", "dry", "adequate", "moist", "wet"}
     moisture = next(
-        (o for o in usable_satellite if o.values.get("moisture_status") in _MOISTURE_STATUSES),
+        (o for o in usable_satellite if o.values.get("moisture_status") in _moisture_statuses),
         None,
     )
     if moisture is not None:

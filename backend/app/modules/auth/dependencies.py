@@ -10,6 +10,10 @@ import json
 from dataclasses import dataclass
 from typing import Annotated
 
+from fastapi import Depends, HTTPException, Request
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.database import get_session
 from app.core.exceptions import ForbiddenError, UnauthorizedError
 from app.core.logging import get_logger
@@ -18,9 +22,6 @@ from app.modules.auth.constants import RoleName, UserStatus
 from app.modules.auth.models import User
 from app.modules.auth.repositories import RoleRepository
 from app.modules.auth.service import AuthService
-from fastapi import Depends, HTTPException, Request
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy.ext.asyncio import AsyncSession
 
 _bearer = HTTPBearer(auto_error=False)
 audit_logger = get_logger("crop_identity.access")

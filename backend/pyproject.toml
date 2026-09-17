@@ -13,6 +13,13 @@ src = ["app"]
 select = ["E", "F", "I", "B", "UP", "N", "ASYNC"]
 ignore = ["B008"]  # FastAPI Depends() in defaults is idiomatic.
 
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.ruff.lint.per-file-ignores]
+# Bilingual (English/Tamil) disease-fact strings; wrapping would corrupt content.
+"app/disease_recommendations/registry.py" = ["E501"]
+
 [tool.black]
 line-length = 160
 target-version = ["py312"]

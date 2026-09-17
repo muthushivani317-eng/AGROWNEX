@@ -8,9 +8,10 @@ from __future__ import annotations
 
 import uuid
 
+from sqlalchemy import delete, select
+
 from app.modules.auth.profile_models import FarmerLanguage, FarmerPreference
 from app.shared.base_repository import BaseRepository
-from sqlalchemy import delete, select
 
 
 class FarmerPreferenceRepository(BaseRepository[FarmerPreference]):

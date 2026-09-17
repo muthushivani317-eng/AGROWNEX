@@ -4,6 +4,8 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
+from pydantic import BaseModel, ConfigDict, Field
+
 from app.modules.auth.models import User
 from app.modules.auth.profile_models import (
     FarmerLanguage,
@@ -11,7 +13,6 @@ from app.modules.auth.profile_models import (
     FarmerProfile,
 )
 from app.modules.farmers.constants import LANGUAGE_PATTERN
-from pydantic import BaseModel, ConfigDict, Field
 
 
 # --------------------------------------------------------------------------- #

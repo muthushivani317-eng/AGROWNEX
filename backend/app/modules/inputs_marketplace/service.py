@@ -4,6 +4,9 @@ import uuid
 from datetime import UTC, datetime
 from decimal import Decimal
 
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.exceptions import ForbiddenError, ValidationError
 from app.modules.admin.constants import AdminPermission
 from app.modules.admin.service import AdminContext
@@ -31,8 +34,6 @@ from app.modules.inputs_marketplace.schemas import (
     OrderOut,
     PlaceOrderIn,
 )
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def _catalog_out(item: InputCatalogItem) -> CatalogItemOut:

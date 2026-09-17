@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from fastapi import APIRouter
+
 from app.api.v1.health import router as health_router
 from app.banana_v3.api_router import router as banana_v3_router
 from app.crop_identity.router import router as crop_identity_router
@@ -66,7 +68,6 @@ from app.modules.support.router import router as support_router
 from app.modules.weather.router import router as weather_router
 from app.plant_identifier.router import router as plant_identifier_router
 from app.restricted_crops.api_router import router as restricted_crops_router
-from fastapi import APIRouter
 
 api_router = APIRouter()
 api_router.include_router(action_verification_router)

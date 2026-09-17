@@ -3,9 +3,10 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from app.shared.base_model import GUID, Base, TimestampMixin, UUIDMixin
 from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
+
+from app.shared.base_model import GUID, Base, TimestampMixin, UUIDMixin
 
 
 class DiseaseRiskAlert(UUIDMixin, TimestampMixin, Base):

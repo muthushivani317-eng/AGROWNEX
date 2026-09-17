@@ -9,6 +9,9 @@ from __future__ import annotations
 import asyncio
 from contextlib import asynccontextmanager
 
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from app.api.errors import register_exception_handlers
 from app.api.probes import router as probes_router
 from app.api.v1.router import api_router
@@ -26,8 +29,6 @@ from app.core.middleware import (
 )
 from app.legacy_joint import get_legacy_joint_runtime
 from app.legacy_joint.artifacts import LegacyJointArtifactError
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
 configure_logging()
 init_sentry()

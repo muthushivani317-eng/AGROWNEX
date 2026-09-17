@@ -4,7 +4,6 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from app.shared.base_model import GUID, Base, SoftDeleteMixin, TimestampMixin, UUIDMixin
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
@@ -17,6 +16,8 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.shared.base_model import GUID, Base, SoftDeleteMixin, TimestampMixin, UUIDMixin
 
 
 class InputCatalogItem(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
