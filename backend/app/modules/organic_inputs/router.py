@@ -1,10 +1,12 @@
-"""Organic Inputs Marketplace API — foundation phase.
+"""Organic Inputs Marketplace API.
 
 Dynamic catalogue (admin-managed, no code change needed for a new category or
-product type), supplier onboarding, and production-batch submission with a
-guarded state machine. Procurement, inventory, cart/orders, traceability,
-reviews/complaints and recalls are later phases with no routes here yet
-(docs: AGROWAI_ORGANIC_INPUTS_MARKETPLACE).
+product type), supplier onboarding, production-batch submission with a
+guarded state machine, QC (inspection/sampling/testing), and now procurement
+(offer/accept-or-reject/receive) and inventory tracking off received batches.
+Cart/orders (selling inventory onward to farmer-buyers), traceability and
+reviews/recalls are still later phases with no routes here yet (docs:
+AGROWAI_ORGANIC_INPUTS_MARKETPLACE).
 
 ``router`` (prefix "/organic-inputs") is farmer-facing: every farmer-owned
 row is scoped to the caller's own ``user_id`` server-side, never trusted from
@@ -41,15 +43,21 @@ from app.modules.organic_inputs.constants import (
     SUPPLIER_STATUS_MAY_SUBMIT_BATCH,
     BatchStatus,
     CatalogStatus,
+    InventoryMovementType,
     NewProductRequestStatus,
+    OfferStatus,
     SupplierStatus,
 )
 from app.modules.organic_inputs.models import (
     BatchDocument,
     BatchIngredient,
     BatchInspection,
+    BatchProcurementOffer,
+    BatchReceipt,
     BatchSample,
     BatchTestResult,
+    InventoryLot,
+    InventoryMovement,
     MarketplaceCategory,
     MarketplaceProductType,
     NewProductTypeRequest,
@@ -64,6 +72,8 @@ from app.modules.organic_inputs.schemas import (
     BatchDocumentIn,
     BatchInspectionIn,
     BatchOut,
+    BatchReceiptIn,
+    BatchReceiptOut,
     BatchSampleIn,
     BatchSampleOut,
     BatchTestResultIn,
@@ -72,9 +82,15 @@ from app.modules.organic_inputs.schemas import (
     CatalogStatusIn,
     CategoryIn,
     CategoryOut,
+    InventoryLotOut,
+    InventoryMovementIn,
+    InventoryMovementOut,
     NewProductTypeRequestDecisionIn,
     NewProductTypeRequestIn,
     NewProductTypeRequestOut,
+    ProcurementOfferDecisionIn,
+    ProcurementOfferIn,
+    ProcurementOfferOut,
     ProductTypeIn,
     ProductTypeOut,
     ProductTypeVersionIn,
@@ -637,6 +653,61 @@ async def submit_batch(batch_id: uuid.UUID, session: Session, user: CurrentUser)
     return {"status": batch.status}
 
 
+@router.get("/batches/{batch_id}/procurement-offer")
+async def get_my_procurement_offer(batch_id: uuid.UUID, session: Session, user: CurrentUser):
+    batch = await _my_batch(session, user.id, batch_id)
+    offer = await session.scalar(
+        select(BatchProcurementOffer).where(BatchProcurementOffer.batch_id == batch.id)
+    )
+    if offer is None:
+        raise NotFoundError("No procurement offer for this batch yet.")
+    return ProcurementOfferOut.model_validate(offer)
+
+
+@router.post("/batches/{batch_id}/procurement-offer/decision")
+async def decide_procurement_offer(
+    batch_id: uuid.UUID,
+    body: ProcurementOfferDecisionIn,
+    session: Session,
+    user: CurrentUser,
+):
+    """The SUPPLIER's own decision on AgrowAI's offer -- drives
+    PROCUREMENT_OFFERED -> OFFER_ACCEPTED/OFFER_REJECTED. decide_batch (an
+    admin endpoint) cannot grant either outcome; only the batch's own owner
+    may accept or reject an offer made to them. A rejected offer is final in
+    this phase -- BATCH_TRANSITIONS has no edge back out of OFFER_REJECTED,
+    so there is no re-offer/renegotiation loop yet."""
+    batch = await _my_batch(session, user.id, batch_id)
+    if batch.status != BatchStatus.PROCUREMENT_OFFERED.value:
+        raise ConflictError("This batch has no pending procurement offer to decide.")
+    offer = await session.scalar(
+        select(BatchProcurementOffer).where(
+            BatchProcurementOffer.batch_id == batch.id,
+            BatchProcurementOffer.status == OfferStatus.OFFERED.value,
+        )
+    )
+    if offer is None:
+        raise NotFoundError("No pending procurement offer found for this batch.")
+    offer.status = OfferStatus.ACCEPTED.value if body.accept else OfferStatus.REJECTED.value
+    offer.decided_at = datetime.now(UTC)
+    if not body.accept:
+        offer.rejection_reason = body.rejection_reason
+    batch.status = (
+        BatchStatus.OFFER_ACCEPTED.value if body.accept else BatchStatus.OFFER_REJECTED.value
+    )
+    session.add(
+        AuditLog(
+            role="farmer",
+            action="organic_inputs_procurement_offer_decided",
+            target="organic_inputs_production_batch",
+            target_id=str(batch.id),
+            meta={"actor_user_id": str(user.id), "accepted": body.accept},
+        )
+    )
+    await session.commit()
+    return {"status": batch.status}
+
+
 # ---------------------------------------------------------------------------
 # Production batches -- admin (Quality Control / Field Verifier)
 # ---------------------------------------------------------------------------
@@ -649,7 +720,10 @@ async def list_batches(
     status_filter: Annotated[BatchStatus | None, Query(alias="status")] = None,
 ):
     _require_permission(
-        admin, AdminPermission.MANAGE_MARKETPLACE_QC, AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS
+        admin,
+        AdminPermission.MANAGE_MARKETPLACE_QC,
+        AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS,
+        AdminPermission.MANAGE_MARKETPLACE_PROCUREMENT,
     )
     stmt = select(ProductionBatch).where(ProductionBatch.is_deleted.is_(False))
     if status_filter:
@@ -661,7 +735,10 @@ async def list_batches(
 @admin_router.get("/batches/{batch_id}")
 async def get_batch(batch_id: uuid.UUID, session: Session, admin: AdminContextDep):
     _require_permission(
-        admin, AdminPermission.MANAGE_MARKETPLACE_QC, AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS
+        admin,
+        AdminPermission.MANAGE_MARKETPLACE_QC,
+        AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS,
+        AdminPermission.MANAGE_MARKETPLACE_PROCUREMENT,
     )
     batch = await session.get(ProductionBatch, batch_id)
     if batch is None:
@@ -674,13 +751,22 @@ async def decide_batch(
     batch_id: uuid.UUID, body: BatchDecisionIn, session: Session, admin: AdminContextDep
 ):
     """Review-stage decisions (docs: acceptance criteria #5 -- a batch cannot
-    be sold without inspection/QC approval) AND the final testing-outcome
-    decision (TESTING -> RETEST_REQUIRED/APPROVED/PARTIALLY_APPROVED/REJECTED).
-    The testing outcome requires at least one real BatchTestResult already
-    recorded via POST .../samples/{sample_id}/test-results -- it can never be
-    granted from nothing."""
+    be sold without inspection/QC approval), the final testing-outcome
+    decision (TESTING -> RETEST_REQUIRED/APPROVED/PARTIALLY_APPROVED/REJECTED),
+    and the post-receipt inventory judgement calls (RECEIVED -> QUARANTINED/
+    RELEASED_FOR_SALE, QUARANTINED -> RELEASED_FOR_SALE/REJECTED,
+    RELEASED_FOR_SALE -> SOLD_OUT/EXPIRED/RECALLED) that need no supporting
+    evidence record of their own. The testing outcome requires at least one
+    real BatchTestResult already recorded via POST
+    .../samples/{sample_id}/test-results -- it can never be granted from
+    nothing. PROCUREMENT_OFFERED/OFFER_ACCEPTED/OFFER_REJECTED/RECEIVED are
+    deliberately NOT reachable here -- see the dedicated procurement-offer,
+    procurement-offer/decision and receipt endpoints below."""
     _require_permission(
-        admin, AdminPermission.MANAGE_MARKETPLACE_QC, AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS
+        admin,
+        AdminPermission.MANAGE_MARKETPLACE_QC,
+        AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS,
+        AdminPermission.MANAGE_MARKETPLACE_PROCUREMENT,
     )
     batch = await session.get(ProductionBatch, batch_id)
     if batch is None:
@@ -880,3 +966,240 @@ async def add_batch_test_result(
     )
     await session.commit()
     return BatchTestResultOut.model_validate(row)
+
+
+# ---------------------------------------------------------------------------
+# Procurement / inventory -- admin (Phase 3)
+# ---------------------------------------------------------------------------
+
+
+@admin_router.post("/batches/{batch_id}/procurement-offer")
+async def create_procurement_offer(
+    batch_id: uuid.UUID,
+    body: ProcurementOfferIn,
+    session: Session,
+    admin: AdminContextDep,
+):
+    """Extends AgrowAI's offer to buy from an APPROVED/PARTIALLY_APPROVED
+    batch and drives that -> PROCUREMENT_OFFERED -- the only way to leave
+    APPROVED/PARTIALLY_APPROVED; decide_batch cannot grant PROCUREMENT_OFFERED
+    directly. A batch can only ever get one offer in this phase -- see
+    OfferStatus."""
+    _require_permission(admin, AdminPermission.MANAGE_MARKETPLACE_PROCUREMENT)
+    batch = await session.get(ProductionBatch, batch_id)
+    if batch is None:
+        raise NotFoundError("Batch not found.")
+    if batch.status not in {BatchStatus.APPROVED.value, BatchStatus.PARTIALLY_APPROVED.value}:
+        raise ConflictError("An offer can only be made on an approved batch.")
+    existing = await session.scalar(
+        select(BatchProcurementOffer.id)
+        .where(BatchProcurementOffer.batch_id == batch.id)
+        .limit(1)
+    )
+    if existing is not None:
+        raise ConflictError("This batch already has a procurement offer.")
+    if body.unit != batch.unit:
+        raise ValidationError("Offer unit must match the batch's own unit.")
+    ceiling = batch.approved_quantity or batch.batch_quantity
+    if body.offered_quantity > ceiling:
+        raise ValidationError("Offered quantity cannot exceed the batch's approved quantity.")
+    row = BatchProcurementOffer(
+        batch_id=batch.id,
+        offered_by_admin_id=admin.admin.id,
+        offered_at=datetime.now(UTC),
+        status=OfferStatus.OFFERED.value,
+        **body.model_dump(),
+    )
+    session.add(row)
+    batch.status = BatchStatus.PROCUREMENT_OFFERED.value
+    session.add(
+        AuditLog(
+            admin_id=admin.admin.id,
+            role=admin.admin.role,
+            action="organic_inputs_procurement_offer_created",
+            target="organic_inputs_production_batch",
+            target_id=str(batch.id),
+            ip_address=admin.ip_address,
+            meta={
+                "offer_id": str(row.id),
+                "offered_quantity": str(body.offered_quantity),
+                "offered_unit_price": str(body.offered_unit_price),
+            },
+        )
+    )
+    await session.commit()
+    return ProcurementOfferOut.model_validate(row)
+
+
+@admin_router.get("/batches/{batch_id}/procurement-offer")
+async def get_procurement_offer(batch_id: uuid.UUID, session: Session, admin: AdminContextDep):
+    _require_permission(
+        admin,
+        AdminPermission.MANAGE_MARKETPLACE_PROCUREMENT,
+        AdminPermission.MANAGE_MARKETPLACE_QC,
+        AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS,
+    )
+    offer = await session.scalar(
+        select(BatchProcurementOffer).where(BatchProcurementOffer.batch_id == batch_id)
+    )
+    if offer is None:
+        raise NotFoundError("No procurement offer for this batch yet.")
+    return ProcurementOfferOut.model_validate(offer)
+
+
+@admin_router.post("/batches/{batch_id}/receipt")
+async def record_batch_receipt(
+    batch_id: uuid.UUID,
+    body: BatchReceiptIn,
+    session: Session,
+    admin: AdminContextDep,
+):
+    """Records the physical receipt of a procured batch and drives
+    OFFER_ACCEPTED -> RECEIVED -- the only way to reach RECEIVED; decide_batch
+    cannot grant it directly. Also creates the batch's InventoryLot together
+    with its opening RECEIPT movement, so a lot never exists without a
+    recorded reason for its starting balance."""
+    _require_permission(admin, AdminPermission.MANAGE_MARKETPLACE_PROCUREMENT)
+    batch = await session.get(ProductionBatch, batch_id)
+    if batch is None:
+        raise NotFoundError("Batch not found.")
+    if batch.status != BatchStatus.OFFER_ACCEPTED.value:
+        raise ConflictError("This batch has no accepted offer awaiting receipt.")
+    offer = await session.scalar(
+        select(BatchProcurementOffer).where(
+            BatchProcurementOffer.batch_id == batch.id,
+            BatchProcurementOffer.status == OfferStatus.ACCEPTED.value,
+        )
+    )
+    if offer is None:
+        raise NotFoundError("No accepted procurement offer found for this batch.")
+    if body.unit != offer.unit:
+        raise ValidationError("Received unit must match the accepted offer's unit.")
+    if body.received_quantity > offer.offered_quantity:
+        raise ValidationError("Received quantity cannot exceed the accepted offer's quantity.")
+    receipt = BatchReceipt(
+        batch_id=batch.id,
+        offer_id=offer.id,
+        received_by_admin_id=admin.admin.id,
+        received_at=datetime.now(UTC),
+        **body.model_dump(),
+    )
+    session.add(receipt)
+    await session.flush()
+    lot = InventoryLot(
+        batch_id=batch.id,
+        product_type_id=batch.product_type_id,
+        receipt_id=receipt.id,
+        quantity_available=body.received_quantity,
+        unit=body.unit,
+        unit_cost=offer.offered_unit_price,
+    )
+    lot.movements = [
+        InventoryMovement(
+            movement_type=InventoryMovementType.RECEIPT.value,
+            quantity_delta=body.received_quantity,
+            note="Initial receipt.",
+            performed_by_admin_id=admin.admin.id,
+        )
+    ]
+    session.add(lot)
+    batch.status = BatchStatus.RECEIVED.value
+    session.add(
+        AuditLog(
+            admin_id=admin.admin.id,
+            role=admin.admin.role,
+            action="organic_inputs_batch_received",
+            target="organic_inputs_production_batch",
+            target_id=str(batch.id),
+            ip_address=admin.ip_address,
+            meta={
+                "receipt_id": str(receipt.id),
+                "received_quantity": str(body.received_quantity),
+            },
+        )
+    )
+    await session.commit()
+    return BatchReceiptOut.model_validate(receipt)
+
+
+@admin_router.get("/batches/{batch_id}/inventory")
+async def get_batch_inventory(batch_id: uuid.UUID, session: Session, admin: AdminContextDep):
+    _require_permission(
+        admin,
+        AdminPermission.MANAGE_MARKETPLACE_PROCUREMENT,
+        AdminPermission.MANAGE_MARKETPLACE_QC,
+        AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS,
+    )
+    lot = await session.scalar(select(InventoryLot).where(InventoryLot.batch_id == batch_id))
+    if lot is None:
+        raise NotFoundError("No inventory lot for this batch yet.")
+    return InventoryLotOut.model_validate(lot)
+
+
+@admin_router.get("/inventory")
+async def list_inventory(
+    session: Session,
+    admin: AdminContextDep,
+    product_type_id: uuid.UUID | None = None,
+):
+    _require_permission(
+        admin,
+        AdminPermission.MANAGE_MARKETPLACE_PROCUREMENT,
+        AdminPermission.MANAGE_MARKETPLACE_QC,
+        AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS,
+    )
+    stmt = select(InventoryLot)
+    if product_type_id:
+        stmt = stmt.where(InventoryLot.product_type_id == product_type_id)
+    rows = (await session.scalars(stmt.order_by(InventoryLot.created_at.desc()))).all()
+    return [InventoryLotOut.model_validate(row) for row in rows]
+
+
+@admin_router.post("/batches/{batch_id}/inventory/movements")
+async def record_inventory_movement(
+    batch_id: uuid.UUID,
+    body: InventoryMovementIn,
+    session: Session,
+    admin: AdminContextDep,
+):
+    """Adjusts an inventory lot's available quantity for a reason other than
+    its opening receipt -- RECEIPT movements are only ever written by
+    record_batch_receipt. If this drains the lot to zero while the batch is
+    RELEASED_FOR_SALE, the batch is moved straight to SOLD_OUT: this repo has
+    no cart/orders yet (docs section 1) to trigger that transition on its
+    own, and leaving an empty lot marked "for sale" would be a stale status,
+    not an honest one."""
+    _require_permission(admin, AdminPermission.MANAGE_MARKETPLACE_PROCUREMENT)
+    batch = await session.get(ProductionBatch, batch_id)
+    if batch is None:
+        raise NotFoundError("Batch not found.")
+    lot = await session.scalar(select(InventoryLot).where(InventoryLot.batch_id == batch_id))
+    if lot is None:
+        raise NotFoundError("No inventory lot for this batch yet.")
+    new_quantity = lot.quantity_available + body.quantity_delta
+    if new_quantity < 0:
+        raise ValidationError("This movement would take available quantity below zero.")
+    movement = InventoryMovement(
+        lot_id=lot.id,
+        movement_type=body.movement_type,
+        quantity_delta=body.quantity_delta,
+        note=body.note,
+        performed_by_admin_id=admin.admin.id,
+    )
+    session.add(movement)
+    lot.quantity_available = new_quantity
+    if new_quantity == 0 and batch.status == BatchStatus.RELEASED_FOR_SALE.value:
+        batch.status = BatchStatus.SOLD_OUT.value
+    session.add(
+        AuditLog(
+            admin_id=admin.admin.id,
+            role=admin.admin.role,
+            action="organic_inputs_inventory_movement_recorded",
+            target="organic_inputs_production_batch",
+            target_id=str(batch.id),
+            ip_address=admin.ip_address,
+            meta={"movement_type": body.movement_type, "quantity_delta": str(body.quantity_delta)},
+        )
+    )
+    await session.commit()
+    return InventoryMovementOut.model_validate(movement)

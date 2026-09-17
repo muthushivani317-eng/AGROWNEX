@@ -52,6 +52,7 @@ class AdminPermission(StrEnum):
     MANAGE_MARKETPLACE_CATALOG = "manage_marketplace_catalog"
     MANAGE_MARKETPLACE_SUPPLIERS = "manage_marketplace_suppliers"
     MANAGE_MARKETPLACE_QC = "manage_marketplace_qc"
+    MANAGE_MARKETPLACE_PROCUREMENT = "manage_marketplace_procurement"
 
 
 _ALL = tuple(AdminPermission)
@@ -95,6 +96,10 @@ ROLE_PERMISSIONS: dict[str, tuple[AdminPermission, ...]] = {
     AdminRole.QUALITY_CONTROL.value: (
         AdminPermission.VIEW_DASHBOARD,
         AdminPermission.MANAGE_MARKETPLACE_QC,
+        # QC already owns the batch through APPROVED; extending them through
+        # procurement/receipt/inventory keeps one team accountable end-to-end
+        # rather than inventing a separate role this phase doesn't need yet.
+        AdminPermission.MANAGE_MARKETPLACE_PROCUREMENT,
     ),
 }
 

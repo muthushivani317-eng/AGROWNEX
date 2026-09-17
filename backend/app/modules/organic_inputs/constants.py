@@ -154,6 +154,15 @@ BATCH_TRANSITIONS: dict[BatchStatus, set[BatchStatus]] = {
 # TESTING only via POST .../samples/{sample_id}/test-results (a real
 # BatchTestResult). This dict is for the *outcome* decision only, once QC has
 # entered at least one test result -- see decide_batch's test-result guard.
+#
+# Procurement phase: APPROVED/PARTIALLY_APPROVED -> PROCUREMENT_OFFERED needs
+# a real BatchProcurementOffer (POST .../procurement-offer); PROCUREMENT_OFFERED
+# -> OFFER_ACCEPTED/OFFER_REJECTED is the SUPPLIER's decision, not admin's (POST
+# /organic-inputs/batches/{id}/procurement-offer/decision); OFFER_ACCEPTED ->
+# RECEIVED needs a real BatchReceipt (POST .../receipt). None of those four are
+# here for the same reason the QC transitions above aren't. RECEIVED onward is
+# a plain admin judgement call with no required evidence record, so those
+# three ARE listed below.
 BATCH_ADMIN_DECISIONS: dict[BatchStatus, set[BatchStatus]] = {
     BatchStatus.SUBMITTED: {BatchStatus.UNDER_REVIEW},
     BatchStatus.UNDER_REVIEW: {
@@ -168,7 +177,45 @@ BATCH_ADMIN_DECISIONS: dict[BatchStatus, set[BatchStatus]] = {
         BatchStatus.PARTIALLY_APPROVED,
         BatchStatus.REJECTED,
     },
+    BatchStatus.RECEIVED: {BatchStatus.QUARANTINED, BatchStatus.RELEASED_FOR_SALE},
+    BatchStatus.QUARANTINED: {BatchStatus.RELEASED_FOR_SALE, BatchStatus.REJECTED},
+    BatchStatus.RELEASED_FOR_SALE: {
+        BatchStatus.SOLD_OUT,
+        BatchStatus.EXPIRED,
+        BatchStatus.RECALLED,
+    },
 }
+
+class OfferStatus(StrEnum):
+    """Status of a single AgrowAI-to-supplier procurement offer.
+
+    A batch reaches PROCUREMENT_OFFERED/OFFER_ACCEPTED/OFFER_REJECTED at most
+    once in this phase -- BATCH_TRANSITIONS has no edge back out of
+    OFFER_REJECTED, so a rejected offer ends that batch's procurement path
+    rather than looping into renegotiation. That is an existing constraint
+    from the foundation phase, not a new one invented here.
+    """
+
+    OFFERED = "offered"
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
+
+
+class InventoryMovementType(StrEnum):
+    """Kinds of change to an InventoryLot.quantity_available.
+
+    RECEIPT is written only by record_batch_receipt (system-generated, the
+    lot's opening balance) -- ADJUSTMENT/WITHDRAWAL are the only types an
+    admin can record directly via the inventory-adjustment endpoint. There is
+    no SALE type yet: cart/orders don't exist in this repo (docs section 1),
+    so a manual WITHDRAWAL is the honest stand-in for stock leaving inventory
+    through whatever offline channel is actually moving it today.
+    """
+
+    RECEIPT = "receipt"
+    ADJUSTMENT = "adjustment"
+    WITHDRAWAL = "withdrawal"
+
 
 # Inspection outcomes recorded on BatchInspection -- deliberately just
 # pass/fail, entered by a human inspector; no auto-derivation from measurements.
