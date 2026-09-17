@@ -67,9 +67,6 @@ backend/model_artifacts/incoming/
 backend/agrowai_local_test.db
 backend/banana_v3_production_bundle.zip
 
-# --- Nested repo (own .git, never embed) ---
-agrow-ai/
-
 # --- AI tooling scratch/cache (2026-08 pre-release audit follow-up) ---
 .claude/
 .codegraph/

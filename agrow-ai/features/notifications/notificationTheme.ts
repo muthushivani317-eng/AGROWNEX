@@ -1,0 +1,16 @@
+export const notificationTheme = {
+  background: '#F7F5E9',
+  surface: '#FFFEF8',
+  surfaceSoft: '#EEF7EA',
+  ink: '#143F2D',
+  muted: '#5D6D65',
+  border: '#D4DDCF',
+  primary: '#18733D',
+  primarySoft: '#E7F3E4',
+  info: '#2563A8',
+  infoSoft: '#EAF2FF',
+  warning: '#A16207',
+  warningSoft: '#FFF3D6',
+  critical: '#C43D36',
+  criticalSoft: '#FDEBE8',
+} as const;

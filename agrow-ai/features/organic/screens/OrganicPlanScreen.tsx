@@ -1,0 +1,16 @@
+import { Alert, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { ArrowLeft } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
+import { AgButton, AgCard, AgEmptyState, AgErrorState, AgPressable, AgScreen, AgSkeleton, AgText } from '@/components/ui';
+import { useAppTheme } from '@/hooks/useAppTheme';
+import { useCreateOrganicPractice } from '../hooks/useOrganic';
+import { useOrganicPlan } from '../hooks/useOrganicPlan';
+import type { OrganicPlanKind } from '../integrationTypes';
+
+const practiceType = (kind: OrganicPlanKind) => kind === 'satellite' ? 'scouting' as const : kind === 'soil' ? 'amendment' as const : kind === 'disease' ? 'biological_treatment' as const : 'custom' as const;
+export function OrganicPlanScreen({ farmId }: { farmId: string }) {
+  const { t } = useTranslation(); const router = useRouter(); const { colors } = useAppTheme(); const plan = useOrganicPlan(farmId); const create = useCreateOrganicPractice(farmId);
+  return <AgScreen scroll><View className="flex-row items-center gap-2"><AgPressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel={t('common.back')} className="h-10 w-10 items-center justify-center"><ArrowLeft size={24} color={colors.text}/></AgPressable><AgText variant="headingM" weight="bold">{t('organic.planTitle')}</AgText></View><AgText color="muted" className="mt-2">{t('organic.planIntro')}</AgText>
+  {plan.isLoading ? <><AgSkeleton className="mt-4 h-28 w-full"/><AgSkeleton className="mt-3 h-28 w-full"/></> : plan.isError ? <AgErrorState message={t('organic.planError')} onRetry={() => void plan.refetch()}/> : !plan.data?.actions.length ? <AgEmptyState title={t('organic.noActions')} message={t('organic.noActionsMessage')}/> : plan.data.actions.map((action) => <AgCard key={action.id} className="mt-3"><View className="flex-row justify-between gap-2"><AgText weight="bold" className="flex-1">{action.title}</AgText><AgText variant="caption" color="primary">{t(`organic.planKind.${action.kind}`)}</AgText></View><AgText className="mt-2" variant="bodySmall">{action.description}</AgText>{action.scoutingOnly ? <AgText className="mt-2" variant="caption" color="muted">{t('organic.scoutingOnly')}</AgText> : null}<AgText className="mt-2" variant="caption" color="muted">{t(`organic.actionState.${action.state}`)}</AgText>{action.state === 'waiting_for_weather' ? <AgText className="mt-1" variant="caption" color="muted">{t('organic.weatherNotification')}</AgText> : null}<AgText className="mt-1" variant="caption" color="muted">{action.source.organization} · {action.source.reference}</AgText>{action.state === 'waiting_for_weather' ? <AgButton className="mt-3" size="sm" variant="secondary" title={t('organic.openCalendarToReschedule')} onPress={() => router.push('/calendar' as never)}/> : <AgButton className="mt-3" size="sm" variant="secondary" title={t(action.scoutingOnly ? 'organic.recordFinding' : 'organic.addToLogbook')} onPress={() => create.mutate({ type: practiceType(action.kind), title: action.title, notes: action.description, occurredAt: new Date().toISOString(), sourceActionId: action.sourceActionId }, { onSuccess: () => Alert.alert(t(action.scoutingOnly ? 'organic.findingRecorded' : 'organic.practiceSaved')) })}/>}</AgCard>)}</AgScreen>;
+}

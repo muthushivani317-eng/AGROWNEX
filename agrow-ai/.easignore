@@ -1,0 +1,44 @@
+# EAS uses this file instead of .gitignore when preparing the remote archive.
+# Keep its exclusions aligned with .gitignore and omit generated native output.
+node_modules/
+.expo/
+dist/
+dist-check/
+web-build/
+expo-env.d.ts
+coverage/
+.env
+.kotlin/
+*.orig.*
+/google-services.json
+/GoogleService-Info.plist
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+.metro-health-check*
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.DS_Store
+*.pem
+.env*.local
+*.tsbuildinfo
+/ios
+/android/app/google-services.json
+/android.backup-before-standalone-*/
+
+# Gradle/CMake output is regenerated remotely. Including it makes the archive
+# enormous and can exhaust the local temporary disk before upload.
+/android/.gradle/
+/android/build/
+/android/app/build/
+/android/app/.cxx/
+/android/.cxx/
+
+# Firebase Android client settings are required by the checked-in bare Android
+# project. They contain public client configuration (not a server credential)
+# and must be included only in the encrypted EAS build archive.
+!/google-services.json
+!/android/app/google-services.json

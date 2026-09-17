@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Design tokens — exact palette from docs/DESIGN_SYSTEM.md, expressed as
+ * space-separated RGB channels so Tailwind can apply the `<alpha-value>`
+ * modifier (e.g. `bg-primary/12`). The dark palette is applied automatically
+ * for the dark color scheme; the app can override the scheme at runtime via
+ * NativeWind's colorScheme API.
+ */
+@layer base {
+  :root {
+    --color-primary: 46 125 50; /* #2E7D32 */
+    --color-primary-light: 76 175 80; /* #4CAF50 */
+    --color-primary-dark: 27 94 32; /* #1B5E20 */
+
+    --color-success: 67 160 71; /* #43A047 */
+    --color-warning: 249 168 37; /* #F9A825 */
+    --color-danger: 229 57 53; /* #E53935 */
+    --color-info: 30 136 229; /* #1E88E5 */
+
+    --color-bg: 247 249 244; /* #F7F9F4 */
+    --color-surface: 255 255 255; /* #FFFFFF */
+    --color-card: 255 255 255; /* #FFFFFF */
+    --color-border: 229 231 235; /* #E5E7EB */
+
+    --color-text: 17 24 39; /* #111827 */
+    --color-text-muted: 107 114 128; /* #6B7280 */
+    --color-text-disabled: 156 163 175; /* #9CA3AF */
+
+    --color-on-primary: 255 255 255;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-primary: 76 175 80; /* #4CAF50 — lifted for contrast on dark */
+      --color-primary-light: 129 199 132; /* #81C784 */
+      --color-primary-dark: 46 125 50; /* #2E7D32 */
+
+      --color-success: 102 187 106; /* #66BB6A */
+      --color-warning: 255 202 40; /* #FFCA28 */
+      --color-danger: 239 83 80; /* #EF5350 */
+      --color-info: 66 165 245; /* #42A5F5 */
+
+      --color-bg: 18 18 18; /* #121212 */
+      --color-surface: 30 30 30; /* #1E1E1E */
+      --color-card: 37 37 37; /* #252525 */
+      --color-border: 51 51 51; /* #333333 */
+
+      --color-text: 255 255 255; /* #FFFFFF */
+      --color-text-muted: 189 189 189; /* #BDBDBD */
+      --color-text-disabled: 117 117 117; /* #757575 */
+
+      --color-on-primary: 12 20 15;
+    }
+  }
+}
