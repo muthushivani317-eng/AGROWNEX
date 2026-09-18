@@ -322,6 +322,39 @@ async def decide_new_product_request(
     return {"status": row.status}
 
 
+@admin_router.get("/categories")
+async def list_categories_admin(session: Session, admin: AdminContextDep):
+    """Every category regardless of status -- the farmer-facing GET only
+    returns ACTIVE ones, which is no use to an admin picking a category to
+    attach a new product type to, or reviewing a DRAFT/SUSPENDED one."""
+    _require_permission(admin, AdminPermission.MANAGE_MARKETPLACE_CATALOG)
+    rows = (
+        await session.scalars(
+            select(MarketplaceCategory)
+            .where(MarketplaceCategory.is_deleted.is_(False))
+            .order_by(MarketplaceCategory.display_order, MarketplaceCategory.name)
+        )
+    ).all()
+    return [CategoryOut.model_validate(row) for row in rows]
+
+
+@admin_router.get("/product-types")
+async def list_product_types_admin(
+    session: Session,
+    admin: AdminContextDep,
+    category_id: uuid.UUID | None = None,
+):
+    """Admin equivalent of the farmer-facing list -- every status, not just
+    ACTIVE, so an admin can find a DRAFT product type to publish a version
+    for, or a SUSPENDED one to reactivate."""
+    _require_permission(admin, AdminPermission.MANAGE_MARKETPLACE_CATALOG)
+    stmt = select(MarketplaceProductType).where(MarketplaceProductType.is_deleted.is_(False))
+    if category_id:
+        stmt = stmt.where(MarketplaceProductType.category_id == category_id)
+    rows = (await session.scalars(stmt.order_by(MarketplaceProductType.name))).all()
+    return [_product_type_out(row) for row in rows]
+
+
 # ---------------------------------------------------------------------------
 # Catalogue -- farmer-facing
 # ---------------------------------------------------------------------------

@@ -1,0 +1,14 @@
+.oi-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.oi-tabs button{background:transparent;color:var(--muted);border:1px solid var(--line);padding:10px 16px;border-radius:999px;font-weight:650}
+.oi-tabs button[aria-pressed="true"]{background:var(--leaf);color:#fff;border-color:var(--leaf)}
+.oi-pill{display:inline-block;padding:4px 10px;border-radius:999px;background:var(--mint);color:var(--green);font-size:12px;font-weight:700;text-transform:capitalize;white-space:nowrap}
+.oi-pill[data-status="rejected"],.oi-pill[data-status="offer_rejected"],.oi-pill[data-status="expired"],.oi-pill[data-status="recalled"]{background:#f8e7e4;color:var(--danger)}
+.oi-pill[data-status="suspended"],.oi-pill[data-status="clarification_required"],.oi-pill[data-status="retest_required"]{background:#fbf1d8;color:#8a6d1f}
+.oi-dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:14px 0}
+.oi-dl div{padding:10px 0;border-bottom:1px solid #e8ebe5}
+.oi-dl dt{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px}
+.oi-dl dd{margin:0;font-weight:650}
+.oi-decide{margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
+.oi-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.oi-note{color:var(--muted);font-size:13px}
+.oi-nested{margin-bottom:12px;padding:16px}

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowUpRight, Bell, BrainCircuit, CalendarDays, ChevronRight, CircleHelp, Cpu, FileCheck2, IndianRupee, Leaf, Mail, RefreshCw, Satellite, Search, ShieldCheck, ShoppingBasket, Sprout, Tractor, UserCheck, UserPlus, Users, WalletCards, type LucideIcon } from 'lucide-react';
 import { api } from './api';
 import { Card, DataTable, ErrorPanel, Loading } from './components';
-import { navigation } from './navigation';
+import { hasPermission, navigation } from './navigation';
 import type { AdminMe, JsonRecord, MetricCard, Page, Procurement } from './types';
 import { useResource } from './useResource';
 
@@ -66,7 +66,7 @@ export function DashboardPage({ me }: { me: AdminMe }) {
   const [search, setSearch] = useState('');
   const [epoch, setEpoch] = useState(0);
   const state = useResource(() => api<Overview>('/admin/dashboard'), [epoch]);
-  const can = (permission: AdminMe['permissions'][number]) => me.permissions.includes(permission);
+  const can = (permission: AdminMe['permissions'][number] | readonly AdminMe['permissions'][number][]) => hasPermission(me.permissions, permission);
   const counts = Object.fromEntries((state.data?.cards ?? []).map(card => [card.key,card.value]));
   const value = (key: string) => formatDashboardValue(counts[key]);
   const matches = navigation.filter(item => can(item.permission) && item.label.toLowerCase().includes(search.toLowerCase()));

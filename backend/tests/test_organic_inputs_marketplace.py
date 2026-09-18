@@ -34,6 +34,8 @@ from app.modules.organic_inputs.router import (
     decide_new_product_request,
     decide_supplier,
     get_my_batch,
+    list_categories_admin,
+    list_product_types_admin,
     my_supplier_profile,
     publish_product_type_version,
     set_product_type_status,
@@ -279,3 +281,45 @@ async def test_new_product_type_request_never_auto_sellable(db_session):
     # sellable MarketplaceProductType (an admin still creates that deliberately).
     count = len((await db_session.scalars(select(MarketplaceProductType))).all())
     assert count == 0
+
+
+@pytest.mark.asyncio
+async def test_admin_catalog_list_shows_every_status_and_is_catalog_gated(db_session):
+    """The admin list endpoints exist because the farmer-facing GET only
+    returns ACTIVE rows -- an admin needs to see a DRAFT category/product
+    type too (e.g. to publish its first version before activating it), and
+    Field Verifier/Quality Control (who lack MANAGE_MARKETPLACE_CATALOG)
+    must not be able to browse the catalogue via this route either."""
+    owner_user = User(firebase_uid="marketplace-owner-5", status="active")
+    field_verifier_user = User(firebase_uid="marketplace-fv-2", status="active")
+    db_session.add_all([owner_user, field_verifier_user])
+    await db_session.flush()
+    owner_ctx = _admin(owner_user, AdminRole.OWNER)
+    field_verifier_ctx = _admin(field_verifier_user, AdminRole.FIELD_VERIFIER)
+
+    category = await create_category(
+        CategoryIn(slug="soil-conditioners", name="Soil conditioners"), db_session, owner_ctx
+    )
+    product_type = await create_product_type(
+        ProductTypeIn(
+            category_id=category.id, slug="rock-phosphate", name="Rock phosphate"
+        ),
+        db_session,
+        owner_ctx,
+    )
+    # A fresh category defaults to ACTIVE; a fresh product type defaults to
+    # DRAFT until an admin explicitly activates it (set_product_type_status) --
+    # confirming here so the admin list assertions below aren't a fluke.
+    assert category.status == CatalogStatus.ACTIVE.value
+    assert product_type["status"] == CatalogStatus.DRAFT.value
+
+    categories = await list_categories_admin(db_session, owner_ctx)
+    assert any(row.id == category.id for row in categories)
+
+    product_types = await list_product_types_admin(db_session, owner_ctx)
+    assert any(row.id == uuid.UUID(product_type["id"]) for row in product_types)
+
+    with pytest.raises(ForbiddenError):
+        await list_categories_admin(db_session, field_verifier_ctx)
+    with pytest.raises(ForbiddenError):
+        await list_product_types_admin(db_session, field_verifier_ctx)
