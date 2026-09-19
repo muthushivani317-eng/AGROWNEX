@@ -1,6 +1,7 @@
 import { createReadStream, existsSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join, normalize } from 'node:path';
+import { applySecurityHeaders } from './security-headers.mjs';
 
 const root = join(process.cwd(), 'dist');
 const port = Number.parseInt(process.env.PORT || '4173', 10);
@@ -14,6 +15,7 @@ const mimeTypes = {
 };
 
 createServer((request, response) => {
+  applySecurityHeaders(response);
   const pathname = decodeURIComponent(new URL(request.url || '/', 'http://localhost').pathname);
   const relativePath = normalize(pathname).replace(/^(\.\.[/\\])+/, '').replace(/^[/\\]+/, '');
   let filePath = join(root, relativePath);
@@ -23,9 +25,6 @@ createServer((request, response) => {
   }
 
   response.setHeader('Content-Type', mimeTypes[extname(filePath)] || 'application/octet-stream');
-  response.setHeader('X-Content-Type-Options', 'nosniff');
-  response.setHeader('X-Frame-Options', 'DENY');
-  response.setHeader('Referrer-Policy', 'no-referrer');
   response.setHeader(
     'Cache-Control',
     filePath.includes(`${join(root, 'assets')}`) ? 'public, max-age=31536000, immutable' : 'no-cache',
