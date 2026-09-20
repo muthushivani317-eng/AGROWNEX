@@ -39,6 +39,20 @@ from app.modules.satellite.jobs import render_satellite_images as _render_satell
 logger = get_logger("worker")
 
 
+async def on_startup(ctx: dict[str, Any]) -> None:
+    """Fail fast on an unsafe production configuration (docs/SECURITY.md).
+
+    The API process guards itself via ``settings.validate_production()`` in
+    ``create_app()`` (main.py), but the worker boots independently (``arq
+    app.worker.WorkerSettings``) and was not running the same check --
+    letting an unsafe production config (wildcard CORS, dev secret, debug on,
+    etc.) reach farmer data unnoticed through background jobs even when the
+    API itself would refuse to start. Both processes share the same
+    ``settings`` object, so the same guard now applies to both.
+    """
+    settings.validate_production()
+
+
 async def _run(job: Callable[[AsyncSession], Awaitable[dict]]) -> dict:
     async with SessionLocal() as session:
         try:
@@ -93,6 +107,7 @@ async def render_satellite_images_job(
 
 class WorkerSettings:
     redis_settings = RedisSettings.from_dsn(settings.redis_url)
+    on_startup = on_startup
     functions = [
         refresh_market_prices,
         evaluate_weather_alerts,
