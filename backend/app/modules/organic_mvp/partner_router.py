@@ -227,6 +227,12 @@ async def delete_organization(organization_id: uuid.UUID, session: Session, admi
     for row in (await session.scalars(select(OrganicPartnerFarmerLink).where(
             OrganicPartnerFarmerLink.organization_id == organization_id))).all():
         await session.delete(row)
+    # Without an ORM `relationship()` between these mapped classes, the unit of
+    # work has no dependency graph to auto-order these deletes against the
+    # organization's own DELETE, so flushing here forces the child rows to be
+    # removed first -- otherwise Postgres rejects the organization delete with
+    # a foreign key violation even though the child deletes are already queued.
+    await session.flush()
     session.add(AuditLog(admin_id=admin.admin.id, role=admin.admin.role,
         action="organic_partner_org_deleted", target="organic_partner_org", target_id=str(organization.id),
         ip_address=admin.ip_address,
