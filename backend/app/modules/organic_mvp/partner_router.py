@@ -133,6 +133,34 @@ async def list_fpos(session: Session, admin: AdminContextDep):
     ]
 
 
+@admin_router.delete("/fpos/{fpo_id}")
+async def delete_fpo(fpo_id: uuid.UUID, session: Session, admin: AdminContextDep):
+    """Remove a mistaken/duplicate FPO entry.
+
+    Previously there was no way to remove an FPO once created via POST
+    /fpos -- not even a test one -- with no UI or API path and no
+    `deleted_at` column on the table. Refuses to delete an FPO that
+    already has a linked partner organization, since that link would be
+    left dangling.
+    """
+    _platform(admin)
+    fpo = await session.get(OrganicFpo, fpo_id)
+    if fpo is None:
+        raise NotFoundError("FPO not found.")
+    linked = await session.scalar(select(OrganicPartnerOrganization).where(
+        OrganicPartnerOrganization.fpo_id == fpo_id,
+    ))
+    if linked is not None:
+        raise ConflictError("This FPO has a linked partner organization; remove that first.")
+    session.add(AuditLog(admin_id=admin.admin.id, role=admin.admin.role,
+        action="organic_fpo_deleted", target="organic_fpo", target_id=str(fpo.id),
+        ip_address=admin.ip_address,
+        meta={"name": fpo.name, "district": fpo.district, "is_test": fpo.is_test}))
+    await session.delete(fpo)
+    await session.commit()
+    return {"status": "deleted"}
+
+
 @admin_router.get("/organizations")
 async def list_organizations(session: Session, admin: AdminContextDep):
     """All partner organizations (FPO / KVK / agri-community), for the Owner

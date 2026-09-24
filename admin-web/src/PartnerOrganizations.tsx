@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, PlusCircle, RefreshCw, Search, ShieldCheck, UserPlus } from 'lucide-react';
+import { Building2, PlusCircle, RefreshCw, Search, ShieldCheck, Trash2, UserPlus } from 'lucide-react';
 import { getCsrfToken } from './api';
 import { getConfig } from './config';
 import { Card, DataTable, ErrorPanel, Loading, PageTitle } from './components';
@@ -41,6 +41,7 @@ export function PartnerOrganizationsPage() {
   const [fpoBusy, setFpoBusy] = useState(false);
   const [fpoError, setFpoError] = useState('');
   const [fpoSuccess, setFpoSuccess] = useState('');
+  const [fpoDeletingId, setFpoDeletingId] = useState('');
 
   // New organization
   const [orgName, setOrgName] = useState('');
@@ -78,6 +79,17 @@ export function PartnerOrganizationsPage() {
       await fpos.reload();
     } catch (cause) { setFpoError(cause instanceof Error ? cause.message : 'Could not create FPO.'); }
     finally { setFpoBusy(false); }
+  }
+
+  async function deleteFpo(id: string, name: string) {
+    if (!window.confirm(`Delete FPO "${name}"? This cannot be undone.`)) return;
+    setFpoDeletingId(id); setFpoError(''); setFpoSuccess('');
+    try {
+      await partnerRequest<{ status: string }>(`/admin/organic-partner/fpos/${id}`, 'DELETE');
+      setFpoSuccess(`FPO "${name}" deleted.`);
+      await fpos.reload();
+    } catch (cause) { setFpoError(cause instanceof Error ? cause.message : 'Could not delete FPO.'); }
+    finally { setFpoDeletingId(''); }
   }
 
   async function createOrganization() {
@@ -145,8 +157,11 @@ export function PartnerOrganizationsPage() {
       </div>
       <h3 style={{ marginTop: 22 }}>Existing FPOs ({fpos.data?.length ?? 0})</h3>
       {fpos.data && fpos.data.length > 0
-        ? <DataTable columns={['Name', 'District', 'Registration ref.', 'Type']}
-            rows={fpos.data.map(f => [f.name, f.district, f.registration_reference ?? '—', f.is_test ? 'Test' : 'Real'])} />
+        ? <DataTable columns={['Name', 'District', 'Registration ref.', 'Type', 'Actions']}
+            rows={fpos.data.map(f => [f.name, f.district, f.registration_reference ?? '—', f.is_test ? 'Test' : 'Real',
+              <button disabled={fpoDeletingId === f.id} onClick={() => void deleteFpo(f.id, f.name)} style={{ background: 'var(--danger)' }}>
+                <Trash2 size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 6 }}/>{fpoDeletingId === f.id ? 'Deleting…' : 'Delete'}
+              </button>])} />
         : <p>No FPOs recorded yet.</p>}
     </Card>
 

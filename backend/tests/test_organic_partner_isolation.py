@@ -1,8 +1,10 @@
 """Partner organizations must never inherit platform-admin or other-org access."""
+import uuid
+
 import pytest
 from sqlalchemy import select
 
-from app.core.exceptions import ForbiddenError, NotFoundError
+from app.core.exceptions import ConflictError, ForbiddenError, NotFoundError
 from app.modules.auth.models import User
 from app.modules.admin.constants import AdminRole
 from app.modules.admin.models import AdminUser
@@ -10,8 +12,8 @@ from app.modules.admin.service import AdminContext
 from app.modules.farms.models import Farm
 from app.modules.organic_mvp.models import OrganicPartnerOrganization, OrganicPartnerStaff
 from app.modules.organic_mvp.partner_router import (
-    LinkRequestIn, approve_farmer_link, farmer_organic_summary,
-    organization_farmers, request_farmer_link, revoke_farmer_link,
+    FpoIn, LinkRequestIn, approve_farmer_link, create_fpo, delete_fpo, farmer_organic_summary,
+    list_fpos, organization_farmers, request_farmer_link, revoke_farmer_link,
     create_organization, deactivate_staff, OrganizationIn,
 )
 
@@ -82,3 +84,49 @@ async def test_partner_identity_cannot_create_organization(db_session):
 
     with pytest.raises(ForbiddenError):
         await create_organization(OrganizationIn(name="Unapproved KVK", kind="kvk"), db_session, NotPlatformAdmin())
+
+
+@pytest.mark.asyncio
+async def test_delete_fpo(db_session):
+    platform_user = User(firebase_uid="partner-fpo-deleter", status="active")
+    db_session.add(platform_user)
+    await db_session.flush()
+    platform_admin = AdminUser(user_id=platform_user.id, role=AdminRole.OWNER.value)
+    db_session.add(platform_admin)
+    await db_session.flush()
+    admin_ctx = AdminContext(admin=platform_admin, permissions=frozenset())
+
+    created = await create_fpo(FpoIn(name="Delete Me FPO", district="Test District", is_test=True), db_session, admin_ctx)
+    fpo_id = uuid.UUID(created["id"])
+
+    with pytest.raises(NotFoundError):
+        await delete_fpo(uuid.uuid4(), db_session, admin_ctx)
+
+    class NotPlatformAdmin:
+        admin = type("Admin", (), {"role": "partner_manager"})()
+
+    with pytest.raises(ForbiddenError):
+        await delete_fpo(fpo_id, db_session, NotPlatformAdmin())
+
+    result = await delete_fpo(fpo_id, db_session, admin_ctx)
+    assert result == {"status": "deleted"}
+    assert await list_fpos(db_session, admin_ctx) == []
+
+
+@pytest.mark.asyncio
+async def test_delete_fpo_refuses_when_linked_to_organization(db_session):
+    platform_user = User(firebase_uid="partner-fpo-linked-deleter", status="active")
+    db_session.add(platform_user)
+    await db_session.flush()
+    platform_admin = AdminUser(user_id=platform_user.id, role=AdminRole.OWNER.value)
+    db_session.add(platform_admin)
+    await db_session.flush()
+    admin_ctx = AdminContext(admin=platform_admin, permissions=frozenset())
+
+    created = await create_fpo(FpoIn(name="Linked FPO", district="Test District", is_test=True), db_session, admin_ctx)
+    fpo_id = uuid.UUID(created["id"])
+    await create_organization(
+        OrganizationIn(name="Linked Org", kind="fpo", fpo_id=fpo_id, is_test=True), db_session, admin_ctx)
+
+    with pytest.raises(ConflictError):
+        await delete_fpo(fpo_id, db_session, admin_ctx)
