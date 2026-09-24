@@ -195,6 +195,7 @@ class ProduceListFilters(BaseModel):
     category: ProduceCategory | None = None
     availability_type: ProduceAvailabilityType | None = None
     search: str | None = Field(default=None, max_length=120)
+    organic_only: bool = False
     page: int = Field(default=1, ge=1)
     page_size: int = Field(default=20, ge=1, le=100)
 
@@ -305,6 +306,8 @@ class ProduceOfferSummaryOut(BaseModel):
     thumbnail_url: str | None
     image_count: int
     insight: ProcurementInsightOut | None
+    organic_certification_status: str | None
+    organic_certification_verified: bool
     created_at: datetime
     updated_at: datetime
 
@@ -314,6 +317,8 @@ class ProduceOfferSummaryOut(BaseModel):
         offer: ProduceOffer,
         *,
         insight: ProcurementInsight | None = None,
+        organic_certification_status: str | None = None,
+        organic_certification_verified: bool = False,
     ) -> ProduceOfferSummaryOut:
         images = offer.images or []
         return cls(
@@ -347,6 +352,8 @@ class ProduceOfferSummaryOut(BaseModel):
             thumbnail_url=(images[0].thumbnail_url or images[0].image_url) if images else None,
             image_count=len(images),
             insight=(ProcurementInsightOut.from_insight(insight) if insight else None),
+            organic_certification_status=organic_certification_status,
+            organic_certification_verified=organic_certification_verified,
             created_at=offer.created_at,
             updated_at=offer.updated_at,
         )
@@ -373,8 +380,15 @@ class ProduceOfferDetailOut(ProduceOfferSummaryOut):
         offer: ProduceOffer,
         *,
         insight: ProcurementInsight | None = None,
+        organic_certification_status: str | None = None,
+        organic_certification_verified: bool = False,
     ) -> ProduceOfferDetailOut:
-        base = ProduceOfferSummaryOut.from_offer(offer, insight=insight)
+        base = ProduceOfferSummaryOut.from_offer(
+            offer,
+            insight=insight,
+            organic_certification_status=organic_certification_status,
+            organic_certification_verified=organic_certification_verified,
+        )
         return cls(
             **base.model_dump(),
             block=offer.block,

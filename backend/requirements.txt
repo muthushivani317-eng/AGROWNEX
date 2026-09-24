@@ -1,5 +1,5 @@
 # AgrowAI backend (docs/BACKEND_ARCHITECTURE.md). Python 3.12+.
-fastapi==0.115.6
+fastapi==0.141.1  # bumped 2026-09-24: pulls starlette>=1.0, fixes 9 known CVEs in the pre-1.0 starlette line
 uvicorn[standard]==0.34.0
 pydantic==2.10.4
 pydantic-settings==2.7.1

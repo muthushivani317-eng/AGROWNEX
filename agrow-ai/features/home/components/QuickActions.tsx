@@ -20,6 +20,7 @@ import {
   MessageCircle,
   MessagesSquare,
   Plus,
+  Recycle,
   ShoppingBasket,
   Satellite,
   Sprout,
@@ -33,6 +34,7 @@ import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { AgText } from "@/components/ui";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { internalTestFlags } from "@/config/internalTestFlags";
+import { organicFeatureEnabled } from "@/features/organic/featureFlag";
 
 import { HOME_FEATURE_ROUTES, type HomeFeatureKey } from "../routes";
 
@@ -186,6 +188,21 @@ export const QUICK_ACTIONS: QuickAction[] = [
     subtitleKey: "home.actionOfflineKnowledgeDescription",
     icon: BookOpen,
   },
+  // Real, working screens + backend (features/organic: profile, plan,
+  // input library, logbook) already live in production behind
+  // EXPO_PUBLIC_AGROWAI_ORGANIC_ENABLED, just never linked from Home
+  // (2026-09-23 organic blueprint audit). Same gate the screens already
+  // enforce, so this card and the routes it opens fail closed together.
+  ...(organicFeatureEnabled
+    ? [
+        {
+          key: "organic" as const,
+          labelKey: "home.actionOrganic",
+          subtitleKey: "home.actionOrganicDescription",
+          icon: Recycle,
+        },
+      ]
+    : []),
   ...(internalTestFlags.internalFeatureTesting
     ? [
         {

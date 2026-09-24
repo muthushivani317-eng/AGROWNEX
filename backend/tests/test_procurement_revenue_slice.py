@@ -140,7 +140,7 @@ async def test_admin_case_update_is_rbac_guarded_and_internal_fields_never_leak(
     )
     assert case.status == ProcurementStatus.UNDER_REVIEW.value
     assert case.earned_commission is None
-    loaded_offer, _ = await produce.get_offer(farmer, offer.id)
+    loaded_offer, _, _ = await produce.get_offer(farmer, offer.id)
     payload = ProduceOfferDetailOut.from_offer_detail(loaded_offer).model_dump()
     assert "buyer_contact" not in payload
     assert "negotiation_notes" not in payload

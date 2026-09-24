@@ -172,6 +172,7 @@ class AdminQueries:
         search: str | None = None,
         category: str | None = None,
         availability_type: str | None = None,
+        organic_only: bool = False,
         limit: int = 20,
         offset: int = 0,
         assigned_admin_id: uuid.UUID | None = None,
@@ -180,6 +181,7 @@ class AdminQueries:
         from app.modules.admin.models import ProcurementCase
         from app.modules.auth.models import User
         from app.modules.auth.profile_models import FarmerProfile
+        from app.modules.organic.repositories import OrganicRepository, organic_certification_display
         from app.modules.produce.models import ProduceOffer
 
         base = (
@@ -215,6 +217,20 @@ class AdminQueries:
                     func.lower(ProduceOffer.crop_name).like(like),
                 )
             )
+        if organic_only:
+            from datetime import date as _date
+
+            from app.modules.organic.models import OrganicFarmProfile
+
+            base = base.where(
+                ProduceOffer.farm_id.in_(
+                    select(OrganicFarmProfile.farm_id).where(
+                        OrganicFarmProfile.certification_status == "verified",
+                        OrganicFarmProfile.certificate_expires_on.is_not(None),
+                        OrganicFarmProfile.certificate_expires_on >= _date.today(),
+                    )
+                )
+            )
 
         total = int(
             (
@@ -231,6 +247,10 @@ class AdminQueries:
             )
             .scalars()
             .all()
+        )
+
+        organic_profiles = await OrganicRepository(self.session).profiles_for_farms(
+            list({o.farm_id for o in offers})
         )
 
         user_ids = [o.user_id for o in offers]
@@ -284,6 +304,12 @@ class AdminQueries:
                 negotiable=o.negotiable,
                 pickup_available=o.pickup_available,
                 pickup_location=o.pickup_location,
+                organic_certification_status=organic_certification_display(
+                    organic_profiles.get(o.farm_id)
+                )[0],
+                organic_certification_verified=organic_certification_display(
+                    organic_profiles.get(o.farm_id)
+                )[1],
             )
             for o in offers
         ]
@@ -293,6 +319,7 @@ class AdminQueries:
         """Load the updated target directly; avoids scanning a paginated queue."""
         from app.modules.auth.models import User
         from app.modules.auth.profile_models import FarmerProfile
+        from app.modules.organic.repositories import OrganicRepository, organic_certification_display
         from app.modules.produce.models import ProduceOffer
 
         offer = await self.session.get(ProduceOffer, offer_id)
@@ -304,6 +331,10 @@ class AdminQueries:
             )
         ).scalar_one_or_none()
         user = await self.session.get(User, offer.user_id)
+        organic_profile = (
+            await OrganicRepository(self.session).profiles_for_farms([offer.farm_id])
+        ).get(offer.farm_id)
+        organic_status, organic_verified = organic_certification_display(organic_profile)
         return ProcurementRow(
             offer_id=offer.id,
             listing_ref=offer.listing_ref,
@@ -333,6 +364,8 @@ class AdminQueries:
             negotiable=offer.negotiable,
             pickup_available=offer.pickup_available,
             pickup_location=offer.pickup_location,
+            organic_certification_status=organic_status,
+            organic_certification_verified=organic_verified,
         )
 
     async def procurement_facts(

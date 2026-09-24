@@ -39,6 +39,24 @@ export const endpoints = {
     practices: "/organic-logbook/entries",
     plan: (farmId: string) => `/farms/${farmId}/organic-plan`,
     inputs: "/organic-inputs",
+    uploads: (farmId: string) => `/farms/${farmId}/organic-uploads`,
+  },
+  // organic-mvp is the separate readiness/PGS backend (see
+  // backend/app/modules/organic_mvp) -- its routes return the raw payload
+  // directly, not the { success, data } envelope the rest of the API uses,
+  // so callers use httpClient directly (see organicReadinessApi.ts), same
+  // pattern as cropRecommendation.predict below.
+  organicMvp: {
+    readinessQuestions: "/organic-mvp/readiness/questions",
+    readiness: (farmId: string) => `/organic-mvp/farms/${farmId}/readiness`,
+    plots: (farmId: string) => `/organic-mvp/farms/${farmId}/plots`,
+    cropCycles: (plotId: string) => `/organic-mvp/plots/${plotId}/crop-cycles`,
+    cropCyclePlan: (cycleId: string) => `/organic-mvp/crop-cycles/${cycleId}/plan`,
+    todayTask: (farmId: string) => `/organic-mvp/farms/${farmId}/today-task`,
+    pgsStatus: (farmId: string) => `/organic-mvp/farms/${farmId}/pgs`,
+    pgsPeerAssignments: "/organic-mvp/pgs/peer-assignments",
+    pgsPeerAssignmentSubmit: (appraisalId: string) =>
+      `/organic-mvp/pgs/peer-assignments/${appraisalId}/submit`,
   },
   // Backend routes live under /organic-partner (built first for the organic
   // certification pilot) but the mechanism is generic — any FPO/KVK/community

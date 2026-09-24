@@ -4,6 +4,7 @@ export type ProcurementFilters = {
   search: string;
   category: string;
   availabilityType: string;
+  organicOnly: boolean;
 };
 
 const categoryLabels: Record<string, string> = {
@@ -25,6 +26,7 @@ export function buildProcurementPath(filters: ProcurementFilters): string {
   if (search) query.set('search', search);
   if (filters.category) query.set('category', filters.category);
   if (filters.availabilityType) query.set('availability_type', filters.availabilityType);
+  if (filters.organicOnly) query.set('organic_only', 'true');
   return `/admin/procurement?${query.toString()}`;
 }
 
@@ -50,6 +52,12 @@ export function marketplacePickupLabel(listing: Procurement): string {
   if (listing.pickup_available === false) return 'Not offered';
   if (listing.pickup_available || listing.pickup_location) return 'Available';
   return 'Not provided';
+}
+
+export function marketplaceOrganicLabel(listing: Procurement): string {
+  if (listing.organic_certification_verified) return 'Verified';
+  if (listing.organic_certification_status === 'expired') return 'Expired';
+  return 'Not certified';
 }
 
 export function marketplacePriceLabel(listing: Procurement): string {

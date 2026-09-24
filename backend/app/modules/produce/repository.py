@@ -76,6 +76,7 @@ class ProduceRepository:
         statuses: tuple[str, ...] | None,
         harvest_from: date | None,
         search: str | None,
+        farm_ids: list[uuid.UUID] | None = None,
     ) -> Select[tuple[ProduceOffer]]:
         stmt = self._owned(user_id)
         if status:
@@ -86,6 +87,8 @@ class ProduceRepository:
             stmt = stmt.where(func.lower(ProduceOffer.crop_name).like(f"%{crop.lower()}%"))
         if farm_id:
             stmt = stmt.where(ProduceOffer.farm_id == farm_id)
+        if farm_ids is not None:
+            stmt = stmt.where(ProduceOffer.farm_id.in_(farm_ids))
         if category:
             stmt = stmt.where(ProduceOffer.product_category == category)
         if availability_type:
@@ -117,6 +120,7 @@ class ProduceRepository:
         order_by_harvest: bool = False,
         limit: int = 20,
         offset: int = 0,
+        farm_ids: list[uuid.UUID] | None = None,
     ) -> tuple[list[ProduceOffer], int]:
         base = self._filtered(
             user_id,
@@ -128,6 +132,7 @@ class ProduceRepository:
             statuses=statuses,
             harvest_from=harvest_from,
             search=search,
+            farm_ids=farm_ids,
         )
         total = int(
             (

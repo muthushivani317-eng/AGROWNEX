@@ -10,7 +10,7 @@ import uuid
 
 from fastapi import APIRouter, Query, UploadFile, status
 
-from app.modules.daily_task.constants import ResponseType
+from app.modules.daily_task.constants import MAX_TASKS_PER_FARMER_PER_DAY, ResponseType
 from app.modules.daily_task.dependencies import (
     CurrentUser,
     DailyTaskRepositoryDep,
@@ -51,10 +51,21 @@ MAX_VOICE_NOTE_SECONDS = 12  # 10s target + small tolerance for client-side roun
 # --------------------------------------------------------------------------- #
 @router.get("/today", response_model=SuccessResponse[TodayTasksResponse])
 async def get_today_tasks(current_user: CurrentUser, repo: DailyTaskRepositoryDep):
+    """`TodayTasksResponse.tasks` is capped at `MAX_TASKS_PER_FARMER_PER_DAY`
+    (the PRD's "at most two tasks a day" rule -- see
+    `daily_task/constants.py`). Generation already enforces this per run
+    (`ranking_engine.py`), but ACTIVE rows can still exceed the cap when
+    older tasks outlive their `valid_until` window without a farmer
+    response (see AGROWAI-BACKEND-2 / Sentry) -- so the read path re-applies
+    the same cap defensively instead of 500ing on `TodayTasksResponse`'s
+    validation. `tasks` is already ordered by `rank_position`, so slicing
+    keeps the highest-priority tasks, matching what generation would have
+    shown."""
     tasks = await repo.get_active_tasks_for_user(current_user.id)
+    shown = tasks[:MAX_TASKS_PER_FARMER_PER_DAY]
     data = TodayTasksResponse(
-        tasks=[_to_public(t) for t in tasks],
-        generated_at=tasks[0].created_at if tasks else _now(),
+        tasks=[_to_public(t) for t in shown],
+        generated_at=shown[0].created_at if shown else _now(),
     )
     return success(data)
 

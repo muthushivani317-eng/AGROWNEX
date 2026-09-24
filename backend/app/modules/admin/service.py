@@ -667,6 +667,7 @@ class AdminService:
         search: str | None = None,
         category: str | None = None,
         availability_type: str | None = None,
+        organic_only: bool = False,
         page: int,
         page_size: int,
     ) -> dict:
@@ -679,6 +680,7 @@ class AdminService:
             search=search,
             category=category,
             availability_type=availability_type,
+            organic_only=organic_only,
             limit=page_size,
             offset=offset,
             assigned_admin_id=ctx.admin.id,

@@ -29,6 +29,7 @@ describe("authenticated Home feature route matrix", () => {
       equipment: "/equipment",
       community: "/community",
       knowledge: "/knowledge",
+      organic: "/organic",
     });
     expect(Object.values(HOME_FEATURE_ROUTES)).not.toContain("/");
   });

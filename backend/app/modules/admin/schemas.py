@@ -308,6 +308,8 @@ class ProcurementRowOut(BaseModel):
     negotiable: bool = False
     pickup_available: bool = False
     pickup_location: str | None = None
+    organic_certification_status: str | None = None
+    organic_certification_verified: bool = False
 
     @classmethod
     def from_item(cls, item: dict) -> ProcurementRowOut:
@@ -351,6 +353,8 @@ class ProcurementRowOut(BaseModel):
             negotiable=row.negotiable,
             pickup_available=row.pickup_available,
             pickup_location=row.pickup_location,
+            organic_certification_status=row.organic_certification_status,
+            organic_certification_verified=row.organic_certification_verified,
         )
 
 

@@ -12,6 +12,17 @@ PGS_STATES = frozenset({
     "pgs_green_under_conversion", "pgs_organic", "non_compliance_review",
 })
 
+# Organic Readiness Check pathway codes. The original three are deliberately
+# soft/non-committal (never claims conversion readiness outright). The
+# blueprint's four (2026-09-23, owner-approved) make a stronger claim, so
+# they're additive, not a replacement -- an admin still has to author and
+# approve a rules version using them before any farmer sees a result, same
+# review gate as every other pathway here.
+READINESS_PATHWAYS = frozenset({
+    "learning", "pre_certification_trial", "eligibility_review",
+    "ready_full_conversion", "start_one_plot", "begin_soil_restoration", "not_ready",
+})
+
 
 def score_readiness(answers: dict, rules: dict) -> dict:
     """Score only a reviewed, versioned question set; reject incomplete answers."""

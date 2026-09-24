@@ -2781,6 +2781,8 @@ export const ta: TranslationSchema = {
     },
   },
   produce: {
+    organicVerified: "இயற்கை சான்றளிக்கப்பட்டது",
+    organicOnlyFilter: "இயற்கை சான்றளிக்கப்பட்டவை மட்டும்",
     procurementUnavailable:
       "உங்கள் உள்ளூர் பட்டியலைச் சேமிக்கலாம். வெளிப்புற கொள்முதல் சேவை இணைக்கப்படவில்லை.",
     readiness: {
@@ -4505,6 +4507,9 @@ export const ta: TranslationSchema = {
     actionOfflineKnowledge: "இணையமில்லா தமிழ் அறிவு",
     actionOfflineKnowledgeDescription:
       "இணையமின்றி நடைமுறைத் தமிழ் வயல் வழிகாட்டிகளைப் படிக்கவும்",
+    actionOrganic: "இயற்கை வேளாண்மை",
+    actionOrganicDescription:
+      "தயார்நிலை சோதனை, மாற்றுத் திட்டம், இயற்கை உள்ளீடுகள் மற்றும் குறிப்பேடு",
     recentActivity: "சமீபத்திய செயல்பாடு",
     activityFarm: "பண்ணை · {{name}}",
     activityProfile: "சுயவிவரம் அமைக்கப்பட்டது",
@@ -5235,6 +5240,14 @@ export const ta: TranslationSchema = {
     practiceSaved: "நடைமுறை பதிவேட்டில் சேர்க்கப்பட்டது.",
     titleRequired: "இந்த நடைமுறைக்குச் சுருக்கமான தலைப்பை உள்ளிடவும்.",
     loadError: "இயற்கை பண்ணைத் தகவலை ஏற்ற முடியவில்லை.",
+    quantityLabel: "அளவு", unitLabel: "அலகு", treatedAreaLabel: "பயன்படுத்திய பரப்பு (ஹெக்.)", costLabel: "செலவு (₹)",
+    outcomeLabel: "இது எப்படி பலனளித்தது?",
+    outcomeStatus: { not_reported: "தெரிவிக்கப்படவில்லை", improved: "மேம்பட்டது", no_change: "மாற்றமில்லை", worse: "மோசமானது", unknown: "உறுதியாக தெரியவில்லை" },
+    quantityUnitRequiredTogether: "அளவு மற்றும் அலகு இரண்டையும் உள்ளிடவும், அல்லது இரண்டையும் காலியாக விடவும்.",
+    quantityValue: "{{quantity}} {{unit}}", treatedAreaValue: "{{area}} ஹெக்டேரில் பயன்படுத்தப்பட்டது", costValue: "₹{{amount}}",
+    attachPhoto: "புகைப்படத்தை இணை", camera: "கேமரா", gallery: "கேலரி", photoAttached: "புகைப்படம் இணைக்கப்பட்டது", removePhoto: "புகைப்படத்தை நீக்கு",
+    evidenceUploadError: "புகைப்படத்தைப் பதிவேற்ற முடியவில்லை. இணைய இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.",
+    evidenceCount: "{{count}} புகைப்படம் இணைக்கப்பட்டுள்ளது",
     planTitle: "இயற்கை செயல் திட்டம்",
     planIntro: "நோய், மண், நாட்காட்டி, வானிலை மற்றும் செயற்கைக்கோள் பகுதிகளிலிருந்து ஆதாரமுள்ள செயல்கள். வானிலைக்காகக் காத்திருக்கும் செயல்களை இப்போது பதிவு செய்ய முடியாது.",
     planError: "இயற்கை செயல் திட்டத்தை ஏற்ற முடியவில்லை.",
@@ -5254,7 +5267,13 @@ export const ta: TranslationSchema = {
     privacyNotice: "நீங்கள் தேர்ந்தெடுத்த புலங்கள் மட்டுமே சேர்க்கப்படும். தனிப்பட்ட ஆதாரம் இயல்பாக மறைக்கப்படும்.",
     shareClassification: "வகைப்பாடு", shareLocation: "இடம்", shareEvidence: "ஆதாரம்", share: "பொதுப் பதிவைப் பகிர்", traceQr: "கண்டறியும் பதிவின் QR குறியீடு",
     weatherNotification: "ஆதாரமுள்ள வானிலை நேரம் ஏற்றதாகும்போது உங்களுக்கு அறிவிக்கப்படும்.", openCalendarToReschedule: "மதிப்பாய்வு அல்லது மறுதிட்டமிடல்", recordFinding: "வயல் ஆய்வு கண்டறிதலைப் பதிவு செய்", findingRecorded: "தொடர் நடவடிக்கைக்காக வயல் ஆய்வு கண்டறிதல் பதிவேட்டில் சேர்க்கப்பட்டது.",
-    inputLibrary: "இயற்கை இடுபொருள் நூலகம்", inputLibraryNotice: "படிக்க மட்டும். மனித மதிப்பாய்வாளர் ஒப்புதல் அளிக்கும் வரை பொது மூலப் பதிவுகள் அங்கீகரிக்கப்பட்ட இடுபொருட்கள் அல்ல.", searchInputs: "இயற்கை இடுபொருட்களைத் தேடுங்கள்", inputLibraryError: "இயற்கை இடுபொருள் நூலகத்தை ஏற்ற முடியவில்லை.", inputLibraryEmpty: "மதிப்பாய்வு செய்யப்பட்ட பதிவுகள் இல்லை", reviewedContentEmpty: "பொருந்தக்கூடிய மதிப்பாய்வு செய்யப்பட்ட உள்ளடக்கம் இல்லை. பயன்பாடு இடுபொருள் பரிந்துரையை உருவாக்காது.", catalogueApproved: "மனித ஒப்புதல் பெற்றது", sourcedNotApproved: "பொது மூலம் — ஒப்புதல் இல்லை", createShare: "பொதுப் பகிர்வை உருவாக்கு", revokeShare: "பொதுப் பகிர்வை ரத்து செய்", shareError: "பகிர்வை மாற்ற முடியவில்லை. இணைய இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.",
+    inputLibrary: "இயற்கை இடுபொருள் நூலகம்", inputLibraryNotice: "படிக்க மட்டும். மனித மதிப்பாய்வாளர் ஒப்புதல் அளிக்கும் வரை பொது மூலப் பதிவுகள் அங்கீகரிக்கப்பட்ட இடுபொருட்கள் அல்ல.", searchInputs: "இயற்கை இடுபொருட்களைத் தேடுங்கள்", inputLibraryError: "இயற்கை இடுபொருள் நூலகத்தை ஏற்ற முடியவில்லை.", inputLibraryEmpty: "மதிப்பாய்வு செய்யப்பட்ட பதிவுகள் இல்லை", reviewedContentEmpty: "பொருந்தக்கூடிய மதிப்பாய்வு செய்யப்பட்ட உள்ளடக்கம் இல்லை. பயன்பாடு இடுபொருள் பரிந்துரையை உருவாக்காது.", catalogueApproved: "மனித ஒப்புதல் பெற்றது", sourcedNotApproved: "பொது மூலம் — ஒப்புதல் இல்லை", createShare: "பொதுப் பகிர்வை உருவாக்கு", revokeShare: "பொதுப் பகிர்வை ரத்து செய்", shareError: "பகிர்வை மாற்ற முடியவில்லை. இணைய இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.", calculatedForFarm: "உங்கள் பண்ணைக்கு ({{area}} ஹெக்.): {{quantity}} {{unit}}",
+    readinessTitle: "இயற்கை தயார்நிலை சோதனை", readinessDashboardHint: "இந்தப் பண்ணை இயற்கை விவசாயத்திற்கு மாற தயாரா என்று சில கேள்விகளுக்குப் பதிலளியுங்கள்.", readinessCta: "தயார்நிலை சோதனையை எடுக்கவும்", readinessIntro: "ஒவ்வொரு கேள்விக்கும் நேர்மையாக பதிலளிக்கவும் — இது உங்கள் அடுத்த படிக்கு வழிகாட்டுவதற்காக மட்டுமே, இது சான்றிதழ் அல்ல.", readinessLoadError: "தயார்நிலை சோதனையை ஏற்ற முடியவில்லை.", readinessNotSetUpTitle: "தயார்நிலை சோதனை இன்னும் தயாராகவில்லை", readinessNotSetUpMessage: "இந்த பயன்பாட்டிற்கான தயார்நிலை கேள்விகளை ஒரு வேளாண் நிபுணர் இன்னும் அங்கீகரிக்கவில்லை. விரைவில் மீண்டும் பாருங்கள்.", readinessResultTitle: "உங்கள் தயார்நிலை முடிவு", readinessScoreLabel: "மதிப்பெண்: {{score}}/100", readinessSubmit: "என் முடிவைப் பார்", readinessSubmitError: "உங்கள் பதில்களைச் சமர்ப்பிக்க முடியவில்லை. இணைய இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.", readinessRetake: "மீண்டும் சோதனை எடு",
+    conversionPlanTitle: "மாற்றுத் திட்டம்", conversionPlanDashboardHint: "வார வாரியான இயற்கை மாற்றுத் திட்டத்தைப் பெற காணிகளையும் பயிர்ச் சுழற்சிகளையும் அமைக்கவும்.", conversionPlanCta: "மாற்றுத் திட்டத்தைத் திற", conversionPlanIntro: "ஒரு காணியையும் பயிர்ச் சுழற்சியையும் சேர்க்கவும். ஒரு வேளாண் நிபுணர் அந்த பயிருக்கான திட்டத்தை மதிப்பாய்வு செய்து செயல்படுத்திய பிறகு அட்டவணை தோன்றும்.", addPlot: "காணி சேர்", plotName: "காணியின் பெயர்", plotAreaHectares: "பரப்பு (ஹெக்டேர்)", plotAreaValue: "{{value}} ஹெக்.", plotsLoadError: "காணிகளை ஏற்ற முடியவில்லை.", noPlots: "இன்னும் காணிகள் இல்லை", noPlotsMessage: "மாற்றுத் திட்டத்தைத் தொடங்க உங்கள் முதல் காணியைச் சேர்க்கவும்.", cropCyclesLoadError: "பயிர்ச் சுழற்சிகளை ஏற்ற முடியவில்லை.", chooseCrop: "ஒரு பயிரைத் தேர்ந்தெடுக்கவும்", sowingDate: "விதைப்பு தேதி", harvestStart: "எதிர்பார்க்கப்படும் அறுவடை தொடக்கம்", harvestEnd: "எதிர்பார்க்கப்படும் அறுவடை முடிவு", addCropCycle: "பயிர்ச் சுழற்சி சேர்", sownOn: "{{date}} அன்று விதைக்கப்பட்டது", planLoadError: "அட்டவணையை ஏற்ற முடியவில்லை.", planAwaitingApproval: "பயிர் திட்டம் வேளாண் நிபுணர் ஒப்புதலுக்காக காத்திருக்கிறது", todayTaskTitle: "இன்றைய இயற்கை பணி", todayTaskLoadError: "இன்றைய பணியை ஏற்ற முடியவில்லை.", todayTaskEmpty: "இன்று இயற்கை பணி எதுவும் இல்லை.", todayTaskOverdue: "தாமதமானது", mvpTaskReminderTitle: "இன்றைய இயற்கை பணி", mvpTaskReminderBody: "உங்கள் {{crop}} பயிருக்கான இயற்கை மாற்றுப் பணி ஒன்று நிலுவையில் உள்ளது.",
+    certificationTitle: "சான்றிதழ் துணை", certificationDashboardHint: "உங்கள் PGS சான்றிதழ் நிலையைக் கண்காணித்து, மனித மதிப்பாய்வாளருக்கு ஆதாரங்களைச் சமர்ப்பிக்கவும்.", certificationCta: "சான்றிதழைத் திற", certificationLoadError: "சான்றிதழ் நிலையை ஏற்ற முடியவில்லை.", certificateVerified: "சான்றிதழ் சரிபார்க்கப்பட்டது", certificateIdLabel: "சான்றிதழ் எண்: {{id}}", issuingAuthorityLabel: "வழங்கியவர்: {{authority}}", validToLabel: "{{date}} வரை செல்லுபடியாகும்", checklistTitle: "மாற்றச் சரிபார்ப்புப் பட்டியல்", checklistHint: "பொருந்துவதைக் குறிக்கவும். சான்றளிக்கப்பட்ட நிலை வழங்கப்படுவதற்கு முன் ஒரு வேளாண் அதிகாரி இதை மதிப்பாய்வு செய்வார்.", partialConversionLabel: "இது ஒரு பகுதி மாற்றம் (முழு நிலமும் இல்லை)", saveChecklist: "பட்டியலைச் சேமி", checklistSaved: "பட்டியல் சேமிக்கப்பட்டது.", checklistSaveError: "பட்டியலைச் சேமிக்க முடியவில்லை. இணைய இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.", peerReviewsTitle: "உங்களுக்கு ஒதுக்கப்பட்ட பங்குதாரர் மதிப்பாய்வுகள்", peerReviewEmpty: "உங்களுக்கு பங்குதாரர் மதிப்பாய்வுகள் எதுவும் ஒதுக்கப்படவில்லை.", peerReviewScheduledOn: "{{date}} அன்று திட்டமிடப்பட்டது", peerReviewFindingsLabel: "உங்கள் கண்டறிதல்கள்", peerReviewSubmit: "கண்டறிதல்களைச் சமர்ப்பி", peerReviewSubmitted: "கண்டறிதல்கள் சமர்ப்பிக்கப்பட்டன.", peerReviewSubmitError: "உங்கள் கண்டறிதல்களைச் சமர்ப்பிக்க முடியவில்லை. இணைய இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.",
+    checklistItem: { whole_holding_reviewed: "முழு நிலமும் மதிப்பாய்வு செய்யப்பட்டது", conversion_plan_recorded: "மாற்றத் திட்டம் பதிவு செய்யப்பட்டது", conversion_completed: "மாற்றம் முடிந்தது", no_major_non_compliance: "பெரிய விதிமீறல் எதுவும் இல்லை" },
+    pgsState: { pre_certification_trial: "சான்றிதழுக்கு முந்தைய சோதனை", pgs_eligibility_review: "PGS தகுதி மதிப்பாய்வு", regional_council_approval_required: "பிராந்திய கவுன்சில் ஒப்புதல் தேவை", pgs_registration_pending: "PGS பதிவு நிலுவையில்", pgs_green_under_conversion: "PGS கிரீன் — மாற்றத்தில்", pgs_organic: "PGS இயற்கை (சான்றளிக்கப்பட்டது)", non_compliance_review: "விதிமீறல் மதிப்பாய்வு" },
+    peerReviewStatus: { scheduled: "நிலுவையில்", completed: "முடிந்தது" },
     planKind: { disease: "நோய்", soil: "மண்", calendar: "நாட்காட்டி", weather: "வானிலை", satellite: "செயற்கைக்கோள் வயல் ஆய்வு" },
     actionState: { ready: "செய்யத் தயார்", waiting_for_weather: "உகந்த வானிலைக்காகக் காத்திருக்கிறது", needs_confirmation: "உறுதிப்படுத்தல் தேவை", completed: "முடிந்தது" },
     produceClassification: "இயற்கை விளைபொருள் வகைப்பாடு",

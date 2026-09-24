@@ -2695,6 +2695,8 @@ export const en = {
     },
   },
   produce: {
+    organicVerified: "Organic verified",
+    organicOnlyFilter: "Organic verified only",
     procurementUnavailable:
       "Your local listing can be saved, but no external procurement channel is connected.",
     readiness: {
@@ -4377,6 +4379,9 @@ export const en = {
     actionOfflineKnowledge: "Offline Tamil knowledge",
     actionOfflineKnowledgeDescription:
       "Read practical Tamil field checklists without internet",
+    actionOrganic: "Organic Farming",
+    actionOrganicDescription:
+      "Readiness check, conversion plan, organic inputs and diary",
     recentActivity: "Recent activity",
     activityFarm: "Farm · {{name}}",
     activityProfile: "Profile set up",
@@ -5089,6 +5094,14 @@ export const en = {
     practiceSaved: "Practice added to the logbook.",
     titleRequired: "Enter a short title for this practice.",
     loadError: "Unable to load organic farm information.",
+    quantityLabel: "Quantity", unitLabel: "Unit", treatedAreaLabel: "Treated area (ha)", costLabel: "Cost (₹)",
+    outcomeLabel: "How did it work out?",
+    outcomeStatus: { not_reported: "Not reported", improved: "Improved", no_change: "No change", worse: "Worse", unknown: "Not sure" },
+    quantityUnitRequiredTogether: "Enter both a quantity and a unit, or leave both blank.",
+    quantityValue: "{{quantity}} {{unit}}", treatedAreaValue: "Treated {{area}} ha", costValue: "₹{{amount}}",
+    attachPhoto: "Attach photo", camera: "Camera", gallery: "Gallery", photoAttached: "Photo attached", removePhoto: "Remove photo",
+    evidenceUploadError: "Unable to upload the photo. Check your connection and try again.",
+    evidenceCount: "{{count}} photo attached",
     planTitle: "Organic action plan",
     planIntro: "Source-backed actions from disease, soil, calendar, weather and satellite modules. Weather-blocked actions cannot be logged yet.",
     planError: "Unable to load the organic action plan.",
@@ -5108,7 +5121,13 @@ export const en = {
     privacyNotice: "Only the fields you select are included. Private evidence remains hidden by default.",
     shareClassification: "Classification", shareLocation: "Location", shareEvidence: "Evidence", share: "Share public record", traceQr: "Traceability QR code",
     weatherNotification: "You will be notified when the source-backed weather window becomes suitable.", openCalendarToReschedule: "Review or reschedule", recordFinding: "Record scouting finding", findingRecorded: "Scouting finding added to the logbook for follow-up.",
-    inputLibrary: "Organic input library", inputLibraryNotice: "Read-only catalogue. Public-source entries are not approved inputs until a human reviewer approves them.", searchInputs: "Search organic inputs", inputLibraryError: "Unable to load the organic input library.", inputLibraryEmpty: "No reviewed catalogue entries", reviewedContentEmpty: "No applicable reviewed content is available. The app will not invent an input recommendation.", catalogueApproved: "Human approved", sourcedNotApproved: "Public source — not approved", createShare: "Create public share", revokeShare: "Revoke public share", shareError: "Unable to change sharing. Check your connection and try again.",
+    inputLibrary: "Organic input library", inputLibraryNotice: "Read-only catalogue. Public-source entries are not approved inputs until a human reviewer approves them.", searchInputs: "Search organic inputs", inputLibraryError: "Unable to load the organic input library.", inputLibraryEmpty: "No reviewed catalogue entries", reviewedContentEmpty: "No applicable reviewed content is available. The app will not invent an input recommendation.", catalogueApproved: "Human approved", sourcedNotApproved: "Public source — not approved", createShare: "Create public share", revokeShare: "Revoke public share", shareError: "Unable to change sharing. Check your connection and try again.", calculatedForFarm: "For your farm ({{area}} ha): {{quantity}} {{unit}}",
+    readinessTitle: "Organic Readiness Check", readinessDashboardHint: "Answer a few questions to see if this farm is ready to start converting to organic.", readinessCta: "Take the readiness check", readinessIntro: "Answer every question honestly — this only guides your own next step, it is not a certification.", readinessLoadError: "Unable to load the readiness check.", readinessNotSetUpTitle: "Readiness check not ready yet", readinessNotSetUpMessage: "An agronomist hasn't approved the readiness questions for this app yet. Check back soon.", readinessResultTitle: "Your readiness result", readinessScoreLabel: "Score: {{score}}/100", readinessSubmit: "See my result", readinessSubmitError: "Unable to submit your answers. Check your connection and try again.", readinessRetake: "Retake the check",
+    conversionPlanTitle: "Conversion Plan", conversionPlanDashboardHint: "Set up plots and crop cycles to get a week-by-week organic conversion schedule.", conversionPlanCta: "Open conversion plan", conversionPlanIntro: "Add a plot and a crop cycle. The schedule appears once an agronomist has reviewed and activated a plan for that crop.", addPlot: "Add plot", plotName: "Plot name", plotAreaHectares: "Area (hectares)", plotAreaValue: "{{value}} ha", plotsLoadError: "Unable to load plots.", noPlots: "No plots yet", noPlotsMessage: "Add your first plot to start a conversion plan.", cropCyclesLoadError: "Unable to load crop cycles.", chooseCrop: "Choose a crop", sowingDate: "Sowing date", harvestStart: "Expected harvest start", harvestEnd: "Expected harvest end", addCropCycle: "Add crop cycle", sownOn: "Sown {{date}}", planLoadError: "Unable to load the schedule.", planAwaitingApproval: "Crop plan awaiting agronomist approval", todayTaskTitle: "Today's Organic Task", todayTaskLoadError: "Unable to load today's task.", todayTaskEmpty: "No organic task due today.", todayTaskOverdue: "Overdue", mvpTaskReminderTitle: "Today's organic task", mvpTaskReminderBody: "You have an organic conversion task due for your {{crop}} crop.",
+    certificationTitle: "Certification Companion", certificationDashboardHint: "Track your PGS certification status and submit evidence for a human reviewer.", certificationCta: "Open certification", certificationLoadError: "Unable to load certification status.", certificateVerified: "Certificate verified", certificateIdLabel: "Certificate ID: {{id}}", issuingAuthorityLabel: "Issued by: {{authority}}", validToLabel: "Valid until {{date}}", checklistTitle: "Conversion checklist", checklistHint: "Mark what applies. An agriculture officer reviews this before any certified status is granted.", partialConversionLabel: "This is a partial conversion (not the whole holding)", saveChecklist: "Save checklist", checklistSaved: "Checklist saved.", checklistSaveError: "Unable to save the checklist. Check your connection and try again.", peerReviewsTitle: "Peer reviews assigned to you", peerReviewEmpty: "No peer reviews assigned to you.", peerReviewScheduledOn: "Scheduled for {{date}}", peerReviewFindingsLabel: "Your findings", peerReviewSubmit: "Submit findings", peerReviewSubmitted: "Findings submitted.", peerReviewSubmitError: "Unable to submit your findings. Check your connection and try again.",
+    checklistItem: { whole_holding_reviewed: "Whole holding reviewed", conversion_plan_recorded: "Conversion plan recorded", conversion_completed: "Conversion completed", no_major_non_compliance: "No major non-compliance found" },
+    pgsState: { pre_certification_trial: "Pre-certification trial", pgs_eligibility_review: "PGS eligibility review", regional_council_approval_required: "Regional Council approval required", pgs_registration_pending: "PGS registration pending", pgs_green_under_conversion: "PGS Green — under conversion", pgs_organic: "PGS Organic (certified)", non_compliance_review: "Non-compliance review" },
+    peerReviewStatus: { scheduled: "Pending", completed: "Completed" },
     planKind: { disease: "Disease", soil: "Soil", calendar: "Calendar", weather: "Weather", satellite: "Satellite scouting" },
     actionState: { ready: "Ready", waiting_for_weather: "Waiting for suitable weather", needs_confirmation: "Needs confirmation", completed: "Completed" },
     produceClassification: "Organic produce classification",

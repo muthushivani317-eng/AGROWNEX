@@ -56,6 +56,7 @@ export const apiProduceProvider: ProduceProvider = {
           category: params.category ?? undefined,
           farm_id: params.farmId ?? undefined,
           search: params.search ?? undefined,
+          organic_only: params.organicOnly ?? undefined,
           page: params.page ?? 1,
           page_size: params.pageSize ?? DEFAULT_PAGE_SIZE,
         },

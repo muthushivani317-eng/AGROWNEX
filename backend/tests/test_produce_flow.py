@@ -139,7 +139,7 @@ async def test_create_routes_to_provider_and_records_status(db_session) -> None:
     assert offer.procurement_reference is not None
     assert offer.procurement_reference.startswith("MOCK-")
 
-    _, insight = await service.get_offer(user, offer.id)
+    _, insight, _ = await service.get_offer(user, offer.id)
     history = offer.status_history
     assert len(history) == 1
     assert history[0].new_status == ProduceStatus.SUBMITTED.value
@@ -170,7 +170,7 @@ async def test_snapshot_uses_verified_market_price_when_available(db_session) ->
     assert offer.market_price_source == "agmarknet"
     assert offer.market_price_unit == "quintal"
 
-    _, insight = await service.get_offer(user, offer.id)
+    _, insight, _ = await service.get_offer(user, offer.id)
     # 20 quintal × ₹2,050 → ₹41,000.
     assert insight.estimated_market_value == 41000.0
     assert insight.price_reference is not None
@@ -183,7 +183,7 @@ async def test_snapshot_is_null_when_no_verified_price(db_session) -> None:
     service = _service(db_session)  # no market price seeded
     offer = await service.create_offer(user, _create_payload(farm.id, crop_name="Ragi"))
     assert offer.current_market_price_snapshot is None
-    _, insight = await service.get_offer(user, offer.id)
+    _, insight, _ = await service.get_offer(user, offer.id)
     assert insight.estimated_market_value is None  # never fabricated
 
 
@@ -198,7 +198,7 @@ async def test_list_offers_paginates_and_carries_insight(db_session) -> None:
         await service.create_offer(
             user, _create_payload(farm.id, crop_name=f"Crop{i}")
         )
-    page, insights = await service.list_offers(
+    page, insights, _ = await service.list_offers(
         user, ProduceListFilters(page=1, page_size=2)
     )
     assert page.total == 3
@@ -213,7 +213,7 @@ async def test_list_filters_by_crop_and_farm(db_session) -> None:
     service = _service(db_session)
     await service.create_offer(user, _create_payload(farm.id, crop_name="Paddy"))
     await service.create_offer(user, _create_payload(farm.id, crop_name="Maize"))
-    page, _ = await service.list_offers(
+    page, _, _ = await service.list_offers(
         user, ProduceListFilters(crop="paddy", farm_id=farm.id)
     )
     assert page.total == 1
@@ -248,7 +248,7 @@ async def test_upcoming_orders_by_harvest_and_excludes_past(db_session) -> None:
             farm.id, crop_name="Tomato", expected_harvest_date=TODAY + timedelta(days=3)
         ),
     )
-    page, _ = await service.upcoming(user, page=1, page_size=10)
+    page, _, _ = await service.upcoming(user, page=1, page_size=10)
     assert [o.crop_name for o in page.items] == ["Tomato", "Turmeric"]
 
 
@@ -262,7 +262,7 @@ async def test_history_shows_only_concluded_offers(db_session) -> None:
         user, concluded.id, ProduceOfferUpdate(status=ProduceStatus.HARVESTED)
     )
 
-    page, _ = await service.history(user, page=1, page_size=10)
+    page, _, _ = await service.history(user, page=1, page_size=10)
     crops = {o.crop_name for o in page.items}
     assert "Banana" in crops
     assert "Paddy" not in crops
@@ -335,7 +335,7 @@ async def test_delete_is_soft_and_hides_offer(db_session) -> None:
     await service.delete_offer(user, offer.id)
     with pytest.raises(ProduceOfferNotFoundError):
         await service.get_offer(user, offer.id)
-    page, _ = await service.list_offers(user, ProduceListFilters())
+    page, _, _ = await service.list_offers(user, ProduceListFilters())
     assert page.total == 0
 
 

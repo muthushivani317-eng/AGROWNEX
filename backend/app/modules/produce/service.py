@@ -22,6 +22,7 @@ from app.modules.admin.models import FarmerOfferDecision, ProcurementCase
 from app.modules.auth.models import User
 from app.modules.farms.repositories import FarmRepository
 from app.modules.market.repository import MarketRepository
+from app.modules.organic.repositories import OrganicRepository, organic_certification_display
 from app.modules.produce.constants import (
     FARMER_SETTABLE_STATUSES,
     PRODUCE_TAXONOMY,
@@ -73,8 +74,36 @@ class ProduceService:
         self.repo = ProduceRepository(session)
         self.farms = FarmRepository(session)
         self.market = MarketRepository(session)
+        self.organic = OrganicRepository(session)
         self.provider = provider or get_default_provider()
         self._today = today
+
+    async def _organic_display_for(
+        self, offers: list[ProduceOffer]
+    ) -> dict[uuid.UUID, tuple[str | None, bool]]:
+        """farm_id -> (organic_certification_status, verified) for a batch of
+        offers -- one query regardless of list size, reusing the same
+        real/admin-verified/expiry-aware source the Certification Companion
+        and traceability screens use (never a farmer self-claim)."""
+        farm_ids = list({o.farm_id for o in offers})
+        profiles = await self.organic.profiles_for_farms(farm_ids)
+        return {
+            farm_id: organic_certification_display(profiles.get(farm_id))
+            for farm_id in farm_ids
+        }
+
+    async def _verified_organic_farm_ids(self, user_id: uuid.UUID) -> list[uuid.UUID]:
+        """This user's farms with a currently-verified organic certificate --
+        used to implement `organic_only` as a farm allowlist, since
+        verification lives on OrganicFarmProfile, not on ProduceOffer."""
+        farms = await self.farms.list_for_user(user_id, limit=500, offset=0)
+        farm_ids = [f.id for f in farms]
+        profiles = await self.organic.profiles_for_farms(farm_ids)
+        return [
+            farm_id
+            for farm_id, profile in profiles.items()
+            if organic_certification_display(profile)[1]
+        ]
 
     def _now_date(self) -> date:
         # India Standard Time, not UTC (docs: app.core.timezone) -- this is a
@@ -377,8 +406,15 @@ class ProduceService:
     # ----------------------------------------------------------------- #
     async def list_offers(
         self, user: User, filters: ProduceListFilters
-    ) -> tuple[PaginatedData[ProduceOffer], dict[uuid.UUID, ProcurementInsight]]:
+    ) -> tuple[
+        PaginatedData[ProduceOffer],
+        dict[uuid.UUID, ProcurementInsight],
+        dict[uuid.UUID, tuple[str | None, bool]],
+    ]:
         offset = (filters.page - 1) * filters.page_size
+        farm_ids = (
+            await self._verified_organic_farm_ids(user.id) if filters.organic_only else None
+        )
         rows, total = await self.repo.list_for_user(
             user.id,
             status=filters.status.value if filters.status else None,
@@ -391,8 +427,11 @@ class ProduceService:
             search=filters.search,
             limit=filters.page_size,
             offset=offset,
+            farm_ids=farm_ids,
         )
         insights = {o.id: self._insight(o) for o in rows}
+        organic_by_farm = await self._organic_display_for(rows)
+        organic = {o.id: organic_by_farm[o.farm_id] for o in rows}
         total_pages = (total + filters.page_size - 1) // filters.page_size if total else 0
         page = PaginatedData(
             items=rows,
@@ -401,13 +440,14 @@ class ProduceService:
             total=total,
             total_pages=total_pages,
         )
-        return page, insights
+        return page, insights, organic
 
     async def get_offer(
         self, user: User, offer_id: uuid.UUID
-    ) -> tuple[ProduceOffer, ProcurementInsight]:
+    ) -> tuple[ProduceOffer, ProcurementInsight, tuple[str | None, bool]]:
         offer = await self._require_offer(user, offer_id)
-        return offer, self._insight(offer)
+        organic_by_farm = await self._organic_display_for([offer])
+        return offer, self._insight(offer), organic_by_farm[offer.farm_id]
 
     async def _paginated_by_statuses(
         self,
@@ -418,7 +458,11 @@ class ProduceService:
         page_size: int,
         harvest_from: date | None,
         order_by_harvest: bool,
-    ) -> tuple[PaginatedData[ProduceOffer], dict[uuid.UUID, ProcurementInsight]]:
+    ) -> tuple[
+        PaginatedData[ProduceOffer],
+        dict[uuid.UUID, ProcurementInsight],
+        dict[uuid.UUID, tuple[str | None, bool]],
+    ]:
         offset = (page - 1) * page_size
         rows, total = await self.repo.list_for_user(
             user.id,
@@ -429,6 +473,8 @@ class ProduceService:
             offset=offset,
         )
         insights = {o.id: self._insight(o) for o in rows}
+        organic_by_farm = await self._organic_display_for(rows)
+        organic = {o.id: organic_by_farm[o.farm_id] for o in rows}
         total_pages = (total + page_size - 1) // page_size if total else 0
         return (
             PaginatedData(
@@ -439,11 +485,16 @@ class ProduceService:
                 total_pages=total_pages,
             ),
             insights,
+            organic,
         )
 
     async def upcoming(
         self, user: User, *, page: int, page_size: int
-    ) -> tuple[PaginatedData[ProduceOffer], dict[uuid.UUID, ProcurementInsight]]:
+    ) -> tuple[
+        PaginatedData[ProduceOffer],
+        dict[uuid.UUID, ProcurementInsight],
+        dict[uuid.UUID, tuple[str | None, bool]],
+    ]:
         """Still-relevant harvests due today or later, soonest first."""
         return await self._paginated_by_statuses(
             user,
@@ -456,7 +507,11 @@ class ProduceService:
 
     async def history(
         self, user: User, *, page: int, page_size: int
-    ) -> tuple[PaginatedData[ProduceOffer], dict[uuid.UUID, ProcurementInsight]]:
+    ) -> tuple[
+        PaginatedData[ProduceOffer],
+        dict[uuid.UUID, ProcurementInsight],
+        dict[uuid.UUID, tuple[str | None, bool]],
+    ]:
         """Concluded offers (harvested / fulfilled / withdrawn / expired)."""
         return await self._paginated_by_statuses(
             user,

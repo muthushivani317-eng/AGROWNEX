@@ -25,6 +25,7 @@ export const HOME_FEATURE_ROUTES = {
   equipment: "/equipment",
   community: "/community",
   knowledge: "/knowledge",
+  organic: "/organic",
 } as const;
 
 export type HomeFeatureKey = keyof typeof HOME_FEATURE_ROUTES;

@@ -385,10 +385,12 @@ async def get_procurement(
     search: str | None = Query(None),
     category: ProduceCategory | None = Query(None),
     availability_type: ProduceAvailabilityType | None = Query(None),
+    organic_only: bool = Query(False),
     page: int = Query(1, ge=1),
     page_size: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
 ):
-    """Future-harvest produce offers with village/crop/season procurement analytics."""
+    """Future-harvest produce offers with village/crop/season procurement analytics.
+    organic_only restricts to farms with a currently-verified organic certificate."""
     data = await service.procurement(
         ctx,
         crop=crop,
@@ -397,6 +399,7 @@ async def get_procurement(
         search=search,
         category=category.value if category else None,
         availability_type=availability_type.value if availability_type else None,
+        organic_only=organic_only,
         page=page,
         page_size=page_size,
     )

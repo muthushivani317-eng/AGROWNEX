@@ -194,3 +194,39 @@ async def test_generate_tasks_for_farm_is_idempotent_for_same_dedupe_key_and_day
     tasks = tasks_result.scalars().all()
     assert len(tasks) == 1
     assert tasks[0].signal_id == signals[0].id
+
+
+async def test_today_tasks_endpoint_caps_at_two_even_with_more_active_rows(db_session):
+    """Regression test for AGROWAI-BACKEND-2 (Sentry): a farmer can end up
+    with more than MAX_TASKS_PER_FARMER_PER_DAY rows in ACTIVE status (older
+    tasks outliving their valid_until without a response, while generation
+    keeps adding new ones each day) -- `TodayTasksResponse.tasks` is capped
+    at 2, so building it from the raw, uncapped repository result raised a
+    Pydantic ValidationError and 500'd the endpoint in production (121 times
+    over 9 days). `rank_position` is scoped per generation run (always 1 or
+    2 for whichever tasks were shown that day), so it repeats across days --
+    it does not grow into a global sequence. The read path must defensively
+    re-apply the cap instead of trusting the row count."""
+    import types
+
+    from app.modules.daily_task.router import get_today_tasks
+
+    user_id = uuid.uuid4()
+    farm_id = uuid.uuid4()
+    # 3 ACTIVE tasks for the same farmer -- one more than the schema allows,
+    # with realistic (repeating, not sequential) rank_position values.
+    t1 = await _make_active_task(db_session, farm_id=farm_id, user_id=user_id)
+    t2 = await _make_active_task(db_session, farm_id=farm_id, user_id=user_id)
+    t3 = await _make_active_task(db_session, farm_id=farm_id, user_id=user_id)
+    t1.rank_position, t2.rank_position, t3.rank_position = 1, 2, 1
+    await db_session.flush()
+
+    repo = DailyTaskRepository(db_session)
+    current_user = types.SimpleNamespace(id=user_id)
+
+    response = await get_today_tasks(current_user=current_user, repo=repo)
+
+    # Must not raise, and must never exceed the schema's cap regardless of
+    # how many ACTIVE rows exist.
+    assert len(response.data.tasks) == 2
+    assert all(t.rank_position in (1, 2) for t in response.data.tasks)

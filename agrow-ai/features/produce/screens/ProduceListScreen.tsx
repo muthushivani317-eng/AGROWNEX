@@ -8,6 +8,7 @@ import {
   Sprout,
   Wheat,
 } from "lucide-react-native";
+import { AgBadge } from "@/components/ui";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -30,10 +31,11 @@ export function ProduceListScreen() {
   const router = useRouter();
   useProduceSync();
   const [view, setView] = useState<ProduceView>("all");
+  const [organicOnly, setOrganicOnly] = useState(false);
   const refreshLock = useRef(false);
   const [refreshing, setRefreshing] = useState(false);
-  const listQuery = useProduceList({ pageSize: 50 }, view === "all");
-  const availableQuery = useProduceList({ pageSize: 50, availabilityType: 'available_now' }, view === 'available');
+  const listQuery = useProduceList({ pageSize: 50, organicOnly }, view === "all");
+  const availableQuery = useProduceList({ pageSize: 50, availabilityType: 'available_now', organicOnly }, view === 'available');
   const upcomingQuery = useUpcomingProduce(view === "upcoming");
   const historyQuery = useProduceHistory(view === "history");
   const active = useMemo(() => {
@@ -123,6 +125,19 @@ export function ProduceListScreen() {
         </View>
       </View>
       <ProduceViewTabs active={view} onChange={setView} />
+      {view === "all" || view === "available" ? (
+        <Pressable
+          onPress={() => setOrganicOnly((prev) => !prev)}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: organicOnly }}
+          style={styles.organicFilter}
+        >
+          <AgBadge
+            label={t("produce.organicOnlyFilter")}
+            tone={organicOnly ? "success" : "neutral"}
+          />
+        </Pressable>
+      ) : null}
       {active.data?.cached ? (
         <AgText accessibilityRole="alert" variant="bodySmall" style={styles.cachedNotice}>
           {t("produce.cachedNotice")}
@@ -168,6 +183,7 @@ export function ProduceListScreen() {
 const styles = StyleSheet.create({
   screenBody: { flex: 1, paddingHorizontal: 20 },
   header: { paddingTop: 12, paddingBottom: 8, gap: 16 },
+  organicFilter: { alignSelf: "flex-start" },
   topRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   iconButton: {
     width: 48,

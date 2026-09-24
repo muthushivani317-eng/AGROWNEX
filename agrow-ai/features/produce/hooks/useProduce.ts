@@ -115,6 +115,8 @@ function optimisticOffer(input: ProduceInput): ProduceOfferDetail {
       expectedHarvestDate: input.expectedHarvestDate,
       askingPrice: input.askingPrice,
     }, null) : null,
+    organicCertificationStatus: null,
+    organicCertificationVerified: false,
     createdAt: now,
     updatedAt: now,
     syncStatus: 'pending',

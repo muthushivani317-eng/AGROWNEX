@@ -76,6 +76,7 @@ function matches(offer: ProduceOfferDetail, params: ProduceListParams): boolean 
       .includes(params.search.toLowerCase())
   )
     return false;
+  if (params.organicOnly && !offer.organicCertificationVerified) return false;
   return true;
 }
 
@@ -156,6 +157,10 @@ export const localProduceProvider: ProduceProvider = {
       thumbnailUrl: images[0]?.thumbnailUrl ?? images[0]?.imageUrl ?? null,
       imageCount: images.length,
       insight: null,
+      // No offline source of truth for organic certification (admin-verified
+      // only) -- never fabricate a status while offline.
+      organicCertificationStatus: null,
+      organicCertificationVerified: false,
       createdAt: now,
       updatedAt: now,
       syncStatus: 'synced',

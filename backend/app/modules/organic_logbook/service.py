@@ -86,6 +86,8 @@ class OrganicLogbookService:
             treated_area_hectares=payload.treated_area_hectares,
             occurred_at=payload.occurred_at,
             note=payload.note,
+            expense_amount_inr=payload.expense_amount_inr,
+            voice_transcript=payload.voice_transcript,
             outcome_status=payload.outcome_status,
             source_feature=source_feature,
             source_record_id=source_record_id,

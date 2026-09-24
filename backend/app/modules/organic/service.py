@@ -33,7 +33,7 @@ from app.modules.organic.models import (
     OrganicUploadAttestation,
 )
 from app.modules.organic.plan_engine import build_disease_plan, build_soil_plan
-from app.modules.organic.repositories import OrganicRepository
+from app.modules.organic.repositories import OrganicRepository, organic_certification_display
 from app.modules.organic.schemas import CertificationDocumentCreate, OrganicProfileWrite
 from app.modules.soil.repository import SoilRepository
 
@@ -374,15 +374,7 @@ class OrganicService:
         await self.farms.get_farm(user, farm_id)
         profile = await self.repo.profile_for_farm(farm_id)
         facts = await self.repo.summary_facts(user.id, farm_id)
-        certification_status = profile.certification_status if profile else None
-        certification_verified = bool(
-            profile
-            and certification_status == "verified"
-            and profile.certificate_expires_on
-            and profile.certificate_expires_on >= date.today()
-        )
-        if certification_status == "verified" and not certification_verified:
-            certification_status = "expired"
+        certification_status, certification_verified = organic_certification_display(profile)
         traceability_ready = bool(profile is not None and facts.logbook_count > 0)
         logger.info(
             "Organic farm summary user=%s farm=%s profile=%s pending=%s logbook=%s",

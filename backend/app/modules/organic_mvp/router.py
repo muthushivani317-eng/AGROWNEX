@@ -20,6 +20,7 @@ from app.modules.farms.models import Farm
 from app.modules.notifications.models import FutureNotificationQueue
 from app.modules.organic.models import OrganicCertificationDocument, OrganicFarmProfile
 from app.modules.organic_mvp.engine import (
+    READINESS_PATHWAYS,
     TRIAL_NOTICE,
     forecast_gate,
     schedule_reviewed_tasks,
@@ -252,6 +253,35 @@ async def crop_plan(cycle_id: uuid.UUID, session: Session, user: CurrentUser):
                        "status": t.status} for t in tasks]}
 
 
+@router.get("/farms/{farm_id}/today-task")
+async def today_task(farm_id: uuid.UUID, session: Session, user: CurrentUser):
+    """Today's due organic task(s) for a farm -- across all activated crop-cycle
+    plans, not just one cycle. Surfaces overdue-but-unresolved tasks too (never
+    hides a pending task just because its due date passed), same "don't hide
+    unresolved work" principle as daily_task's own cooldown logic. Read-only;
+    marking a task done happens via the logbook, not here (no PATCH at MVP).
+    """
+    await _farm(session, farm_id, user.id)
+    today = datetime.now(ZoneInfo("Asia/Kolkata")).date()
+    rows = (
+        await session.scalars(
+            select(OrganicScheduledTask)
+            .join(OrganicCropCycle, OrganicCropCycle.id == OrganicScheduledTask.crop_cycle_id)
+            .join(OrganicPlot, OrganicPlot.id == OrganicCropCycle.plot_id)
+            .where(
+                OrganicPlot.farm_id == farm_id,
+                OrganicScheduledTask.status == "pending",
+                OrganicScheduledTask.due_on <= today,
+            )
+            .order_by(OrganicScheduledTask.due_on)
+            .limit(3)
+        )
+    ).all()
+    return {"tasks": [{"id": str(t.id), "due_on": t.due_on, "title_ta": t.title_ta,
+                        "body_ta": t.body_ta, "title_en": t.title_en, "body_en": t.body_en,
+                        "is_overdue": t.due_on < today} for t in rows]}
+
+
 @admin_router.post("/pilot")
 async def setup_pilot(body: PilotSetupIn, session: Session, admin: AdminContextDep):
     _allow(admin, AdminPermission.MANAGE_FARMERS)
@@ -393,8 +423,7 @@ async def create_rules(body: ReadinessRulesIn, session: Session, admin: AdminCon
     if not body.scoring.get("bands"):
         raise ValidationError("Scoring bands are required.")
     for band in body.scoring["bands"]:
-        if (not isinstance(band, dict) or band.get("pathway") not in
-            {"learning", "pre_certification_trial", "eligibility_review"}
+        if (not isinstance(band, dict) or band.get("pathway") not in READINESS_PATHWAYS
             or not band.get("recommendation_ta")
             or not isinstance(band.get("min"), int)
             or not isinstance(band.get("max"), int)
@@ -510,7 +539,7 @@ async def activate_plan(cycle_id: uuid.UUID, template_id: uuid.UUID, session: Se
                 user_id=farm.user_id, farm_id=farm.id, module="calendar", event_type="organic_task_due",
                 title_key="organic.mvpTaskReminderTitle", message_key="organic.mvpTaskReminderBody",
                 payload_json={"crop": cycle.crop_id}, severity="info", priority="medium",
-                action_route=f"/organic/crop-plan?farmId={farm.id}",
+                action_route=f"/organic/conversion-plan?farmId={farm.id}",
                 dedup_key=f"organic-plan:{cycle_id}:{template_id}:{index}",
                 scheduled_for=reminder_at, expires_at=reminder_at + timedelta(days=2), processed=False))
     await session.commit()

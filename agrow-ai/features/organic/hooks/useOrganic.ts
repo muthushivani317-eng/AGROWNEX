@@ -5,6 +5,7 @@ import { organicKeys } from '../constants';
 import { getOrganicProvider } from '../services/organicProvider';
 import { organicStorage } from '../services/organicStorage';
 import { isOrganicOfflineError, organicOutbox } from '../services/organicSync';
+import { uploadOrganicEvidence } from '../services/organicEvidenceApi';
 import type { OrganicFarmProfileInput, OrganicPracticeInput } from '../types';
 
 export function useOrganicProfile(farmId: string) {
@@ -26,10 +27,25 @@ export function useOrganicPractices(farmId: string) {
     catch (error) { const cached = organicStorage.practices(farmId); if (isOrganicOfflineError(error)) return cached; throw error; }
   }});
 }
+/**
+ * Uploads one piece of Farm Diary evidence (currently: a photo) and returns
+ * the attestation id + signed receipt needed by useCreateOrganicPractice's
+ * `evidence` array. Requires connectivity -- unlike practice creation, this
+ * is not queued offline (a photo can't be attested without actually
+ * reaching the backend), so callers should surface the mutation's error to
+ * the farmer and let them retry once online.
+ */
+export function useUploadOrganicEvidence(farmId: string) {
+  return useMutation({
+    mutationFn: (input: { fileUri: string; mimeType: string }) =>
+      uploadOrganicEvidence(farmId, input.fileUri, input.mimeType),
+  });
+}
+
 export function useCreateOrganicPractice(farmId: string) {
   return useMutation({ mutationFn: async (input: Omit<OrganicPracticeInput, 'farmId' | 'clientRequestId'>) => {
     const payload = { ...input, farmId, clientRequestId: uuid() };
     try { const practice = await getOrganicProvider().createPractice(payload); organicStorage.addPractice(practice); return { practice, offline: false }; }
-    catch (error) { if (!isOrganicOfflineError(error)) throw error; const practice = { id: payload.clientRequestId, ...payload, notes: payload.notes ?? null, quantity: payload.quantity ?? null, unit: payload.unit ?? null, sourceActionId: payload.sourceActionId ?? null, createdAt: new Date().toISOString(), syncStatus: 'pending' as const }; organicStorage.addPractice(practice); organicOutbox.enqueue({ op: 'create_practice', farmId, input: payload }); return { practice, offline: true }; }
+    catch (error) { if (!isOrganicOfflineError(error)) throw error; const practice = { id: payload.clientRequestId, ...payload, notes: payload.notes ?? null, quantity: payload.quantity ?? null, unit: payload.unit ?? null, treatedAreaHectares: payload.treatedAreaHectares ?? null, expenseAmountInr: payload.expenseAmountInr ?? null, outcomeStatus: payload.outcomeStatus ?? 'not_reported' as const, evidence: [], sourceActionId: payload.sourceActionId ?? null, createdAt: new Date().toISOString(), syncStatus: 'pending' as const }; organicStorage.addPractice(practice); organicOutbox.enqueue({ op: 'create_practice', farmId, input: payload }); return { practice, offline: true }; }
   }, onSuccess: () => void queryClient.invalidateQueries({ queryKey: organicKeys.practices(farmId) }) });
 }

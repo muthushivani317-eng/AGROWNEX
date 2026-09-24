@@ -66,6 +66,8 @@ class ProcurementRow:
     negotiable: bool
     pickup_available: bool
     pickup_location: str | None
+    organic_certification_status: str | None = None
+    organic_certification_verified: bool = False
 
 
 @dataclass

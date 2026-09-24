@@ -40,11 +40,12 @@ describe('admin marketplace procurement presentation', () => {
       search: 'paddy & rice',
       category: 'grains',
       availabilityType: 'available_now',
+      organicOnly: false,
     })).toBe('/admin/procurement?page=1&page_size=50&search=paddy+%26+rice&category=grains&availability_type=available_now');
   });
 
   it('does not add empty filters that could broaden or alter server scope', () => {
-    expect(buildProcurementPath({ search: ' ', category: '', availabilityType: '' }))
+    expect(buildProcurementPath({ search: ' ', category: '', availabilityType: '', organicOnly: false }))
       .toBe('/admin/procurement?page=1&page_size=50');
   });
 

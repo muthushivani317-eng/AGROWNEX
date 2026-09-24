@@ -11,7 +11,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
 
-import { AgText } from "@/components/ui";
+import { AgBadge, AgText } from "@/components/ui";
 
 import { UNIT_LABEL_KEY } from "../constants";
 import { PRODUCE_COLORS as C } from "../produceTheme";
@@ -78,6 +78,9 @@ export function ProduceCard({ offer }: { offer: ProduceOffer }) {
           ) : null}
           <View style={styles.badgeRow}>
             <ProduceStatusBadge status={offer.status} />
+            {offer.organicCertificationVerified ? (
+              <AgBadge label={t("produce.organicVerified")} tone="success" />
+            ) : null}
             {offer.syncStatus === "pending" ? (
               <View style={styles.syncBadge}>
                 <CloudOff size={14} color={C.gold} />

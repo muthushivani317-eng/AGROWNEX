@@ -105,6 +105,8 @@ export function apiToOffer(dto: ApiProduceSummary): ProduceOffer {
     thumbnailUrl: dto.thumbnail_url,
     imageCount: dto.image_count,
     insight: apiToInsight(dto.insight),
+    organicCertificationStatus: dto.organic_certification_status,
+    organicCertificationVerified: dto.organic_certification_verified ?? false,
     createdAt: dto.created_at,
     updatedAt: dto.updated_at,
     syncStatus: 'synced',

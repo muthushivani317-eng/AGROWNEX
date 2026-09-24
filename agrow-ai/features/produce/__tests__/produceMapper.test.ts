@@ -62,6 +62,8 @@ const apiSummary: ApiProduceSummary = {
   thumbnail_url: 'https://cdn/r2/a.jpg',
   image_count: 1,
   insight: apiInsight,
+  organic_certification_status: 'verified',
+  organic_certification_verified: true,
   created_at: '2026-07-11T00:00:00Z',
   updated_at: '2026-07-11T00:00:00Z',
 };

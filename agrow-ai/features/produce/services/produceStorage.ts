@@ -86,6 +86,7 @@ export function listCacheKey(params: ProduceListParams, view = 'all'): string {
     params.category ?? '',
     params.farmId ?? '',
     params.search ?? '',
+    params.organicOnly ? 'organic' : '',
     params.page ?? 1,
   ]
     .join('|')

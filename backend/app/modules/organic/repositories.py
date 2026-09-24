@@ -14,6 +14,30 @@ from app.modules.organic.models import (
 )
 
 
+def organic_certification_display(
+    profile: OrganicFarmProfile | None,
+) -> tuple[str | None, bool]:
+    """(display_status, verified) for a farm's real organic certification --
+    the exact expiry-aware logic already used by
+    organic/service.py::OrganicService.farm_summary, extracted here so other
+    modules (produce marketplace tagging/filtering) can reuse it instead of
+    re-deriving their own version of "is this actually still verified."
+    A farmer can never make this return True by themselves -- certification_status
+    only ever becomes "verified" via an admin decision (admin_service.py).
+    """
+    if profile is None:
+        return None, False
+    status = profile.certification_status
+    verified = bool(
+        status == "verified"
+        and profile.certificate_expires_on is not None
+        and profile.certificate_expires_on >= date.today()
+    )
+    if status == "verified" and not verified:
+        status = "expired"
+    return status, verified
+
+
 class OrganicSummaryFacts:
     def __init__(self, **values):
         self.__dict__.update(values)
@@ -28,6 +52,18 @@ class OrganicRepository:
             select(OrganicFarmProfile).where(OrganicFarmProfile.farm_id == farm_id)
         )
         return result.scalar_one_or_none()
+
+    async def profiles_for_farms(
+        self, farm_ids: list[uuid.UUID]
+    ) -> dict[uuid.UUID, OrganicFarmProfile]:
+        """Batch lookup for list views (produce marketplace organic tagging) --
+        avoids one query per row. Empty input short-circuits without a query."""
+        if not farm_ids:
+            return {}
+        result = await self.session.execute(
+            select(OrganicFarmProfile).where(OrganicFarmProfile.farm_id.in_(farm_ids))
+        )
+        return {p.farm_id: p for p in result.scalars().all()}
 
     async def document_by_key(
         self, profile_id: uuid.UUID, idempotency_key: str

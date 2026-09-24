@@ -99,6 +99,11 @@ export interface ProduceOffer {
   thumbnailUrl: string | null;
   imageCount: number;
   insight: ProcurementInsight | null;
+  // Real, admin-verified organic certification status for this offer's farm
+  // (never a farmer self-claim -- see backend OrganicFarmProfile.certification_status).
+  // null when the farm has no organic profile at all.
+  organicCertificationStatus: string | null;
+  organicCertificationVerified: boolean;
   createdAt: string;
   updatedAt: string;
   // Client-only: 'pending' while a mutation is queued in the offline outbox.
@@ -171,6 +176,7 @@ export interface ProduceListParams {
   category?: ProduceCategory | null;
   farmId?: string | null;
   search?: string | null;
+  organicOnly?: boolean;
   page?: number;
   pageSize?: number;
 }
@@ -284,6 +290,8 @@ export interface ApiProduceSummary {
   thumbnail_url: string | null;
   image_count: number;
   insight: ApiProcurementInsight | null;
+  organic_certification_status: string | null;
+  organic_certification_verified: boolean;
   created_at: string;
   updated_at: string;
 }

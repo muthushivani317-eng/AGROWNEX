@@ -155,6 +155,9 @@ export function ProduceDetailScreen({ offerId }: { offerId: string }) {
       <View className="mt-4 flex-row flex-wrap items-center gap-2">
         <AgBadge label={offer.listingRef ?? offer.id} tone="info" />
         <ProduceStatusBadge status={offer.status} />
+        {offer.organicCertificationVerified ? (
+          <AgBadge label={t('produce.organicVerified')} tone="success" />
+        ) : null}
         {offer.insight ? <HarvestWindowBadge window={offer.insight.harvestWindow} /> : null}
         {offer.expectedGrade ? (
           <AgBadge label={t(GRADE_LABEL_KEY[offer.expectedGrade])} tone="neutral" />

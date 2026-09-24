@@ -2,6 +2,23 @@ export type OrganicFarmMode = 'conventional' | 'organic_preferred' | 'transition
 export type CertificationStatus = 'not_claimed' | 'self_declared' | 'document_submitted' | 'verified' | 'expired' | 'rejected';
 export type OrganicPracticeType = 'amendment' | 'seed_treatment' | 'biological_treatment' | 'botanical_spray' | 'trap' | 'mechanical_weeding' | 'mulching' | 'green_manure' | 'crop_rotation' | 'irrigation_drainage' | 'scouting' | 'harvest' | 'custom';
 export type OrganicSyncStatus = 'synced' | 'pending';
+export type OrganicOutcomeStatus = 'not_reported' | 'improved' | 'no_change' | 'worse' | 'unknown';
+export type OrganicEvidenceType = 'photo' | 'voice_note' | 'receipt' | 'document' | 'other';
+
+export interface OrganicEvidenceInput {
+  evidenceType: OrganicEvidenceType;
+  uploadAttestationId: string;
+  uploadReceipt: string;
+  capturedAt?: string | null;
+  retentionConsent: boolean;
+}
+
+export interface OrganicEvidence {
+  id: string;
+  evidenceType: OrganicEvidenceType;
+  mimeType: string | null;
+  capturedAt: string | null;
+}
 
 export interface OrganicFarmProfile {
   farmId: string;
@@ -33,6 +50,10 @@ export interface OrganicPractice {
   notes: string | null;
   quantity: number | null;
   unit: string | null;
+  treatedAreaHectares: number | null;
+  expenseAmountInr: number | null;
+  outcomeStatus: OrganicOutcomeStatus;
+  evidence: OrganicEvidence[];
   sourceActionId: string | null;
   createdAt: string;
   syncStatus: OrganicSyncStatus;
@@ -46,6 +67,10 @@ export interface OrganicPracticeInput {
   notes?: string | null;
   quantity?: number | null;
   unit?: string | null;
+  treatedAreaHectares?: number | null;
+  expenseAmountInr?: number | null;
+  outcomeStatus?: OrganicOutcomeStatus;
+  evidence?: OrganicEvidenceInput[];
   sourceActionId?: string | null;
   clientRequestId: string;
 }
@@ -59,5 +84,7 @@ export interface ApiOrganicProfile {
 export interface ApiOrganicPractice {
   id: string; farm_id: string; practice_type: OrganicPracticeType; practice_code: string; input_reference?: string | null;
   occurred_at: string; note?: string | null; quantity?: number | null; quantity_unit?: string | null;
+  treated_area_hectares?: number | null; expense_amount_inr?: number | null; outcome_status?: OrganicOutcomeStatus;
+  evidence?: Array<{ id: string; evidence_type: OrganicEvidenceType; mime_type: string | null; captured_at: string | null }>;
   action_workflow_id?: string | null; created_at: string;
 }

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from decimal import Decimal
 from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
@@ -47,6 +48,8 @@ class OrganicLogCreateIn(BaseModel):
     treated_area_hectares: float | None = Field(default=None, gt=0)
     occurred_at: datetime
     note: str | None = Field(default=None, max_length=2000)
+    expense_amount_inr: Decimal | None = Field(default=None, ge=0, max_digits=12, decimal_places=2)
+    voice_transcript: str | None = Field(default=None, max_length=4000)
     outcome_status: OutcomeStatus = "not_reported"
     idempotency_key: str = Field(min_length=8, max_length=100)
     evidence: list[OrganicEvidenceIn] = Field(default_factory=list, max_length=10)
@@ -87,6 +90,8 @@ class OrganicLogOut(BaseModel):
     treated_area_hectares: float | None
     occurred_at: datetime
     note: str | None
+    expense_amount_inr: Decimal | None
+    voice_transcript: str | None
     outcome_status: str
     source_feature: str
     source_record_id: str

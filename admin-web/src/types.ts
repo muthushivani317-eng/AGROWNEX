@@ -3,7 +3,7 @@ export type Permission =
   | 'view_crop_intelligence'
   | 'manage_procurement' | 'view_ai' | 'view_audit'
   | 'manage_admins' | 'reveal_buyer_contact' | 'view_revenue' | 'view_ai_costs'
-  | 'manage_support'
+  | 'manage_support' | 'manage_content'
   | 'manage_marketplace_catalog' | 'manage_marketplace_suppliers'
   | 'manage_marketplace_qc' | 'manage_marketplace_procurement';
 
@@ -35,6 +35,7 @@ export interface Procurement {
   variety?: string | null; expected_grade?: string | null; asking_price?: number | null;
   price_unit?: string | null; negotiable?: boolean; packaging?: string | null;
   pickup_location?: string | null; pickup_available?: boolean;
+  organic_certification_status?: string | null; organic_certification_verified?: boolean;
 }
 export interface AuditRow {
   admin_id?: string | null;

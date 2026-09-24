@@ -164,7 +164,7 @@ async def test_category_and_availability_filters_remain_owner_scoped(db_session)
                 unit=ProduceUnit.KG,
             ),
         )
-    page, _ = await service.list_offers(
+    page, _, _ = await service.list_offers(
         owner,
         ProduceListFilters(
             category=ProduceCategory.VEGETABLES,
