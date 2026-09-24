@@ -9,6 +9,7 @@ import type { Farmer, Page } from './types';
 type Fpo = { id: string; name: string; district: string; registration_reference: string | null; is_test: boolean };
 type Organization = { id: string; name: string; kind: 'fpo' | 'kvk' | 'agri_community'; fpo_id: string | null; is_test: boolean };
 type StaffRole = 'manager' | 'advisor' | 'viewer';
+type Staff = { id: string; user_id: string; farmer_ref: string; role: StaffRole; status: string };
 
 // This module's endpoints (`/admin/organic-partner/...`) return raw JSON, not
 // the `{success,data}` envelope the shared `api()` helper expects — same
@@ -43,6 +44,10 @@ export function PartnerOrganizationsPage() {
   const [fpoSuccess, setFpoSuccess] = useState('');
   const [fpoDeletingId, setFpoDeletingId] = useState('');
 
+  // Delete organization
+  const [orgDeletingId, setOrgDeletingId] = useState('');
+  const [orgDeleteError, setOrgDeleteError] = useState('');
+
   // New organization
   const [orgName, setOrgName] = useState('');
   const [orgKind, setOrgKind] = useState<Organization['kind']>('fpo');
@@ -63,8 +68,14 @@ export function PartnerOrganizationsPage() {
   const [staffBusy, setStaffBusy] = useState(false);
   const [staffError, setStaffError] = useState('');
   const [staffSuccess, setStaffSuccess] = useState('');
+  const [staffDeactivatingId, setStaffDeactivatingId] = useState('');
 
-  function refreshAll() { void fpos.reload(); void organizations.reload(); }
+  const staffList = useResource(
+    () => staffOrgId ? partnerRequest<Staff[]>(`/admin/organic-partner/organizations/${staffOrgId}/staff`) : Promise.resolve([] as Staff[]),
+    [staffOrgId],
+  );
+
+  function refreshAll() { void fpos.reload(); void organizations.reload(); if (staffOrgId) void staffList.reload(); }
 
   async function createFpo() {
     setFpoBusy(true); setFpoError(''); setFpoSuccess('');
@@ -108,6 +119,17 @@ export function PartnerOrganizationsPage() {
     finally { setOrgBusy(false); }
   }
 
+  async function deleteOrganization(id: string, name: string) {
+    if (!window.confirm(`Delete organization "${name}"? This cannot be undone.`)) return;
+    setOrgDeletingId(id); setOrgDeleteError('');
+    try {
+      await partnerRequest<{ status: string }>(`/admin/organic-partner/organizations/${id}`, 'DELETE');
+      if (staffOrgId === id) setStaffOrgId('');
+      await organizations.reload();
+    } catch (cause) { setOrgDeleteError(cause instanceof Error ? cause.message : 'Could not delete organization.'); }
+    finally { setOrgDeletingId(''); }
+  }
+
   async function searchFarmers() {
     setStaffSearching(true); setStaffError('');
     try {
@@ -128,8 +150,21 @@ export function PartnerOrganizationsPage() {
         { user_id: staffUserId.trim(), role: staffRole });
       setStaffSuccess(`Added as ${staffRole} — staff record ${result.status}.`);
       setStaffUserId(''); setStaffLabel(''); setStaffSearch(''); setStaffMatches([]);
+      await staffList.reload();
     } catch (cause) { setStaffError(cause instanceof Error ? cause.message : 'Could not add staff member.'); }
     finally { setStaffBusy(false); }
+  }
+
+  async function deactivateStaff(staffId: string, farmerRef: string) {
+    if (!staffOrgId) return;
+    if (!window.confirm(`Deactivate staff member ${farmerRef}?`)) return;
+    setStaffDeactivatingId(staffId); setStaffError('');
+    try {
+      await partnerRequest<{ status: string }>(
+        `/admin/organic-partner/organizations/${staffOrgId}/staff/${staffId}/deactivate`, 'POST');
+      await staffList.reload();
+    } catch (cause) { setStaffError(cause instanceof Error ? cause.message : 'Could not deactivate staff member.'); }
+    finally { setStaffDeactivatingId(''); }
   }
 
   const loading = fpos.loading || organizations.loading;
@@ -184,10 +219,14 @@ export function PartnerOrganizationsPage() {
           <PlusCircle size={16} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 6 }}/>{orgBusy ? 'Creating…' : 'Create organization'}
         </button>
       </div>
+      {orgDeleteError && <p role="alert" className="error">{orgDeleteError}</p>}
       <h3 style={{ marginTop: 22 }}>Existing organizations ({organizations.data?.length ?? 0})</h3>
       {organizations.data && organizations.data.length > 0
-        ? <DataTable columns={['Name', 'Kind', 'Linked FPO', 'Type']}
-            rows={organizations.data.map(o => [o.name, o.kind, fpos.data?.find(f => f.id === o.fpo_id)?.name ?? '—', o.is_test ? 'Test' : 'Real'])} />
+        ? <DataTable columns={['Name', 'Kind', 'Linked FPO', 'Type', 'Actions']}
+            rows={organizations.data.map(o => [o.name, o.kind, fpos.data?.find(f => f.id === o.fpo_id)?.name ?? '—', o.is_test ? 'Test' : 'Real',
+              <button disabled={orgDeletingId === o.id} onClick={() => void deleteOrganization(o.id, o.name)} style={{ background: 'var(--danger)' }}>
+                <Trash2 size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 6 }}/>{orgDeletingId === o.id ? 'Deleting…' : 'Delete'}
+              </button>])} />
         : <p>No organizations recorded yet.</p>}
     </Card>
 
@@ -229,6 +268,19 @@ export function PartnerOrganizationsPage() {
           <UserPlus size={16} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 6 }}/>{staffBusy ? 'Adding…' : 'Add staff member'}
         </button>
       </div>
+      {staffOrgId && <>
+        <h3 style={{ marginTop: 22 }}>Staff for this organization ({staffList.data?.length ?? 0})</h3>
+        {staffList.loading ? <Loading /> : staffList.error ? <ErrorPanel message={staffList.error} retry={() => void staffList.reload()} />
+          : staffList.data && staffList.data.length > 0
+          ? <DataTable columns={['Farmer ref.', 'Role', 'Status', 'Actions']}
+              rows={staffList.data.map(s => [s.farmer_ref, s.role, s.status,
+                s.status === 'active'
+                  ? <button disabled={staffDeactivatingId === s.id} onClick={() => void deactivateStaff(s.id, s.farmer_ref)} style={{ background: 'var(--danger)' }}>
+                      {staffDeactivatingId === s.id ? 'Deactivating…' : 'Deactivate'}
+                    </button>
+                  : '—'])} />
+          : <p>No staff on this organization yet.</p>}
+      </>}
     </Card>
     </>}
   </section>;

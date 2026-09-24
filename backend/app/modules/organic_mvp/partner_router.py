@@ -184,6 +184,58 @@ async def list_organizations(session: Session, admin: AdminContextDep):
     ]
 
 
+@admin_router.delete("/organizations/{organization_id}")
+async def delete_organization(organization_id: uuid.UUID, session: Session, admin: AdminContextDep):
+    """Remove a mistaken/duplicate organization entry.
+
+    Previously there was no way to remove a partner organization once
+    created via POST /organizations -- not even a test one -- with no UI
+    or API path. Refuses to delete an organization that still has active
+    staff, an active API key, or a pending/approved farmer link, since
+    those would be left dangling; once those are cleared (deactivated /
+    revoked / resolved), any leftover inactive rows are removed along with
+    the organization itself so the delete doesn't fail on stale history.
+    """
+    _platform(admin)
+    organization = await session.get(OrganicPartnerOrganization, organization_id)
+    if organization is None:
+        raise NotFoundError("Organization not found.")
+    active_staff = await session.scalar(select(OrganicPartnerStaff).where(
+        OrganicPartnerStaff.organization_id == organization_id,
+        OrganicPartnerStaff.status == "active",
+    ))
+    if active_staff is not None:
+        raise ConflictError("This organization has active staff; deactivate them first.")
+    active_key = await session.scalar(select(OrganicPartnerApiKey).where(
+        OrganicPartnerApiKey.organization_id == organization_id,
+        OrganicPartnerApiKey.revoked_at.is_(None),
+    ))
+    if active_key is not None:
+        raise ConflictError("This organization has an active API key; revoke it first.")
+    open_link = await session.scalar(select(OrganicPartnerFarmerLink).where(
+        OrganicPartnerFarmerLink.organization_id == organization_id,
+        OrganicPartnerFarmerLink.status.in_(["pending", "approved"]),
+    ))
+    if open_link is not None:
+        raise ConflictError("This organization has a linked or pending farmer; resolve that first.")
+    for row in (await session.scalars(select(OrganicPartnerStaff).where(
+            OrganicPartnerStaff.organization_id == organization_id))).all():
+        await session.delete(row)
+    for row in (await session.scalars(select(OrganicPartnerApiKey).where(
+            OrganicPartnerApiKey.organization_id == organization_id))).all():
+        await session.delete(row)
+    for row in (await session.scalars(select(OrganicPartnerFarmerLink).where(
+            OrganicPartnerFarmerLink.organization_id == organization_id))).all():
+        await session.delete(row)
+    session.add(AuditLog(admin_id=admin.admin.id, role=admin.admin.role,
+        action="organic_partner_org_deleted", target="organic_partner_org", target_id=str(organization.id),
+        ip_address=admin.ip_address,
+        meta={"name": organization.name, "kind": organization.kind, "is_test": organization.is_test}))
+    await session.delete(organization)
+    await session.commit()
+    return {"status": "deleted"}
+
+
 @admin_router.get("/organizations/{organization_id}/farmers")
 async def admin_organization_farmers(
     organization_id: uuid.UUID, session: Session, admin: AdminContextDep
@@ -244,6 +296,27 @@ async def add_staff(organization_id: uuid.UUID, body: StaffIn, session: Session,
         meta={"organization_id": str(organization_id), "user_id": str(body.user_id), "role": body.role}))
     await session.commit()
     return {"id": str(row.id), "status": row.status}
+
+
+@admin_router.get("/organizations/{organization_id}/staff")
+async def list_staff(organization_id: uuid.UUID, session: Session, admin: AdminContextDep):
+    """Staff for one organization -- previously add_staff had no matching
+    list route, so there was no way to see who already has access, or find
+    a staff_id to deactivate, without a direct database query.
+    """
+    _platform(admin)
+    organization = await session.get(OrganicPartnerOrganization, organization_id)
+    if organization is None:
+        raise NotFoundError("Organization not found.")
+    rows = (await session.execute(select(OrganicPartnerStaff, User.farmer_ref).join(
+        User, User.id == OrganicPartnerStaff.user_id,
+    ).where(OrganicPartnerStaff.organization_id == organization_id)
+        .order_by(OrganicPartnerStaff.created_at))).all()
+    return [
+        {"id": str(staff.id), "user_id": str(staff.user_id), "farmer_ref": farmer_ref,
+         "role": staff.role, "status": staff.status}
+        for staff, farmer_ref in rows
+    ]
 
 
 @admin_router.post("/organizations/{organization_id}/staff/{staff_id}/deactivate")

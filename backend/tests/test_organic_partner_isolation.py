@@ -12,9 +12,10 @@ from app.modules.admin.service import AdminContext
 from app.modules.farms.models import Farm
 from app.modules.organic_mvp.models import OrganicPartnerOrganization, OrganicPartnerStaff
 from app.modules.organic_mvp.partner_router import (
-    FpoIn, LinkRequestIn, approve_farmer_link, create_fpo, delete_fpo, farmer_organic_summary,
+    FpoIn, LinkRequestIn, StaffIn, approve_farmer_link, create_fpo, delete_fpo, farmer_organic_summary,
     list_fpos, organization_farmers, request_farmer_link, revoke_farmer_link,
-    create_organization, deactivate_staff, OrganizationIn,
+    add_staff, create_organization, deactivate_staff, delete_organization, list_organizations,
+    list_staff, OrganizationIn,
 )
 
 
@@ -130,3 +131,79 @@ async def test_delete_fpo_refuses_when_linked_to_organization(db_session):
 
     with pytest.raises(ConflictError):
         await delete_fpo(fpo_id, db_session, admin_ctx)
+
+
+@pytest.mark.asyncio
+async def test_list_staff_and_deactivate_staff(db_session):
+    platform_user = User(firebase_uid="partner-staff-lister", status="active")
+    farmer = User(firebase_uid="partner-staff-member", status="active")
+    db_session.add_all([platform_user, farmer])
+    await db_session.flush()
+    platform_admin = AdminUser(user_id=platform_user.id, role=AdminRole.OWNER.value)
+    db_session.add(platform_admin)
+    await db_session.flush()
+    admin_ctx = AdminContext(admin=platform_admin, permissions=frozenset())
+
+    created_fpo = await create_fpo(FpoIn(name="Staff FPO", district="Test District", is_test=True), db_session, admin_ctx)
+    created_org = await create_organization(
+        OrganizationIn(name="Staff Org", kind="fpo", fpo_id=uuid.UUID(created_fpo["id"]), is_test=True),
+        db_session, admin_ctx)
+    org_id = uuid.UUID(created_org["id"])
+
+    assert await list_staff(org_id, db_session, admin_ctx) == []
+
+    added = await add_staff(org_id, StaffIn(user_id=farmer.id, role="manager"), db_session, admin_ctx)
+    staff_id = uuid.UUID(added["id"])
+
+    rows = await list_staff(org_id, db_session, admin_ctx)
+    assert len(rows) == 1
+    assert rows[0]["id"] == str(staff_id)
+    assert rows[0]["role"] == "manager"
+    assert rows[0]["status"] == "active"
+    assert rows[0]["farmer_ref"] == farmer.farmer_ref
+
+    class NotPlatformAdmin:
+        admin = type("Admin", (), {"role": "partner_manager"})()
+
+    with pytest.raises(ForbiddenError):
+        await list_staff(org_id, db_session, NotPlatformAdmin())
+
+    await deactivate_staff(org_id, staff_id, db_session, admin_ctx)
+    rows = await list_staff(org_id, db_session, admin_ctx)
+    assert rows[0]["status"] == "inactive"
+
+
+@pytest.mark.asyncio
+async def test_delete_organization_refuses_with_active_staff_then_succeeds(db_session):
+    platform_user = User(firebase_uid="partner-org-deleter", status="active")
+    farmer = User(firebase_uid="partner-org-deleter-staff", status="active")
+    db_session.add_all([platform_user, farmer])
+    await db_session.flush()
+    platform_admin = AdminUser(user_id=platform_user.id, role=AdminRole.OWNER.value)
+    db_session.add(platform_admin)
+    await db_session.flush()
+    admin_ctx = AdminContext(admin=platform_admin, permissions=frozenset())
+
+    with pytest.raises(NotFoundError):
+        await delete_organization(uuid.uuid4(), db_session, admin_ctx)
+
+    created_org = await create_organization(OrganizationIn(name="Delete Me Org", kind="kvk", is_test=True), db_session, admin_ctx)
+    org_id = uuid.UUID(created_org["id"])
+    added = await add_staff(org_id, StaffIn(user_id=farmer.id, role="manager"), db_session, admin_ctx)
+    staff_id = uuid.UUID(added["id"])
+
+    class NotPlatformAdmin:
+        admin = type("Admin", (), {"role": "partner_manager"})()
+
+    with pytest.raises(ForbiddenError):
+        await delete_organization(org_id, db_session, NotPlatformAdmin())
+
+    with pytest.raises(ConflictError):
+        await delete_organization(org_id, db_session, admin_ctx)
+
+    await deactivate_staff(org_id, staff_id, db_session, admin_ctx)
+
+    result = await delete_organization(org_id, db_session, admin_ctx)
+    assert result == {"status": "deleted"}
+    remaining = await list_organizations(db_session, admin_ctx)
+    assert org_id not in {uuid.UUID(o["id"]) for o in remaining}
