@@ -62,8 +62,23 @@ def build_safe_result(assessment: NutrientAssessment) -> SafeNutrientResult:
         )
     if assessment.status == "confirmed" and corroborated:
         code = NutrientResultCode.SUPPORTED_FINDING
-    elif assessment.status == "possible" and corroborated:
-        code = NutrientResultCode.POSSIBLE_FINDING
+    elif assessment.status in {"confirmed", "possible"}:
+        # A clear visual finding with no contradicting evidence is shown to the
+        # farmer as a *likely* deficiency (with its confidence), together with a
+        # soil/tissue test to confirm it -- never as a confirmed one.
+        next_evidence = ["soil_or_tissue_test"]
+        if assessment.needs_expert:
+            next_evidence.append("expert_review")
+        return SafeNutrientResult(
+            NutrientResultCode.POSSIBLE_FINDING,
+            assessment.primary_deficiency,
+            band,
+            observed,
+            missing,
+            [],
+            None,
+            next_evidence,
+        )
     else:
         return SafeNutrientResult(
             NutrientResultCode.ABSTAINED,

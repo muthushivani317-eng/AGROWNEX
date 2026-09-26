@@ -82,8 +82,11 @@ def schedule_reviewed_tasks(tasks: list[dict], sowing_date: date) -> list[dict]:
     result = []
     for task in tasks:
         day = task.get("day_offset")
-        if not isinstance(day, int) or not 0 <= day <= 90:
-            raise ValidationError("Task day must be within the 90-day plan.")
+        # 400 covers every supported annual/biennial crop's full sowing-to-harvest
+        # window (banana/sugarcane run close to 365 days); perennials like coconut
+        # are out of scope for a single harvest-cycle plan.
+        if not isinstance(day, int) or not 0 <= day <= 400:
+            raise ValidationError("Task day must be within the 400-day plan.")
         if not task.get("title_ta") or not task.get("body_ta"):
             raise ValidationError("Reviewed tasks require Tamil title and instructions.")
         result.append({**task, "due_on": sowing_date + timedelta(days=day)})

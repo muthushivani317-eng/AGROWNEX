@@ -63,10 +63,29 @@ export function NutrientRecommendationCard({
           <View style={styles.organicTip}>
             <Leaf size={14} color={NUTRIENT_UI.leaf} />
             <AgText variant="bodySmall" style={styles.organicTipText}>
-              <AgText variant="bodySmall" weight="semibold" style={styles.organicTipText}>
+              <AgText
+                variant="bodySmall"
+                weight="semibold"
+                style={styles.organicTipText}
+              >
                 {t("nutrient.organicWay")}{" "}
               </AgText>
               {t(`${rec.code}.organicTip`)}
+            </AgText>
+          </View>
+        ) : null}
+        {rec.category === "nutrient" ? (
+          <View style={styles.chemicalTip}>
+            <FlaskConical size={14} color={NUTRIENT_UI.muted} />
+            <AgText variant="bodySmall" style={styles.chemicalTipText}>
+              <AgText
+                variant="bodySmall"
+                weight="semibold"
+                style={styles.chemicalTipText}
+              >
+                {t("nutrient.chemicalWay")}{" "}
+              </AgText>
+              {t(`${rec.code}.chemicalTip`)}
             </AgText>
           </View>
         ) : null}
@@ -103,6 +122,16 @@ const styles = StyleSheet.create({
     backgroundColor: NUTRIENT_UI.surfaceSoft,
   },
   organicTipText: { flex: 1, color: NUTRIENT_UI.text },
+  chemicalTip: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 6,
+    padding: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: NUTRIENT_UI.border,
+  },
+  chemicalTipText: { flex: 1, color: NUTRIENT_UI.muted },
   titleRow: {
     flexDirection: "row",
     flexWrap: "wrap",

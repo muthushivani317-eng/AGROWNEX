@@ -136,10 +136,10 @@ describe("nutrientEngine (client mirror of the backend Nutrient Engine)", () => 
       );
     });
 
-    it("does not expose a nutrient action for visual-only evidence", () => {
+    it("gives the remedy plus a soil test for visual-only evidence", () => {
       const a = corroborate(obs({ primary: "nitrogen" }));
       const codes = buildRecommendations(a).map((r) => r.code);
-      expect(codes).not.toContain("nutrient.rec.nitrogen.deficiency");
+      expect(codes).toContain("nutrient.rec.nitrogen.deficiency");
       expect(codes).toContain("nutrient.rec.test.soil_test");
     });
 

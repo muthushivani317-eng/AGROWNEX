@@ -41,6 +41,7 @@ import { useAppTheme } from "@/hooks/useAppTheme";
 import { useLanguage } from "@/hooks/useLanguage";
 import { ApiError } from "@/types";
 
+import { GrowthBoostCard } from "../components/GrowthBoostCard";
 import { GrowthCard } from "../components/GrowthCard";
 import { GrowthComparison } from "../components/GrowthComparison";
 import { ImageViewer } from "../components/ImageViewer";
@@ -97,7 +98,11 @@ export function GrowthMonitorScreen() {
     caption?: string | null;
   } | null>(null);
 
-  const timelineQuery = useGrowthTimeline(null, farm?.id ?? null, Boolean(farm));
+  const timelineQuery = useGrowthTimeline(
+    null,
+    farm?.id ?? null,
+    Boolean(farm),
+  );
   const historyQuery = useGrowthHistory(null, farm?.id ?? null, Boolean(farm));
   const upload = useUploadGrowth();
   const del = useDeleteGrowthImage();
@@ -119,19 +124,27 @@ export function GrowthMonitorScreen() {
         a.weekNumber - b.weekNumber || a.capturedAt.localeCompare(b.capturedAt),
     );
   }, [images, sessionId]);
+  const latestAnalysis = useMemo(
+    () =>
+      [...sessionImages].reverse().find((image) => image.analysis)?.analysis ??
+      null,
+    [sessionImages],
+  );
 
   const onPick = async (source: CaptureMethod) => {
     if (!farm || pickLock.current || mutationLock.current) return;
     pickLock.current = true;
     setPicking(true);
     try {
-    const image =
-      source === "camera" ? await captureFromCamera() : await pickFromGallery();
-    if (!image) return;
-    setMethod(source);
-    setPicked(image);
-    setIssues(checkImageQuality(image).issues);
-    upload.reset();
+      const image =
+        source === "camera"
+          ? await captureFromCamera()
+          : await pickFromGallery();
+      if (!image) return;
+      setMethod(source);
+      setPicked(image);
+      setIssues(checkImageQuality(image).issues);
+      upload.reset();
     } catch {
       Alert.alert(t("common.somethingWrong"), t("growth.captureFailed"));
     } finally {
@@ -147,7 +160,14 @@ export function GrowthMonitorScreen() {
   };
 
   const onUpload = () => {
-    if (!picked || !farm || issues.length || mutationLock.current || pickLock.current) return;
+    if (
+      !picked ||
+      !farm ||
+      issues.length ||
+      mutationLock.current ||
+      pickLock.current
+    )
+      return;
     mutationLock.current = true;
     upload.mutate(
       {
@@ -166,7 +186,9 @@ export function GrowthMonitorScreen() {
           resetUpload();
           setView("timeline");
         },
-        onSettled: () => { mutationLock.current = false; },
+        onSettled: () => {
+          mutationLock.current = false;
+        },
       },
     );
   };
@@ -175,8 +197,11 @@ export function GrowthMonitorScreen() {
     if (mutationLock.current || pickLock.current) return;
     mutationLock.current = true;
     del.mutate(image.id, {
-      onError: () => Alert.alert(t("common.somethingWrong"), t("growth.deleteFailed")),
-      onSettled: () => { mutationLock.current = false; },
+      onError: () =>
+        Alert.alert(t("common.somethingWrong"), t("growth.deleteFailed")),
+      onSettled: () => {
+        mutationLock.current = false;
+      },
     });
   };
   const openViewer = (uri: string | null, caption?: string | null) => {
@@ -201,7 +226,15 @@ export function GrowthMonitorScreen() {
     return (
       <AgScreen backgroundColor={GROWTH_COLORS.background}>
         <Header onBack={() => router.back()} title={t("growth.title")} />
-        {farmQuery.isLoading ? <GrowthSkeleton /> : <GrowthErrorState onRetry={() => { void farmQuery.refetch(); }} />}
+        {farmQuery.isLoading ? (
+          <GrowthSkeleton />
+        ) : (
+          <GrowthErrorState
+            onRetry={() => {
+              void farmQuery.refetch();
+            }}
+          />
+        )}
       </AgScreen>
     );
   }
@@ -229,7 +262,9 @@ export function GrowthMonitorScreen() {
     setRefreshing(true);
     try {
       await Promise.allSettled([
-        farmQuery.refetch(), timelineQuery.refetch(), historyQuery.refetch(),
+        farmQuery.refetch(),
+        timelineQuery.refetch(),
+        historyQuery.refetch(),
         ...(sessionId ? [stageQuery.refetch()] : []),
       ]);
     } finally {
@@ -242,15 +277,26 @@ export function GrowthMonitorScreen() {
     timelineQuery.error instanceof ApiError &&
     timelineQuery.error.status === 404 &&
     timelineQuery.error.errorCode === "growth_session_not_found";
-  const loading = view === "history" ? historyQuery.isLoading
-    : timelineQuery.isLoading || (view === "compare" && historyQuery.isLoading);
-  const errored = view === "history" ? historyQuery.isError
-    : (timelineQuery.isError && !timelineSessionNotFound) || (view === "compare" && historyQuery.isError);
+  const loading =
+    view === "history"
+      ? historyQuery.isLoading
+      : timelineQuery.isLoading ||
+        (view === "compare" && historyQuery.isLoading);
+  const errored =
+    view === "history"
+      ? historyQuery.isError
+      : (timelineQuery.isError && !timelineSessionNotFound) ||
+        (view === "compare" && historyQuery.isError);
 
   const busy = upload.isPending;
   const listData: (TimelineEntry | GrowthImage)[] =
     errored || loading || (view === "timeline" && timelineSessionNotFound)
-      ? [] : view === "timeline" ? timeline : view === "history" ? images : [];
+      ? []
+      : view === "timeline"
+        ? timeline
+        : view === "history"
+          ? images
+          : [];
 
   const header = (
     <View style={styles.headerContent}>
@@ -293,10 +339,13 @@ export function GrowthMonitorScreen() {
               : t("growth.stageTracking.title")}
           </AgText>
           <AgText variant="caption" style={styles.mutedText} numberOfLines={2}>
-            {stageQuery.isError ? t("growth.loadErrorMessage")
-              : stageQuery.isLoading ? t("common.loading") : stageQuery.data
-              ? t(`growth.stageTracking.${stageQuery.data.state}`)
-              : t("growth.stageTracking.notConfirmed")}
+            {stageQuery.isError
+              ? t("growth.loadErrorMessage")
+              : stageQuery.isLoading
+                ? t("common.loading")
+                : stageQuery.data
+                  ? t(`growth.stageTracking.${stageQuery.data.state}`)
+                  : t("growth.stageTracking.notConfirmed")}
           </AgText>
         </View>
         <View style={styles.stageAction}>
@@ -309,7 +358,13 @@ export function GrowthMonitorScreen() {
           </AgText>
         </View>
       </AgPressable>
-      {stageQuery.isError ? <AgButton title={t("common.retry")} onPress={refresh} disabled={refreshing} /> : null}
+      {stageQuery.isError ? (
+        <AgButton
+          title={t("common.retry")}
+          onPress={refresh}
+          disabled={refreshing}
+        />
+      ) : null}
 
       {/* Upload area */}
       {picked ? (
@@ -323,7 +378,11 @@ export function GrowthMonitorScreen() {
             <View className="mt-3 rounded-card border border-warning/40 bg-warning/10 p-3">
               <View className="mb-1 flex-row items-center gap-2">
                 <TriangleAlert size={16} color={colors.warning} />
-                <AgText variant="bodySmall" weight="semibold" style={styles.inkText}>
+                <AgText
+                  variant="bodySmall"
+                  weight="semibold"
+                  style={styles.inkText}
+                >
                   {t("growth.qualityTitle")}
                 </AgText>
               </View>
@@ -334,7 +393,12 @@ export function GrowthMonitorScreen() {
               ))}
             </View>
           ) : uploadError ? (
-            <AgText variant="bodySmall" color="danger" className="mt-3" style={styles.errorText}>
+            <AgText
+              variant="bodySmall"
+              color="danger"
+              className="mt-3"
+              style={styles.errorText}
+            >
               {uploadError}
             </AgText>
           ) : null}
@@ -379,7 +443,10 @@ export function GrowthMonitorScreen() {
           <AgPressable
             onPress={() => onPick("camera")}
             disabled={picking || del.isPending}
-            accessibilityState={{ disabled: picking || del.isPending, busy: picking }}
+            accessibilityState={{
+              disabled: picking || del.isPending,
+              busy: picking,
+            }}
             accessibilityRole="button"
             accessibilityLabel={t("growth.takeGrowthPhoto")}
             style={styles.primaryCaptureButton}
@@ -392,7 +459,10 @@ export function GrowthMonitorScreen() {
           <AgPressable
             onPress={() => onPick("gallery")}
             disabled={picking || del.isPending}
-            accessibilityState={{ disabled: picking || del.isPending, busy: picking }}
+            accessibilityState={{
+              disabled: picking || del.isPending,
+              busy: picking,
+            }}
             accessibilityRole="button"
             accessibilityLabel={t("growth.chooseGallery")}
             style={styles.secondaryCaptureButton}
@@ -404,6 +474,8 @@ export function GrowthMonitorScreen() {
           </AgPressable>
         </View>
       )}
+
+      {latestAnalysis ? <GrowthBoostCard analysis={latestAnalysis} /> : null}
 
       <View style={styles.tabs} accessibilityRole="tablist">
         {VIEWS.map((v) => {
@@ -429,7 +501,10 @@ export function GrowthMonitorScreen() {
       </View>
 
       {/* Compare view content lives in the header (list stays empty). */}
-      {view === "compare" && !loading && !errored && sessionImages.length >= 2 ? (
+      {view === "compare" &&
+      !loading &&
+      !errored &&
+      sessionImages.length >= 2 ? (
         <GrowthComparison
           first={sessionImages[0]}
           latest={sessionImages[sessionImages.length - 1]}
@@ -461,7 +536,9 @@ export function GrowthMonitorScreen() {
           refreshControl={
             <RefreshControl
               refreshing={
-                refreshing || timelineQuery.isRefetching || historyQuery.isRefetching
+                refreshing ||
+                timelineQuery.isRefetching ||
+                historyQuery.isRefetching
               }
               onRefresh={refresh}
               tintColor={colors.primary}
@@ -490,7 +567,8 @@ export function GrowthMonitorScreen() {
               <GrowthSkeleton />
             ) : errored ? (
               <GrowthErrorState onRetry={refresh} />
-            ) : view === "compare" && sessionImages.length >= 2 ? null : view === "compare" ? (
+            ) : view === "compare" &&
+              sessionImages.length >= 2 ? null : view === "compare" ? (
               <AgEmptyState
                 light
                 icon={Sprout}
@@ -623,7 +701,15 @@ function GrowthSkeleton() {
   return (
     <View style={{ marginTop: 8, gap: 12 }}>
       {[0, 1, 2].map((i) => (
-        <AgSkeleton key={i} style={{ height: 112, width: "100%", borderRadius: 12, backgroundColor: GROWTH_COLORS.border }} />
+        <AgSkeleton
+          key={i}
+          style={{
+            height: 112,
+            width: "100%",
+            borderRadius: 12,
+            backgroundColor: GROWTH_COLORS.border,
+          }}
+        />
       ))}
     </View>
   );

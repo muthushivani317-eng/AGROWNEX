@@ -268,13 +268,14 @@ def build_recommendations(assessment: NutrientAssessment) -> list[Recommendation
     status = assessment.status
     primary = assessment.primary_deficiency
 
-    # A visual suggestion is not enough to expose a nutrient-specific action.
-    # The safe public result contract only supports a finding when compatible
-    # measured soil/tissue evidence corroborates the primary observation.
+    # A confirmed or clearly visible (possible) deficiency gets its remedy --
+    # organic first, then chemical -- as long as nothing contradicts it (soil
+    # measuring the nutrient as ample, or a recent disease on the farm). A
+    # possible finding also gets the soil-test recommendation below.
     if (
         primary
-        and status == DeficiencyStatus.CONFIRMED.value
-        and assessment.soil_supports is True
+        and status in (DeficiencyStatus.CONFIRMED.value, DeficiencyStatus.POSSIBLE.value)
+        and assessment.soil_supports is not False
         and not assessment.disease_conflict
     ):
         rec_sev = _SEVERITY_TO_REC.get(assessment.severity, _REC_WARNING)

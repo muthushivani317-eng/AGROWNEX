@@ -128,7 +128,7 @@ async def test_analyze_saves_report_with_analysis(
     # No corroboration yet → an honest "possible", not a confirmed claim.
     assert report.analysis.status == "possible"
     assert "yellowing" in [s.code for s in report.symptoms]
-    assert not any(r.category == "nutrient" for r in report.recommendations)
+    assert any(r.code == "nutrient.rec.nitrogen.deficiency" for r in report.recommendations)
     assert any(r.code == "nutrient.rec.test.soil_test" for r in report.recommendations)
     usage_rows = (await db_session.execute(select(TokenUsage))).scalars().all()
     assert len(usage_rows) == 1

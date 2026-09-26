@@ -191,11 +191,17 @@ class TestRecommendations:
         codes = [r.code for r in build_recommendations(a)]
         assert "nutrient.rec.magnesium.deficiency" not in codes
 
-    def test_visual_only_possible_finding_does_not_expose_nutrient_action(self) -> None:
+    def test_visual_only_possible_finding_gives_remedy_and_soil_test(self) -> None:
         a = corroborate(_obs(primary="nitrogen", confidence=68))
         codes = [r.code for r in build_recommendations(a)]
-        assert "nutrient.rec.nitrogen.deficiency" not in codes
+        assert "nutrient.rec.nitrogen.deficiency" in codes
         assert "nutrient.rec.test.soil_test" in codes
+
+    def test_soil_contradiction_hides_nutrient_remedy(self) -> None:
+        soil = SoilReference(has_data=True, macro_ratings={"nitrogen": "high"})
+        a = corroborate(_obs(primary="nitrogen", confidence=68), soil=soil)
+        codes = [r.code for r in build_recommendations(a)]
+        assert "nutrient.rec.nitrogen.deficiency" not in codes
 
     def test_not_confirmed_advises_a_soil_test(self) -> None:
         a = corroborate(_obs(primary=None, confidence=20))

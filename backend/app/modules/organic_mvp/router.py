@@ -19,6 +19,12 @@ from app.modules.auth.dependencies import CurrentUser
 from app.modules.farms.models import Farm
 from app.modules.notifications.models import FutureNotificationQueue
 from app.modules.organic.models import OrganicCertificationDocument, OrganicFarmProfile
+from app.modules.organic_mvp.common_plan import (
+    COMMON_PLAN_VERSION,
+    NOTICE_EN,
+    NOTICE_TA,
+    build_common_plan,
+)
 from app.modules.organic_mvp.engine import (
     READINESS_PATHWAYS,
     TRIAL_NOTICE,
@@ -133,7 +139,7 @@ async def add_crop_cycle(plot_id: uuid.UUID, body: CropCycleIn, session: Session
     cycle = OrganicCropCycle(plot_id=plot_id, **body.model_dump())
     session.add(cycle)
     await session.commit()
-    return {"id": str(cycle.id), "status": "Crop plan awaiting agronomist approval"}
+    return {"id": str(cycle.id), "status": "ready" if cycle.sowing_date else "needs_sowing_date"}
 
 
 @router.get("/plots/{plot_id}/crop-cycles")
@@ -247,10 +253,26 @@ async def crop_plan(cycle_id: uuid.UUID, session: Session, user: CurrentUser):
             .order_by(OrganicScheduledTask.due_on)
         )
     ).all()
-    return {"status": "ready" if tasks else "Crop plan awaiting agronomist approval",
-            "tasks": [{"id": str(t.id), "due_on": t.due_on, "title_ta": t.title_ta,
-                       "body_ta": t.body_ta, "title_en": t.title_en, "body_en": t.body_en,
-                       "status": t.status} for t in tasks]}
+    if tasks:
+        return {"status": "ready", "source": "reviewed_template",
+                "notice_ta": NOTICE_TA, "notice_en": NOTICE_EN,
+                "tasks": [{"id": str(t.id), "week": None, "due_on": t.due_on, "title_ta": t.title_ta,
+                           "body_ta": t.body_ta, "title_en": t.title_en, "body_en": t.body_en,
+                           "status": t.status} for t in tasks]}
+    # No crop-specific plan activated: fall back to the KVK-approved common plan.
+    if not cycle.sowing_date:
+        return {"status": "needs_sowing_date", "source": COMMON_PLAN_VERSION,
+                "notice_ta": NOTICE_TA, "notice_en": NOTICE_EN, "tasks": []}
+    return {"status": "ready", "source": COMMON_PLAN_VERSION,
+            "notice_ta": NOTICE_TA, "notice_en": NOTICE_EN,
+            "tasks": [_common_task_out(cycle.id, t) for t in
+                      build_common_plan(cycle.sowing_date, cycle.expected_harvest_start)]}
+
+
+def _common_task_out(cycle_id: uuid.UUID, task: dict, **extra) -> dict:
+    return {"id": f"common:{cycle_id}:{task['week']}", "week": task["week"],
+            "due_on": task["due_on"], "title_ta": task["title_ta"], "body_ta": task["body_ta"],
+            "title_en": task["title_en"], "body_en": task["body_en"], "status": "pending", **extra}
 
 
 @router.get("/farms/{farm_id}/today-task")
@@ -277,9 +299,30 @@ async def today_task(farm_id: uuid.UUID, session: Session, user: CurrentUser):
             .limit(3)
         )
     ).all()
-    return {"tasks": [{"id": str(t.id), "due_on": t.due_on, "title_ta": t.title_ta,
-                        "body_ta": t.body_ta, "title_en": t.title_en, "body_en": t.body_en,
-                        "is_overdue": t.due_on < today} for t in rows]}
+    result = [{"id": str(t.id), "due_on": t.due_on, "title_ta": t.title_ta,
+               "body_ta": t.body_ta, "title_en": t.title_en, "body_en": t.body_en,
+               "is_overdue": t.due_on < today} for t in rows]
+    # Crop cycles without an activated crop-specific plan follow the common plan:
+    # show the step whose week is running now (due within the last 7 days).
+    cycles = (
+        await session.scalars(
+            select(OrganicCropCycle)
+            .join(OrganicPlot, OrganicPlot.id == OrganicCropCycle.plot_id)
+            .where(OrganicPlot.farm_id == farm_id, OrganicCropCycle.sowing_date.is_not(None))
+        )
+    ).all()
+    for cycle in cycles:
+        has_reviewed = await session.scalar(select(OrganicScheduledTask.id).where(
+            OrganicScheduledTask.crop_cycle_id == cycle.id).limit(1))
+        if has_reviewed:
+            continue
+        for task in build_common_plan(cycle.sowing_date, cycle.expected_harvest_start):
+            if task["due_on"] <= today < task["due_on"] + timedelta(days=7):
+                item = _common_task_out(cycle.id, task, is_overdue=False)
+                item.pop("status")
+                result.append(item)
+    result.sort(key=lambda item: item["due_on"])
+    return {"tasks": result[:3]}
 
 
 @admin_router.post("/pilot")

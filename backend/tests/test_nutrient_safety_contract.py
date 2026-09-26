@@ -23,11 +23,19 @@ def assessment(**changes):
     return NutrientAssessment(**values)
 
 
-def test_incomplete_corroboration_abstains_and_is_not_expert_verified() -> None:
+def test_visual_only_finding_is_possible_not_supported() -> None:
     result = build_safe_result(assessment())
-    assert result.code == NutrientResultCode.ABSTAINED
+    assert result.code == NutrientResultCode.POSSIBLE_FINDING
+    assert result.primary_finding == "nitrogen"
     assert result.expert_verified is False
     assert result.evidence_missing
+    assert "soil_or_tissue_test" in result.suggested_next_evidence
+
+
+def test_low_visual_confidence_still_abstains() -> None:
+    result = build_safe_result(assessment(status="not_confirmed", confidence=40))
+    assert result.code == NutrientResultCode.ABSTAINED
+    assert result.primary_finding is None
 
 
 def test_conflicting_disease_never_presented_as_nutrient_finding() -> None:

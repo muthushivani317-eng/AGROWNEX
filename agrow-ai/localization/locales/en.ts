@@ -66,34 +66,130 @@ export const en = {
       "This guidance is compiled from a public agricultural source, not personally reviewed by an agronomist for AgrowAI.",
     verified: {
       blackgram: {
-        prepare_land: { title: "Prepare the black gram field", description: "Prepare the land to a fine tilth and form beds and channels before sowing." },
-        sow_seed: { title: "Sow black gram", description: "Sow healthy seed using the crop and season guidance in the cited TNAU source." },
-        establishment_irrigation: { title: "Give establishment irrigation", description: "For irrigated fields, irrigate after sowing and give life irrigation around the third day; avoid water stagnation." },
-        hand_weeding_15: { title: "First hand weeding", description: "Where herbicide is not used, carry out the first hand weeding around 15 days after sowing." },
-        hand_weeding_30: { title: "Second hand weeding", description: "Where herbicide is not used, carry out the second hand weeding around 30 days after sowing." },
-        field_scouting: { title: "Scout the field", description: "Inspect crop establishment, weeds, water stagnation, and visible symptoms; record findings before treatment." },
-        check_maturity: { title: "Check pod maturity", description: "Inspect pods for crop maturity before deciding to harvest." },
-        harvest_and_dry: { title: "Harvest and dry", description: "Harvest mature pods or plants, then dry and process them as described in the cited TNAU source." },
+        prepare_land: {
+          title: "Prepare the black gram field",
+          description:
+            "Prepare the land to a fine tilth and form beds and channels before sowing.",
+        },
+        sow_seed: {
+          title: "Sow black gram",
+          description:
+            "Sow healthy seed using the crop and season guidance in the cited TNAU source.",
+        },
+        establishment_irrigation: {
+          title: "Give establishment irrigation",
+          description:
+            "For irrigated fields, irrigate after sowing and give life irrigation around the third day; avoid water stagnation.",
+        },
+        hand_weeding_15: {
+          title: "First hand weeding",
+          description:
+            "Where herbicide is not used, carry out the first hand weeding around 15 days after sowing.",
+        },
+        hand_weeding_30: {
+          title: "Second hand weeding",
+          description:
+            "Where herbicide is not used, carry out the second hand weeding around 30 days after sowing.",
+        },
+        field_scouting: {
+          title: "Scout the field",
+          description:
+            "Inspect crop establishment, weeds, water stagnation, and visible symptoms; record findings before treatment.",
+        },
+        check_maturity: {
+          title: "Check pod maturity",
+          description:
+            "Inspect pods for crop maturity before deciding to harvest.",
+        },
+        harvest_and_dry: {
+          title: "Harvest and dry",
+          description:
+            "Harvest mature pods or plants, then dry and process them as described in the cited TNAU source.",
+        },
       },
       greengram: {
-        prepare_land: { title: "Prepare the green gram field", description: "Prepare the land to a fine tilth and form beds and channels before sowing." },
-        sow_seed: { title: "Sow green gram", description: "Sow healthy seed using the crop and season guidance in the cited TNAU source." },
-        establishment_irrigation: { title: "Give establishment irrigation", description: "For irrigated fields, irrigate after sowing and give life irrigation around the third day; avoid water stagnation." },
-        hand_weeding_15: { title: "First hand weeding", description: "Where herbicide is not used, carry out the first hand weeding around 15 days after sowing." },
-        hand_weeding_30: { title: "Second hand weeding", description: "Where herbicide is not used, carry out the second hand weeding around 30 days after sowing." },
-        field_scouting: { title: "Scout the field", description: "Inspect crop establishment, weeds, water stagnation, and visible symptoms; record findings before treatment." },
-        check_maturity: { title: "Check pod maturity", description: "Inspect pods for crop maturity before deciding to harvest." },
-        harvest_and_dry: { title: "Harvest and dry", description: "Harvest mature pods or plants, then dry and process them as described in the cited TNAU source." },
+        prepare_land: {
+          title: "Prepare the green gram field",
+          description:
+            "Prepare the land to a fine tilth and form beds and channels before sowing.",
+        },
+        sow_seed: {
+          title: "Sow green gram",
+          description:
+            "Sow healthy seed using the crop and season guidance in the cited TNAU source.",
+        },
+        establishment_irrigation: {
+          title: "Give establishment irrigation",
+          description:
+            "For irrigated fields, irrigate after sowing and give life irrigation around the third day; avoid water stagnation.",
+        },
+        hand_weeding_15: {
+          title: "First hand weeding",
+          description:
+            "Where herbicide is not used, carry out the first hand weeding around 15 days after sowing.",
+        },
+        hand_weeding_30: {
+          title: "Second hand weeding",
+          description:
+            "Where herbicide is not used, carry out the second hand weeding around 30 days after sowing.",
+        },
+        field_scouting: {
+          title: "Scout the field",
+          description:
+            "Inspect crop establishment, weeds, water stagnation, and visible symptoms; record findings before treatment.",
+        },
+        check_maturity: {
+          title: "Check pod maturity",
+          description:
+            "Inspect pods for crop maturity before deciding to harvest.",
+        },
+        harvest_and_dry: {
+          title: "Harvest and dry",
+          description:
+            "Harvest mature pods or plants, then dry and process them as described in the cited TNAU source.",
+        },
       },
       redgram: {
-        prepare_land: { title: "Prepare the red gram field", description: "Prepare the land to a fine tilth and form beds and channels before sowing." },
-        sow_seed: { title: "Sow red gram", description: "Sow healthy seed using the crop and season guidance in the cited TNAU source." },
-        establishment_irrigation: { title: "Give establishment irrigation", description: "For irrigated fields, irrigate after sowing and give life irrigation around the third day; avoid water stagnation." },
-        hand_weeding_15: { title: "First hand weeding", description: "Where herbicide is not used, carry out the first hand weeding around 15 days after sowing." },
-        hand_weeding_30: { title: "Second hand weeding", description: "Where herbicide is not used, carry out the second hand weeding around 30 days after sowing." },
-        field_scouting: { title: "Scout the field", description: "Inspect crop establishment, weeds, water stagnation, and visible symptoms; record findings before treatment." },
-        check_maturity: { title: "Check pod maturity", description: "Inspect pods for crop maturity before deciding to harvest." },
-        harvest_and_dry: { title: "Harvest and dry", description: "Harvest mature pods or plants, then dry and process them as described in the cited TNAU source." },
+        prepare_land: {
+          title: "Prepare the red gram field",
+          description:
+            "Prepare the land to a fine tilth and form beds and channels before sowing.",
+        },
+        sow_seed: {
+          title: "Sow red gram",
+          description:
+            "Sow healthy seed using the crop and season guidance in the cited TNAU source.",
+        },
+        establishment_irrigation: {
+          title: "Give establishment irrigation",
+          description:
+            "For irrigated fields, irrigate after sowing and give life irrigation around the third day; avoid water stagnation.",
+        },
+        hand_weeding_15: {
+          title: "First hand weeding",
+          description:
+            "Where herbicide is not used, carry out the first hand weeding around 15 days after sowing.",
+        },
+        hand_weeding_30: {
+          title: "Second hand weeding",
+          description:
+            "Where herbicide is not used, carry out the second hand weeding around 30 days after sowing.",
+        },
+        field_scouting: {
+          title: "Scout the field",
+          description:
+            "Inspect crop establishment, weeds, water stagnation, and visible symptoms; record findings before treatment.",
+        },
+        check_maturity: {
+          title: "Check pod maturity",
+          description:
+            "Inspect pods for crop maturity before deciding to harvest.",
+        },
+        harvest_and_dry: {
+          title: "Harvest and dry",
+          description:
+            "Harvest mature pods or plants, then dry and process them as described in the cited TNAU source.",
+        },
       },
       paddy_sheath_blight: {
         title: "Sheath blight risk",
@@ -168,7 +264,7 @@ export const en = {
   },
   common: {
     viewDetails: "View details",
-    appName: "AgrowAI",
+    appName: "AgrowNex",
     tagline: "Your AI Farming Partner",
     continue: "Continue",
     next: "Next",
@@ -201,7 +297,7 @@ export const en = {
     retry: "Retry",
     resetNavigation: "Reset startup navigation",
     startingSecurely: "Starting securely…",
-    openingApp: "Opening AgrowAI…",
+    openingApp: "Opening AgrowNex…",
   },
   configurationError: {
     title: "App configuration error",
@@ -247,10 +343,15 @@ export const en = {
   },
   auth: {
     heroImageAccessibility: "Tamil Nadu farmer standing in a green field",
-    brandAccessibility: "AgrowAI",
+    brandAccessibility: "AgrowNex",
+    brandTagline: "Cultivating Agriculture with Intelligence.",
     heroTaglineTamil: "Strength for farmers, trust in technology.",
     heroTaglineEnglish: "Smart Farming. Better Tomorrow.",
-    loginTitle: "Welcome to AgrowAI",
+    heroWelcome: "Welcome to Agronex",
+    getStarted: "Let's get started",
+    phoneEntrySubtitle:
+      "Enter your mobile number to receive a verification code.",
+    loginTitle: "Mobile number",
     loginSubtitle: "Your AI Farming Assistant in Tamil",
     phoneLabel: "Mobile Number",
     phonePlaceholder: "Enter your mobile number",
@@ -437,7 +538,8 @@ export const en = {
     accountSubtitle: "Manage your account settings",
     farmerCode: "Farmer code",
     linkedOrganizations: "Linked organizations",
-    linkedOrganizationsDesc: "FPOs and organizations that can see your farm data",
+    linkedOrganizationsDesc:
+      "FPOs and organizations that can see your farm data",
     accountSettings: "Account settings",
     accountSettingsDesc: "Contact, preferences and sign out",
     accountSettingsRedesignDesc: "Privacy, security and preferences",
@@ -607,6 +709,7 @@ export const en = {
     retryMap: "Retry map",
     editFarm: "Edit farm",
     editBoundary: "Edit boundary",
+    detailsTitle: "Farm Details",
     perimeter: "Perimeter",
     metersShort: "m",
     points: "points",
@@ -923,13 +1026,13 @@ export const en = {
     history: "History",
     placeholder: "Ask about your crop, weather, fertilizer…",
     send: "Send",
-    welcomeTitle: "Ask AgrowAI",
+    welcomeTitle: "Ask AgrowNex",
     askPrefix: "Ask",
     welcomeMessage:
       "Your smart farming assistant. Ask in Tamil or English about crops, weather, irrigation and more.",
     tryAsking: "Try asking",
     safetyNote:
-      "AgrowAI gives general guidance. Follow expert advice for critical decisions.",
+      "AgrowNex gives general guidance. Follow expert advice for critical decisions.",
     suggestion1: "Why are my paddy leaves turning yellow?",
     suggestion2: "Should I irrigate today?",
     suggestion3: "Which fertilizer is best for cotton?",
@@ -986,11 +1089,16 @@ export const en = {
     diagnosisFailedTitle: "Couldn't analyze this photo",
     chooseAnotherPhoto: "Choose another photo",
     photoTooDark: "The photo is too dark. Take another photo in natural light.",
-    photoTooBright: "The photo is too bright. Avoid glare and take another photo.",
-    photoSizeInvalid: "The photo is empty or too large. Choose a smaller photo or take a new one.",
-    photoFormatInvalid: "This photo format is not supported. Choose a JPEG or PNG photo.",
-    photoRejected: "This photo or its details could not be accepted. Check the selected crop and choose a clear, well-lit photo of the affected leaf.",
-    diagnosisTimedOut: "The photo is taking longer than usual to analyze. Please try again in a moment.",
+    photoTooBright:
+      "The photo is too bright. Avoid glare and take another photo.",
+    photoSizeInvalid:
+      "The photo is empty or too large. Choose a smaller photo or take a new one.",
+    photoFormatInvalid:
+      "This photo format is not supported. Choose a JPEG or PNG photo.",
+    photoRejected:
+      "This photo or its details could not be accepted. Check the selected crop and choose a clear, well-lit photo of the affected leaf.",
+    diagnosisTimedOut:
+      "The photo is taking longer than usual to analyze. Please try again in a moment.",
     generalDiagnosisFailed:
       "The diagnosis service is temporarily unavailable. Please try again.",
     startOver: "Start over",
@@ -1094,7 +1202,8 @@ export const en = {
       "Take a clear, close photo of the affected leaf in good light.",
     takePhoto: "Take photo",
     chooseGallery: "Choose from gallery",
-    photoOpenFailed: "Could not open the photo. Please try again or choose another photo.",
+    photoOpenFailed:
+      "Could not open the photo. Please try again or choose another photo.",
     cameraPermissionTitle: "Camera permission needed",
     cameraPermissionMessage:
       "Please allow camera access to take a photo of your crop.",
@@ -1266,7 +1375,7 @@ export const en = {
     needsExpert: "Needs expert review",
     symptoms: "Symptoms",
     causes: "Likely causes",
-    recommendations: "Organic way",
+    recommendations: "Organic way (recommended)",
     conventionalCategory: "Normal (chemical) way",
     prevention: "Prevention",
     weatherAtCapture: "Weather at capture",
@@ -1458,34 +1567,130 @@ export const en = {
     },
     verified: {
       blackgram: {
-        prepare_land: { title: "Prepare the black gram field", description: "Prepare the land to a fine tilth and form beds and channels before sowing." },
-        sow_seed: { title: "Sow black gram", description: "Sow healthy seed using the crop and season guidance in the cited TNAU source." },
-        establishment_irrigation: { title: "Give establishment irrigation", description: "For irrigated fields, irrigate after sowing and give life irrigation around the third day; avoid water stagnation." },
-        hand_weeding_15: { title: "First hand weeding", description: "Where herbicide is not used, carry out the first hand weeding around 15 days after sowing." },
-        hand_weeding_30: { title: "Second hand weeding", description: "Where herbicide is not used, carry out the second hand weeding around 30 days after sowing." },
-        field_scouting: { title: "Scout the field", description: "Inspect establishment, weeds, water stagnation, and visible symptoms; record findings before treatment." },
-        check_maturity: { title: "Check pod maturity", description: "Inspect pods for crop maturity before deciding to harvest." },
-        harvest_and_dry: { title: "Harvest and dry", description: "Harvest mature pods or plants, then dry and process them as described in the cited TNAU source." },
+        prepare_land: {
+          title: "Prepare the black gram field",
+          description:
+            "Prepare the land to a fine tilth and form beds and channels before sowing.",
+        },
+        sow_seed: {
+          title: "Sow black gram",
+          description:
+            "Sow healthy seed using the crop and season guidance in the cited TNAU source.",
+        },
+        establishment_irrigation: {
+          title: "Give establishment irrigation",
+          description:
+            "For irrigated fields, irrigate after sowing and give life irrigation around the third day; avoid water stagnation.",
+        },
+        hand_weeding_15: {
+          title: "First hand weeding",
+          description:
+            "Where herbicide is not used, carry out the first hand weeding around 15 days after sowing.",
+        },
+        hand_weeding_30: {
+          title: "Second hand weeding",
+          description:
+            "Where herbicide is not used, carry out the second hand weeding around 30 days after sowing.",
+        },
+        field_scouting: {
+          title: "Scout the field",
+          description:
+            "Inspect establishment, weeds, water stagnation, and visible symptoms; record findings before treatment.",
+        },
+        check_maturity: {
+          title: "Check pod maturity",
+          description:
+            "Inspect pods for crop maturity before deciding to harvest.",
+        },
+        harvest_and_dry: {
+          title: "Harvest and dry",
+          description:
+            "Harvest mature pods or plants, then dry and process them as described in the cited TNAU source.",
+        },
       },
       greengram: {
-        prepare_land: { title: "Prepare the green gram field", description: "Prepare the land to a fine tilth and form beds and channels before sowing." },
-        sow_seed: { title: "Sow green gram", description: "Sow healthy seed using the crop and season guidance in the cited TNAU source." },
-        establishment_irrigation: { title: "Give establishment irrigation", description: "For irrigated fields, irrigate after sowing and give life irrigation around the third day; avoid water stagnation." },
-        hand_weeding_15: { title: "First hand weeding", description: "Where herbicide is not used, carry out the first hand weeding around 15 days after sowing." },
-        hand_weeding_30: { title: "Second hand weeding", description: "Where herbicide is not used, carry out the second hand weeding around 30 days after sowing." },
-        field_scouting: { title: "Scout the field", description: "Inspect establishment, weeds, water stagnation, and visible symptoms; record findings before treatment." },
-        check_maturity: { title: "Check pod maturity", description: "Inspect pods for crop maturity before deciding to harvest." },
-        harvest_and_dry: { title: "Harvest and dry", description: "Harvest mature pods or plants, then dry and process them as described in the cited TNAU source." },
+        prepare_land: {
+          title: "Prepare the green gram field",
+          description:
+            "Prepare the land to a fine tilth and form beds and channels before sowing.",
+        },
+        sow_seed: {
+          title: "Sow green gram",
+          description:
+            "Sow healthy seed using the crop and season guidance in the cited TNAU source.",
+        },
+        establishment_irrigation: {
+          title: "Give establishment irrigation",
+          description:
+            "For irrigated fields, irrigate after sowing and give life irrigation around the third day; avoid water stagnation.",
+        },
+        hand_weeding_15: {
+          title: "First hand weeding",
+          description:
+            "Where herbicide is not used, carry out the first hand weeding around 15 days after sowing.",
+        },
+        hand_weeding_30: {
+          title: "Second hand weeding",
+          description:
+            "Where herbicide is not used, carry out the second hand weeding around 30 days after sowing.",
+        },
+        field_scouting: {
+          title: "Scout the field",
+          description:
+            "Inspect establishment, weeds, water stagnation, and visible symptoms; record findings before treatment.",
+        },
+        check_maturity: {
+          title: "Check pod maturity",
+          description:
+            "Inspect pods for crop maturity before deciding to harvest.",
+        },
+        harvest_and_dry: {
+          title: "Harvest and dry",
+          description:
+            "Harvest mature pods or plants, then dry and process them as described in the cited TNAU source.",
+        },
       },
       redgram: {
-        prepare_land: { title: "Prepare the red gram field", description: "Prepare the land to a fine tilth and form beds and channels before sowing." },
-        sow_seed: { title: "Sow red gram", description: "Sow healthy seed using the crop and season guidance in the cited TNAU source." },
-        establishment_irrigation: { title: "Give establishment irrigation", description: "For irrigated fields, irrigate after sowing and give life irrigation around the third day; avoid water stagnation." },
-        hand_weeding_15: { title: "First hand weeding", description: "Where herbicide is not used, carry out the first hand weeding around 15 days after sowing." },
-        hand_weeding_30: { title: "Second hand weeding", description: "Where herbicide is not used, carry out the second hand weeding around 30 days after sowing." },
-        field_scouting: { title: "Scout the field", description: "Inspect establishment, weeds, water stagnation, and visible symptoms; record findings before treatment." },
-        check_maturity: { title: "Check pod maturity", description: "Inspect pods for crop maturity before deciding to harvest." },
-        harvest_and_dry: { title: "Harvest and dry", description: "Harvest mature pods or plants, then dry and process them as described in the cited TNAU source." },
+        prepare_land: {
+          title: "Prepare the red gram field",
+          description:
+            "Prepare the land to a fine tilth and form beds and channels before sowing.",
+        },
+        sow_seed: {
+          title: "Sow red gram",
+          description:
+            "Sow healthy seed using the crop and season guidance in the cited TNAU source.",
+        },
+        establishment_irrigation: {
+          title: "Give establishment irrigation",
+          description:
+            "For irrigated fields, irrigate after sowing and give life irrigation around the third day; avoid water stagnation.",
+        },
+        hand_weeding_15: {
+          title: "First hand weeding",
+          description:
+            "Where herbicide is not used, carry out the first hand weeding around 15 days after sowing.",
+        },
+        hand_weeding_30: {
+          title: "Second hand weeding",
+          description:
+            "Where herbicide is not used, carry out the second hand weeding around 30 days after sowing.",
+        },
+        field_scouting: {
+          title: "Scout the field",
+          description:
+            "Inspect establishment, weeds, water stagnation, and visible symptoms; record findings before treatment.",
+        },
+        check_maturity: {
+          title: "Check pod maturity",
+          description:
+            "Inspect pods for crop maturity before deciding to harvest.",
+        },
+        harvest_and_dry: {
+          title: "Harvest and dry",
+          description:
+            "Harvest mature pods or plants, then dry and process them as described in the cited TNAU source.",
+        },
       },
       paddy: {
         nursery_sowing: {
@@ -2419,6 +2624,42 @@ export const en = {
     },
   },
   growth: {
+    boost: {
+      title: "Boost your crop's growth",
+      organicLabel: "Organic (recommended):",
+      chemicalLabel: "Chemical option:",
+      notice:
+        "Verify with official sources (KVK or Agriculture Department) before applying anything.",
+      early: {
+        organic:
+          "Drench Panchagavya or Jeevamirtham around the roots, and apply Azospirillum and phosphobacteria mixed with compost.",
+        chemical:
+          "A light starter dose of NPK fertiliser, or a weak 19:19:19 water-soluble foliar spray, as per your soil test.",
+      },
+      vegetative: {
+        organic:
+          "Top-dress vermicompost or neem cake, and spray Panchagavya or fish amino acid every 10–15 days.",
+        chemical:
+          "Top-dress urea in split doses, or spray 19:19:19 water-soluble fertiliser, as per your soil test.",
+      },
+      flowering: {
+        organic:
+          "Spray Panchagavya or seaweed extract, and keep soil moisture even — avoid heavy watering.",
+        chemical:
+          "A potassium nitrate foliar spray and a TNAU micronutrient mixture support flowering.",
+      },
+      fruiting: {
+        organic:
+          "Spray Panchagavya, apply vermicompost, and mulch to hold soil moisture while fruits fill.",
+        chemical:
+          "A potassium nitrate or potassium sulphate foliar spray helps fruit and grain filling.",
+      },
+      late: {
+        organic:
+          "No growth boost is needed now. Stop sprays and get ready for harvest.",
+        chemical: "",
+      },
+    },
     storageUnavailable:
       "Secure image storage is unavailable. Your growth photo was not saved. Please try again later.",
     stageTracking: {
@@ -2493,7 +2734,8 @@ export const en = {
     poorQuality: "The photo quality is too low. Please take a clearer photo.",
     noPlant: "No crop or leaf detected. Please photograph the plant clearly.",
     uploadError: "Could not analyse the photo. Please try again.",
-    captureFailed: "Could not open the camera or gallery. Check photo permissions and try again.",
+    captureFailed:
+      "Could not open the camera or gallery. Check photo permissions and try again.",
     deleteFailed: "Could not delete the photo. Please try again.",
     quotaExceeded: "Daily limit reached. Please try again tomorrow.",
     stageGermination: "Germination",
@@ -2568,7 +2810,8 @@ export const en = {
     nearbyNoFarmMessage: "Add a farm with a district to see nearby markets.",
   },
   schemes: {
-    cachedNotice: "Saved scheme information. Reconnect and refresh to check the latest details.",
+    cachedNotice:
+      "Saved scheme information. Reconnect and refresh to check the latest details.",
     saveFailed: "Could not save your change. Please try again.",
     providerUnavailable:
       "Current verified government scheme information is unavailable.",
@@ -2585,8 +2828,10 @@ export const en = {
     noFarmContextMessage: "Select or add a farm to improve scheme matching.",
     detailTitle: "Scheme details",
     fullEligibility: "Check full eligibility",
-    eligibilityContext: "Based on the information you've provided. This is a match estimate, not approval.",
-    amountCaution: "Verify amounts and eligibility before applying. Scheme details may change over time.",
+    eligibilityContext:
+      "Based on the information you've provided. This is a match estimate, not approval.",
+    amountCaution:
+      "Verify amounts and eligibility before applying. Scheme details may change over time.",
     viewOfficialSource: "View official source",
     basedOn: "Matched to",
     tabEligible: "Potential matches",
@@ -2718,7 +2963,8 @@ export const en = {
     subtitle: "List produce available now or from an upcoming harvest.",
     noticeTitle: "You control every listing",
     refresh: "Refresh listings",
-    cachedNotice: "Saved listings are shown. Reconnect and refresh to check the latest status.",
+    cachedNotice:
+      "Saved listings are shown. Reconnect and refresh to check the latest status.",
     create: "Add listing",
     createTitle: "Add produce listing",
     editTitle: "Edit produce listing",
@@ -2885,8 +3131,10 @@ export const en = {
     titlePrefix: "Notifi",
     titleAccent: "cations",
     subtitle: "Smart alerts from every part of your farm.",
-    cachedNotice: "Saved notifications are shown. Reconnect and refresh for the latest alerts.",
-    actionFailed: "That notification change could not be saved. Please try again.",
+    cachedNotice:
+      "Saved notifications are shown. Reconnect and refresh for the latest alerts.",
+    actionFailed:
+      "That notification change could not be saved. Please try again.",
     detailTitle: "Notification",
     notFound: "This notification is no longer available.",
     emptyTitle: "You’re all caught up",
@@ -2922,6 +3170,7 @@ export const en = {
     moduleSatellite: "Satellite",
     moduleNutrient: "Nutrients",
     moduleIntelligence: "Farm Health",
+    moduleOrganic: "Organic",
     moduleSystem: "System",
     severityInfo: "Info",
     severityWarning: "Warning",
@@ -3094,6 +3343,13 @@ export const en = {
         conversation_reminder: {
           title: "Your AI Assistant is ready",
           message: "Pick up where you left off with your farming questions.",
+        },
+      },
+      organic: {
+        practice_not_logged: {
+          title: "Log your organic practice",
+          message:
+            "{{title}} is ready to log. Add it to your organic practice logbook so it counts as evidence.",
         },
       },
       experts: {
@@ -3835,64 +4091,100 @@ export const en = {
   inputs: {
     title: "Farm Inputs",
     cashOnly: "Cash on delivery — no online payment",
-    category: { all: "All", seed: "Seeds", fertilizer: "Fertilizer", pesticide: "Pesticides" },
+    category: {
+      all: "All",
+      seed: "Seeds",
+      fertilizer: "Fertilizer",
+      pesticide: "Pesticides",
+    },
     stock: "{{count}} available",
     cart: "Your order",
     total: "Total ₹{{total}}",
     deliveryAddress: "Delivery address",
     placeOrder: "Place cash-on-delivery order",
-    noOnlinePayment: "No payment is collected in the app. Pay Ferido in person when the goods are delivered.",
+    noOnlinePayment:
+      "No payment is collected in the app. Pay Ferido in person when the goods are delivered.",
     cannotOrder: "Order not placed",
     addressRequired: "Add a complete delivery address.",
-    refreshRequired: "Stock or price changed. Review the refreshed catalog and try again.",
+    refreshRequired:
+      "Stock or price changed. Review the refreshed catalog and try again.",
     orderPlaced: "Order placed",
     orderReference: "Reference: {{reference}}",
     orderHistory: "Order history",
     eta: "Expected delivery: {{date}}",
-    status: { placed: "Placed", confirmed: "Confirmed", out_for_delivery: "Out for delivery", delivered: "Delivered — cash collected" },
+    status: {
+      placed: "Placed",
+      confirmed: "Confirmed",
+      out_for_delivery: "Out for delivery",
+      delivered: "Delivered — cash collected",
+    },
   },
   lcc: {
     title: "Leaf Colour Chart",
     subtitle: "Learn about leaf colour with an approximate photo comparison",
     photoGuideTitle: "Take a reliable leaf photo",
-    photoGuide: "Use the fully opened third leaf from the top. Photograph it in soft daylight against a plain neutral background, without flash or shadows.",
-    safetyNote: "For learning only. Camera and lighting affect colour; this app has not been calibrated against a physical LCC card. It does not diagnose nitrogen status.",
+    photoGuide:
+      "Use the fully opened third leaf from the top. Photograph it in soft daylight against a plain neutral background, without flash or shadows.",
+    safetyNote:
+      "For learning only. Camera and lighting affect colour; this app has not been calibrated against a physical LCC card. It does not diagnose nitrogen status.",
     takePhoto: "Take leaf photo",
     choosePhoto: "Choose from gallery",
     analyze: "Compare leaf colour",
     retake: "Retake photo",
     retakeRequired: "A better photo is needed",
     analysisFailed: "The leaf could not be checked. Please try again.",
-    farmRequired: "Select a registered farm before checking the leaf. Add a farm from the Farm tab if needed.",
-    farmsFailed: "Your farms could not be loaded. Retry before checking the leaf.",
-    serviceUnavailable: "Leaf checking is unavailable for this farm or app version. Refresh your farms and try again later.",
-    networkFailed: "The connection failed or timed out. Check your internet connection and try again.",
+    farmRequired:
+      "Select a registered farm before checking the leaf. Add a farm from the Farm tab if needed.",
+    farmsFailed:
+      "Your farms could not be loaded. Retry before checking the leaf.",
+    serviceUnavailable:
+      "Leaf checking is unavailable for this farm or app version. Refresh your farms and try again later.",
+    networkFailed:
+      "The connection failed or timed out. Check your internet connection and try again.",
     matchedPanel: "Approximate digital colour match (2–5)",
-    estimateDisclaimer: "Not for fertilizer decisions. This number is not a verified physical-card reading. Ask your local agricultural extension officer for crop-specific advice.",
+    estimateDisclaimer:
+      "Not for fertilizer decisions. This number is not a verified physical-card reading. Ask your local agricultural extension officer for crop-specific advice.",
     educationalResult: "Educational colour estimate",
-    educationalGuidance: "This compares the photo with AgrowAI's approximate digital palette. It cannot determine nitrogen deficiency or fertilizer requirements.",
+    educationalGuidance:
+      "This compares the photo with AgrowAI's approximate digital palette. It cannot determine nitrogen deficiency or fertilizer requirements.",
     learnMore: "Learn about rice LCC — TNAU",
-    sourceUnavailable: "The TNAU learning page could not be opened. Please try again later.",
-    status: { deficient: "Nitrogen may be deficient", borderline: "Borderline — monitor", sufficient: "Nitrogen appears sufficient", abstained: "No reliable result" },
+    sourceUnavailable:
+      "The TNAU learning page could not be opened. Please try again later.",
+    status: {
+      deficient: "Nitrogen may be deficient",
+      borderline: "Borderline — monitor",
+      sufficient: "Nitrogen appears sufficient",
+      abstained: "No reliable result",
+    },
     guidance: {
       rice: {
-        deficient: "For rice, confirm across representative leaves, then use the locally approved nitrogen topdressing for your variety and stage.",
-        borderline: "Monitor again soon across representative rice leaves before applying nitrogen.",
-        sufficient: "No nitrogen action is indicated by this reading. Continue routine monitoring.",
+        deficient:
+          "For rice, confirm across representative leaves, then use the locally approved nitrogen topdressing for your variety and stage.",
+        borderline:
+          "Monitor again soon across representative rice leaves before applying nitrogen.",
+        sufficient:
+          "No nitrogen action is indicated by this reading. Continue routine monitoring.",
       },
       other: {
-        deficient: "This suggests low leaf greenness. Confirm with a local agronomist or soil/tissue test before topdressing.",
-        borderline: "Monitor and confirm with crop-specific guidance before applying nitrogen.",
-        sufficient: "No nitrogen action is indicated by this screening. Continue crop-specific monitoring.",
+        deficient:
+          "This suggests low leaf greenness. Confirm with a local agronomist or soil/tissue test before topdressing.",
+        borderline:
+          "Monitor and confirm with crop-specific guidance before applying nitrogen.",
+        sufficient:
+          "No nitrogen action is indicated by this screening. Continue crop-specific monitoring.",
       },
       retake: {
         invalid_image: "Choose a valid JPEG, PNG or WebP photo.",
-        image_too_small: "Move closer and take a larger, clear photo of the leaf.",
-        too_little_leaf: "Fill most of the frame with one green leaf against a plain background.",
-        too_dark: "Retake in soft daylight; the leaf is too dark to compare safely.",
+        image_too_small:
+          "Move closer and take a larger, clear photo of the leaf.",
+        too_little_leaf:
+          "Fill most of the frame with one green leaf against a plain background.",
+        too_dark:
+          "Retake in soft daylight; the leaf is too dark to compare safely.",
         overexposed: "Avoid flash and direct glare; the leaf is overexposed.",
         too_blurry: "Hold the phone steady, tap the leaf to focus, and retake.",
-        ambiguous_colour: "Retake in even daylight without shadows or colour filters.",
+        ambiguous_colour:
+          "Retake in even daylight without shadows or colour filters.",
       },
     },
   },
@@ -3964,7 +4256,8 @@ export const en = {
       greengram: "Green gram",
     },
     unsupportedCrop: "Nutrient image analysis is not available for this crop.",
-    timedOut: "The photo is taking longer than usual to analyse. Please try again in a moment.",
+    timedOut:
+      "The photo is taking longer than usual to analyse. Please try again in a moment.",
     offline: "Check your internet connection and try again.",
     genericError: "Could not analyse the image right now. Please try again.",
     quotaExceeded: "Daily limit reached. Please try again tomorrow.",
@@ -3986,6 +4279,7 @@ export const en = {
     symptomsTitle: "Observed symptoms",
     recommendationsTitle: "What you can do",
     organicWay: "Organic way:",
+    chemicalWay: "Chemical option:",
     evidenceTitle: "Cross-checked with",
     evidenceSoil: "Your soil profile",
     evidenceSatellite: "Satellite vegetation",
@@ -4005,7 +4299,7 @@ export const en = {
     openReport: "Open report",
     status: {
       confirmed: "Confirmed",
-      possible: "Possible",
+      possible: "Likely",
       not_confirmed: "Not confirmed",
     },
     severity: {
@@ -4066,91 +4360,130 @@ export const en = {
         deficiency: {
           title: "Nitrogen deficiency",
           body: "Older leaves yellowing evenly suggests low nitrogen. Top-dress a nitrogen source in split doses as per local guidance and re-check in 1–2 weeks.",
-          organicTip: "Well-rotted farmyard manure, vermicompost, or a green-manure crop (dhaincha, sunhemp) worked into the soil before sowing builds up nitrogen naturally; neem cake also helps release it slowly.",
+          organicTip:
+            "Well-rotted farmyard manure, vermicompost, or a green-manure crop (dhaincha, sunhemp) worked into the soil before sowing builds up nitrogen naturally; neem cake also helps release it slowly.",
+          chemicalTip:
+            "Urea or ammonium sulphate, top-dressed in split doses. A urea foliar spray gives quick greening. Use the dose from your soil test or KVK.",
         },
       },
       phosphorus: {
         deficiency: {
           title: "Phosphorus deficiency",
           body: "Dark or purplish leaves can signal low phosphorus. A soil test guides the correct dose at the root zone.",
-          organicTip: "Compost enriched with rock phosphate or bone meal, plus farmyard manure, releases phosphorus slowly as soil microbes break it down — pair with the soil test above to know how much your field needs.",
+          organicTip:
+            "Compost enriched with rock phosphate or bone meal, plus farmyard manure, releases phosphorus slowly as soil microbes break it down — pair with the soil test above to know how much your field needs.",
+          chemicalTip:
+            "Single super phosphate (SSP) or DAP, placed near the roots at sowing or early growth. Use the dose from your soil test or KVK.",
         },
       },
       potassium: {
         deficiency: {
           title: "Potassium deficiency",
           body: "Scorched leaf edges point to low potassium. Add a potassium source; it supports water regulation and grain filling.",
-          organicTip: "Composted banana-stem waste, wood ash used sparingly, and farmyard manure are traditional potassium sources; vermicompost from crop residues also helps build it up over a season.",
+          organicTip:
+            "Composted banana-stem waste, wood ash used sparingly, and farmyard manure are traditional potassium sources; vermicompost from crop residues also helps build it up over a season.",
+          chemicalTip:
+            "Muriate of potash (MOP) or sulphate of potash to the soil; a potassium nitrate foliar spray works faster. Use the dose from your soil test or KVK.",
         },
       },
       sulphur: {
         deficiency: {
           title: "Sulphur deficiency",
           body: "Uniform paleness of younger leaves can indicate low sulphur. Confirm with a soil or tissue test before correcting.",
-          organicTip: "Composted crop residues and farmyard manure gradually rebuild soil sulphur; gypsum, a naturally mined mineral, is commonly used where organic standards allow it.",
+          organicTip:
+            "Composted crop residues and farmyard manure gradually rebuild soil sulphur; gypsum, a naturally mined mineral, is commonly used where organic standards allow it.",
+          chemicalTip:
+            "Gypsum, or a sulphur-containing fertiliser such as ammonium sulphate or single super phosphate. Use the dose from your soil test or KVK.",
         },
       },
       calcium: {
         deficiency: {
           title: "Calcium deficiency",
           body: "Deformed new growth can reflect low calcium uptake. Keep soil moisture even and check soil pH.",
-          organicTip: "Agricultural lime or gypsum — both naturally mined minerals — correct calcium and soil pH together; composted material with crushed eggshell or bone meal also helps over time.",
+          organicTip:
+            "Agricultural lime or gypsum — both naturally mined minerals — correct calcium and soil pH together; composted material with crushed eggshell or bone meal also helps over time.",
+          chemicalTip:
+            "Gypsum or agricultural lime to the soil; a calcium nitrate foliar spray for fruit crops. Use the dose from your soil test or KVK.",
         },
       },
       magnesium: {
         deficiency: {
           title: "Magnesium deficiency",
           body: "Yellowing between veins on older leaves suggests low magnesium. Correct via a magnesium source after a test.",
-          organicTip: "Dolomite lime supplies both calcium and magnesium naturally; well-composted organic matter improves magnesium availability over successive seasons.",
+          organicTip:
+            "Dolomite lime supplies both calcium and magnesium naturally; well-composted organic matter improves magnesium availability over successive seasons.",
+          chemicalTip:
+            "Magnesium sulphate to the soil or as a foliar spray. Use the dose from your soil test or KVK.",
         },
       },
       iron: {
         deficiency: {
           title: "Iron deficiency",
           body: "Yellowing between veins on young leaves points to iron chlorosis. Check soil pH and drainage first.",
-          organicTip: "Building up soil organic matter with compost or farmyard manure, and improving drainage, is the main organic route to correcting iron chlorosis — iron becomes harder for roots to absorb in waterlogged or high-pH soil.",
+          organicTip:
+            "Building up soil organic matter with compost or farmyard manure, and improving drainage, is the main organic route to correcting iron chlorosis — iron becomes harder for roots to absorb in waterlogged or high-pH soil.",
+          chemicalTip:
+            "Ferrous sulphate as a foliar spray or to the soil. Use the dose from your soil test or KVK.",
         },
       },
       zinc: {
         deficiency: {
           title: "Zinc deficiency",
           body: "Zinc deficiency is common in paddy and shows as pale bands. A soil test confirms the need.",
-          organicTip: "Regular farmyard manure or compost application over a few seasons is the standard organic route to correcting zinc deficiency, especially in paddy soils.",
+          organicTip:
+            "Regular farmyard manure or compost application over a few seasons is the standard organic route to correcting zinc deficiency, especially in paddy soils.",
+          chemicalTip:
+            "Zinc sulphate to the soil, or as a foliar spray on the standing crop. Use the dose from your soil test or KVK.",
         },
       },
       boron: {
         deficiency: {
           title: "Boron deficiency",
           body: "Boron affects new growth and flowering. Apply only the tested dose — excess boron harms the crop.",
-          organicTip: "Composted organic matter releases boron slowly and safely; because the gap between too little and too much boron is narrow, always confirm the amount with a soil test first.",
+          organicTip:
+            "Composted organic matter releases boron slowly and safely; because the gap between too little and too much boron is narrow, always confirm the amount with a soil test first.",
+          chemicalTip:
+            "Borax to the soil or a boric acid foliar spray — only the tested dose, as too much boron harms the crop.",
         },
       },
       copper: {
         deficiency: {
           title: "Copper deficiency",
           body: "Copper deficiency is uncommon. Confirm with a soil test before applying anything.",
-          organicTip: "Well-composted farmyard manure supplies trace copper over time; since copper deficiency is uncommon, confirm with a soil test before adding anything.",
+          organicTip:
+            "Well-composted farmyard manure supplies trace copper over time; since copper deficiency is uncommon, confirm with a soil test before adding anything.",
+          chemicalTip:
+            "Copper sulphate, only after a soil test confirms the need. Use the dose from your soil test or KVK.",
         },
       },
       manganese: {
         deficiency: {
           title: "Manganese deficiency",
           body: "Yellowing between veins on younger leaves can indicate low manganese. Verify with a test.",
-          organicTip: "Composted organic matter, and maintaining a slightly acidic soil pH where suited to the crop, improve manganese availability naturally.",
+          organicTip:
+            "Composted organic matter, and maintaining a slightly acidic soil pH where suited to the crop, improve manganese availability naturally.",
+          chemicalTip:
+            "Manganese sulphate as a foliar spray. Use the dose from your soil test or KVK.",
         },
       },
       molybdenum: {
         deficiency: {
           title: "Molybdenum deficiency",
           body: "Molybdenum needs are tiny. A soil or tissue test is essential before acting.",
-          organicTip: "Molybdenum needs are tiny; well-composted organic matter and correcting very acidic soil (molybdenum becomes less available as soil turns acidic) are the usual organic routes — always confirm with a test first.",
+          organicTip:
+            "Molybdenum needs are tiny; well-composted organic matter and correcting very acidic soil (molybdenum becomes less available as soil turns acidic) are the usual organic routes — always confirm with a test first.",
+          chemicalTip:
+            "Sodium or ammonium molybdate in a very small amount, only after a test confirms the need.",
         },
       },
       chlorine: {
         deficiency: {
           title: "Chlorine deficiency",
           body: "Chlorine deficiency is very rare. Consult an agriculture expert before treating.",
-          organicTip: "Chlorine deficiency is very rare; well-composted organic matter and normal irrigation water usually supply enough. Consult an agriculture expert before treating.",
+          organicTip:
+            "Chlorine deficiency is very rare; well-composted organic matter and normal irrigation water usually supply enough. Consult an agriculture expert before treating.",
+          chemicalTip:
+            "Usually nothing is needed — muriate of potash already supplies chlorine. Ask an agriculture expert first.",
         },
       },
       general: {
@@ -4296,6 +4629,26 @@ export const en = {
     shareWithFpo: "Share with FPO",
     downloadPdf: "Download",
     shareExternal: "Share",
+    copy: {
+      irrigationTask: "Inspect this field's irrigation today.",
+      unevenGrowthTask:
+        "Inspect the affected area before applying fertilizer or pesticide.",
+      drainageTask: "Check the field drainage today.",
+      germinationTask: "Check seed germination today.",
+      genericTask: "Inspect this field today.",
+      irrigationReason:
+        "This part of the field is drying faster than the surrounding area.",
+      unevenGrowthReason:
+        "Crop growth in this area is lower than in the surrounding area.",
+      drainageReason: "Heavy rain may have affected the field drainage.",
+      germinationReason:
+        "Crop growth has not started within the expected period.",
+      genericReason: "Something in this field needs your attention.",
+      satelliteWeatherWhy:
+        "This reminder is based on recent satellite and weather information.",
+      calendarWhy:
+        "This reminder is based on your crop calendar and recent satellite information.",
+    },
   },
   home: {
     actionDiseaseRisk: "Disease risk",
@@ -4342,7 +4695,7 @@ export const en = {
     actionSatellite: "Satellite",
     actionNutrient: "Nutrients",
     actionLcc: "Leaf Colour Chart",
-    actionInputs: "Buy Farm Inputs",
+    actionInputs: "Organic Marketplace",
     actionIntelligence: "Farm Health",
     actionMemory: "Farm Memory",
     actionAIDescription: "Get answers and farming advice",
@@ -4364,7 +4717,7 @@ export const en = {
     actionPlantIdentifierDescription: "Identify plants from a photo",
     actionNutrientDescription: "Check crop nutrient health",
     actionLccDescription: "Compare leaf colour",
-    actionInputsDescription: "Order seeds and crop supplies",
+    actionInputsDescription: "Buy and sell organic products",
     actionIntelligenceDescription: "Your farm's combined AI health check",
     actionMemoryDescription: "A timeline of everything on your farm",
     actionCropRecommendation: "Crop recommendation",
@@ -4899,8 +5252,10 @@ export const en = {
     about: "About",
     retry: "Retry",
     startOver: "Start over",
-    photoAccessFailed: "Could not open the camera or gallery. Check photo permissions and try again.",
-    journalSaveFailed: "Could not save this plant to the journal. Please try again.",
+    photoAccessFailed:
+      "Could not open the camera or gallery. Check photo permissions and try again.",
+    journalSaveFailed:
+      "Could not save this plant to the journal. Please try again.",
     family: "Family: {{family}}",
     confidence: "confidence",
     qualityIssue:
@@ -5049,7 +5404,8 @@ export const en = {
   },
   partnerLinks: {
     title: "Linked organizations",
-    subtitle: "Organizations that can see your farm activity, with your permission",
+    subtitle:
+      "Organizations that can see your farm activity, with your permission",
     emptyTitle: "No linked organizations yet",
     emptyMessage:
       "When an FPO or organization requests access using your farmer code, it will appear here for your approval.",
@@ -5074,76 +5430,284 @@ export const en = {
   },
   organic: {
     sectionTitle: "Organic farming",
-    sectionDescription: "Set this farm's approach and keep a private record of organic practices.",
+    sectionDescription:
+      "Set this farm's approach and keep a private record of organic practices.",
     profileTitle: "Organic farm plan",
-    profileIntro: "Choose how this farm is managed. Farming mode does not mean certified organic.",
+    profileIntro:
+      "Choose how this farm is managed. Farming mode does not mean certified organic.",
     chooseMode: "Farming approach",
     transitionDate: "Transition start date",
     goals: "Goals",
     goalsHint: "For example: improve soil carbon, reduce chemical inputs",
-    certificationNotice: "Certification is tracked separately. This setting never creates a certified-organic claim.",
+    certificationNotice:
+      "Certification is tracked separately. This setting never creates a certified-organic claim.",
     logbookTitle: "Organic practice logbook",
+    logbookSubtitle:
+      "Record your farm activities and track the impact of organic practices.",
     addPractice: "Add practice",
+    practiceHistoryTitle: "Practice history",
+    practiceTypeLabel: "Practice type",
     practiceTitle: "What did you do?",
+    practiceTitlePlaceholder: "E.g. Applied compost to the field",
     notes: "Notes (optional)",
+    notesPlaceholder: "Add any additional details",
     emptyTitle: "No practices recorded",
-    emptyDescription: "Record an organic farm activity to start the farm history.",
+    emptyDescription:
+      "Record an organic farm activity to start the farm history.",
     pendingSync: "Waiting to sync",
     saved: "Organic farm plan saved.",
-    savedOffline: "Saved on this device. It will sync when internet is available.",
+    savedOffline:
+      "Saved on this device. It will sync when internet is available.",
     practiceSaved: "Practice added to the logbook.",
     titleRequired: "Enter a short title for this practice.",
     loadError: "Unable to load organic farm information.",
-    quantityLabel: "Quantity", unitLabel: "Unit", treatedAreaLabel: "Treated area (ha)", costLabel: "Cost (₹)",
+    quantityLabel: "Quantity",
+    unitLabel: "Unit",
+    treatedAreaLabel: "Treated area (ha)",
+    costLabel: "Cost (₹)",
+    quantityPlaceholder: "Enter amount",
+    unitPlaceholder: "e.g. kg, litre, bag",
+    treatedAreaPlaceholder: "Enter area",
+    costPlaceholder: "Enter cost",
     outcomeLabel: "How did it work out?",
-    outcomeStatus: { not_reported: "Not reported", improved: "Improved", no_change: "No change", worse: "Worse", unknown: "Not sure" },
-    quantityUnitRequiredTogether: "Enter both a quantity and a unit, or leave both blank.",
-    quantityValue: "{{quantity}} {{unit}}", treatedAreaValue: "Treated {{area}} ha", costValue: "₹{{amount}}",
-    attachPhoto: "Attach photo", camera: "Camera", gallery: "Gallery", photoAttached: "Photo attached", removePhoto: "Remove photo",
-    evidenceUploadError: "Unable to upload the photo. Check your connection and try again.",
+    outcomeStatus: {
+      not_reported: "Not reported",
+      improved: "Improved",
+      no_change: "No change",
+      worse: "Worse",
+      unknown: "Not sure",
+    },
+    quantityUnitRequiredTogether:
+      "Enter both a quantity and a unit, or leave both blank.",
+    quantityValue: "{{quantity}} {{unit}}",
+    treatedAreaValue: "Treated {{area}} ha",
+    costValue: "₹{{amount}}",
+    attachPhoto: "Attach photo",
+    camera: "Camera",
+    gallery: "Gallery",
+    photoAttached: "Photo attached",
+    removePhoto: "Remove photo",
+    evidenceUploadError:
+      "Unable to upload the photo. Check your connection and try again.",
     evidenceCount: "{{count}} photo attached",
     planTitle: "Organic action plan",
-    planIntro: "Source-backed actions from disease, soil, calendar, weather and satellite modules. Weather-blocked actions cannot be logged yet.",
+    planIntro:
+      "Source-backed actions from disease, soil, calendar, weather and satellite modules. Weather-blocked actions cannot be logged yet.",
     planError: "Unable to load the organic action plan.",
     noActions: "No organic actions available",
-    noActionsMessage: "The app will show actions here only when the backend has applicable, source-reviewed guidance.",
-    scoutingOnly: "Field inspection only — satellite data does not diagnose a disease or deficiency.",
+    noActionsMessage:
+      "The app will show actions here only when the backend has applicable, source-reviewed guidance.",
+    scoutingOnly:
+      "Field inspection only — satellite data does not diagnose a disease or deficiency.",
     addToLogbook: "Record this action",
     calendarOnly: "Show organic activities only",
     dashboardTitle: "Organic farm dashboard",
+    dashboardSubtitle:
+      "Plan, track and adopt organic farming practices step by step.",
     profileNotSet: "Organic plan not set",
+    readinessDashboardCta: "Take the check",
+    conversionPlanDashboardCta: "Open plan",
+    profileDashboardCta: "Organic farm plan",
+    certificationDashboardCta: "Open certification",
+    logbookDashboardCta: "Open logbook",
     practiceCount: "{{count}} practices recorded",
     openLogbook: "Open logbook",
-    widget: { disease: "Pest and disease actions", soil: "Soil organic-matter plan", calendar: "Organic calendar", weather: "Weather-aware actions", satellite: "Satellite scouting" },
+    marketLinkTitle: "Sell as organic",
+    marketLinkDescription: "Find buyers looking for certified organic produce.",
+    marketLinkDashboardCta: "View organic buyers",
+    widget: {
+      disease: "Pest and disease actions",
+      soil: "Soil organic-matter plan",
+      calendar: "Organic calendar",
+      weather: "Weather-aware actions",
+      satellite: "Satellite scouting",
+    },
     widgetSummary: "{{total}} actions · {{ready}} ready · {{blocked}} waiting",
     viewAllActions: "View all actions",
     shareTraceability: "Share traceability",
-    privacyNotice: "Only the fields you select are included. Private evidence remains hidden by default.",
-    shareClassification: "Classification", shareLocation: "Location", shareEvidence: "Evidence", share: "Share public record", traceQr: "Traceability QR code",
-    weatherNotification: "You will be notified when the source-backed weather window becomes suitable.", openCalendarToReschedule: "Review or reschedule", recordFinding: "Record scouting finding", findingRecorded: "Scouting finding added to the logbook for follow-up.",
-    inputLibrary: "Organic input library", inputLibraryNotice: "Read-only catalogue. Public-source entries are not approved inputs until a human reviewer approves them.", searchInputs: "Search organic inputs", inputLibraryError: "Unable to load the organic input library.", inputLibraryEmpty: "No reviewed catalogue entries", reviewedContentEmpty: "No applicable reviewed content is available. The app will not invent an input recommendation.", catalogueApproved: "Human approved", sourcedNotApproved: "Public source — not approved", createShare: "Create public share", revokeShare: "Revoke public share", shareError: "Unable to change sharing. Check your connection and try again.", calculatedForFarm: "For your farm ({{area}} ha): {{quantity}} {{unit}}",
-    readinessTitle: "Organic Readiness Check", readinessDashboardHint: "Answer a few questions to see if this farm is ready to start converting to organic.", readinessCta: "Take the readiness check", readinessIntro: "Answer every question honestly — this only guides your own next step, it is not a certification.", readinessLoadError: "Unable to load the readiness check.", readinessNotSetUpTitle: "Readiness check not ready yet", readinessNotSetUpMessage: "An agronomist hasn't approved the readiness questions for this app yet. Check back soon.", readinessResultTitle: "Your readiness result", readinessScoreLabel: "Score: {{score}}/100", readinessSubmit: "See my result", readinessSubmitError: "Unable to submit your answers. Check your connection and try again.", readinessRetake: "Retake the check",
-    conversionPlanTitle: "Conversion Plan", conversionPlanDashboardHint: "Set up plots and crop cycles to get a week-by-week organic conversion schedule.", conversionPlanCta: "Open conversion plan", conversionPlanIntro: "Add a plot and a crop cycle. The schedule appears once an agronomist has reviewed and activated a plan for that crop.", addPlot: "Add plot", plotName: "Plot name", plotAreaHectares: "Area (hectares)", plotAreaValue: "{{value}} ha", plotsLoadError: "Unable to load plots.", noPlots: "No plots yet", noPlotsMessage: "Add your first plot to start a conversion plan.", cropCyclesLoadError: "Unable to load crop cycles.", chooseCrop: "Choose a crop", sowingDate: "Sowing date", harvestStart: "Expected harvest start", harvestEnd: "Expected harvest end", addCropCycle: "Add crop cycle", sownOn: "Sown {{date}}", planLoadError: "Unable to load the schedule.", planAwaitingApproval: "Crop plan awaiting agronomist approval", todayTaskTitle: "Today's Organic Task", todayTaskLoadError: "Unable to load today's task.", todayTaskEmpty: "No organic task due today.", todayTaskOverdue: "Overdue", mvpTaskReminderTitle: "Today's organic task", mvpTaskReminderBody: "You have an organic conversion task due for your {{crop}} crop.",
-    certificationTitle: "Certification Companion", certificationDashboardHint: "Track your PGS certification status and submit evidence for a human reviewer.", certificationCta: "Open certification", certificationLoadError: "Unable to load certification status.", certificateVerified: "Certificate verified", certificateIdLabel: "Certificate ID: {{id}}", issuingAuthorityLabel: "Issued by: {{authority}}", validToLabel: "Valid until {{date}}", checklistTitle: "Conversion checklist", checklistHint: "Mark what applies. An agriculture officer reviews this before any certified status is granted.", partialConversionLabel: "This is a partial conversion (not the whole holding)", saveChecklist: "Save checklist", checklistSaved: "Checklist saved.", checklistSaveError: "Unable to save the checklist. Check your connection and try again.", peerReviewsTitle: "Peer reviews assigned to you", peerReviewEmpty: "No peer reviews assigned to you.", peerReviewScheduledOn: "Scheduled for {{date}}", peerReviewFindingsLabel: "Your findings", peerReviewSubmit: "Submit findings", peerReviewSubmitted: "Findings submitted.", peerReviewSubmitError: "Unable to submit your findings. Check your connection and try again.",
-    checklistItem: { whole_holding_reviewed: "Whole holding reviewed", conversion_plan_recorded: "Conversion plan recorded", conversion_completed: "Conversion completed", no_major_non_compliance: "No major non-compliance found" },
-    pgsState: { pre_certification_trial: "Pre-certification trial", pgs_eligibility_review: "PGS eligibility review", regional_council_approval_required: "Regional Council approval required", pgs_registration_pending: "PGS registration pending", pgs_green_under_conversion: "PGS Green — under conversion", pgs_organic: "PGS Organic (certified)", non_compliance_review: "Non-compliance review" },
+    privacyNotice:
+      "Only the fields you select are included. Private evidence remains hidden by default.",
+    shareClassification: "Classification",
+    shareLocation: "Location",
+    shareEvidence: "Evidence",
+    share: "Share public record",
+    traceQr: "Traceability QR code",
+    weatherNotification:
+      "You will be notified when the source-backed weather window becomes suitable.",
+    openCalendarToReschedule: "Review or reschedule",
+    recordFinding: "Record scouting finding",
+    findingRecorded: "Scouting finding added to the logbook for follow-up.",
+    inputLibrary: "Organic input library",
+    inputLibraryNotice:
+      "Read-only catalogue. Public-source entries are not approved inputs until a human reviewer approves them.",
+    searchInputs: "Search organic inputs",
+    inputLibraryError: "Unable to load the organic input library.",
+    inputLibraryEmpty: "No reviewed catalogue entries",
+    reviewedContentEmpty:
+      "No applicable reviewed content is available. The app will not invent an input recommendation.",
+    catalogueApproved: "Human approved",
+    sourcedNotApproved: "Public source — not approved",
+    createShare: "Create public share",
+    revokeShare: "Revoke public share",
+    shareError:
+      "Unable to change sharing. Check your connection and try again.",
+    calculatedForFarm: "For your farm ({{area}} ha): {{quantity}} {{unit}}",
+    readinessTitle: "Organic Readiness Check",
+    readinessDashboardHint:
+      "Answer a few questions to see if this farm is ready to start converting to organic.",
+    readinessCta: "Take the readiness check",
+    readinessIntro:
+      "Answer every question honestly — this only guides your own next step, it is not a certification.",
+    readinessLoadError: "Unable to load the readiness check.",
+    readinessNotSetUpTitle: "Readiness check not ready yet",
+    readinessNotSetUpMessage:
+      "An agronomist hasn't approved the readiness questions for this app yet. Check back soon.",
+    readinessResultTitle: "Your readiness result",
+    readinessResultSubtitle:
+      "Here's your result and recommendation based on your answers.",
+    readinessScoreHeading: "Readiness score",
+    readinessKeyFactor: "Key factor: {{factor}}",
+    readinessScoreLabel: "Score: {{score}}/100",
+    readinessSubmit: "See my result",
+    readinessSubmitError:
+      "Unable to submit your answers. Check your connection and try again.",
+    readinessRetake: "Retake the check",
+    conversionPlanTitle: "Conversion Plan",
+    conversionPlanDashboardHint:
+      "Set up plots and crop cycles to get a week-by-week organic conversion schedule.",
+    conversionPlanCta: "Open conversion plan",
+    conversionPlanIntro:
+      "Add a plot and a crop cycle. The schedule appears once an agronomist has reviewed and activated a plan for that crop.",
+    addPlot: "Add plot",
+    plotName: "Plot name",
+    plotAreaHectares: "Area (hectares)",
+    plotAreaValue: "{{value}} ha",
+    plotsLoadError: "Unable to load plots.",
+    noPlots: "No plots yet",
+    noPlotsMessage: "Add your first plot to start a conversion plan.",
+    cropCyclesLoadError: "Unable to load crop cycles.",
+    chooseCrop: "Choose a crop",
+    sowingDate: "Sowing date",
+    harvestStart: "Expected harvest start",
+    harvestEnd: "Expected harvest end",
+    addCropCycle: "Add crop cycle",
+    sownOn: "Sown {{date}}",
+    planLoadError: "Unable to load the schedule.",
+    planNeedsSowingDate: "Add a sowing date to see your week-by-week plan.",
+    planWeek: "Week {{week}}",
+    todayTaskTitle: "Today's Organic Task",
+    todayTaskLoadError: "Unable to load today's task.",
+    todayTaskEmpty: "No organic task due today.",
+    todayTaskOverdue: "Overdue",
+    mvpTaskReminderTitle: "Today's organic task",
+    mvpTaskReminderBody:
+      "You have an organic conversion task due for your {{crop}} crop.",
+    certificationTitle: "Certification Companion",
+    certificationDashboardHint:
+      "Track your PGS certification status and submit evidence for a human reviewer.",
+    certificationCta: "Open certification",
+    certificationLoadError: "Unable to load certification status.",
+    certificateVerified: "Certificate verified",
+    notCertifiedYet: "Not certified yet",
+    certificateIdLabel: "Certificate ID: {{id}}",
+    issuingAuthorityLabel: "Issued by: {{authority}}",
+    validToLabel: "Valid until {{date}}",
+    checklistTitle: "Conversion checklist",
+    checklistHint:
+      "Mark what applies. An agriculture officer reviews this before any certified status is granted.",
+    partialConversionLabel:
+      "This is a partial conversion (not the whole holding)",
+    saveChecklist: "Save checklist",
+    checklistSaved: "Checklist saved.",
+    checklistSaveError:
+      "Unable to save the checklist. Check your connection and try again.",
+    peerReviewsTitle: "Peer reviews assigned to you",
+    peerReviewEmpty: "No peer reviews assigned to you.",
+    peerReviewEmptyHint:
+      "Assigned peer reviews will appear here when available.",
+    peerReviewScheduledOn: "Scheduled for {{date}}",
+    peerReviewFindingsLabel: "Your findings",
+    peerReviewSubmit: "Submit findings",
+    peerReviewSubmitted: "Findings submitted.",
+    peerReviewSubmitError:
+      "Unable to submit your findings. Check your connection and try again.",
+    checklistItem: {
+      whole_holding_reviewed: "Whole holding reviewed",
+      conversion_plan_recorded: "Conversion plan recorded",
+      conversion_completed: "Conversion completed",
+      no_major_non_compliance: "No major non-compliance found",
+    },
+    pgsState: {
+      pre_certification_trial: "Pre-certification trial",
+      pgs_eligibility_review: "PGS eligibility review",
+      regional_council_approval_required: "Regional Council approval required",
+      pgs_registration_pending: "PGS registration pending",
+      pgs_green_under_conversion: "PGS Green — under conversion",
+      pgs_organic: "PGS Organic (certified)",
+      non_compliance_review: "Non-compliance review",
+    },
     peerReviewStatus: { scheduled: "Pending", completed: "Completed" },
-    planKind: { disease: "Disease", soil: "Soil", calendar: "Calendar", weather: "Weather", satellite: "Satellite scouting" },
-    actionState: { ready: "Ready", waiting_for_weather: "Waiting for suitable weather", needs_confirmation: "Needs confirmation", completed: "Completed" },
+    planKind: {
+      disease: "Disease",
+      soil: "Soil",
+      calendar: "Calendar",
+      weather: "Weather",
+      satellite: "Satellite scouting",
+    },
+    actionState: {
+      ready: "Ready",
+      waiting_for_weather: "Waiting for suitable weather",
+      needs_confirmation: "Needs confirmation",
+      completed: "Completed",
+    },
     produceClassification: "Organic produce classification",
-    produceClass: { conventional: "Conventional", organic_practices_not_certified: "Organic practices used — not certified", under_organic_transition: "Under organic transition", certified_organic: "Certified organic" },
-    claimVerification: { not_claimed: "No certification claimed", self_declared: "Farmer declared", document_submitted: "Document submitted for review", verified: "Certification verified", expired: "Certification expired", rejected: "Certification not verified" },
+    produceClass: {
+      conventional: "Conventional",
+      organic_practices_not_certified: "Organic practices used — not certified",
+      under_organic_transition: "Under organic transition",
+      certified_organic: "Certified organic",
+    },
+    claimVerification: {
+      not_claimed: "No certification claimed",
+      self_declared: "Farmer declared",
+      document_submitted: "Document submitted for review",
+      verified: "Certification verified",
+      expired: "Certification expired",
+      rejected: "Certification not verified",
+    },
     mode: {
-      conventional: { title: "Conventional", description: "No organic preference is applied." },
-      organic_preferred: { title: "Organic preferred", description: "Prefer approved organic options when available." },
-      transitioning: { title: "Transitioning", description: "Track the farm's move toward organic practices." },
-      fully_organic: { title: "Fully organic practices", description: "Manage this farm using organic practices; this is not certification." },
+      conventional: {
+        title: "Conventional",
+        description: "No organic preference is applied.",
+      },
+      organic_preferred: {
+        title: "Organic preferred",
+        description: "Prefer approved organic options when available.",
+      },
+      transitioning: {
+        title: "Transitioning",
+        description: "Track the farm's move toward organic practices.",
+      },
+      fully_organic: {
+        title: "Fully organic practices",
+        description:
+          "Manage this farm using organic practices; this is not certification.",
+      },
     },
     practice: {
-      amendment: "Organic amendment", seed_treatment: "Seed treatment", biological_treatment: "Biological treatment",
-      botanical_spray: "Botanical spray", trap: "Trap", mechanical_weeding: "Mechanical weeding", mulching: "Mulching",
-      green_manure: "Green manure", crop_rotation: "Crop rotation", irrigation_drainage: "Irrigation / drainage",
-      scouting: "Scouting", harvest: "Harvest", custom: "Other practice",
+      amendment: "Organic amendment",
+      seed_treatment: "Seed treatment",
+      biological_treatment: "Biological treatment",
+      botanical_spray: "Botanical spray",
+      trap: "Trap",
+      mechanical_weeding: "Mechanical weeding",
+      mulching: "Mulching",
+      green_manure: "Green manure",
+      crop_rotation: "Crop rotation",
+      irrigation_drainage: "Irrigation / drainage",
+      scouting: "Scouting",
+      harvest: "Harvest",
+      custom: "Other practice",
     },
   },
   errors: {

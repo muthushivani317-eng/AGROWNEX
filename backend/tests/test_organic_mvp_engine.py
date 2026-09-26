@@ -1,15 +1,16 @@
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 
 from app.core.exceptions import ValidationError
+from app.modules.organic_mvp.common_plan import COMMON_PLAN_VERSION, build_common_plan
 from app.modules.organic_mvp.engine import (
     TRIAL_NOTICE, forecast_gate, schedule_reviewed_tasks, score_readiness,
     validate_pgs_transition,
 )
 from app.modules.organic_mvp import models as _organic_mvp_models  # noqa: F401
 from app.modules.organic_mvp.router import (
-    add_crop_cycle, add_plot, crop_plan, pgs_status, review_pgs, setup_status,
+    add_crop_cycle, add_plot, crop_plan, pgs_status, review_pgs, setup_status, today_task,
     update_pgs_checklist,
 )
 from app.modules.organic_mvp.schemas import CropCycleIn, PgsFarmerIn, PgsReviewIn, PlotIn
@@ -48,9 +49,24 @@ def test_pgs_claim_requires_valid_external_evidence():
 
 def test_plan_is_bounded_and_requires_tamil():
     with pytest.raises(ValidationError):
-        schedule_reviewed_tasks([{"day_offset": 91, "title_ta": "x", "body_ta": "y"}], date(2026, 1, 1))
+        schedule_reviewed_tasks([{"day_offset": 401, "title_ta": "x", "body_ta": "y"}], date(2026, 1, 1))
     with pytest.raises(ValidationError):
         schedule_reviewed_tasks([{"day_offset": 1, "title_en": "English"}], date(2026, 1, 1))
+
+
+def test_common_plan_default_and_short_crop():
+    sowing = date(2026, 10, 1)
+    plan = build_common_plan(sowing)
+    assert [t["week"] for t in plan][:6] == [1, 2, 3, 4, 5, 6]
+    assert plan[5]["due_on"] == sowing
+    assert plan[-1]["title_en"] == "Harvest"
+    assert plan[-1]["due_on"] == sowing + timedelta(weeks=13)
+    assert all(t["title_ta"] and t["body_ta"] for t in plan)
+    short = build_common_plan(sowing, date(2026, 12, 20))
+    assert short[-1]["due_on"] == date(2026, 12, 20)
+    stop = next(t for t in short if t["title_en"] == "Stop sprays")
+    assert stop["due_on"] == date(2026, 12, 6)
+    assert all(t["due_on"] < stop["due_on"] for t in short if 6 < t["week"] < 17)
 
 
 def test_forecast_is_fail_closed():
@@ -80,7 +96,13 @@ async def test_plot_plan_and_partial_conversion_fail_closed(db_session):
     plot = await add_plot(farm.id, PlotIn(name="South plot", area_hectares=0.5), db_session, user)
     assert plot["notice"] == TRIAL_NOTICE
     cycle = await add_crop_cycle(plot["id"], CropCycleIn(crop_id="rice", sowing_date=date(2026, 9, 16)), db_session, user)
-    assert (await crop_plan(cycle["id"], db_session, user))["status"] == "Crop plan awaiting agronomist approval"
+    plan = await crop_plan(cycle["id"], db_session, user)
+    assert plan["status"] == "ready"
+    assert plan["source"] == COMMON_PLAN_VERSION
+    assert plan["tasks"][0]["week"] == 1
+    assert plan["notice_ta"] and plan["notice_en"]
+    no_date = await add_crop_cycle(plot["id"], CropCycleIn(crop_id="rice"), db_session, user)
+    assert (await crop_plan(no_date["id"], db_session, user))["status"] == "needs_sowing_date"
     assert (await pgs_status(farm.id, db_session, user))["notice"] == TRIAL_NOTICE
     result = await update_pgs_checklist(farm.id, PgsFarmerIn(partial_conversion=True), db_session, user)
     assert result["state"] == "regional_council_approval_required"
@@ -118,3 +140,18 @@ async def test_pgs_admin_transition_has_append_only_actor_record(db_session):
     assert audit.meta["prior_state"] == "pre_certification_trial"
     assert audit.meta["new_state"] == "pgs_eligibility_review"
     assert audit.meta["occurred_at"]
+
+
+@pytest.mark.asyncio
+async def test_today_task_follows_common_plan(db_session):
+    user = User(firebase_uid="organic-common-plan", status="active")
+    db_session.add(user)
+    await db_session.flush()
+    farm = Farm(user_id=user.id, name="Common plan farm")
+    db_session.add(farm)
+    await db_session.flush()
+    plot = await add_plot(farm.id, PlotIn(name="East plot"), db_session, user)
+    await add_crop_cycle(plot["id"], CropCycleIn(crop_id="groundnut", sowing_date=date.today()), db_session, user)
+    tasks = (await today_task(farm.id, db_session, user))["tasks"]
+    assert [t["title_en"] for t in tasks] == ["Sow or transplant"]
+    assert tasks[0]["week"] == 6

@@ -47,6 +47,8 @@ export interface OrganicCropCycleInput {
 
 export interface OrganicScheduledTask {
   id: string;
+  /** Week number (1 = season start, 6 = sowing) for the common plan; null for crop-specific plans. */
+  week: number | null;
   due_on: string;
   title_ta: string;
   body_ta: string;
@@ -56,8 +58,12 @@ export interface OrganicScheduledTask {
 }
 
 export interface OrganicCropCyclePlan {
-  /** "ready" once an agronomist has activated a reviewed task template for this cycle, else "Crop plan awaiting agronomist approval". */
-  status: string;
+  /** "ready", or "needs_sowing_date" when the cycle has no sowing date yet. */
+  status: "ready" | "needs_sowing_date";
+  /** "reviewed_template" for a crop-specific plan, else the common plan version. */
+  source: string;
+  notice_ta: string;
+  notice_en: string;
   tasks: OrganicScheduledTask[];
 }
 
