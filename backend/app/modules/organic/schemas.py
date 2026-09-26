@@ -7,6 +7,8 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.modules.organic.constants import CertificationStatus, OrganicFarmMode
+from app.modules.organic_mvp.common_plan import NOTICE_EN as COMMON_PLAN_NOTICE_EN
+from app.modules.organic_mvp.common_plan import NOTICE_TA as COMMON_PLAN_NOTICE_TA
 
 
 class OrganicProfileWrite(BaseModel):
@@ -159,10 +161,27 @@ class OrganicUploadAttestationOut(BaseModel):
     upload_receipt: str
 
 
+class CommonPlanStepOut(BaseModel):
+    crop_cycle_id: uuid.UUID
+    crop_id: str
+    week: int
+    due_on: date
+    title_ta: str
+    body_ta: str
+    title_en: str
+    body_en: str
+
+
 class OrganicPlanBundleOut(BaseModel):
     farm_id: uuid.UUID
     generated_at: datetime
     actions: list[OrganicPlanActionOut]
+    common_plan_status: Literal["ready", "no_step_this_week", "needs_sowing_date"] = (
+        "needs_sowing_date"
+    )
+    common_plan: list[CommonPlanStepOut] = []
+    notice_ta: str = COMMON_PLAN_NOTICE_TA
+    notice_en: str = COMMON_PLAN_NOTICE_EN
 
 
 class DiseasePlanStepOut(BaseModel):

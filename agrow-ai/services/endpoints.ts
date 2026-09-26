@@ -54,6 +54,7 @@ export const endpoints = {
     cropCyclePlan: (cycleId: string) => `/organic-mvp/crop-cycles/${cycleId}/plan`,
     todayTask: (farmId: string) => `/organic-mvp/farms/${farmId}/today-task`,
     pgsStatus: (farmId: string) => `/organic-mvp/farms/${farmId}/pgs`,
+    pgsChecklist: (farmId: string) => `/organic-mvp/farms/${farmId}/pgs/checklist`,
     pgsPeerAssignments: "/organic-mvp/pgs/peer-assignments",
     pgsPeerAssignmentSubmit: (appraisalId: string) =>
       `/organic-mvp/pgs/peer-assignments/${appraisalId}/submit`,

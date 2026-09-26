@@ -79,7 +79,7 @@ export const organicPgsApi = {
     input: PgsChecklistInput,
   ): Promise<{ state: PgsState } | PgsStatusResponse> {
     const response = await httpClient.put(
-      endpoints.organicMvp.pgsStatus(farmId),
+      endpoints.organicMvp.pgsChecklist(farmId),
       input,
     );
     return response.data;

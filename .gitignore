@@ -95,3 +95,11 @@ _to_delete_outer/
 logcat*.txt
 /*.xml
 /*.png
+
+*.apk
+*.aab
+*.apks
+artifacts/
+release-worktrees/
+lcc-*/
+mobile-security-release-*/

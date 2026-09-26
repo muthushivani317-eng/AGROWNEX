@@ -5495,6 +5495,22 @@ export const en = {
       "Source-backed actions from disease, soil, calendar, weather and satellite modules. Weather-blocked actions cannot be logged yet.",
     planError: "Unable to load the organic action plan.",
     noActions: "No organic actions available",
+    noStepThisWeek: "No plan step this week. Open the conversion plan to see what is next.",
+    thisWeekTitle: "This week's organic steps",
+    openConversionPlan: "Open conversion plan",
+    actionCode: {
+      applyInput: "Apply {{name}}",
+      fieldScouting: "Check the field ({{area}})",
+      confirm_symptoms: "Check the symptoms in the field",
+      request_expert_review: "Ask an expert to confirm",
+      apply_approved_input: "Apply the approved organic input",
+      no_approved_treatment: "No approved organic input yet - ask an expert",
+      reinspect: "Check the crop again",
+      postpone_organic_application_for_rain: "Wait - rain expected, do not spray",
+      postpone_organic_application_for_wind: "Wait - strong wind, do not spray",
+      postpone_organic_application_for_heavy_rain: "Wait - heavy rain expected, do not apply",
+      review_farmer_reported_field_findings: "Review your field findings",
+    },
     noActionsMessage:
       "The app will show actions here only when the backend has applicable, source-reviewed guidance.",
     scoutingOnly:

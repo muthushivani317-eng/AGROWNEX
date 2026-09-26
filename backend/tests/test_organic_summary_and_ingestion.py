@@ -177,3 +177,37 @@ async def test_public_source_pack_is_bilingual_and_fails_closed_until_promoted(d
     assert coverage["approved"] == 0
 
     assert await seed_public_source_pack(db_session) == []
+
+
+async def test_farm_plan_needs_sowing_date_without_crop_cycle(db_session):
+    owner = await _user(db_session, "common-none", "+919000000291")
+    farm = Farm(user_id=owner.id, name="No cycle farm")
+    db_session.add(farm)
+    await db_session.flush()
+    bundle = await OrganicService(db_session).farm_plan(owner, farm.id)
+    assert bundle["common_plan_status"] == "needs_sowing_date"
+    assert bundle["common_plan"] == []
+
+
+async def test_farm_plan_shows_this_weeks_common_plan_step(db_session):
+    from datetime import timedelta
+    from zoneinfo import ZoneInfo
+
+    from app.modules.organic_mvp.models import OrganicCropCycle, OrganicPlot
+
+    owner = await _user(db_session, "common-week", "+919000000292")
+    farm = Farm(user_id=owner.id, name="Common plan farm")
+    db_session.add(farm)
+    await db_session.flush()
+    plot = OrganicPlot(farm_id=farm.id, name="Plot 1")
+    db_session.add(plot)
+    await db_session.flush()
+    today = datetime.now(ZoneInfo("Asia/Kolkata")).date()
+    # Sowing today = week 6 step ("Sow or transplant") is due today.
+    db_session.add(OrganicCropCycle(plot_id=plot.id, crop_id="paddy", sowing_date=today))
+    await db_session.flush()
+    bundle = await OrganicService(db_session).farm_plan(owner, farm.id)
+    assert bundle["common_plan_status"] == "ready"
+    assert [step["week"] for step in bundle["common_plan"]] == [6]
+    assert bundle["common_plan"][0]["title_en"] == "Sow or transplant"
+    assert bundle["common_plan"][0]["due_on"] <= today < bundle["common_plan"][0]["due_on"] + timedelta(days=7)

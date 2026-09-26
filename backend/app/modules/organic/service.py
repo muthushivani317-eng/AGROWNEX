@@ -298,6 +298,65 @@ class OrganicService:
             user, farm_id, option.source_action
         )
 
+    async def _common_plan_week(self, farm_id: uuid.UUID) -> tuple[str, list[dict]]:
+        """This week's common-plan steps for crop cycles without a reviewed plan.
+
+        Status: "ready" (steps found), "no_step_this_week", or "needs_sowing_date"
+        (no organic crop cycle with a sowing date yet).
+        """
+        from datetime import timedelta
+        from zoneinfo import ZoneInfo
+
+        from app.modules.organic_mvp.common_plan import build_common_plan
+        from app.modules.organic_mvp.models import (
+            OrganicCropCycle,
+            OrganicPlot,
+            OrganicScheduledTask,
+        )
+
+        cycles = list(
+            (
+                await self.session.execute(
+                    select(OrganicCropCycle)
+                    .join(OrganicPlot, OrganicPlot.id == OrganicCropCycle.plot_id)
+                    .where(
+                        OrganicPlot.farm_id == farm_id,
+                        OrganicCropCycle.sowing_date.is_not(None),
+                    )
+                )
+            ).scalars()
+        )
+        if not cycles:
+            return "needs_sowing_date", []
+        today = datetime.now(ZoneInfo("Asia/Kolkata")).date()
+        steps: list[dict] = []
+        for cycle in cycles:
+            has_reviewed = (
+                await self.session.execute(
+                    select(OrganicScheduledTask.id)
+                    .where(OrganicScheduledTask.crop_cycle_id == cycle.id)
+                    .limit(1)
+                )
+            ).scalar()
+            if has_reviewed:
+                continue
+            for task in build_common_plan(cycle.sowing_date, cycle.expected_harvest_start):
+                if task["due_on"] <= today < task["due_on"] + timedelta(days=7):
+                    steps.append(
+                        {
+                            "crop_cycle_id": cycle.id,
+                            "crop_id": cycle.crop_id,
+                            "week": task["week"],
+                            "due_on": task["due_on"],
+                            "title_ta": task["title_ta"],
+                            "body_ta": task["body_ta"],
+                            "title_en": task["title_en"],
+                            "body_en": task["body_en"],
+                        }
+                    )
+        steps.sort(key=lambda item: item["due_on"])
+        return ("ready" if steps else "no_step_this_week"), steps
+
     async def farm_plan(self, user: User, farm_id: uuid.UUID):
         await self.farms.get_farm(user, farm_id)
         rows = list(
@@ -341,9 +400,12 @@ class OrganicService:
                 return "needs_confirmation"
             return "ready"
 
+        common_status, common_steps = await self._common_plan_week(farm_id)
         return {
             "farm_id": farm_id,
             "generated_at": datetime.now(UTC),
+            "common_plan_status": common_status,
+            "common_plan": common_steps,
             "actions": [
                 {
                     "id": row.id,
