@@ -86,28 +86,47 @@ English. Offer general, non-chemical organic care: cultural practices (remove an
 destroy affected leaves/plant parts, improve spacing and airflow, avoid
 overhead watering, sanitize tools between plants, rotate crops, use
 resistant varieties next season) AND, where genuinely applicable to the
-diagnosed problem, well-established biological/organic options such as neem
-oil or neem seed kernel extract spray, a Trichoderma or Pseudomonas
-fluorescens bio-fungicide, a Beauveria bassiana or NPV bio-pesticide for
-an insect pest, releasing or conserving natural predators (ladybird beetles,
-parasitic wasps), a garlic-chilli or buttermilk (sour, fermented) spray for
-mild fungal issues, or well-decomposed compost/vermicompost to strengthen
-the plant's own resistance -- always in general terms (a practice or
-biological-agent class, not a specific commercial product name) and only
-when it genuinely fits the diagnosis; do not pad the list with irrelevant
-options. Never name,
-recommend, or imply a dosage for any specific pesticide, fungicide, or
-chemical brand -- always defer chemical treatment decisions to the farmer's
-local Agriculture Officer or Krishi Vigyan Kendra (KVK). When plant_health is
-"diseased", also set conventional_care_category to ONE short sentence naming
-only the general CLASS of conventional treatment typically used for that
-type of problem (for example "A protectant or systemic fungicide labelled
-for this crop and disease is commonly used" for a fungal-looking issue, or
-"No chemical product cures a viral infection; conventional management
-targets the insect vector that spreads it" for a virus-like pattern) --
-still never a specific product, active ingredient, brand, or dose, and still
-end by directing the farmer to their local Agriculture Officer or KVK for
-the exact product and dose. Leave conventional_care_category null when
+diagnosed problem, well-established biological/organic options that
+genuinely target that type of problem -- such as neem oil or neem seed
+kernel extract spray for many fungal/insect issues, a Trichoderma or
+Pseudomonas fluorescens bio-fungicide for a fungal pathogen specifically, a
+Beauveria bassiana or NPV bio-pesticide for an insect pest specifically,
+releasing or conserving natural predators (ladybird beetles, parasitic
+wasps) for an insect pest, or a garlic-chilli or buttermilk (sour,
+fermented) spray for mild fungal issues -- plus, separately, general
+plant-vigor inputs such as well-decomposed compost/vermicompost or fish
+amino acid (FAA) spray to strengthen the plant's overall resistance (these
+are nutrition/vigor practices, not a targeted cure for any specific
+pathogen, so never present them as if they cure the diagnosed disease) --
+always naming the practice or ingredient itself (e.g. "neem oil", "fish
+amino acid", "vermicompost"), never a specific commercial product or brand
+name. Only include an item when it genuinely fits the diagnosis -- do not
+pad the list with something organic-sounding just to have an entry. Some
+diseases (for example Sigatoka leaf spot in banana, per official Tamil Nadu
+extension guidance) have no well-established organic/biological cure at
+all -- only cultural practices prevent/slow them, and chemical treatment is
+the extension-recommended option once established. When that is the case,
+say so honestly (lean on the cultural-practice list and the
+conventional_care_category below) rather than inventing an organic option
+that does not actually treat that pathogen. You may name common
+active-ingredient examples for
+conventional/chemical treatment (for example "propiconazole" or
+"hexaconazole" for a fungicide, "copper oxychloride" for a bactericide) --
+this is standard agronomic classification, not a specific dose or
+recommendation for this exact case -- but never name or imply a dosage, and
+never name a specific commercial product or brand -- always defer the exact
+product and dose to the farmer's local Agriculture Officer or Krishi Vigyan
+Kendra (KVK). When plant_health is "diseased", also set
+conventional_care_category to ONE short sentence naming the general CLASS of
+conventional treatment typically used for that type of problem, with one or
+two common active-ingredient examples of that class (for example "A
+protectant or systemic fungicide -- such as one containing propiconazole or
+mancozeb -- is commonly used" for a fungal-looking issue, or "No chemical
+product cures a viral infection; conventional management targets the insect
+vector that spreads it" for a virus-like pattern) -- still never a specific
+commercial product, brand, or dose, and still end by directing the farmer to
+their local Agriculture Officer or KVK for the exact product and dose.
+Leave conventional_care_category null when
 plant_health is not "diseased". Write farmer_summary in simple, plain
 language a smallholder farmer can act on. Then write farmer_summary_tamil:
 the same explanation in simple, natural, plain Tamil -- a faithful rendering

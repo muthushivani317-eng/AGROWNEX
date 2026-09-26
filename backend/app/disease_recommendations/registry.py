@@ -53,28 +53,31 @@ STATUS_UNVERIFIED = "RECOMMENDATION_NOT_VERIFIED"
 STATUS_UNMAPPED = "RUNTIME_LABEL_UNMAPPED"
 CHEMICAL_WITHHELD = "CHEMICAL_RECOMMENDATION_WITHHELD"
 
-# Category-level-only conventional-treatment guidance, keyed by the same
+# Category-level conventional-treatment guidance, keyed by the same
 # `category` tag every LABELS entry already carries (fungal/bacterial/viral/
 # healthy -- no pest/insect category exists in the current 20-label set).
-# This deliberately names only the general CLASS of treatment a farmer would
-# typically be given for that category of problem -- never a specific
-# product, active ingredient, brand, or dose, consistent with
-# CHEMICAL_WITHHELD above (dose/registration data hasn't been independently
-# verified per crop+disease against the official regulator). Always paired
+# Names common, real active-ingredient examples for that category (e.g.
+# propiconazole for a systemic fungicide) -- this is standard, widely-known
+# agronomic classification, not a per-crop+disease dose recommendation --
+# but still never a specific commercial brand or a dose, consistent with
+# CHEMICAL_WITHHELD above (exact product + dose per crop+disease hasn't been
+# independently verified against the official regulator). Always paired
 # with a line sending the farmer to their local Agriculture Officer / KVK for
 # the actual product and dose.
 _CONVENTIONAL_CATEGORY_EN: dict[str, str] = {
     "fungal": (
         "A protectant or systemic fungicide labelled for this crop and "
-        "disease is commonly used. Ask your local Agriculture Officer or "
+        "disease is commonly used -- such as one containing propiconazole, "
+        "hexaconazole, or mancozeb. Ask your local Agriculture Officer or "
         "Krishi Vigyan Kendra (KVK) for the specific product and dose."
     ),
     "bacterial": (
         "A copper-based bactericide labelled for this crop is commonly "
-        "used, though bacterial diseases are harder to cure chemically once "
-        "established -- removing infected material matters as much as any "
-        "spray. Ask your local Agriculture Officer or KVK for the specific "
-        "product and dose."
+        "used -- such as one containing copper oxychloride or copper "
+        "hydroxide -- though bacterial diseases are harder to cure "
+        "chemically once established -- removing infected material matters "
+        "as much as any spray. Ask your local Agriculture Officer or KVK "
+        "for the specific product and dose."
     ),
     "viral": (
         "No chemical product cures a viral disease. Conventional management "
@@ -93,17 +96,19 @@ _CONVENTIONAL_CATEGORY_EN: dict[str, str] = {
 _CONVENTIONAL_CATEGORY_TA: dict[str, str] = {
     "fungal": (
         "இந்தப் பயிருக்கும் நோய்க்கும் ஏற்ற பாதுகாப்பு (protectant) அல்லது "
-        "உட்புகு (systemic) பூஞ்சைக்கொல்லி பொதுவாகப் பயன்படுத்தப்படுகிறது. "
-        "குறிப்பிட்ட பொருள் மற்றும் அளவுக்கு உங்கள் உள்ளூர் வேளாண் அலுவலர் "
-        "அல்லது கிருஷி விஞ்ஞான கேந்திரத்தை (KVK) அணுகவும்."
+        "உட்புகு (systemic) பூஞ்சைக்கொல்லி பொதுவாகப் பயன்படுத்தப்படுகிறது -- "
+        "எடுத்துக்காட்டாக propiconazole, hexaconazole, அல்லது mancozeb "
+        "கொண்டவை. குறிப்பிட்ட பொருள் மற்றும் அளவுக்கு உங்கள் உள்ளூர் வேளாண் "
+        "அலுவலர் அல்லது கிருஷி விஞ்ஞான கேந்திரத்தை (KVK) அணுகவும்."
     ),
     "bacterial": (
         "இந்தப் பயிருக்கு ஏற்ற காப்பர் அடிப்படையிலான பாக்டீரியாக் கொல்லி "
-        "(bactericide) பொதுவாகப் பயன்படுத்தப்படுகிறது; எனினும் பாக்டீரியா "
-        "நோய்கள் ஏற்கனவே பரவிவிட்டால் மருந்தால் மட்டும் குணப்படுத்துவது "
-        "கடினம் -- பாதிக்கப்பட்ட பகுதிகளை அகற்றுவதும் அதே அளவு முக்கியம். "
-        "குறிப்பிட்ட பொருள் மற்றும் அளவுக்கு உங்கள் உள்ளூர் வேளாண் அலுவலர் "
-        "அல்லது KVK-ஐ அணுகவும்."
+        "(bactericide) பொதுவாகப் பயன்படுத்தப்படுகிறது -- எடுத்துக்காட்டாக "
+        "copper oxychloride அல்லது copper hydroxide கொண்டவை; எனினும் "
+        "பாக்டீரியா நோய்கள் ஏற்கனவே பரவிவிட்டால் மருந்தால் மட்டும் "
+        "குணப்படுத்துவது கடினம் -- பாதிக்கப்பட்ட பகுதிகளை அகற்றுவதும் அதே "
+        "அளவு முக்கியம். குறிப்பிட்ட பொருள் மற்றும் அளவுக்கு உங்கள் உள்ளூர் "
+        "வேளாண் அலுவலர் அல்லது KVK-ஐ அணுகவும்."
     ),
     "viral": (
         "வைரஸ் நோய்க்கு எந்த மருந்தும் குணப்படுத்தாது. இதைப் பரப்பும் "
@@ -217,6 +222,38 @@ EXTENSION_SOURCES: dict[str, dict[str, Any]] = {
         "url": None,
         "source_date": "2001-01-01",
         "official": True,
+    },
+    "tnau_agritech_paddy_expert_system": {
+        "source_id": "tnau_agritech_paddy_expert_system",
+        "publisher": "Tamil Nadu Agricultural University (TNAU) Agritech Portal",
+        "title": "Expert System - Paddy - Brown Spot",
+        "url": "https://agritech.tnau.ac.in/expert_system/paddy/cpdisbrownspot.html",
+        "source_date": None,
+        "official": True,
+    },
+    "tnau_agritech_cotton_diseases": {
+        "source_id": "tnau_agritech_cotton_diseases",
+        "publisher": "Tamil Nadu Agricultural University (TNAU) Agritech Portal",
+        "title": "Crop Protection - Cotton Diseases",
+        "url": "https://agritech.tnau.ac.in/crop_protection/cotton_diseases/cotton_d2.html",
+        "source_date": None,
+        "official": True,
+    },
+    "tnau_agritech_chilli_diseases": {
+        "source_id": "tnau_agritech_chilli_diseases",
+        "publisher": "Tamil Nadu Agricultural University (TNAU) Agritech Portal",
+        "title": "Crop Protection - Chilli Diseases",
+        "url": "https://agritech.tnau.ac.in/crop_protection/chilli_diseases_4.html",
+        "source_date": None,
+        "official": True,
+    },
+    "legume_research_2018_pigeonpea_alternaria": {
+        "source_id": "legume_research_2018_pigeonpea_alternaria",
+        "publisher": "Legume Research (NAAS-accredited Indian journal), not a government/extension body",
+        "title": "Balai, Singh, Sinha & Yadav (2018), \"Evaluation of different fungicides and antagonists In vitro and In vivo condition against Alternaria blight of pigeonpea\", Legume Research 43(2):268-275",
+        "url": None,
+        "source_date": "2018-01-01",
+        "official": False,
     },
 }
 
@@ -451,6 +488,9 @@ DISEASE_CONTENT: dict[str, dict[str, Any]] = {
             "Avoid over-applying nitrogen fertilizer; follow recommended doses",
             "Practice field sanitation between seasons (manage stubbles/ratoons, maintain bunds)",
         ],
+        "biological_options_en": [
+            "Seed treatment with Pseudomonas fluorescens (about 10 g per kg of seed), followed by a seedling dip in a Pseudomonas fluorescens solution before transplanting",
+        ],
         "prevention_en": [
             "Follow balanced/split fertilizer recommendations rather than over-applying nitrogen",
             "Use clean, certified seed each season",
@@ -462,13 +502,16 @@ DISEASE_CONTENT: dict[str, dict[str, Any]] = {
             "நைட்ரஜன் உரத்தை அதிகமாகப் பயன்படுத்துவதைத் தவிர்த்து, பரிந்துரைக்கப்பட்ட அளவுகளைப் பின்பற்றவும்",
             "பருவங்களுக்கு இடையே வயல் சுத்தத்தைக் கடைப்பிடிக்கவும் (தாள்/மறுமுளைப் பயிரை நிர்வகித்தல், வரம்புகளைப் பராமரித்தல்)",
         ],
+        "biological_options_ta": [
+            "Pseudomonas fluorescens உடன் விதை நேர்த்தி செய்யவும் (சுமார் 10 கிராம் ஒரு கிலோ விதைக்கு), நடவு செய்வதற்கு முன் நாற்றுகளை Pseudomonas fluorescens கரைசலில் நனைக்கவும்",
+        ],
         "prevention_ta": [
             "நைட்ரஜனை அதிகமாகப் பயன்படுத்துவதற்குப் பதிலாக சமச்சீர்/பிரிவு உர பரிந்துரைகளைப் பின்பற்றவும்",
             "ஒவ்வொரு பருவத்திலும் சுத்தமான, சான்றளிக்கப்பட்ட விதையைப் பயன்படுத்தவும்",
             "பழுப்பு புள்ளி நோய் குலைநோயுடன் இணைந்தும் ஏற்படுவதாக ஆவணப்படுத்தப்பட்டுள்ளதால், உடனடியாக நோய் கண்டறிதலைப் பெறவும்",
         ],
-        "_source_ids": ["tnau_agriculture_guide"],
-        "_source_note": "AGRICULTURE.pdf disease-management table (Brown spot entry has no dedicated symptom/cultural section in this source -- cause and general seed/fertilizer guidance only)",
+        "_source_ids": ["tnau_agriculture_guide", "tnau_agritech_paddy_expert_system"],
+        "_source_note": "AGRICULTURE.pdf disease-management table (cause and general seed/fertilizer guidance); TNAU Agritech Portal Expert System - Paddy - Brown Spot page (biological seed-treatment/seedling-dip protocol)",
     },
     "paddy_tungro": {
         "cause_en": "Caused by Rice tungro Bacilliform virus and Rice tungro Spherical virus, transmitted by green leafhopper vectors.",
@@ -572,17 +615,25 @@ DISEASE_CONTENT: dict[str, dict[str, Any]] = {
         "cultural_management_en": [
             "Choose a Verticillium-wilt-resistant variety where the disease is a known local concern",
         ],
+        "biological_options_en": [
+            "Seed treatment with Bacillus subtilis (about 10 g per kg of seed) or Trichoderma asperellum (about 4 g per kg of seed)",
+            "Trichoderma asperellum applied to the soil at sowing and again about 90 days after sowing",
+        ],
         "prevention_en": [
-            "Use resistant varieties rather than relying on curative measures, since none are described in the available sources for this disease",
+            "Use resistant varieties as the primary defence, alongside seed-/soil-applied biocontrol treatment",
         ],
         "cultural_management_ta": [
             "இந்நோய் உள்ளூரில் அறியப்பட்ட பிரச்சனையாக இருக்கும் இடங்களில் Verticillium வாடல் நோய் எதிர்ப்புத் திறன் கொண்ட ரகத்தைத் தேர்ந்தெடுக்கவும்",
         ],
-        "prevention_ta": [
-            "இந்நோய்க்கு கிடைக்கும் ஆதாரங்களில் குணப்படுத்தும் நடவடிக்கைகள் எதுவும் விவரிக்கப்படாததால், அவற்றை நம்புவதற்குப் பதிலாக எதிர்ப்புத் திறன் கொண்ட ரகங்களைப் பயன்படுத்தவும்",
+        "biological_options_ta": [
+            "Bacillus subtilis உடன் விதை நேர்த்தி செய்யவும் (சுமார் 10 கிராம் ஒரு கிலோ விதைக்கு) அல்லது Trichoderma asperellum (சுமார் 4 கிராம் ஒரு கிலோ விதைக்கு)",
+            "விதைக்கும் நேரத்திலும் விதைத்த சுமார் 90 நாட்களுக்குப் பிறகும் Trichoderma asperellum-ஐ மண்ணில் இடவும்",
         ],
-        "_source_ids": ["tnau_agriculture_guide"],
-        "_source_note": "AGRICULTURE.pdf p.256 (variety table notes one variety as Verticillium-wilt-resistant) -- this is the only mention of this disease across the entire reference library; no symptom, causal-species, or biology detail is available from any source on hand.",
+        "prevention_ta": [
+            "எதிர்ப்புத் திறன் கொண்ட ரகங்களை முதன்மை பாதுகாப்பாகப் பயன்படுத்தவும், விதை/மண் மூலம் இடப்படும் உயிரியல் கட்டுப்பாட்டு சிகிச்சையுடன் சேர்த்து",
+        ],
+        "_source_ids": ["tnau_agriculture_guide", "tnau_agritech_cotton_diseases"],
+        "_source_note": "AGRICULTURE.pdf p.256 (variety table notes one variety as Verticillium-wilt-resistant); TNAU Agritech Portal Crop Protection - Cotton Diseases page (Bacillus subtilis / Trichoderma asperellum seed and soil treatment) -- no symptom or causal-species detail is available from any source on hand.",
     },
     "groundnut_healthy": {
         "symptoms_en": [
@@ -696,6 +747,9 @@ DISEASE_CONTENT: dict[str, dict[str, Any]] = {
             "Destroy crop residues/debris and volunteer/alternate host plants after final harvest",
             "Practice crop rotation",
         ],
+        "biological_options_en": [
+            "Copper oxychloride spray -- TNAU documents this as the standard spray for chilli bacterial spot, and copper-based compounds are permitted inputs under India's organic farming standard (NPOP), so this is usable under organic management even though TNAU itself frames it as a chemical/mineral spray rather than a biological agent. No living bioagent (Pseudomonas/Bacillus) is documented against this disease by any official Indian source.",
+        ],
         "prevention_en": [
             "Use certified/pathogen-free seed",
             "Follow field sanitation/phytosanitation to reduce carryover of inoculum between seasons",
@@ -705,12 +759,15 @@ DISEASE_CONTENT: dict[str, dict[str, Any]] = {
             "இறுதி அறுவடைக்குப் பிறகு பயிர் எச்சங்கள்/கழிவுகள் மற்றும் தானாக முளைத்த/மாற்று புரவல் தாவரங்களை அழிக்கவும்",
             "பயிர் சுழற்சியை மேற்கொள்ளவும்",
         ],
+        "biological_options_ta": [
+            "காப்பர் ஆக்ஸிகுளோரைடு தெளிப்பு -- மிளகாய் பாக்டீரியா இலைப்புள்ளிக்கு TNAU இதை நிலையான தெளிப்பாகக் குறிப்பிடுகிறது; காப்பர் அடிப்படையிலான கலவைகள் இந்தியாவின் இயற்கை வேளாண் தரநிலையின் (NPOP) கீழ் அனுமதிக்கப்பட்ட உள்ளீடுகள் என்பதால், TNAU இதை ஒரு உயிரியல் முகவிக்கு பதிலாக ஒரு இரசாயன/கனிம தெளிப்பாகக் கருதினாலும், இயற்கை முறையில் இதைப் பயன்படுத்தலாம். இந்நோய்க்கு எதிராக எந்த உயிருள்ள உயிரியல் முகவும் (Pseudomonas/Bacillus) எந்த அதிகாரப்பூர்வ இந்திய ஆதாரத்திலும் ஆவணப்படுத்தப்படவில்லை.",
+        ],
         "prevention_ta": [
             "சான்றளிக்கப்பட்ட/நோய்க்கிருமி இல்லாத விதையைப் பயன்படுத்தவும்",
             "பருவங்களுக்கு இடையே தொற்று சேர்க்கையைக் குறைக்க வயல் சுத்தம்/தாவர சுகாதாரத்தைப் பின்பற்றவும்",
         ],
-        "_source_ids": ["goi_ipm_chilli_capsicum"],
-        "_source_note": "ChilliesCapsicum.pdf p.7 (disease named only, no further detail found anywhere in this 28-page source); management content here is the source's GENERAL disease-reduction guidance, not specific to bacterial spot -- no causal organism or symptom description is available from any source on hand.",
+        "_source_ids": ["goi_ipm_chilli_capsicum", "tnau_agritech_chilli_diseases"],
+        "_source_note": "ChilliesCapsicum.pdf p.7 (disease named only, cultural guidance is the source's GENERAL disease-reduction guidance, not specific to bacterial spot); TNAU Agritech Portal Crop Protection - Chilli Diseases page (copper oxychloride/Bordeaux mixture spray, framed by TNAU as chemical control -- organic-permitted status under NPOP is this app's own characterization, not TNAU's). No causal organism or symptom description is available from any source on hand.",
     },
     "chilli_cercospora_leaf_spot": {
         "symptoms_en": [
@@ -871,6 +928,9 @@ DISEASE_CONTENT: dict[str, dict[str, Any]] = {
         "cultural_management_en": [
             "Grow Alternaria-blight-resistant varieties, particularly in endemic pockets of Eastern Uttar Pradesh, Bihar, Assam and West Bengal",
         ],
+        "biological_options_en": [
+            "A Trichoderma-based biocontrol (Hypocrea rufa, in the same genus group as Trichoderma viride) has shown real field-trial reduction of Alternaria blight severity in a peer-reviewed Indian study -- note this is not a government extension recommendation, and in that same study the strongest field result came from combining it with the fungicide Mancozeb, not from the biocontrol alone, so treat this as a supplementary option rather than a standalone proven cure.",
+        ],
         "prevention_en": [
             "Select and sow only resistant varieties recommended for Alternaria-blight-endemic regions",
             "Include disease-incidence recording as part of regular field scouting",
@@ -883,12 +943,15 @@ DISEASE_CONTENT: dict[str, dict[str, Any]] = {
         "cultural_management_ta": [
             "குறிப்பாக கிழக்கு உத்தரப்பிரதேசம், பீகார், அசாம் மற்றும் மேற்கு வங்காளத்தின் பாதிப்புள்ள பகுதிகளில் Alternaria blight-க்கு எதிர்ப்புத் திறன் கொண்ட ரகங்களை வளர்க்கவும்",
         ],
+        "biological_options_ta": [
+            "Trichoderma அடிப்படையிலான உயிரியல் கட்டுப்பாடு (Hypocrea rufa, Trichoderma viride-உடன் இணைந்த இனக் குழு) ஒரு இந்திய ஆய்வில் Alternaria blight தீவிரத்தை உண்மையான வயல் சோதனையில் குறைத்துக் காட்டியுள்ளது -- இது அரசு விரிவாக்க பரிந்துரை அல்ல என்பதை கவனிக்கவும்; அதே ஆய்வில், சிறந்த வயல் முடிவு உயிரியல் கட்டுப்பாடு மட்டும் அல்ல, Mancozeb பூஞ்சைக்கொல்லியுடன் இணைந்தபோதே கிடைத்தது -- எனவே இதை ஒரு தனித்த நிரூபிக்கப்பட்ட குணப்படுத்தலாக அல்லாமல், ஒரு துணை விருப்பமாகக் கருதவும்.",
+        ],
         "prevention_ta": [
             "Alternaria blight பாதிப்புள்ள பகுதிகளுக்குப் பரிந்துரைக்கப்பட்ட எதிர்ப்புத் திறன் கொண்ட ரகங்களை மட்டும் தேர்ந்தெடுத்து விதைக்கவும்",
             "வழக்கமான வயல் கண்காணிப்பின் ஒரு பகுதியாக நோய் ஏற்படும் அளவைப் பதிவு செய்யவும்",
         ],
-        "_source_ids": ["goi_ipm_pigeonpea"],
-        "_source_note": "Pigeonpea.pdf p.7,9,20. No symptom description is given in the source for this disease; content is applied here to the app's 'Redgram leaf spot' label as the closest matching foliar disease the source documents.",
+        "_source_ids": ["goi_ipm_pigeonpea", "legume_research_2018_pigeonpea_alternaria"],
+        "_source_note": "Pigeonpea.pdf p.7,9,20 (cultural/resistant-variety content; no symptom description given). Biological option from Balai, Singh, Sinha & Yadav (2018), Legume Research 43(2):268-275 -- a peer-reviewed field-trial study, not a government extension source; best verified result was Hypocrea rufa combined with Mancozeb fungicide, not standalone.",
     },
     "redgram_sterility_mosaic": {
         "cause_en": "Named in the source as caused by 'Sterility Mosaic Virus'; the source does not specify the transmitting vector.",
