@@ -309,7 +309,7 @@ function failureMessage(status: CropSafetyStatus): string {
     low_quality_image: "The image quality is too low for safe analysis.",
     out_of_domain: "The image is outside the supported crop domain.",
     invalid_image: "The image could not be decoded safely.",
-    throttled: "Too many requests. Try again later.",
+    throttled: "Your limit has been reached. Try again later.",
   };
   return (
     messages[status] ?? "The diagnosis service is temporarily unavailable."

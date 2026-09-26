@@ -1039,7 +1039,7 @@ export const en = {
     suggestion4: "What should I watch for in this weather?",
     errorReply:
       "Could not get a reply. Please check your connection and try again.",
-    quotaExceeded: "Daily limit reached. Please try again tomorrow.",
+    quotaExceeded: "Your limit has been reached. Try again later.",
     networkError: "No connection. Check your internet and try again.",
     retrySend: "Tap to retry sending",
     mockTitle: "Chat",
@@ -1147,7 +1147,7 @@ export const en = {
         "No network connection was available. Start again when you are online.",
       server_error:
         "The diagnosis service is temporarily unavailable. Start again with a new photo.",
-      throttled: "Too many requests. Please try again later.",
+      throttled: "Your limit has been reached. Try again later.",
     },
     modelEvidenceIncomplete:
       "Required model evidence is incomplete. No prediction request will be sent.",
@@ -2737,7 +2737,7 @@ export const en = {
     captureFailed:
       "Could not open the camera or gallery. Check photo permissions and try again.",
     deleteFailed: "Could not delete the photo. Please try again.",
-    quotaExceeded: "Daily limit reached. Please try again tomorrow.",
+    quotaExceeded: "Your limit has been reached. Try again later.",
     stageGermination: "Germination",
     stageSeedling: "Seedling",
     stageVegetative: "Vegetative",
@@ -4260,7 +4260,7 @@ export const en = {
       "The photo is taking longer than usual to analyse. Please try again in a moment.",
     offline: "Check your internet connection and try again.",
     genericError: "Could not analyse the image right now. Please try again.",
-    quotaExceeded: "Daily limit reached. Please try again tomorrow.",
+    quotaExceeded: "Your limit has been reached. Try again later.",
     qualityTitle: "Photo needs improvement",
     qualityHelp: "Fill the frame with the leaf in good light and hold steady.",
     qualityGeneric: "The photo quality is low.",
@@ -5268,7 +5268,7 @@ export const en = {
     invalidImageMessage: "Retake a clear, well-lit plant photo.",
     providerErrorTitle: "Plant identification is temporarily unavailable",
     providerErrorMessage: "Check the connection and try again.",
-    quotaExceeded: "Daily limit reached. Please try again tomorrow.",
+    quotaExceeded: "Your limit has been reached. Try again later.",
     disclaimer:
       "This identification is provided for general knowledge only. Do not use it as a disease diagnosis, treatment recommendation, or proof that a plant is safe to eat, touch, or use.",
     viewJournal: "View journal",

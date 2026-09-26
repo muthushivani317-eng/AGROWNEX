@@ -131,7 +131,12 @@ httpClient.interceptors.response.use(
         body?.details && typeof body.details === 'object' ? body.details : undefined,
     });
 
-    logger.error('api', apiError.status, apiError.errorCode, apiError.message);
+    // Quota limits are expected, not bugs: log as warn so they don't raise a red error box.
+    if (apiError.errorCode === 'ai_daily_quota_exceeded') {
+      logger.warn('api', apiError.status, apiError.errorCode);
+    } else {
+      logger.error('api', apiError.status, apiError.errorCode, apiError.message);
+    }
     return Promise.reject(apiError);
   },
 );

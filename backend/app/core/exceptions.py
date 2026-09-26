@@ -70,6 +70,6 @@ class QuotaExceededError(AppError):
     status_code = 429
     error_code = "ai_daily_quota_exceeded"
     message = (
-        "இன்றைய AI பயன்பாட்டு வரம்பை எட்டிவிட்டீர்கள். நாளை மீண்டும் முயற்சிக்கவும். "
-        "/ You have reached today's AI usage limit. Please try again tomorrow."
+        "உங்கள் வரம்பு முடிந்துவிட்டது. பிறகு முயற்சிக்கவும். "
+        "/ Your limit has been reached. Try again later."
     )
