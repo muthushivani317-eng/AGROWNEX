@@ -2,6 +2,8 @@
 
 **Status: UNREVIEWED DRAFT. Do not approve as-is.**
 
+**Update 2026-09-26:** simplified the soil-test and certification-intent question wording for farmer comprehension (added a plain-language explainer to each) — flagged during a usability review. Wording is still unverified with real farmers or an agronomist; review before approving.
+
 This is a starting point for Phase 1 of the organic-farming blueprint, built
 from the topics the owner's blueprint specified (crop/acreage/stage, input
 history, soil-test/irrigation availability, FYM/residue/livestock/labour,
@@ -21,7 +23,7 @@ until that approval happens (`organic_mvp` enforces this server-side).
 ## `version`
 
 ```
-readiness-v1-draft-2026-09-23
+readiness-v1.1-draft-2026-09-26
 ```
 
 ## `questions`
@@ -50,12 +52,12 @@ readiness-v1-draft-2026-09-23
   },
   {
     "id": "soil_test_availability",
-    "title_ta": "இந்த நிலத்திற்கு மண் பரிசோதனை அறிக்கை உள்ளதா?",
-    "title_en": "Do you have a soil test report for this land?",
+    "title_ta": "இந்த நிலத்தின் மண் ஒருபோதும் விவசாய அலுவலகம் அல்லது ஆய்வகத்தில் பரிசோதிக்கப்பட்டதா? (மண்ணில் உள்ள சத்துக்களை அறிய செய்யப்படும் பரிசோதனை)",
+    "title_en": "Has this land's soil ever been tested at an agriculture office or lab? (This checks the nutrients in your soil.)",
     "options": {
-      "recent_report": {"points": 2, "label_ta": "ஆம், கடந்த 12 மாதங்களில்", "label_en": "Yes, within the last 12 months"},
-      "old_report": {"points": 1, "label_ta": "ஆம், ஆனால் பழையது", "label_en": "Yes, but it's old"},
-      "none": {"points": 0, "risk_flag": "no_soil_baseline", "label_ta": "இல்லை, மண் பரிசோதனை செய்யவில்லை", "label_en": "No soil test has been done"}
+      "recent_report": {"points": 2, "label_ta": "ஆம், கடந்த 12 மாதங்களில் பரிசோதிக்கப்பட்டது", "label_en": "Yes, tested within the last 12 months"},
+      "old_report": {"points": 1, "label_ta": "ஆம், ஆனால் ஒரு வருடத்திற்கு முன் பரிசோதிக்கப்பட்டது", "label_en": "Yes, but it was tested more than a year ago"},
+      "none": {"points": 0, "risk_flag": "no_soil_baseline", "label_ta": "இல்லை, இந்த நிலத்தின் மண் ஒருபோதும் பரிசோதிக்கப்படவில்லை", "label_en": "No, this land's soil has never been tested"}
     }
   },
   {
@@ -110,11 +112,11 @@ readiness-v1-draft-2026-09-23
   },
   {
     "id": "certification_intent",
-    "title_ta": "PGS-India சான்றிதழ் பெறுவதற்கான செயல்முறையில் ஈடுபட தயாரா?",
-    "title_en": "Are you ready to take part in the PGS-India certification process (group meetings, self-declaration, peer inspection)?",
+    "title_ta": "இயற்கை சான்றிதழ் (PGS-India) பெற வேண்டுமெனில்: உள்ளூர் விவசாயிகள் குழுவில் சேர வேண்டும், நீங்கள் இயற்கை முறையில் பயிரிடுகிறீர்கள் என சுய-பிரகடனம் செய்ய வேண்டும், மற்றும் மற்ற விவசாயிகள் உங்கள் வயலுக்கு வந்து பார்வையிட வேண்டும். இதற்கு தயாரா?",
+    "title_en": "Organic certification (PGS-India) means: joining a local farmer group, signing a self-declaration that you farm organically, and having other farmers visit and inspect your field. Are you willing to do this?",
     "options": {
       "ready_now": {"points": 2, "label_ta": "ஆம், இப்போதே தயார்", "label_en": "Yes, ready now"},
-      "need_more_info": {"points": 1, "label_ta": "மேலும் தகவல் தேவை", "label_en": "Need more information first"},
+      "need_more_info": {"points": 1, "label_ta": "இதைப் பற்றி மேலும் தெரிந்துகொள்ள விரும்புகிறேன்", "label_en": "I'd like to know more before deciding"},
       "not_yet": {"points": 0, "label_ta": "இப்போது இல்லை", "label_en": "Not right now"}
     }
   }
