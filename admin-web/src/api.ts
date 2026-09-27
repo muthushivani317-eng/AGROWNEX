@@ -1,5 +1,6 @@
 import { getConfig } from './config';
 import type { Envelope } from './types';
+import { reportReauthRequired } from './sessionTimeout';
 
 let csrfToken: string | null = null;
 export const getCsrfToken = () => csrfToken;
@@ -25,8 +26,9 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (!response.ok) {
     const body = await response.json().catch(() => null) as { detail?: { message?: string } | string; message?: string; error_code?: string } | null;
     const detail = typeof body?.detail === 'string' ? body.detail : body?.detail?.message;
+    if (body?.error_code === 'admin_recent_auth_required') reportReauthRequired();
     const friendly = body?.error_code === 'admin_recent_auth_required'
-      ? 'For security, sign out and sign in again, then retry within 15 minutes.'
+      ? 'Your session expired after 15 minutes. Please sign in again.'
       : undefined;
     throw new ApiError(response.status, friendly ?? detail ?? body?.message ?? (response.status === 403 ? 'Access denied.' : 'Request failed.'));
   }

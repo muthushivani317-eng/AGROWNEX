@@ -5,6 +5,7 @@ import { Card, DataTable, ErrorPanel, Loading, PageTitle } from './components';
 import { useResource } from './useResource';
 import './OrganicInputsAdmin.css';
 import { useMarketplaceAttention } from './marketplaceAttention';
+import { reportReauthRequired } from './sessionTimeout';
 
 // ---------------------------------------------------------------------------
 // /admin/organic-inputs/* returns plain JSON, not the {success,data} envelope
@@ -26,8 +27,9 @@ async function inputsRequest<T>(path: string, method = 'GET', body?: unknown): P
     const detail = (await response.json().catch(() => null)) as
       | { detail?: { message?: string } | string; message?: string; error_code?: string }
       | null;
+    if (detail?.error_code === 'admin_recent_auth_required') reportReauthRequired();
     const message = detail?.error_code === 'admin_recent_auth_required'
-      ? 'For security, sign out and sign in again, then retry within 15 minutes.'
+      ? 'Your session expired after 15 minutes. Please sign in again.'
       : typeof detail?.detail === 'string' ? detail.detail : detail?.detail?.message ?? detail?.message;
     throw new Error(message ?? `Request failed (${response.status}).`);
   }

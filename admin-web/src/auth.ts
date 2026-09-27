@@ -6,6 +6,7 @@ import {
   type UserCredential
 } from 'firebase/auth';
 import { getConfig } from './config';
+import { clearSignedIn, markSignedIn } from './sessionTimeout';
 
 let authInstance: ReturnType<typeof getAuth> | null = null;
 function auth() {
@@ -82,6 +83,7 @@ export async function signInAdmin(email: string, password: string, invitationTok
     await signOut(instance);
     throw new Error(response.status === 403 ? 'This account is not authorised for AgrowAI Admin.' : 'Secure session could not be created.');
   }
+  markSignedIn();
   await signOut(instance);
 }
 
@@ -90,4 +92,5 @@ export async function signOutAdmin(csrf: string | null): Promise<void> {
     method: 'DELETE', credentials: 'include', headers: csrf ? { 'X-CSRF-Token': csrf } : {}
   });
   if (!response.ok) throw new Error('Secure sign-out failed. Check the connection and try again.');
+  clearSignedIn();
 }

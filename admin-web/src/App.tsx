@@ -1,5 +1,5 @@
 import { Leaf, LogOut, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, NavLink, Route, Routes } from 'react-router-dom';
 import { api, ApiError, getCsrfToken } from './api';
 import { signOutAdmin } from './auth';
@@ -17,6 +17,7 @@ import { AiPage, AuditPage, CropIntelligencePage, DashboardPage, FarmersPage, Fa
 import type { AdminMe, Permission } from './types';
 import { useResource } from './useResource';
 import { useMarketplaceAttention } from './marketplaceAttention';
+import { msUntilSignOut, REAUTH_EVENT } from './sessionTimeout';
 
 function Guard({ permission, me, children }: { permission: Permission | readonly Permission[]; me: AdminMe; children: React.ReactNode }) {
   return hasPermission(me.permissions, permission) ? <>{children}</> : <Navigate to="/" replace />;
@@ -38,5 +39,18 @@ export default function App() {
   if (state.loading) return <Loading />;
   if (state.error) return <ErrorPanel message={state.error} retry={() => void state.reload()} />;
   if (!state.data) return <Login onSuccess={() => setEpoch(x => x + 1)} />;
-  return <Portal me={state.data} onLogout={() => void signOutAdmin(getCsrfToken()).then(() => setEpoch(x => x + 1)).catch((error: Error) => window.alert(error.message))} />;
+  return <SignedIn me={state.data} onSignedOut={() => setEpoch(x => x + 1)} />;
+}
+
+// Auto sign-out 15 minutes after sign-in (and immediately if the API reports
+// the sign-in is too old), so admins see the login page instead of a 403.
+function SignedIn({ me, onSignedOut }: { me: AdminMe; onSignedOut: () => void }) {
+  const logout = () => void signOutAdmin(getCsrfToken()).then(onSignedOut).catch((error: Error) => window.alert(error.message));
+  useEffect(() => {
+    const timer = window.setTimeout(logout, msUntilSignOut());
+    window.addEventListener(REAUTH_EVENT, logout);
+    return () => { window.clearTimeout(timer); window.removeEventListener(REAUTH_EVENT, logout); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return <Portal me={me} onLogout={logout} />;
 }
