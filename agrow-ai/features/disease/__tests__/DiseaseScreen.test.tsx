@@ -44,6 +44,10 @@ jest.mock('expo-router', () => ({
   useRouter: () => ({ back: jest.fn(), push: jest.fn() }),
 }));
 jest.mock('expo-image', () => ({ Image: 'Image' }));
+jest.mock('@/features/organic/chemicalPolicy', () => ({
+  useChemicalPolicy: () => 'show',
+  applyChemicalPolicy: (items: string[]) => items,
+}));
 jest.mock('lucide-react-native', () => {
   const { View } = require('react-native');
   return new Proxy({}, { get: () => View });

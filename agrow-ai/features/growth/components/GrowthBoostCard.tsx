@@ -1,5 +1,6 @@
 import { FlaskConical, Leaf, Sprout } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
+import type { ChemicalPolicy } from "@/features/organic/chemicalPolicy";
 import { StyleSheet, View } from "react-native";
 
 import { AgText } from "@/components/ui";
@@ -31,7 +32,14 @@ const C = {
  * organic option (shown first and highlighted) and a chemical option. Content
  * is fixed per growth stage (no doses) so nothing is invented by the AI.
  */
-export function GrowthBoostCard({ analysis }: { analysis: GrowthAnalysis }) {
+export function GrowthBoostCard({
+  analysis,
+  chemicalPolicy = "show",
+}: {
+  analysis: GrowthAnalysis;
+  /** Farm's organic mode decides whether the chemical option is shown. */
+  chemicalPolicy?: ChemicalPolicy;
+}) {
   const { t } = useTranslation();
   const group = BOOST_STAGES[analysis.growthStage];
   if (!group && analysis.recommendations.length === 0) return null;
@@ -65,7 +73,7 @@ export function GrowthBoostCard({ analysis }: { analysis: GrowthAnalysis }) {
         </View>
       ) : null}
 
-      {group && !late ? (
+      {group && !late && chemicalPolicy !== "hide" ? (
         <View style={styles.chemical}>
           <FlaskConical size={15} color={C.muted} />
           <AgText variant="bodySmall" style={styles.muted}>
@@ -75,6 +83,12 @@ export function GrowthBoostCard({ analysis }: { analysis: GrowthAnalysis }) {
             {t(`growth.boost.${group}.chemical`)}
           </AgText>
         </View>
+      ) : null}
+
+      {group && !late && chemicalPolicy !== "show" ? (
+        <AgText variant="caption" style={styles.muted}>
+          {t(chemicalPolicy === "hide" ? "organic.chemicalNotAllowed" : "organic.chemicalLastResort")}
+        </AgText>
       ) : null}
 
       {group ? (

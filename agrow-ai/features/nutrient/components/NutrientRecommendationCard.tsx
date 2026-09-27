@@ -11,6 +11,8 @@ import { StyleSheet, View } from "react-native";
 
 import { AgBadge, AgText } from "@/components/ui";
 
+import type { ChemicalPolicy } from "@/features/organic/chemicalPolicy";
+
 import { REC_SEVERITY_TONE } from "../constants";
 import type { NutrientRecommendation } from "../types";
 import { NUTRIENT_UI } from "../design";
@@ -19,10 +21,13 @@ import { NUTRIENT_UI } from "../design";
 export function NutrientRecommendationCard({
   rec,
   diseaseConflict = false,
+  chemicalPolicy = "show",
 }: {
   rec: NutrientRecommendation;
   /** A recent disease was found on this farm: warn before the chemical option. */
   diseaseConflict?: boolean;
+  /** Farm's organic mode decides whether the chemical option is shown. */
+  chemicalPolicy?: ChemicalPolicy;
 }) {
   const { t } = useTranslation();
 
@@ -77,7 +82,7 @@ export function NutrientRecommendationCard({
             </AgText>
           </View>
         ) : null}
-        {rec.category === "nutrient" ? (
+        {rec.category === "nutrient" && chemicalPolicy !== "hide" ? (
           <View style={styles.chemicalTip}>
             <FlaskConical size={14} color={NUTRIENT_UI.muted} />
             <AgText variant="bodySmall" style={styles.chemicalTipText}>
@@ -92,7 +97,15 @@ export function NutrientRecommendationCard({
             </AgText>
           </View>
         ) : null}
-        {rec.category === "nutrient" && diseaseConflict ? (
+        {rec.category === "nutrient" && chemicalPolicy !== "show" ? (
+          <View style={styles.chemicalTip}>
+            <Leaf size={14} color={NUTRIENT_UI.leaf} />
+            <AgText variant="bodySmall" style={styles.chemicalTipText}>
+              {t(chemicalPolicy === "hide" ? "organic.chemicalNotAllowed" : "organic.chemicalLastResort")}
+            </AgText>
+          </View>
+        ) : null}
+        {rec.category === "nutrient" && diseaseConflict && chemicalPolicy !== "hide" ? (
           <View style={styles.chemicalTip}>
             <TriangleAlert size={14} color={NUTRIENT_UI.amber} />
             <AgText variant="bodySmall" style={styles.chemicalTipText}>

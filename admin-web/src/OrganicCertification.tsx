@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getConfig } from './config';
 import { getCsrfToken } from './api';
 
+type QueueRow = { farm_id: string; farm_name: string; state: string; partial_conversion: boolean; items_ticked: number; updated_at: string };
 type Case = { state: string; partial_conversion?: boolean; checklist?: Record<string, boolean>; regional_council_approval_ref?: string | null; documents?: { id: string; file_name: string; review_status: string }[]; notice?: string };
 async function request<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
   const response = await fetch(`${getConfig().apiBaseUrl}${path}`, { method, credentials: 'include', cache: 'no-store',
@@ -27,6 +28,15 @@ export function OrganicCertificationPage() {
   const [verified, setVerified] = useState(false); const [majorNonCompliance, setMajorNonCompliance] = useState(false);
   const [note, setNote] = useState(''); const [peerId, setPeerId] = useState(''); const [appraisalDate, setAppraisalDate] = useState('');
   const [message, setMessage] = useState(''); const [busy, setBusy] = useState(false);
+  const [queue, setQueue] = useState<QueueRow[] | null>(null);
+  const loadQueue = async () => {
+    try { setQueue(await request<QueueRow[]>('/admin/organic-mvp/pgs/review-queue')); }
+    catch { setQueue([]); } };
+  useEffect(() => { void loadQueue(); }, []);
+  const openCase = async (id: string) => { setFarmId(id); setBusy(true); setMessage('');
+    try { setRecord(await request<Case>(`/admin/organic-mvp/farms/${id}/pgs`)); }
+    catch (error) { setMessage(error instanceof Error ? error.message : 'Could not load PGS case.'); }
+    finally { setBusy(false); } };
   const load = async () => { if (!farmId.trim()) return; setBusy(true); setMessage('');
     try { setRecord(await request<Case>(`/admin/organic-mvp/farms/${farmId.trim()}/pgs`)); }
     catch (error) { setMessage(error instanceof Error ? error.message : 'Could not load PGS case.'); }
@@ -38,7 +48,7 @@ export function OrganicCertificationPage() {
       issuing_authority: authority.trim() || null, valid_from: validFrom || null, valid_to: validTo || null,
       verified_evidence: verified, major_non_compliance: majorNonCompliance,
       non_compliance_note: note.trim() || null,
-    }); setMessage('External PGS status recorded. AgrowAI did not issue certification.'); await load();
+    }); setMessage('External PGS status recorded. AgrowNex did not issue certification.'); await load(); await loadQueue();
   } catch (error) { setMessage(error instanceof Error ? error.message : 'Could not review PGS case.'); }
     finally { setBusy(false); } };
   const schedule = async () => { setBusy(true); setMessage(''); try {
@@ -48,8 +58,16 @@ export function OrganicCertificationPage() {
     finally { setBusy(false); } };
   return <section className="page" style={{ display: 'grid', gap: 22 }}>
     <h1>PGS certification companion</h1>
-    <p>Record evidence and externally verified status only. AgrowAI does not certify farms. A demonstration plot remains “Pre-certification trial—not PGS certified.”</p>
+    <p>Record evidence and externally verified status only. AgrowNex does not certify farms. A demonstration plot remains “Pre-certification trial—not PGS certified.”</p>
     {message && <p role="status">{message}</p>}
+    <div className="card" style={{ padding: 24, display: 'grid', gap: 10 }}>
+      <strong>Waiting for review ({queue?.length ?? '…'})</strong>
+      {queue && queue.length === 0 && <p>No farms waiting for review.</p>}
+      {queue?.map(row => <div key={row.farm_id} style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+        <span>{row.farm_name} · {states.find(([value]) => value === row.state)?.[1] ?? row.state} · {row.items_ticked} ticked{row.partial_conversion ? ' · partial conversion' : ''} · {new Date(row.updated_at).toLocaleDateString()}</span>
+        <button disabled={busy} onClick={() => void openCase(row.farm_id)}>Open</button>
+      </div>)}
+    </div>
     <div className="card" style={{ padding: 24, display: 'grid', gap: 12 }}>
       <label>Real farm ID <input value={farmId} onChange={event => setFarmId(event.target.value)} /></label>
       <button disabled={busy || !farmId.trim()} onClick={() => void load()}>Load PGS case</button>

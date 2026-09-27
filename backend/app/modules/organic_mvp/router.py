@@ -190,6 +190,9 @@ async def readiness_history(farm_id: uuid.UUID, session: Session, user: CurrentU
              "rules_version": row.rules_version, "risk_flags": row.risk_flags} for row in rows]
 
 
+PGS_REVIEW_QUEUE_STATES = ("pgs_eligibility_review", "regional_council_approval_required", "non_compliance_review")
+
+
 @router.get("/farms/{farm_id}/pgs")
 async def pgs_status(farm_id: uuid.UUID, session: Session, user: CurrentUser):
     await _farm(session, farm_id, user.id)
@@ -222,6 +225,11 @@ async def update_pgs_checklist(farm_id: uuid.UUID, body: PgsFarmerIn, session: S
     row.partial_conversion = body.partial_conversion
     if body.partial_conversion and not row.regional_council_approval_ref:
         row.state = "regional_council_approval_required"
+    elif prior_state == "pre_certification_trial" and any(body.checklist.values()):
+        # A saved checklist with at least one item ticked is a request for review:
+        # it joins the agriculture officer's review queue. Only an officer can
+        # move it further; the farmer never grants a certified status.
+        row.state = "pgs_eligibility_review"
     elif row.state in {"pgs_green_under_conversion", "pgs_organic"}:
         # A farmer cannot retain a verified label after changing conversion evidence.
         row.state = "pgs_eligibility_review"
@@ -641,6 +649,23 @@ async def review_pgs(farm_id: uuid.UUID, body: PgsReviewIn, session: Session, ad
     ))
     await session.commit()
     return {"state": row.state}
+
+
+@admin_router.get("/pgs/review-queue")
+async def admin_pgs_review_queue(session: Session, admin: AdminContextDep):
+    """PGS cases waiting for an agriculture officer, oldest update first."""
+    _allow(admin, AdminPermission.MANAGE_FARMERS)
+    rows = (await session.execute(
+        select(OrganicPgsCase, Farm.name)
+        .join(Farm, Farm.id == OrganicPgsCase.farm_id)
+        .where(OrganicPgsCase.state.in_(PGS_REVIEW_QUEUE_STATES))
+        .order_by(OrganicPgsCase.updated_at)
+        .limit(200)
+    )).all()
+    return [{"farm_id": str(case.farm_id), "farm_name": name, "state": case.state,
+             "partial_conversion": case.partial_conversion,
+             "items_ticked": sum(1 for value in (case.checklist or {}).values() if value),
+             "updated_at": case.updated_at} for case, name in rows]
 
 
 @admin_router.get("/farms/{farm_id}/pgs")

@@ -12,6 +12,7 @@ from app.modules.organic_mvp import models as _organic_mvp_models  # noqa: F401
 from app.modules.organic_mvp.router import (
     add_crop_cycle, add_plot, crop_plan, pgs_status, review_pgs, setup_status, today_task,
     update_pgs_checklist,
+    admin_pgs_review_queue,
 )
 from app.modules.organic_mvp.schemas import CropCycleIn, PgsFarmerIn, PgsReviewIn, PlotIn
 from app.modules.auth.models import User
@@ -155,3 +156,31 @@ async def test_today_task_follows_common_plan(db_session):
     tasks = (await today_task(farm.id, db_session, user))["tasks"]
     assert [t["title_en"] for t in tasks] == ["Sow or transplant"]
     assert tasks[0]["week"] == 6
+
+
+@pytest.mark.asyncio
+async def test_saved_checklist_joins_officer_review_queue(db_session):
+    farmer = User(firebase_uid="pgs-queue-farmer", status="active")
+    officer = User(firebase_uid="pgs-queue-officer", status="active")
+    db_session.add_all([farmer, officer])
+    await db_session.flush()
+    farm = Farm(user_id=farmer.id, name="Queue farm")
+    db_session.add(farm)
+    await db_session.flush()
+    admin = AdminUser(user_id=officer.id, role=AdminRole.AGRICULTURE_OFFICER.value)
+    db_session.add(admin)
+    await db_session.flush()
+    context = AdminContext(admin=admin, permissions=frozenset({AdminPermission.MANAGE_FARMERS.value}))
+
+    # Nothing ticked: stays a trial and is not queued.
+    result = await update_pgs_checklist(farm.id, PgsFarmerIn(), db_session, farmer)
+    assert result["state"] == "pre_certification_trial"
+    assert await admin_pgs_review_queue(db_session, context) == []
+
+    # One item ticked: moves to eligibility review and appears in the officer queue.
+    result = await update_pgs_checklist(
+        farm.id, PgsFarmerIn(checklist={"whole_holding_reviewed": True}), db_session, farmer
+    )
+    assert result["state"] == "pgs_eligibility_review"
+    queue = await admin_pgs_review_queue(db_session, context)
+    assert [(row["farm_name"], row["items_ticked"]) for row in queue] == [("Queue farm", 1)]

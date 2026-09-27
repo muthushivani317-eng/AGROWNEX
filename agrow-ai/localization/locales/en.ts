@@ -5512,6 +5512,8 @@ export const en = {
       postpone_organic_application_for_heavy_rain: "Wait - heavy rain expected, do not apply",
       review_farmer_reported_field_findings: "Review your field findings",
     },
+    chemicalNotAllowed: "Chemicals are not allowed during organic conversion. Use the organic option.",
+    chemicalLastResort: "Use the chemical option only if the organic option does not work.",
     noActionsMessage:
       "The app will show actions here only when the backend has applicable, source-reviewed guidance.",
     scoutingOnly:

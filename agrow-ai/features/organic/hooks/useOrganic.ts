@@ -9,7 +9,7 @@ import { uploadOrganicEvidence } from '../services/organicEvidenceApi';
 import type { OrganicFarmProfileInput, OrganicPracticeInput } from '../types';
 
 export function useOrganicProfile(farmId: string) {
-  return useQuery({ queryKey: organicKeys.profile(farmId), queryFn: async () => {
+  return useQuery({ queryKey: organicKeys.profile(farmId), enabled: Boolean(farmId), queryFn: async () => {
     try { const row = await getOrganicProvider().getProfile(farmId); if (row) organicStorage.saveProfile(row); return row; }
     catch (error) { const cached = organicStorage.profile(farmId); if (isOrganicOfflineError(error) && cached) return cached; throw error; }
   }});

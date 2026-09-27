@@ -17,6 +17,8 @@ import { useAppTheme } from "@/hooks/useAppTheme";
 import { DeficiencyResultCard } from "../components/DeficiencyResultCard";
 import { EvidenceCard } from "../components/EvidenceCard";
 import { NutrientBackHeader } from "../components/NutrientBackHeader";
+import { useChemicalPolicy } from "@/features/organic/chemicalPolicy";
+
 import { NutrientRecommendationCard } from "../components/NutrientRecommendationCard";
 import { SymptomList } from "../components/SymptomList";
 import { useNutrientReport } from "../hooks/useNutrient";
@@ -30,6 +32,7 @@ export function NutrientResultScreen({ reportId }: { reportId: string }) {
   const query = useNutrientReport(reportId);
 
   const report = query.data;
+  const chemicalPolicy = useChemicalPolicy(report?.farmId);
 
   return (
     <AgScreen padded={false} backgroundColor={NUTRIENT_UI.canvas}>
@@ -96,7 +99,7 @@ export function NutrientResultScreen({ reportId }: { reportId: string }) {
                   {t("nutrient.recommendationsTitle")}
                 </AgText>
                 {report.recommendations.map((rec) => (
-                  <NutrientRecommendationCard key={rec.code} rec={rec} diseaseConflict={Boolean(report.analysis?.diseaseConflict)} />
+                  <NutrientRecommendationCard key={rec.code} rec={rec} diseaseConflict={Boolean(report.analysis?.diseaseConflict)} chemicalPolicy={chemicalPolicy} />
                 ))}
               </View>
             ) : null}

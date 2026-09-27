@@ -32,6 +32,7 @@ import { ConfidenceMeter } from '../components/ConfidenceMeter';
 import { DiseaseReportImage } from '../components/DiseaseReportImage';
 import { InfoList } from '../components/InfoList';
 import { SeverityBadge } from '../components/SeverityBadge';
+import { applyChemicalPolicy, useChemicalPolicy } from '@/features/organic/chemicalPolicy';
 import { useDeleteReport, useDiseaseReport } from '../hooks/useDisease';
 import { formatDiagnosisName } from '../utils/diagnosisName';
 
@@ -42,6 +43,7 @@ export function DiseaseDetailScreen({ reportId }: { reportId: string }) {
   const { language } = useLanguage();
 
   const { data: report, isLoading, isError, refetch } = useDiseaseReport(reportId);
+  const chemicalPolicy = useChemicalPolicy(report?.farmId);
   const del = useDeleteReport();
 
   if (isLoading) {
@@ -171,7 +173,7 @@ export function DiseaseDetailScreen({ reportId }: { reportId: string }) {
       <InfoList
         icon={FlaskConical}
         title={t('disease.conventionalCategory')}
-        items={conventionalCategory ? [conventionalCategory] : []}
+        items={applyChemicalPolicy(conventionalCategory ? [conventionalCategory] : [], chemicalPolicy, t)}
       />
       <InfoList
         icon={ShieldCheck}

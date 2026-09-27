@@ -41,6 +41,7 @@ import { useAppTheme } from "@/hooks/useAppTheme";
 import { useLanguage } from "@/hooks/useLanguage";
 import { ApiError } from "@/types";
 
+import { useChemicalPolicy } from "@/features/organic/chemicalPolicy";
 import { GrowthBoostCard } from "../components/GrowthBoostCard";
 import { GrowthCard } from "../components/GrowthCard";
 import { GrowthComparison } from "../components/GrowthComparison";
@@ -83,6 +84,7 @@ export function GrowthMonitorScreen() {
   const { language } = useLanguage();
   const farmQuery = useSelectedFarm();
   const { selected: farm } = farmQuery;
+  const chemicalPolicy = useChemicalPolicy(farm?.id);
   const pickLock = useRef(false);
   const mutationLock = useRef(false);
   const refreshLock = useRef(false);
@@ -475,7 +477,7 @@ export function GrowthMonitorScreen() {
         </View>
       )}
 
-      {latestAnalysis ? <GrowthBoostCard analysis={latestAnalysis} /> : null}
+      {latestAnalysis ? <GrowthBoostCard analysis={latestAnalysis} chemicalPolicy={chemicalPolicy} /> : null}
 
       <View style={styles.tabs} accessibilityRole="tablist">
         {VIEWS.map((v) => {

@@ -5651,6 +5651,8 @@ export const ta: TranslationSchema = {
       postpone_organic_application_for_heavy_rain: "காத்திருங்கள் - கனமழை வரும், இட வேண்டாம்",
       review_farmer_reported_field_findings: "உங்கள் வயல் கண்டறிதல்களைப் பாருங்கள்",
     },
+    chemicalNotAllowed: "இயற்கை வேளாண் மாற்றத்தின் போது ரசாயனங்கள் அனுமதிக்கப்படாது. இயற்கை முறையைப் பயன்படுத்தவும்.",
+    chemicalLastResort: "இயற்கை முறை பலன் தராவிட்டால் மட்டுமே ரசாயன முறையைப் பயன்படுத்தவும்.",
     noActionsMessage:
       "பொருந்தக்கூடிய, ஆதாரம் மதிப்பாய்வு செய்யப்பட்ட வழிகாட்டல் இருந்தால் மட்டுமே செயல்கள் இங்கே காட்டப்படும்.",
     scoutingOnly:

@@ -18,6 +18,7 @@ import {
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { applyChemicalPolicy, useChemicalPolicy } from "@/features/organic/chemicalPolicy";
 import { ActivityIndicator, Pressable as AgPressable, ScrollView, StyleSheet, View } from "react-native";
 import { Image } from "expo-image";
 
@@ -124,6 +125,7 @@ export function GeneralDiagnosisScreen() {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const { selected: farm } = useSelectedFarm();
+  const chemicalPolicy = useChemicalPolicy(farm?.id);
   const router = useRouter();
 
   const [step, setStep] = useState<Step>("crop");
@@ -148,6 +150,18 @@ export function GeneralDiagnosisScreen() {
         : result.explanationEnglish) ||
       result.explanationEnglish ||
       result.explanationTamil
+    : null;
+
+  // Category-level-only conventional (chemical) guidance -- same pattern as
+  // DiseaseDetailScreen: never a specific product, brand, or dose, just the
+  // general treatment class, so farmers who need more than the organic
+  // options above still get pointed the right direction.
+  const conventionalCategory = result
+    ? (language === "ta"
+        ? result.conventionalCategoryTamil
+        : result.conventionalCategoryEnglish) ||
+      result.conventionalCategoryEnglish ||
+      result.conventionalCategoryTamil
     : null;
 
   const reset = () => {
@@ -227,7 +241,7 @@ export function GeneralDiagnosisScreen() {
               <Sprout size={28} color={ENTRY.green} />
             </View>
             <AgText variant="headingS" weight="bold" style={styles.brandText}>
-              AgrowAI
+              AgrowNex
             </AgText>
             <AgPressable
               onPress={() => router.push("/disease/history")}
@@ -322,7 +336,7 @@ export function GeneralDiagnosisScreen() {
             <View style={styles.photoBrand}>
               <Sprout size={31} color={ENTRY.green} />
               <AgText weight="bold" style={styles.brandText}>
-                AgrowAI
+                AgrowNex
               </AgText>
             </View>
             <AgPressable
@@ -607,10 +621,12 @@ export function GeneralDiagnosisScreen() {
               items={result.causes}
             />
             <ResultSection
-              title={t("disease.immediateActions", {
-                defaultValue: "General care",
-              })}
+              title={t("disease.recommendations")}
               items={result.recommendations}
+            />
+            <ResultSection
+              title={t("disease.conventionalCategory")}
+              items={applyChemicalPolicy(conventionalCategory ? [conventionalCategory] : [], chemicalPolicy, t)}
             />
             <ResultSection
               title={t("disease.prevention", { defaultValue: "Prevention" })}
