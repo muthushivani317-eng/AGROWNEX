@@ -1,0 +1,37 @@
+{
+  "slug": "tnau-bacillus-thuringiensis",
+  "category": "biopesticide",
+  "name_en": "Bacillus thuringiensis (Bt)",
+  "name_ta": "பேசில்லஸ் துரின்ஜியன்சிஸ் (பிடி)",
+  "purpose_en": "A bacterial biopesticide sprayed against caterpillar pests such as rice stem borer and leaf folder, and Helicoverpa and Spodoptera in tomato.",
+  "purpose_ta": "நெல் தண்டுத் துளைப்பான், இலைச்சுருட்டுப் புழு, தக்காளியில் காய்ப்புழு, புகையிலைப் புழு போன்ற புழுக்களுக்கு எதிராகத் தெளிக்கப்படும் பாக்டீரியா உயிர்ப் பூச்சிக்கொல்லி.",
+  "guidance": {
+    "key_points": [
+      "Rice: \"Spray Bacillus thuringiensis @ 1.0 kg/ha when the stem borer / leaf folder crosses ETL\" (ETL = economic threshold level)",
+      "Tomato: \"Spray Bacillus thuringiensis @ 2g/l. (H. armigera and S. litura).\""
+    ]
+  },
+  "applicable_crops": [
+    "paddy",
+    "tomato",
+    "brinjal",
+    "chilli"
+  ],
+  "source_organization": "Tamil Nadu Agricultural University (TNAU) Agritech Portal",
+  "document_reference": "Pest and Disease Management: Organic Ecosystem",
+  "source_url": "https://agritech.tnau.ac.in/org_farm/IPM%20Booklet%20for%20OF-Dr.P.D.pdf",
+  "applicable_stages": [],
+  "applicable_regions": [
+    "Tamil Nadu"
+  ],
+  "limitations": {
+    "requires_local_verification": true,
+    "verify_with_official_sources": true
+  },
+  "source_version": "public-page-snapshot-2026-09-27-v1",
+  "review_status": "sourced_public_reference",
+  "reviewed_by": null,
+  "reviewed_at": null,
+  "effective_from": "2026-09-27",
+  "review_due_on": "2027-09-27"
+}

@@ -1,0 +1,34 @@
+{
+  "slug": "tnau-trichoderma-viride",
+  "category": "biopesticide",
+  "name_en": "Trichoderma viride",
+  "name_ta": "டிரைக்கோடெர்மா விரிடி",
+  "purpose_en": "A fungal antagonist used against soil-borne fungal diseases, especially root rot and wilt in pulses.",
+  "purpose_ta": "மண் வழி பரவும் பூஞ்சை நோய்களுக்கு, குறிப்பாக பயறு வகைகளில் வேர் அழுகல் மற்றும் வாடல் நோய்களுக்கு எதிராகப் பயன்படும் நன்மை செய்யும் பூஞ்சை.",
+  "guidance": {
+    "key_points": [
+      "Seed treatment is used to introduce Trichoderma into the soil",
+      "\"Talc based formulations of the fungal antagonists are applied at the rate of 4gm per kg of seed\""
+    ]
+  },
+  "applicable_crops": [
+    "pulses"
+  ],
+  "source_organization": "Tamil Nadu Agricultural University (TNAU) Agritech Portal",
+  "document_reference": "TNAU Agritech Portal :: Farm Enterprises – Bio pesticides",
+  "source_url": "https://agritech.tnau.ac.in/farm_enterprises/Farm%20enterprises_%20bio%20pesticides.html",
+  "applicable_stages": [],
+  "applicable_regions": [
+    "Tamil Nadu"
+  ],
+  "limitations": {
+    "requires_local_verification": true,
+    "verify_with_official_sources": true
+  },
+  "source_version": "public-page-snapshot-2026-09-27-v1",
+  "review_status": "sourced_public_reference",
+  "reviewed_by": null,
+  "reviewed_at": null,
+  "effective_from": "2026-09-27",
+  "review_due_on": "2027-09-27"
+}

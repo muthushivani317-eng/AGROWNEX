@@ -1,0 +1,34 @@
+{
+  "slug": "niti-beejamrutham",
+  "category": "seed_treatment",
+  "name_en": "Beejamrutham (Beejamrit)",
+  "name_ta": "பீஜாமிர்தம்",
+  "purpose_en": "A seed treatment that protects young roots from fungus and helps beneficial microbes colonise roots and leaves.",
+  "purpose_ta": "இளம் வேர்களை பூஞ்சையிலிருந்து பாதுகாத்து, நன்மை செய்யும் நுண்ணுயிர்கள் வேர் மற்றும் இலைகளில் பெருக உதவும் விதை நேர்த்தி கரைசல்.",
+  "guidance": {
+    "key_points": [
+      "Ingredients: \"5 kg cow dung, 5 litre cow urine, 50 gram lime, 1kg bund soil, 20 litre water\"",
+      "Hang the cow dung in a cloth in the water for up to 12 hours; soak the lime in water overnight; then squeeze the dung bundle and mix in the soil, urine and lime water",
+      "\"Add Beejamrit to the seeds of any crop; coat them, mixing by hand; dry them well and use them for sowing.\"",
+      "For legume seeds with thin coats, dip quickly and dry"
+    ]
+  },
+  "applicable_crops": [],
+  "source_organization": "NITI Aayog, Government of India (Natural Farming: NITI Initiative)",
+  "document_reference": "Components of Natural Farming – Natural Farming: NITI Initiative",
+  "source_url": "https://naturalfarming.niti.gov.in/components/",
+  "applicable_stages": [],
+  "applicable_regions": [
+    "Tamil Nadu"
+  ],
+  "limitations": {
+    "requires_local_verification": true,
+    "verify_with_official_sources": true
+  },
+  "source_version": "public-page-snapshot-2026-09-27-v1",
+  "review_status": "sourced_public_reference",
+  "reviewed_by": null,
+  "reviewed_at": null,
+  "effective_from": "2026-09-27",
+  "review_due_on": "2027-09-27"
+}

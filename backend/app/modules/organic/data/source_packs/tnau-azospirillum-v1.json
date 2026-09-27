@@ -1,0 +1,36 @@
+{
+  "slug": "tnau-azospirillum",
+  "category": "biofertilizer",
+  "name_en": "Azospirillum",
+  "name_ta": "அசோஸ்பைரில்லம்",
+  "purpose_en": "A nitrogen-fixing soil bacterium used as a biofertilizer for non-legume crops.",
+  "purpose_ta": "பயறு அல்லாத பயிர்களுக்கு உயிர் உரமாகப் பயன்படும், காற்றிலுள்ள தழைச்சத்தை நிலைநிறுத்தும் பாக்டீரியா.",
+  "guidance": {
+    "key_points": [
+      "Seed treatment: \"One packet of the inoculant (200 g) is sufficient to treat 10 kg of seeds.\"",
+      "Seedling root dip: \"Two packets of the inoculant is mixed in 40 litres of water.\"",
+      "Soil application: \"Four packets of the inoculant is mixed with 20 kgs of dried and powdered farm yard manure.\""
+    ]
+  },
+  "applicable_crops": [
+    "paddy",
+    "maize"
+  ],
+  "source_organization": "Tamil Nadu Agricultural University (TNAU) Agritech Portal",
+  "document_reference": "ORGANIC FARMING :: Biofertilizers Technology",
+  "source_url": "https://agritech.tnau.ac.in/org_farm/orgfarm_biofertilizertechnology.html",
+  "applicable_stages": [],
+  "applicable_regions": [
+    "Tamil Nadu"
+  ],
+  "limitations": {
+    "requires_local_verification": true,
+    "verify_with_official_sources": true
+  },
+  "source_version": "public-page-snapshot-2026-09-27-v1",
+  "review_status": "sourced_public_reference",
+  "reviewed_by": null,
+  "reviewed_at": null,
+  "effective_from": "2026-09-27",
+  "review_due_on": "2027-09-27"
+}

@@ -1,0 +1,33 @@
+{
+  "slug": "tnau-yellow-sticky-traps",
+  "category": "pest_trap",
+  "name_en": "Yellow sticky traps",
+  "name_ta": "மஞ்சள் ஒட்டும் பொறி",
+  "purpose_en": "Yellow sticky traps are used to monitor adult whitefly activity in cotton.",
+  "purpose_ta": "பருத்தியில் வெள்ளை ஈ முதிர் பூச்சிகளின் நடமாட்டத்தைக் கண்காணிக்க மஞ்சள் ஒட்டும் பொறி பயன்படுகிறது.",
+  "guidance": {
+    "key_points": [
+      "\"Monitoring the activities of the adult white flies by setting up yellow sticky traps at 1 foot height above the plant canopy.\""
+    ]
+  },
+  "applicable_crops": [
+    "cotton"
+  ],
+  "source_organization": "Tamil Nadu Agricultural University (TNAU) Agritech Portal",
+  "document_reference": "TNAU Agritech Portal :: Crop Protection :: Cotton (Whitefly)",
+  "source_url": "https://agritech.tnau.ac.in/crop_protection/cotton/crop_prot_crop_insectpest%20_cotton_13.html",
+  "applicable_stages": [],
+  "applicable_regions": [
+    "Tamil Nadu"
+  ],
+  "limitations": {
+    "requires_local_verification": true,
+    "verify_with_official_sources": true
+  },
+  "source_version": "public-page-snapshot-2026-09-27-v1",
+  "review_status": "sourced_public_reference",
+  "reviewed_by": null,
+  "reviewed_at": null,
+  "effective_from": "2026-09-27",
+  "review_due_on": "2027-09-27"
+}

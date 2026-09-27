@@ -1,0 +1,35 @@
+{
+  "slug": "tnau-pseudomonas-fluorescens",
+  "category": "biopesticide",
+  "name_en": "Pseudomonas fluorescens",
+  "name_ta": "சூடோமோனாஸ் ஃப்ளூரசன்ஸ்",
+  "purpose_en": "A bacterial biocontrol agent listed in TNAU's organic pest and disease management guide against wilts, and against nematodes in brinjal.",
+  "purpose_ta": "வாடல் நோய்களுக்கும், கத்தரியில் நூற்புழுக்களுக்கும் எதிராக TNAU இயற்கை பூச்சி-நோய் மேலாண்மை கையேட்டில் பரிந்துரைக்கப்பட்ட நன்மை செய்யும் பாக்டீரியா.",
+  "guidance": {
+    "key_points": [
+      "Brinjal: \"Apply Pseudomonas fluorescens@ 10 g / m2 for nematodes.\"",
+      "Listed with Trichoderma for managing wilts in rice"
+    ]
+  },
+  "applicable_crops": [
+    "brinjal",
+    "paddy"
+  ],
+  "source_organization": "Tamil Nadu Agricultural University (TNAU) Agritech Portal",
+  "document_reference": "Pest and Disease Management: Organic Ecosystem",
+  "source_url": "https://agritech.tnau.ac.in/org_farm/IPM%20Booklet%20for%20OF-Dr.P.D.pdf",
+  "applicable_stages": [],
+  "applicable_regions": [
+    "Tamil Nadu"
+  ],
+  "limitations": {
+    "requires_local_verification": true,
+    "verify_with_official_sources": true
+  },
+  "source_version": "public-page-snapshot-2026-09-27-v1",
+  "review_status": "sourced_public_reference",
+  "reviewed_by": null,
+  "reviewed_at": null,
+  "effective_from": "2026-09-27",
+  "review_due_on": "2027-09-27"
+}

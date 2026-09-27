@@ -1,0 +1,38 @@
+{
+  "slug": "tnau-dasagavya",
+  "category": "botanical_extract",
+  "name_en": "Dasagavya",
+  "name_ta": "தசகவ்யா",
+  "purpose_en": "An organic preparation made from panchagavya and certain plant extracts. It controls sucking pests such as aphids, thrips and mites, and diseases such as leaf spot, leaf blight and powdery mildew.",
+  "purpose_ta": "பஞ்சகவ்யா மற்றும் சில தாவரச் சாறுகளால் செய்யப்படும் இயற்கை கரைசல். அசுவினி, இலைப்பேன், சிலந்திப்பேன் போன்ற சாறு உறிஞ்சும் பூச்சிகளையும், இலைப்புள்ளி, இலைக்கருகல், சாம்பல் நோய்களையும் கட்டுப்படுத்தும்.",
+  "guidance": {
+    "key_points": [
+      "Plant extracts are made by soaking chopped leaves in cow urine (1 kg leaves in 1 litre cow urine) for ten days, then added to panchagavya",
+      "\"recommended as foliar spray at 3 % concentration\", filtered first so it does not clog sprayer nozzles",
+      "Soaking seeds or dipping seedling roots \"in 3 % solution of dasagavya for 20 minutes before planting\"",
+      "Weekly sprays for vegetables and plantation crops; for tea, \"3 % dasagavya at 15 days interval\" against blister blight"
+    ]
+  },
+  "applicable_crops": [
+    "vegetables",
+    "plantation crops",
+    "tea"
+  ],
+  "source_organization": "Tamil Nadu Agricultural University (TNAU) Agritech Portal",
+  "document_reference": "ORGANIC FARMING :: Dasakavya",
+  "source_url": "https://agritech.tnau.ac.in/org_farm/orgfarm_dasakavya.html",
+  "applicable_stages": [],
+  "applicable_regions": [
+    "Tamil Nadu"
+  ],
+  "limitations": {
+    "requires_local_verification": true,
+    "verify_with_official_sources": true
+  },
+  "source_version": "public-page-snapshot-2026-09-27-v1",
+  "review_status": "sourced_public_reference",
+  "reviewed_by": null,
+  "reviewed_at": null,
+  "effective_from": "2026-09-27",
+  "review_due_on": "2027-09-27"
+}

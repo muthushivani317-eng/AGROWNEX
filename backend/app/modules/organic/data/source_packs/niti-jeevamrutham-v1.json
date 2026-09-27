@@ -1,0 +1,33 @@
+{
+  "slug": "niti-jeevamrutham",
+  "category": "biostimulant",
+  "name_en": "Jeevamrutham (Jivamrit)",
+  "name_ta": "ஜீவாமிர்தம்",
+  "purpose_en": "A biostimulant that promotes the activity of soil microorganisms and earthworms. When sprayed on leaves, it also activates the microorganisms living on them.",
+  "purpose_ta": "மண்ணில் உள்ள நுண்ணுயிர்கள் மற்றும் மண்புழுக்களின் செயல்பாட்டை ஊக்குவிக்கும் கரைசல். இலைகளில் தெளித்தால் இலைகளில் உள்ள நுண்ணுயிர்களும் செயல்படும்.",
+  "guidance": {
+    "key_points": [
+      "Ingredients: \"10 kg of fresh cow dung, 5-10 litre cow urine, 50 gram lime, 2 kg jaggery, 2 kg pulses' flour 1 kg uncontaminated soil and 200 litres water\"",
+      "Ferment 5-7 days in shade, stirring twice daily with a wooden stick",
+      "\"This mixture should be applied every fortnight. It should be either sprayed directly on the crops or mixed with irrigation water.\""
+    ]
+  },
+  "applicable_crops": [],
+  "source_organization": "NITI Aayog, Government of India (Natural Farming: NITI Initiative)",
+  "document_reference": "Components of Natural Farming – Natural Farming: NITI Initiative",
+  "source_url": "https://naturalfarming.niti.gov.in/components/",
+  "applicable_stages": [],
+  "applicable_regions": [
+    "Tamil Nadu"
+  ],
+  "limitations": {
+    "requires_local_verification": true,
+    "verify_with_official_sources": true
+  },
+  "source_version": "public-page-snapshot-2026-09-27-v1",
+  "review_status": "sourced_public_reference",
+  "reviewed_by": null,
+  "reviewed_at": null,
+  "effective_from": "2026-09-27",
+  "review_due_on": "2027-09-27"
+}

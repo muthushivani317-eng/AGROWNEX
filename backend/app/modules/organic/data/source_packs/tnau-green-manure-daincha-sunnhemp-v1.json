@@ -1,0 +1,33 @@
+{
+  "slug": "tnau-green-manure-daincha-sunnhemp",
+  "category": "soil_fertility",
+  "name_en": "Green manure (Dhaincha / Sunnhemp)",
+  "name_ta": "பசுந்தாள் உரம் (தக்கைப்பூண்டு / சணப்பு)",
+  "purpose_en": "Green, undecomposed plant material, grown mainly from legume crops and worked into the soil as manure. It improves soil structure, increases water-holding capacity and reduces erosion.",
+  "purpose_ta": "பெரும்பாலும் பயறு வகைப் பயிர்களை வளர்த்து, பசுமையாக மண்ணில் மடக்கி உழுது உரமாக்குவது. மண் அமைப்பை மேம்படுத்தி, நீர் பிடிப்புத் திறனை அதிகரித்து, மண் அரிப்பைக் குறைக்கும்.",
+  "guidance": {
+    "key_points": [
+      "Important green manure crops listed: sunnhemp, dhaincha, pillipesara, clusterbean and Sesbania rostrata",
+      "Dhaincha (Sesbania aculeata) at 60 days: 23.2 t/ha dry matter, 133 kg/ha N accumulated",
+      "Sunnhemp (Crotalaria juncea) at 60 days: 30.6 t/ha dry matter, 134 kg/ha N accumulated"
+    ]
+  },
+  "applicable_crops": [],
+  "source_organization": "Tamil Nadu Agricultural University (TNAU) Agritech Portal",
+  "document_reference": "ORGANIC FARMING :: Green Manure",
+  "source_url": "https://agritech.tnau.ac.in/org_farm/orgfarm_green%20manure.html",
+  "applicable_stages": [],
+  "applicable_regions": [
+    "Tamil Nadu"
+  ],
+  "limitations": {
+    "requires_local_verification": true,
+    "verify_with_official_sources": true
+  },
+  "source_version": "public-page-snapshot-2026-09-27-v1",
+  "review_status": "sourced_public_reference",
+  "reviewed_by": null,
+  "reviewed_at": null,
+  "effective_from": "2026-09-27",
+  "review_due_on": "2027-09-27"
+}
