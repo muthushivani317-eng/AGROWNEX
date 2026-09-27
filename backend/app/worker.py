@@ -118,7 +118,8 @@ class WorkerSettings:
         send_verification_followups_job,
     ]
     cron_jobs = [
-        cron(refresh_market_prices, hour=set(range(0, 24, 2)), minute=0),
+        # State-wide price sync + targets; long budget for a slow data.gov.in.
+        cron(refresh_market_prices, hour=set(range(0, 24, 2)), minute=0, timeout=1800),
         cron(evaluate_weather_alerts, minute={0, 30}),
         cron(retry_failed_notifications, minute=set(range(0, 60, 5))),
         cron(expire_stale_offers, hour={3}, minute=0),

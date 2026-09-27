@@ -307,6 +307,18 @@ class MarketService:
                 logger.exception("market background refresh failed")
                 return _RefreshOutcome.UNAVAILABLE
 
+    async def sync_state(self, state: str, *, max_pages: int) -> int:
+        """Pull and store every current price for one state (worker sync)."""
+        query = PriceQuery(state=state)
+        fetch_all = getattr(self.provider, "fetch_all_prices", None)
+        if fetch_all is not None:
+            records = await fetch_all(query, max_pages=max_pages)
+        else:
+            records = await self.provider.fetch_prices(query)
+        if records:
+            await self.repo.save_prices(records)
+        return len(records)
+
     async def _fetch_and_store(self, query: PriceQuery) -> list[ProviderPrice]:
         records = await self.provider.fetch_prices(query)
         if records:

@@ -9,8 +9,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.modules.farms.repositories import FarmRepository
+from app.modules.market.constants import (
+    AGMARKNET_SYNC_MAX_PAGES,
+    AGMARKNET_SYNC_MAX_RETRIES,
+    AGMARKNET_SYNC_TIMEOUT_SECONDS,
+    DATA_GOV_API_KEY,
+    MARKET_SYNC_STATES,
+)
 from app.modules.market.exceptions import MarketDataUnavailableError
-from app.modules.market.provider import MarketPriceProvider
+from app.modules.market.provider import AgmarknetProvider, MarketPriceProvider
 from app.modules.market.repository import MarketRepository
 from app.modules.market.schemas import MarketPriceFilters
 from app.modules.market.service import MarketService
@@ -18,8 +25,20 @@ from app.modules.market.service import MarketService
 logger = get_logger("market.jobs")
 
 
+def _sync_provider() -> MarketPriceProvider | None:
+    """Agmarknet client with the worker's generous timeout/retry budget."""
+    if not DATA_GOV_API_KEY:
+        return None
+    return AgmarknetProvider(
+        timeout=AGMARKNET_SYNC_TIMEOUT_SECONDS, max_retries=AGMARKNET_SYNC_MAX_RETRIES
+    )
+
+
 async def refresh_market_prices(
-    session: AsyncSession, *, provider: MarketPriceProvider | None = None
+    session: AsyncSession,
+    *,
+    provider: MarketPriceProvider | None = None,
+    sync_states: tuple[str, ...] = MARKET_SYNC_STATES,
 ) -> dict[str, int]:
     """Refresh every commodity/market farmers actually track: explicit
     favourites, plus every active farm's own crop + district, upserting current
@@ -38,7 +57,22 @@ async def refresh_market_prices(
         for crop, district in await farm_repo.distinct_crop_district_targets()
     ]
     targets = list({*favourite_targets, *farm_targets})
-    service = MarketService(session, provider=provider)
+    service = MarketService(session, provider=provider or _sync_provider())
+
+    # State-wide sync first: the app serves these stored prices, so a slow or
+    # briefly-down data.gov.in never reaches the farmer's screen.
+    synced_states = 0
+    synced_prices = 0
+    for state in sync_states:
+        try:
+            count = await service.sync_state(state, max_pages=AGMARKNET_SYNC_MAX_PAGES)
+        except MarketDataUnavailableError:
+            logger.info("market state sync skipped (provider unavailable): %s", state)
+            continue
+        await session.commit()
+        synced_states += 1
+        synced_prices += count
+        logger.info("market state sync: %s -> %s prices", state, count)
 
     refreshed_prices = 0
     refreshed_targets = 0
@@ -65,4 +99,6 @@ async def refresh_market_prices(
         "targets": len(targets),
         "refreshed_targets": refreshed_targets,
         "prices": refreshed_prices,
+        "synced_states": synced_states,
+        "synced_prices": synced_prices,
     }

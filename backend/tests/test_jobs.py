@@ -68,16 +68,34 @@ async def test_refresh_market_prices_refreshes_tracked_favourites(db_session):
     await db_session.flush()
 
     provider = FakeMarketProvider()
-    result = await refresh_market_prices(db_session, provider=provider)
+    result = await refresh_market_prices(db_session, provider=provider, sync_states=())
 
     assert result["targets"] == 1
     assert result["prices"] >= 1
     assert provider.queries[0].commodity == "Paddy"
 
 
+async def test_refresh_market_prices_syncs_whole_state_before_targets(db_session):
+    provider = FakeMarketProvider()
+    result = await refresh_market_prices(
+        db_session, provider=provider, sync_states=("Tamil Nadu",)
+    )
+
+    assert provider.queries[0].state == "Tamil Nadu"
+    assert provider.queries[0].commodity is None
+    assert result["synced_states"] == 1
+    assert result["synced_prices"] == 1
+
+
 async def test_refresh_market_prices_no_favourites_is_noop(db_session):
-    result = await refresh_market_prices(db_session, provider=FakeMarketProvider())
-    assert result == {"targets": 0, "refreshed_targets": 0, "prices": 0}
+    result = await refresh_market_prices(db_session, provider=FakeMarketProvider(), sync_states=())
+    assert result == {
+        "targets": 0,
+        "refreshed_targets": 0,
+        "prices": 0,
+        "synced_states": 0,
+        "synced_prices": 0,
+    }
 
 
 async def test_refresh_market_prices_also_warms_active_farms_own_crop_district(
@@ -94,7 +112,7 @@ async def test_refresh_market_prices_also_warms_active_farms_own_crop_district(
     await db_session.flush()
 
     provider = FakeMarketProvider()
-    result = await refresh_market_prices(db_session, provider=provider)
+    result = await refresh_market_prices(db_session, provider=provider, sync_states=())
 
     assert result["targets"] == 1
     assert result["prices"] >= 1
@@ -119,7 +137,7 @@ async def test_refresh_market_prices_dedupes_farms_sharing_a_crop_and_district(
     await db_session.flush()
 
     provider = FakeMarketProvider()
-    result = await refresh_market_prices(db_session, provider=provider)
+    result = await refresh_market_prices(db_session, provider=provider, sync_states=())
 
     assert result["targets"] == 1
     assert len(provider.queries) == 1
@@ -148,7 +166,7 @@ async def test_refresh_market_prices_combines_favourites_and_farm_targets(
     await db_session.flush()
 
     provider = FakeMarketProvider()
-    result = await refresh_market_prices(db_session, provider=provider)
+    result = await refresh_market_prices(db_session, provider=provider, sync_states=())
 
     assert result["targets"] == 2
     queried_commodities = {q.commodity for q in provider.queries}
@@ -166,8 +184,14 @@ async def test_refresh_market_prices_ignores_farms_missing_crop_or_district(
     db_session.add(FarmLocation(farm_id=no_crop.id, district="Salem", source="gps"))
     await db_session.flush()
 
-    result = await refresh_market_prices(db_session, provider=FakeMarketProvider())
-    assert result == {"targets": 0, "refreshed_targets": 0, "prices": 0}
+    result = await refresh_market_prices(db_session, provider=FakeMarketProvider(), sync_states=())
+    assert result == {
+        "targets": 0,
+        "refreshed_targets": 0,
+        "prices": 0,
+        "synced_states": 0,
+        "synced_prices": 0,
+    }
 
 
 # --------------------------------------------------------------------------- #

@@ -28,6 +28,20 @@ AGMARKNET_TIMEOUT_SECONDS = float(os.getenv("AGMARKNET_TIMEOUT_SECONDS", "8"))
 AGMARKNET_MAX_RETRIES = int(os.getenv("AGMARKNET_MAX_RETRIES", "3"))
 # Cap the number of records pulled per upstream call (bounded, paginated client-side).
 AGMARKNET_FETCH_LIMIT = int(os.getenv("AGMARKNET_FETCH_LIMIT", "500"))
+# Optional second official data.gov.in resource tried when the primary fails
+# (same Agmarknet source, different dataset). Empty = disabled.
+AGMARKNET_BACKUP_RESOURCE_ID = os.getenv("AGMARKNET_BACKUP_RESOURCE_ID", "").strip()
+
+# --- Background state-wide sync (worker only; never on a farmer's request) ---
+# data.gov.in is often slow or briefly down, so the worker pulls every price for
+# these states on a schedule with a generous timeout/retry budget and the app
+# serves the stored copy (last good prices, with their market date).
+MARKET_SYNC_STATES = tuple(
+    s.strip() for s in os.getenv("MARKET_SYNC_STATES", "Tamil Nadu").split(",") if s.strip()
+)
+AGMARKNET_SYNC_TIMEOUT_SECONDS = float(os.getenv("AGMARKNET_SYNC_TIMEOUT_SECONDS", "45"))
+AGMARKNET_SYNC_MAX_RETRIES = int(os.getenv("AGMARKNET_SYNC_MAX_RETRIES", "5"))
+AGMARKNET_SYNC_MAX_PAGES = int(os.getenv("AGMARKNET_SYNC_MAX_PAGES", "20"))
 
 # Number of days of history returned by GET /market/history by default.
 DEFAULT_HISTORY_DAYS = 30

@@ -189,3 +189,50 @@ async def test_agmarknet_explicit_empty_records_is_successful_empty(
     provider = AgmarknetProvider(api_key="configured", max_retries=1)
 
     assert await provider.fetch_prices(PriceQuery(commodity="NoSuchCrop")) == []
+
+
+async def test_agmarknet_fetch_all_pages_until_short_page(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    offsets: list[int] = []
+
+    class PagedClient:
+        async def get(self, url, params=None, **_request_options):
+            offset = int(params.get("offset", 0))
+            offsets.append(offset)
+            count = 2 if offset < 4 else 1  # pages of 2, then a short page
+            request = httpx.Request("GET", url)
+            records = [_record(market=f"M{offset + i}") for i in range(count)]
+            return httpx.Response(200, request=request, json={"records": records})
+
+    monkeypatch.setattr("app.modules.market.provider.get_http_client", lambda: PagedClient())
+    provider = AgmarknetProvider(api_key="configured", max_retries=1)
+
+    prices = await provider.fetch_all_prices(
+        PriceQuery(state="Tamil Nadu", limit=2), max_pages=10
+    )
+
+    assert offsets == [0, 2, 4]
+    assert [p.market for p in prices] == ["M0", "M1", "M2", "M3", "M4"]
+
+
+async def test_agmarknet_uses_backup_resource_when_primary_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class PrimaryDownClient:
+        async def get(self, url, **_request_options):
+            if url.endswith("/primary"):
+                raise httpx.ConnectTimeout("down")
+            request = httpx.Request("GET", url)
+            return httpx.Response(200, request=request, json={"records": [_record()]})
+
+    monkeypatch.setattr(
+        "app.modules.market.provider.get_http_client", lambda: PrimaryDownClient()
+    )
+    provider = AgmarknetProvider(
+        api_key="configured", resource_id="primary", backup_resource_id="backup", max_retries=1
+    )
+
+    prices = await provider.fetch_prices(PriceQuery(commodity="Paddy"))
+
+    assert [p.commodity for p in prices] == ["Paddy"]

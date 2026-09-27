@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime
 from typing import Any, Protocol
 
@@ -25,6 +25,7 @@ from app.core.http import get_http_client
 from app.core.logging import get_logger
 from app.core.provider_policy import test_mocks_enabled
 from app.modules.market.constants import (
+    AGMARKNET_BACKUP_RESOURCE_ID,
     AGMARKNET_FETCH_LIMIT,
     AGMARKNET_MAX_RETRIES,
     AGMARKNET_RESOURCE_ID,
@@ -67,6 +68,7 @@ class PriceQuery:
     district: str | None = None
     state: str | None = None
     limit: int = AGMARKNET_FETCH_LIMIT
+    offset: int = 0
 
 
 class MarketPriceProvider(Protocol):
@@ -165,12 +167,14 @@ class AgmarknetProvider:
         api_key: str = DATA_GOV_API_KEY,
         base_url: str = DATA_GOV_BASE_URL,
         resource_id: str = AGMARKNET_RESOURCE_ID,
+        backup_resource_id: str = AGMARKNET_BACKUP_RESOURCE_ID,
         timeout: float = AGMARKNET_TIMEOUT_SECONDS,
         max_retries: int = AGMARKNET_MAX_RETRIES,
     ) -> None:
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
         self.resource_id = resource_id
+        self.backup_resource_id = backup_resource_id
         self.timeout = timeout
         self.max_retries = max_retries
 
@@ -180,6 +184,8 @@ class AgmarknetProvider:
             "format": "json",
             "limit": max(1, min(query.limit, AGMARKNET_FETCH_LIMIT)),
         }
+        if query.offset > 0:
+            params["offset"] = query.offset
         # data.gov.in filter syntax: filters[field]=value.
         if query.commodity:
             params["filters[commodity]"] = query.commodity
@@ -192,7 +198,50 @@ class AgmarknetProvider:
         return params
 
     async def fetch_prices(self, query: PriceQuery) -> list[ProviderPrice]:
-        url = f"{self.base_url}/{self.resource_id}"
+        prices, _ = await self._fetch_with_backup(query)
+        return prices
+
+    async def fetch_all_prices(
+        self, query: PriceQuery, *, max_pages: int
+    ) -> list[ProviderPrice]:
+        """Page through every record for ``query`` (e.g. a whole state).
+
+        Used only by the background sync, never on a farmer's request. Stops at
+        the first short page; a failure on a later page keeps the pages already
+        fetched rather than discarding a partial but valid sync.
+        """
+        page_size = max(1, min(query.limit, AGMARKNET_FETCH_LIMIT))
+        collected: list[ProviderPrice] = []
+        for page in range(max(1, max_pages)):
+            try:
+                prices, raw_count = await self._fetch_with_backup(
+                    replace(query, limit=page_size, offset=page * page_size)
+                )
+            except MarketDataUnavailableError:
+                if not collected:
+                    raise
+                logger.warning("provider=agmarknet sync stopped early at page=%s", page)
+                break
+            collected.extend(prices)
+            if raw_count < page_size:
+                break
+        return collected
+
+    async def _fetch_with_backup(
+        self, query: PriceQuery
+    ) -> tuple[list[ProviderPrice], int]:
+        try:
+            return await self._fetch_from(self.resource_id, query)
+        except MarketDataUnavailableError:
+            if not self.backup_resource_id:
+                raise
+            logger.warning("provider=agmarknet primary failed; trying backup resource")
+            return await self._fetch_from(self.backup_resource_id, query)
+
+    async def _fetch_from(
+        self, resource_id: str, query: PriceQuery
+    ) -> tuple[list[ProviderPrice], int]:
+        url = f"{self.base_url}/{resource_id}"
         params = self._params(query)
         last_error: Exception | None = None
 
@@ -266,7 +315,7 @@ class AgmarknetProvider:
                             round((time.perf_counter() - started) * 1000),
                             len(prices),
                         )
-                        return prices
+                        return prices, len(records)
             except (httpx.TransportError, httpx.TimeoutException) as exc:
                 last_error = exc
                 logger.warning(
