@@ -26,6 +26,7 @@ from app.modules.organic_inputs.constants import (
 from app.modules.organic_inputs.models import MarketplaceProductType
 from app.modules.organic_inputs.router import (
     add_batch_document,
+    attention_counts,
     apply_as_supplier,
     create_batch,
     create_category,
@@ -323,3 +324,39 @@ async def test_admin_catalog_list_shows_every_status_and_is_catalog_gated(db_ses
         await list_categories_admin(db_session, field_verifier_ctx)
     with pytest.raises(ForbiddenError):
         await list_product_types_admin(db_session, field_verifier_ctx)
+
+
+
+@pytest.mark.asyncio
+async def test_attention_counts_new_supplier_and_batch_for_admin_badge(db_session):
+    farmer = User(firebase_uid="marketplace-attention-farmer", status="active")
+    owner_user = User(firebase_uid="marketplace-attention-owner", status="active")
+    db_session.add_all([farmer, owner_user])
+    await db_session.flush()
+    owner_ctx = _admin(owner_user, AdminRole.OWNER)
+    _category, product_type_id = await _seed_catalog(db_session, owner_ctx)
+
+    assert (await attention_counts(db_session, owner_ctx))["total"] == 0
+
+    await apply_as_supplier(SupplierApplyIn(district="Erode"), db_session, farmer)
+    await submit_supplier_profile(db_session, farmer)
+    counts = await attention_counts(db_session, owner_ctx)
+    assert counts["new_suppliers"] == 1 and counts["total"] == 1
+
+    # Once the supplier is approved and offers a batch, the batch is flagged instead.
+    profile = await my_supplier_profile(db_session, farmer)
+    for status in (
+        SupplierStatus.UNDER_REVIEW,
+        SupplierStatus.INSPECTION_SCHEDULED,
+        SupplierStatus.INSPECTION_COMPLETED,
+        SupplierStatus.APPROVED,
+    ):
+        await decide_supplier(profile.id, SupplierDecisionIn(status=status), db_session, owner_ctx)
+    batch = await create_batch(
+        BatchCreateIn(product_type_id=product_type_id, batch_quantity="50", unit="litre"),
+        db_session,
+        farmer,
+    )
+    await submit_batch(batch.id, db_session, farmer)
+    counts = await attention_counts(db_session, owner_ctx)
+    assert counts == {"new_suppliers": 0, "new_batches": 1, "offers_accepted": 0, "total": 1}

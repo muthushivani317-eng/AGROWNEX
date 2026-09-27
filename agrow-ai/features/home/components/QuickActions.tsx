@@ -260,16 +260,40 @@ export function buildQuickActionRows(
   return rows;
 }
 
+// Ordered by how often a farmer uses each tool in day-to-day work:
+// daily checks first, seasonal / one-time tools last (2026-09-27).
 const FEATURED_ACTION_ORDER: HomeFeatureKey[] = [
+  // First: every other tool needs a farm
+  "addFarm",
+  // Daily
   "weather",
-  "soil",
-  "satellite",
   "disease",
   "ai",
   "market",
+  "calendar",
+  // Weekly
+  "growth",
+  "nutrient",
+  "organic",
+  "diseaseRisk",
+  "sell",
+  "notifications",
+  // Monthly / seasonal
+  "soil",
+  "satellite",
+  "lcc",
+  "schemes",
+  "inputs",
+  "harvestReadiness",
+  // Occasional
+  "plantIdentifier",
+  "knowledge",
+  "intelligence",
+  "memory",
+  "actionVerification",
 ];
 
-function homeDisplayOrder(actions: QuickAction[]): QuickAction[] {
+export function homeDisplayOrder(actions: QuickAction[]): QuickAction[] {
   const featured = FEATURED_ACTION_ORDER.flatMap((key) =>
     actions.filter((action) => action.key === key),
   );

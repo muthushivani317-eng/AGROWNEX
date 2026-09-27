@@ -22,8 +22,10 @@ jest.mock("@/components/ui", () => {
 });
 import {
   buildQuickActionRows,
+  homeDisplayOrder,
   QUICK_ACTIONS,
   QuickActions,
+  type QuickAction,
 } from "../components/QuickActions";
 import { HOME_FEATURE_ROUTES } from "../routes";
 import { ta } from "../../../localization/locales/ta";
@@ -94,6 +96,33 @@ test("can collapse to one column without dropping or reordering tools", () => {
   const rows = buildQuickActionRows(QUICK_ACTIONS, 1);
   expect(rows).toHaveLength(QUICK_ACTIONS.length);
   expect(rows.flat()).toEqual(QUICK_ACTIONS);
+});
+
+test("orders tools by everyday use, with Organic after the daily tools", () => {
+  const actions = [
+    "ai",
+    "disease",
+    "weather",
+    "soil",
+    "satellite",
+    "market",
+    "organic",
+  ].map((key) => ({
+    key: key as QuickAction["key"],
+    labelKey: `label.${key}`,
+    subtitleKey: `subtitle.${key}`,
+    icon: require("react-native").View,
+  }));
+
+  expect(homeDisplayOrder(actions).map((action) => action.key)).toEqual([
+    "weather",
+    "disease",
+    "ai",
+    "market",
+    "organic",
+    "soil",
+    "satellite",
+  ]);
 });
 
 test("renders one full-width card per row and preserves every existing route and tap action", async () => {
@@ -173,4 +202,17 @@ test("provides localized header, subtitle, and Tamil-ready helper keys", async (
     ) as keyof typeof ta.home;
     expect(ta.home[localeKey]).toBeTruthy();
   }
+});
+
+test("names the inputs destination as a two-sided organic marketplace", () => {
+  const { en } = require("../../../localization/locales/en");
+
+  expect(en.home.actionInputs).toBe("Organic Marketplace");
+  expect(en.home.actionInputsDescription).toBe(
+    "Buy and sell organic products",
+  );
+  expect(ta.home.actionInputs).toBe("இயற்கை பொருட்கள் சந்தை");
+  expect(ta.home.actionInputsDescription).toBe(
+    "இயற்கை பொருட்களை வாங்கவும் விற்கவும்",
+  );
 });

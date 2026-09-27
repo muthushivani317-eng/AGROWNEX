@@ -4,6 +4,7 @@ import { getConfig } from './config';
 import { Card, DataTable, ErrorPanel, Loading, PageTitle } from './components';
 import { useResource } from './useResource';
 import './OrganicInputsAdmin.css';
+import { useMarketplaceAttention } from './marketplaceAttention';
 
 // ---------------------------------------------------------------------------
 // /admin/organic-inputs/* returns plain JSON, not the {success,data} envelope
@@ -130,12 +131,21 @@ export function OrganicInputsAdminPage({ permissions }: { permissions: string[] 
   const canSuppliers = permissions.includes('manage_marketplace_suppliers');
   const canQc = permissions.includes('manage_marketplace_qc');
   const canProcurement = permissions.includes('manage_marketplace_procurement');
+  const attention = useMarketplaceAttention(permissions, 30_000);
   return (
     <>
       <PageTitle
         title="Organic Inputs Marketplace"
         subtitle="Catalogue, supplier onboarding, batch QC, procurement and inventory. Every action here is audit-logged."
       />
+      {attention && attention.total > 0 && (
+        <div role="alert" className="card" style={{ padding: 16, marginBottom: 16, borderLeft: '4px solid #C67909', display: 'grid', gap: 6 }}>
+          <strong>Needs your attention ({attention.total})</strong>
+          {attention.new_suppliers > 0 && <button style={{ justifySelf: 'start' }} onClick={() => setTab('Suppliers')}>{attention.new_suppliers} new farmer application{attention.new_suppliers > 1 ? 's' : ''} to sell → Suppliers</button>}
+          {attention.new_batches > 0 && <button style={{ justifySelf: 'start' }} onClick={() => setTab('Batches & QC')}>{attention.new_batches} new batch{attention.new_batches > 1 ? 'es' : ''} offered → Batches &amp; QC</button>}
+          {attention.offers_accepted > 0 && <button style={{ justifySelf: 'start' }} onClick={() => setTab('Procurement & Inventory')}>{attention.offers_accepted} offer{attention.offers_accepted > 1 ? 's' : ''} accepted — arrange receipt → Procurement</button>}
+        </div>
+      )}
       <div className="oi-tabs" aria-label="Organic inputs sections">
         {TABS.map((name) => (
           <button key={name} aria-pressed={tab === name} onClick={() => setTab(name)}>{name}</button>

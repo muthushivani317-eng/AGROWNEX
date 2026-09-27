@@ -28,7 +28,7 @@ from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session
@@ -512,6 +512,48 @@ async def list_supplier_documents(session: Session, user: CurrentUser):
 # ---------------------------------------------------------------------------
 # Supplier onboarding -- admin (Field Verifier)
 # ---------------------------------------------------------------------------
+
+
+@admin_router.get("/attention")
+async def attention_counts(session: Session, admin: AdminContextDep):
+    """What needs an admin right now -- drives the admin-web menu badge.
+
+    new_suppliers: farmers who applied to sell (submitted).
+    new_batches: batches farmers offered for sale (submitted).
+    offers_accepted: farmers accepted our purchase offer -> arrange pickup/receipt.
+    """
+    _require_permission(
+        admin,
+        AdminPermission.MANAGE_MARKETPLACE_QC,
+        AdminPermission.MANAGE_MARKETPLACE_SUPPLIERS,
+        AdminPermission.MANAGE_MARKETPLACE_PROCUREMENT,
+    )
+    new_suppliers = await session.scalar(
+        select(func.count()).select_from(SupplierProfile).where(
+            SupplierProfile.status == SupplierStatus.SUBMITTED.value
+        )
+    )
+    batch_counts = dict(
+        (
+            await session.execute(
+                select(ProductionBatch.status, func.count())
+                .where(
+                    ProductionBatch.is_deleted.is_(False),
+                    ProductionBatch.status.in_(
+                        [BatchStatus.SUBMITTED.value, BatchStatus.OFFER_ACCEPTED.value]
+                    ),
+                )
+                .group_by(ProductionBatch.status)
+            )
+        ).all()
+    )
+    counts = {
+        "new_suppliers": int(new_suppliers or 0),
+        "new_batches": int(batch_counts.get(BatchStatus.SUBMITTED.value, 0)),
+        "offers_accepted": int(batch_counts.get(BatchStatus.OFFER_ACCEPTED.value, 0)),
+    }
+    counts["total"] = sum(counts.values())
+    return counts
 
 
 @admin_router.get("/suppliers")

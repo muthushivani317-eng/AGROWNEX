@@ -1,235 +1,59 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
-import { ArrowLeft, Minus, Plus, ShoppingBasket } from "lucide-react-native";
-import { useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Alert, Pressable, StyleSheet, TextInput, View } from "react-native";
-import { AgButton, AgCard, AgScreen, AgText } from "@/components/ui";
-import { useSelectedFarm } from "@/features/weather";
-import { useAppTheme } from "@/hooks/useAppTheme";
-import { uuid } from "@/utils/id";
-import { getInputCatalog, getInputOrders, placeInputOrder } from "./api";
-import type { CatalogItem, InputCategory } from "./types";
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
+import { ArrowLeft, ArrowRight, CheckCircle2, Leaf, Minus, Package, Plus, Search, ShoppingBasket, Sprout } from 'lucide-react-native';
+import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Alert, Pressable, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
-const categories: Array<InputCategory | "all"> = [
-  "all",
-  "seed",
-  "fertilizer",
-  "pesticide",
-];
+import { AgButton, AgCard, AgScreen, AgText } from '@/components/ui';
+import { useSelectedFarm } from '@/features/weather';
+import { useAppTheme } from '@/hooks/useAppTheme';
+import { uuid } from '@/utils/id';
+import { getInputCatalog, getInputOrders, placeInputOrder } from './api';
+import type { CatalogItem, InputCategory } from './types';
+
+const categories: Array<InputCategory | 'all'> = ['all', 'fertilizer', 'seed', 'pesticide'];
+const CATEGORY_DETAILS: Record<InputCategory, { icon: typeof Sprout; label: string; color: string; wash: string }> = {
+  fertilizer: { icon: Sprout, label: 'Organic input', color: '#17713A', wash: '#E6F4E2' }, seed: { icon: Leaf, label: 'Seeds', color: '#A86609', wash: '#FFF3D9' }, pesticide: { icon: CheckCircle2, label: 'Crop care', color: '#A05D07', wash: '#FFF0D4' },
+};
+
+function CatalogCard({ item, quantity, adjust }: { item: CatalogItem; quantity: number; adjust: (delta: number) => void }) {
+  const { t, i18n } = useTranslation(); const { colors, isDark } = useAppTheme(); const detail = CATEGORY_DETAILS[item.category]; const Icon = detail.icon; const name = i18n.language.startsWith('ta') && item.name_ta ? item.name_ta : item.name;
+  return <View style={[styles.productCard, { backgroundColor: isDark ? '#202A21' : '#FFFDFC', borderColor: isDark ? '#35463A' : '#E2ECE0' }]}>
+    <View style={[styles.productArt, { backgroundColor: isDark ? '#243C2B' : detail.wash }]}><View style={[styles.productGlow, { backgroundColor: detail.color }]} /><Icon size={52} color={detail.color} strokeWidth={1.55} /></View>
+    <View style={styles.productCopy}>
+      <View style={styles.productTitleRow}><AgText variant="headingS" weight="bold" numberOfLines={2} style={[styles.productName, { color: isDark ? colors.text : '#073F2A' }]}>{name}</AgText><View style={[styles.tag, { backgroundColor: isDark ? '#24452D' : '#EBF7E8' }]}><Leaf size={14} color={colors.primary} /><AgText variant="caption" weight="semibold" style={{ color: colors.primary }}>{detail.label}</AgText></View></View>
+      <AgText variant="bodySmall" numberOfLines={2} style={[styles.productDescription, { color: colors.textMuted }]}>{item.description ?? t(`inputs.category.${item.category}`)}</AgText>
+      <View style={styles.stockRow}><CheckCircle2 size={15} color={colors.primary} /><AgText variant="caption" style={{ color: colors.textMuted }}>{t('inputs.stock', { count: item.stock_quantity })}</AgText></View>
+      <View style={styles.purchaseRow}><View><AgText variant="headingS" weight="bold" style={{ color: colors.primary }}>₹{item.unit_price}</AgText><AgText variant="caption" style={{ color: colors.textMuted }}>per {item.unit}</AgText></View><View style={[styles.stepper, { borderColor: isDark ? '#3A5140' : '#DCE8DA' }]}><Pressable accessibilityRole="button" accessibilityLabel={`Remove ${name}`} onPress={() => adjust(-1)} style={styles.stepperButton}><Minus size={18} color={colors.primary} /></Pressable><AgText weight="bold" style={{ color: colors.text }}>{quantity}</AgText><Pressable accessibilityRole="button" accessibilityLabel={`Add ${name}`} onPress={() => adjust(1)} disabled={quantity >= item.stock_quantity} style={styles.stepperButton}><Plus size={18} color={colors.primary} /></Pressable></View></View>
+    </View>
+  </View>;
+}
 
 export function InputsMarketplaceScreen() {
-  const { t, i18n } = useTranslation();
-  const router = useRouter();
-  const { colors } = useAppTheme();
-  const client = useQueryClient();
-  const { selected } = useSelectedFarm();
-  const [category, setCategory] = useState<InputCategory | "all">("all");
-  const [cart, setCart] = useState<Record<string, number>>({});
-  const [address, setAddress] = useState("");
-  const [busy, setBusy] = useState(false);
-  const catalog = useQuery({
-    queryKey: ["inputs", "catalog", category, selected?.crop],
-    queryFn: () =>
-      getInputCatalog(
-        category === "all" ? undefined : category,
-        selected?.crop,
-      ),
-  });
-  const orders = useQuery({
-    queryKey: ["inputs", "orders"],
-    queryFn: getInputOrders,
-  });
-  const lines = useMemo(
-    () =>
-      (catalog.data ?? [])
-        .filter((item) => cart[item.id])
-        .map((item) => ({ item, quantity: cart[item.id] })),
-    [catalog.data, cart],
-  );
-  const total = lines.reduce(
-    (sum, line) => sum + Number(line.item.unit_price) * line.quantity,
-    0,
-  );
-  const adjust = (item: CatalogItem, delta: number) =>
-    setCart((current) => ({
-      ...current,
-      [item.id]: Math.max(
-        0,
-        Math.min(item.stock_quantity, (current[item.id] ?? 0) + delta),
-      ),
-    }));
-  const checkout = async () => {
-    if (!lines.length || address.trim().length < 10) {
-      Alert.alert(t("inputs.cannotOrder"), t("inputs.addressRequired"));
-      return;
-    }
-    setBusy(true);
-    try {
-      const order = await placeInputOrder({
-        cart: lines,
-        deliveryAddress: address.trim(),
-        idempotencyKey: uuid(),
-      });
-      setCart({});
-      setAddress("");
-      await Promise.all([
-        client.invalidateQueries({ queryKey: ["inputs", "catalog"] }),
-        client.invalidateQueries({ queryKey: ["inputs", "orders"] }),
-      ]);
-      Alert.alert(
-        t("inputs.orderPlaced"),
-        t("inputs.orderReference", { reference: order.order_ref }),
-      );
-    } catch {
-      Alert.alert(t("inputs.cannotOrder"), t("inputs.refreshRequired"));
-      await catalog.refetch();
-    } finally {
-      setBusy(false);
-    }
-  };
-  return (
-    <AgScreen scroll contentContainerStyle={styles.screen}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()}>
-          <ArrowLeft size={24} color={colors.text} />
-        </Pressable>
-        <ShoppingBasket size={28} color={colors.primary} />
-        <View style={styles.flex}>
-          <AgText variant="headingM" weight="bold">
-            {t("inputs.title")}
-          </AgText>
-          <AgText variant="bodySmall" color="muted">
-            {t("inputs.cashOnly")}
-          </AgText>
-        </View>
-      </View>
-      <View style={styles.filters}>
-        {categories.map((value) => (
-          <Pressable
-            key={value}
-            onPress={() => setCategory(value)}
-            style={[
-              styles.chip,
-              {
-                borderColor: colors.border,
-                backgroundColor:
-                  category === value ? colors.primary : colors.card,
-              },
-            ]}
-          >
-            <AgText
-              style={{
-                color: category === value ? colors.onPrimary : colors.text,
-              }}
-            >
-              {t(`inputs.category.${value}`)}
-            </AgText>
-          </Pressable>
-        ))}
-      </View>
-      {catalog.isLoading ? <AgText>{t("common.loading")}</AgText> : null}
-      {catalog.isError ? (
-        <AgButton title={t("common.retry")} onPress={() => catalog.refetch()} />
-      ) : null}
-      {(catalog.data ?? []).map((item) => (
-        <AgCard key={item.id} style={styles.card}>
-          <AgText variant="headingS" weight="bold">
-            {i18n.language.startsWith("ta") && item.name_ta
-              ? item.name_ta
-              : item.name}
-          </AgText>
-          <AgText color="muted">
-            {t(`inputs.category.${item.category}`)} · {item.unit}
-          </AgText>
-          <AgText weight="bold">₹{item.unit_price}</AgText>
-          <AgText variant="bodySmall" color="muted">
-            {t("inputs.stock", { count: item.stock_quantity })}
-          </AgText>
-          <View style={styles.quantity}>
-            <Pressable onPress={() => adjust(item, -1)}>
-              <Minus color={colors.primary} />
-            </Pressable>
-            <AgText weight="bold">{cart[item.id] ?? 0}</AgText>
-            <Pressable
-              onPress={() => adjust(item, 1)}
-              disabled={(cart[item.id] ?? 0) >= item.stock_quantity}
-            >
-              <Plus color={colors.primary} />
-            </Pressable>
-          </View>
-        </AgCard>
-      ))}
-      {lines.length ? (
-        <AgCard style={styles.card}>
-          <AgText variant="headingS" weight="bold">
-            {t("inputs.cart")}
-          </AgText>
-          <AgText>{t("inputs.total", { total: total.toFixed(2) })}</AgText>
-          <TextInput
-            value={address}
-            onChangeText={setAddress}
-            multiline
-            placeholder={t("inputs.deliveryAddress")}
-            placeholderTextColor={colors.textMuted}
-            style={[
-              styles.input,
-              { borderColor: colors.border, color: colors.text },
-            ]}
-          />
-          <AgButton
-            title={t("inputs.placeOrder")}
-            onPress={checkout}
-            loading={busy}
-          />
-          <AgText variant="bodySmall" color="muted">
-            {t("inputs.noOnlinePayment")}
-          </AgText>
-        </AgCard>
-      ) : null}
-      <AgText variant="headingS" weight="bold">
-        {t("inputs.orderHistory")}
-      </AgText>
-      {(orders.data ?? []).map((order) => (
-        <AgCard key={order.id} style={styles.card}>
-          <AgText weight="bold">{order.order_ref}</AgText>
-          <AgText>{t(`inputs.status.${order.status}`)}</AgText>
-          <AgText>₹{order.total_amount}</AgText>
-          {order.delivery_eta ? (
-            <AgText>
-              {t("inputs.eta", {
-                date: new Date(order.delivery_eta).toLocaleString(),
-              })}
-            </AgText>
-          ) : null}
-        </AgCard>
-      ))}
-    </AgScreen>
-  );
+  const { t } = useTranslation(); const router = useRouter(); const { colors, isDark } = useAppTheme(); const client = useQueryClient(); const { selected } = useSelectedFarm();
+  const [category, setCategory] = useState<InputCategory | 'all'>('all'); const [search, setSearch] = useState(''); const [cart, setCart] = useState<Record<string, number>>({}); const [address, setAddress] = useState(''); const [busy, setBusy] = useState(false);
+  const catalog = useQuery({ queryKey: ['inputs', 'catalog', category, selected?.crop], queryFn: () => getInputCatalog(category === 'all' ? undefined : category, selected?.crop) });
+  const orders = useQuery({ queryKey: ['inputs', 'orders'], queryFn: getInputOrders });
+  const products = useMemo(() => (catalog.data ?? []).filter((item) => `${item.name} ${item.name_ta ?? ''} ${item.description ?? ''}`.toLowerCase().includes(search.trim().toLowerCase())), [catalog.data, search]);
+  const lines = useMemo(() => (catalog.data ?? []).filter((item) => cart[item.id]).map((item) => ({ item, quantity: cart[item.id] })), [catalog.data, cart]);
+  const total = lines.reduce((sum, line) => sum + Number(line.item.unit_price) * line.quantity, 0);
+  const adjust = (item: CatalogItem, delta: number) => setCart((current) => ({ ...current, [item.id]: Math.max(0, Math.min(item.stock_quantity, (current[item.id] ?? 0) + delta)) }));
+  const checkout = async () => { if (!lines.length || address.trim().length < 10) { Alert.alert(t('inputs.cannotOrder'), t('inputs.addressRequired')); return; } setBusy(true); try { const order = await placeInputOrder({ cart: lines, deliveryAddress: address.trim(), idempotencyKey: uuid() }); setCart({}); setAddress(''); await Promise.all([client.invalidateQueries({ queryKey: ['inputs', 'catalog'] }), client.invalidateQueries({ queryKey: ['inputs', 'orders'] })]); Alert.alert(t('inputs.orderPlaced'), t('inputs.orderReference', { reference: order.order_ref })); } catch { Alert.alert(t('inputs.cannotOrder'), t('inputs.refreshRequired')); await catalog.refetch(); } finally { setBusy(false); } };
+  return <AgScreen scroll padded={false} backgroundColor={isDark ? '#131B15' : '#F7FAF4'} contentContainerStyle={styles.screen}>
+    <View style={styles.hero}><Image source={require('@/assets/images/organic-dashboard-landscape.png')} contentFit="cover" contentPosition="right bottom" style={styles.heroLandscape} accessible={false} /><View style={[styles.heroShade, { backgroundColor: isDark ? 'rgba(19,27,21,0.66)' : 'rgba(247,250,244,0.40)' }]} /><View style={styles.header}><TouchableOpacity onPress={() => router.back()} accessibilityRole="button" accessibilityLabel={t('common.back')} activeOpacity={0.72} style={[styles.backButton, { backgroundColor: isDark ? '#1D3926' : '#EEF7EA' }]}><ArrowLeft size={23} color={isDark ? colors.text : '#0B4A31'} /></TouchableOpacity><View style={[styles.brandMark, { backgroundColor: isDark ? '#1D3926' : '#EEF8EB' }]}><ShoppingBasket size={21} color={colors.primary} /><AgText variant="caption" weight="bold" style={{ color: colors.primary }}>MARKET</AgText></View></View><View style={styles.heroCopy}><AgText variant="headingL" weight="bold" style={[styles.heroTitle, { color: isDark ? colors.text : '#073F2A' }]}>{t('inputs.title')}</AgText><AgText variant="body" style={[styles.heroSub, { color: colors.textMuted }]}>Buy organic farm inputs from trusted local suppliers</AgText><AgText variant="bodySmall" style={[styles.cashLine, { color: colors.textMuted }]}>{t('inputs.cashOnly')}</AgText></View></View>
+    <View style={styles.content}><View style={[styles.searchBar, { backgroundColor: isDark ? '#202A21' : '#FFFFFF', borderColor: isDark ? '#35463A' : '#E0EAE0' }]}><Search size={24} color={colors.textMuted} /><TextInput value={search} onChangeText={setSearch} placeholder="Search compost, seeds, bio inputs" placeholderTextColor={colors.textMuted} style={[styles.searchInput, { color: colors.text }]} /></View><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>{categories.map((value) => <Pressable key={value} onPress={() => setCategory(value)} style={[styles.chip, { backgroundColor: category === value ? colors.primary : (isDark ? '#202A21' : '#FFFFFF'), borderColor: category === value ? colors.primary : (isDark ? '#35463A' : '#D9E6D8') }]}><AgText weight="semibold" style={{ color: category === value ? colors.onPrimary : colors.text }}>{t(`inputs.category.${value}`)}</AgText></Pressable>)}</ScrollView>
+    <View style={[styles.trustBanner, { backgroundColor: isDark ? '#1D3424' : '#ECF7E8' }]}><View style={[styles.trustIcon, { backgroundColor: isDark ? '#285234' : '#D9F0D3' }]}><Leaf size={25} color={colors.primary} /></View><View style={styles.trustCopy}><AgText weight="bold" style={{ color: isDark ? colors.text : '#0B442C' }}>Farmer-friendly organic inputs</AgText><AgText variant="caption" style={{ color: colors.textMuted }}>Quality listings · Clear stock · Cash on delivery</AgText></View></View>
+    <View style={styles.resultHeader}><View><AgText variant="headingS" weight="bold" style={{ color: colors.text }}>Available inputs</AgText><AgText variant="caption" style={{ color: colors.textMuted }}>{products.length} items for your farm</AgText></View></View>
+    {catalog.isLoading ? <AgText style={{ color: colors.textMuted }}>{t('common.loading')}</AgText> : null}{catalog.isError ? <AgButton title={t('common.retry')} onPress={() => catalog.refetch()} /> : null}{products.map((item) => <CatalogCard key={item.id} item={item} quantity={cart[item.id] ?? 0} adjust={(delta) => adjust(item, delta)} />)}
+    {lines.length ? <View style={[styles.orderCard, { backgroundColor: isDark ? '#1D3424' : '#EFF8EC', borderColor: isDark ? '#31573B' : '#D1E8CB' }]}><View style={styles.orderTitle}><Package size={22} color={colors.primary} /><AgText variant="headingS" weight="bold" style={{ color: colors.text }}>{t('inputs.cart')}</AgText></View><AgText variant="body" weight="bold" style={{ color: colors.primary }}>{t('inputs.total', { total: total.toFixed(2) })}</AgText><TextInput value={address} onChangeText={setAddress} multiline placeholder={t('inputs.deliveryAddress')} placeholderTextColor={colors.textMuted} style={[styles.address, { color: colors.text, borderColor: isDark ? '#3A5140' : '#D6E3D4', backgroundColor: isDark ? '#202A21' : '#FFFFFF' }]} /><AgButton title={t('inputs.placeOrder')} onPress={checkout} loading={busy} /><AgText variant="caption" style={{ color: colors.textMuted }}>{t('inputs.noOnlinePayment')}</AgText></View> : null}
+    <View style={[styles.history, { backgroundColor: isDark ? '#272418' : '#FFF8E9', borderColor: isDark ? '#584B24' : '#F1D9A4' }]}><View style={[styles.historyIcon, { backgroundColor: isDark ? '#51421D' : '#FFE9BC' }]}><Package size={23} color="#D5760C" /></View><View style={styles.historyCopy}><AgText weight="bold" style={{ color: colors.text }}>{t('inputs.orderHistory')}</AgText><AgText variant="caption" style={{ color: colors.textMuted }}>{orders.data?.length ?? 0} past orders</AgText></View><ArrowRight size={22} color={colors.textMuted} /></View>
+    <TouchableOpacity testID="sell-to-agrownex" accessibilityRole="button" onPress={() => router.push('/inputs/sell' as never)} activeOpacity={0.8} style={[styles.history, { backgroundColor: isDark ? '#1D3424' : '#EFF8EC', borderColor: isDark ? '#31573B' : '#D1E8CB' }]}><View style={[styles.historyIcon, { backgroundColor: isDark ? '#25462D' : '#DDF0DA' }]}><Sprout size={23} color={colors.primary} /></View><View style={styles.historyCopy}><AgText weight="bold" style={{ color: colors.text }}>{t('inputsSell.entryTitle')}</AgText><AgText variant="caption" style={{ color: colors.textMuted }}>{t('inputsSell.entryBody')}</AgText></View><ArrowRight size={22} color={colors.primary} /></TouchableOpacity>
+    </View>
+  </AgScreen>;
 }
+
 const styles = StyleSheet.create({
-  screen: { padding: 16, gap: 14 },
-  header: { flexDirection: "row", alignItems: "center", gap: 12 },
-  flex: { flex: 1 },
-  filters: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  chip: {
-    borderWidth: 1,
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  card: { gap: 8 },
-  quantity: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    width: 130,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 12,
-    minHeight: 80,
-    padding: 12,
-    textAlignVertical: "top",
-  },
+  screen: { paddingBottom: 38 }, hero: { minHeight: 247, overflow: 'hidden' }, heroLandscape: { position: 'absolute', right: -70, bottom: -6, width: '100%', height: 185, opacity: 0.74 }, heroShade: { position: 'absolute', right: 0, bottom: 0, left: 0, height: '100%' }, header: { minHeight: 76, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, backButton: { width: 46, height: 46, borderRadius: 15, alignItems: 'center', justifyContent: 'center' }, brandMark: { minHeight: 34, paddingHorizontal: 11, borderRadius: 17, flexDirection: 'row', alignItems: 'center', gap: 6 }, heroCopy: { paddingHorizontal: 20, paddingTop: 10, maxWidth: 540 }, heroTitle: { letterSpacing: -0.9 }, heroSub: { marginTop: 4, lineHeight: 23 }, cashLine: { marginTop: 3 }, content: { paddingHorizontal: 16 }, searchBar: { minHeight: 62, marginTop: -10, paddingHorizontal: 16, borderRadius: 19, borderWidth: 1, flexDirection: 'row', alignItems: 'center', gap: 11 }, searchInput: { flex: 1, minHeight: 60, paddingVertical: 0, fontSize: 16 }, chips: { paddingTop: 15, paddingBottom: 16, gap: 9 }, chip: { minHeight: 44, paddingHorizontal: 17, borderRadius: 22, borderWidth: 1, alignItems: 'center', justifyContent: 'center' }, trustBanner: { minHeight: 93, padding: 16, borderRadius: 20, flexDirection: 'row', alignItems: 'center', gap: 12 }, trustIcon: { width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center' }, trustCopy: { flex: 1 }, resultHeader: { marginTop: 24, marginBottom: 12 }, productCard: { minHeight: 170, marginBottom: 14, padding: 12, borderRadius: 22, borderWidth: 1, flexDirection: 'row', shadowColor: '#285638', shadowOpacity: 0.08, shadowRadius: 14, shadowOffset: { width: 0, height: 4 }, elevation: 2 }, productArt: { width: 110, alignSelf: 'stretch', minHeight: 146, borderRadius: 16, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }, productGlow: { position: 'absolute', width: 100, height: 100, borderRadius: 50, opacity: 0.17, transform: [{ translateX: 28 }, { translateY: -28 }] }, productCopy: { flex: 1, minWidth: 0, paddingLeft: 13, paddingVertical: 3 }, productTitleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 5 }, productName: { flex: 1, lineHeight: 24, letterSpacing: -0.4 }, tag: { maxWidth: 115, minHeight: 28, paddingHorizontal: 8, borderRadius: 14, flexDirection: 'row', alignItems: 'center', gap: 4 }, productDescription: { marginTop: 5, lineHeight: 19 }, stockRow: { marginTop: 7, flexDirection: 'row', alignItems: 'center', gap: 5 }, purchaseRow: { marginTop: 8, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }, stepper: { height: 38, minWidth: 103, borderRadius: 12, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around' }, stepperButton: { width: 30, height: 34, alignItems: 'center', justifyContent: 'center' }, orderCard: { marginTop: 4, marginBottom: 16, padding: 16, borderRadius: 20, borderWidth: 1, gap: 12 }, orderTitle: { flexDirection: 'row', alignItems: 'center', gap: 9 }, address: { minHeight: 82, padding: 12, borderRadius: 13, borderWidth: 1, textAlignVertical: 'top' }, history: { minHeight: 76, padding: 14, borderRadius: 18, borderWidth: 1, flexDirection: 'row', alignItems: 'center', gap: 11 }, historyIcon: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' }, historyCopy: { flex: 1 },
 });
