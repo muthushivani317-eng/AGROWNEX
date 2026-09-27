@@ -72,3 +72,22 @@ async def test_checkout_fails_closed_on_insufficient_stock(db_session):
     user, item = await _seed(db_session)
     with pytest.raises(CatalogItemUnavailableError):
         await InputsMarketplaceService(db_session).place_order(user, _payload(item, quantity=4))
+
+@pytest.mark.asyncio
+async def test_crop_filter_keeps_untagged_general_items(db_session):
+    general = InputCatalogItem(
+        name="Vermicompost", category="fertilizer", unit="1 kg",
+        unit_price=Decimal("250.00"), stock_quantity=10, stock_version=1, is_active=True,
+    )
+    paddy = InputCatalogItem(
+        name="Paddy seed", category="seed", unit="5 kg bag", unit_price=Decimal("450.00"),
+        stock_quantity=5, stock_version=1, is_active=True, crop_tags=",paddy,",
+    )
+    chilli = InputCatalogItem(
+        name="Chilli seed", category="seed", unit="100 g", unit_price=Decimal("120.00"),
+        stock_quantity=5, stock_version=1, is_active=True, crop_tags=",chilli,",
+    )
+    db_session.add_all([general, paddy, chilli])
+    await db_session.commit()
+    names = {i.name for i in await InputsMarketplaceService(db_session).catalog(crop="Paddy")}
+    assert names == {"Vermicompost", "Paddy seed"}

@@ -4,7 +4,7 @@ import uuid
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ForbiddenError, ValidationError
@@ -111,7 +111,14 @@ class InputsMarketplaceService:
             stmt = stmt.where(InputCatalogItem.category == category)
         if crop:
             normalized_crop = crop.strip().lower()
-            stmt = stmt.where(InputCatalogItem.crop_tags.ilike(f"%,{normalized_crop},%"))
+            # Items with no crop tags are general-purpose and suit every crop.
+            stmt = stmt.where(
+                or_(
+                    InputCatalogItem.crop_tags.is_(None),
+                    InputCatalogItem.crop_tags == "",
+                    InputCatalogItem.crop_tags.ilike(f"%,{normalized_crop},%"),
+                )
+            )
         rows = (await self.session.execute(stmt.order_by(InputCatalogItem.name))).scalars().all()
         return [_catalog_out(row) for row in rows]
 
