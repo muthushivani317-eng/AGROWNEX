@@ -4241,7 +4241,8 @@ export const en = {
     cropMismatch:
       "This photo does not match the selected farm crop. Check the crop and try again.",
     cropMismatchDetailed:
-      "Your farm is registered for {{expected}}, not {{observed}}. Check the crop and try again.",
+      "This photo looks like {{observed}}, but your farm is registered for {{expected}}. Take a photo of your {{expected}} crop, or change the farm's crop in Farm details.",
+    analysingCrop: "Crop: {{crop}} (from your farm). Take a photo of this crop.",
     cropNames: {
       banana: "Banana",
       paddy: "Paddy",

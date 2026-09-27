@@ -45,6 +45,7 @@ import { QUALITY_ISSUE_KEY } from "../constants";
 import { useAnalyzeNutrient } from "../hooks/useNutrient";
 import {
   nutrientCropMismatchMessage,
+  cropLabel,
   nutrientErrorMessageKey,
 } from "../services/nutrientErrorMessage";
 import { NutrientError } from "../services/nutrientProvider";
@@ -391,6 +392,11 @@ export function NutrientAnalysisScreen() {
               onSelect={select}
               light
             />
+            {selected?.crop ? (
+              <AgText testID="nutrient-farm-crop" variant="caption" style={{ marginTop: 6, color: NUTRIENT_UI.muted }}>
+                {t("nutrient.analysingCrop", { crop: cropLabel(t, selected.crop) })}
+              </AgText>
+            ) : null}
           </View>
 
           {!picked ? (

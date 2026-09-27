@@ -34,7 +34,7 @@ function titleCase(value: string): string {
  * isn't in the nutrient.cropNames table -- the backend's crop normalization
  * isn't limited to a fixed list (app/modules/nutrient/crops.py), so this
  * table can never be guaranteed complete. */
-function cropLabel(t: Translate, crop: string): string {
+export function cropLabel(t: Translate, crop: string): string {
   const key = crop.trim().toLowerCase().replace(/\s+/g, "_");
   return t(`nutrient.cropNames.${key}`, { defaultValue: titleCase(crop) });
 }

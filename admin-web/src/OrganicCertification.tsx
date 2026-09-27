@@ -19,6 +19,14 @@ const states = [
   ['pgs_organic', 'PGS-Organic'],
   ['non_compliance_review', 'Non-compliance review'],
 ] as const;
+const stateLabel = (value: string) => value === 'pre_certification_trial' ? 'Pre-certification trial' : states.find(([key]) => key === value)?.[1] ?? value;
+const CHECKLIST_LABELS: Record<string, string> = {
+  whole_holding_reviewed: 'Whole holding reviewed',
+  conversion_plan_recorded: 'Conversion plan recorded',
+  conversion_completed: 'Conversion completed',
+  no_major_non_compliance: 'No major non-compliance found',
+};
+const checklistLabel = (key: string) => CHECKLIST_LABELS[key] ?? key.replaceAll('_', ' ');
 export function OrganicCertificationPage() {
   const [farmId, setFarmId] = useState(''); const [record, setRecord] = useState<Case | null>(null);
   const [state, setState] = useState<(typeof states)[number][0]>('pgs_eligibility_review');
@@ -64,16 +72,16 @@ export function OrganicCertificationPage() {
       <strong>Waiting for review ({queue?.length ?? '…'})</strong>
       {queue && queue.length === 0 && <p>No farms waiting for review.</p>}
       {queue?.map(row => <div key={row.farm_id} style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-        <span>{row.farm_name} · {states.find(([value]) => value === row.state)?.[1] ?? row.state} · {row.items_ticked} ticked{row.partial_conversion ? ' · partial conversion' : ''} · {new Date(row.updated_at).toLocaleDateString()}</span>
+        <span>{row.farm_name} · {stateLabel(row.state)} · {row.items_ticked} ticked{row.partial_conversion ? ' · partial conversion' : ''} · {new Date(row.updated_at).toLocaleDateString()}</span>
         <button disabled={busy} onClick={() => void openCase(row.farm_id)}>Open</button>
       </div>)}
     </div>
     <div className="card" style={{ padding: 24, display: 'grid', gap: 12 }}>
       <label>Real farm ID <input value={farmId} onChange={event => setFarmId(event.target.value)} /></label>
       <button disabled={busy || !farmId.trim()} onClick={() => void load()}>Load PGS case</button>
-      {record && <><strong>Current state: {record.state}</strong><p>{record.notice}</p>
+      {record && <><strong>Current state: {stateLabel(record.state)}</strong><p>{record.notice}</p>
         {record.partial_conversion && <p>Partial conversion — Regional Council approval required.</p>}
-        <p>Farmer checklist: {Object.entries(record.checklist || {}).map(([key, value]) => `${key}: ${value ? 'yes' : 'no'}`).join(' · ') || 'Not completed'}</p>
+        <p>Farmer checklist: {Object.entries(record.checklist || {}).map(([key, value]) => `${checklistLabel(key)} ${value ? '✓' : '✗'}`).join(' · ') || 'Not completed'}</p>
         <p>Submitted documents: {record.documents?.length || 0}</p>
         {record.documents?.map(document => <p key={document.id}>{document.file_name} · {document.review_status} · {document.id}</p>)}
       </>}
