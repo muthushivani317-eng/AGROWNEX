@@ -38,7 +38,7 @@ export function configureApiAuth(opts: {
 }
 
 const RETRY_LIMIT = 2;
-const EXPECTED_ERROR_CODES = new Set(['ai_daily_quota_exceeded', 'growth_session_not_found']);
+const EXPECTED_ERROR_CODES = new Set(['ai_daily_quota_exceeded', 'growth_session_not_found', 'supplier_profile_not_found']);
 const RETRYABLE_STATUS = new Set([408, 429, 500, 502, 503, 504]);
 
 interface RetryConfig extends InternalAxiosRequestConfig {

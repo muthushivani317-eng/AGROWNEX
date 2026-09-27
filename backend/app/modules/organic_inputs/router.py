@@ -135,7 +135,9 @@ async def _my_supplier_profile(session: AsyncSession, user_id: uuid.UUID) -> Sup
         select(SupplierProfile).where(SupplierProfile.user_id == user_id)
     )
     if profile is None:
-        raise NotFoundError("You have not applied as a supplier yet.")
+        raise NotFoundError(
+            "You have not applied as a supplier yet.", error_code="supplier_profile_not_found"
+        )
     return profile
 
 
