@@ -96,7 +96,7 @@ export function NutrientResultScreen({ reportId }: { reportId: string }) {
                   {t("nutrient.recommendationsTitle")}
                 </AgText>
                 {report.recommendations.map((rec) => (
-                  <NutrientRecommendationCard key={rec.code} rec={rec} />
+                  <NutrientRecommendationCard key={rec.code} rec={rec} diseaseConflict={Boolean(report.analysis?.diseaseConflict)} />
                 ))}
               </View>
             ) : null}

@@ -4280,6 +4280,7 @@ export const en = {
     recommendationsTitle: "What you can do",
     organicWay: "Organic way:",
     chemicalWay: "Chemical option:",
+    chemicalCautionDisease: "A disease was also found on this farm. Confirm with an expert before applying chemicals.",
     evidenceTitle: "Cross-checked with",
     evidenceSoil: "Your soil profile",
     evidenceSatellite: "Satellite vegetation",

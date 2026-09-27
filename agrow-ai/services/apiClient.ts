@@ -38,6 +38,7 @@ export function configureApiAuth(opts: {
 }
 
 const RETRY_LIMIT = 2;
+const EXPECTED_ERROR_CODES = new Set(['ai_daily_quota_exceeded', 'growth_session_not_found']);
 const RETRYABLE_STATUS = new Set([408, 429, 500, 502, 503, 504]);
 
 interface RetryConfig extends InternalAxiosRequestConfig {
@@ -131,8 +132,9 @@ httpClient.interceptors.response.use(
         body?.details && typeof body.details === 'object' ? body.details : undefined,
     });
 
-    // Quota limits are expected, not bugs: log as warn so they don't raise a red error box.
-    if (apiError.errorCode === 'ai_daily_quota_exceeded') {
+    // Expected outcomes, not bugs: log as warn so they don't raise a red error box.
+    // (quota reached; no growth session yet before the first growth photo)
+    if (EXPECTED_ERROR_CODES.has(apiError.errorCode)) {
       logger.warn('api', apiError.status, apiError.errorCode);
     } else {
       logger.error('api', apiError.status, apiError.errorCode, apiError.message);

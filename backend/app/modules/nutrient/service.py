@@ -18,7 +18,7 @@ from __future__ import annotations
 import base64
 import binascii
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -90,6 +90,7 @@ _EXT = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
 # A recent disease at/above this confidence is treated as an evidence-based conflict
 # (the engine then lowers certainty and asks for an expert — never a silent override).
 _DISEASE_CONFLICT_CONFIDENCE = 80
+_DISEASE_CONFLICT_DAYS = 14
 _LOW_VIGOR_HEALTH = frozenset({"bare", "very_low", "low"})
 _MAX_DECODED_IMAGE_BYTES = 10 * 1024 * 1024
 
@@ -419,7 +420,15 @@ class NutrientService:
             )
         except Exception:  # noqa: BLE001 — disease overlap is an optional check
             return False
-        return any((r.confidence or 0) >= _DISEASE_CONFLICT_CONFIDENCE for r in reports)
+        # Only a *recent* disease can overlap with today's leaf symptoms; an old
+        # report must not block every future nutrient result on the farm.
+        cutoff = datetime.now(UTC) - timedelta(days=_DISEASE_CONFLICT_DAYS)
+        return any(
+            (r.confidence or 0) >= _DISEASE_CONFLICT_CONFIDENCE
+            and r.created_at is not None
+            and (r.created_at if r.created_at.tzinfo else r.created_at.replace(tzinfo=UTC)) >= cutoff
+            for r in reports
+        )
 
     async def _safe_weather(self, user: User, farm: Farm | None) -> WeatherBundle | None:
         if self.weather_service is None or farm is None:

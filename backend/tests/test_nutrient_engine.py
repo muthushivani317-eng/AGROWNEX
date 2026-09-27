@@ -214,6 +214,12 @@ class TestRecommendations:
         codes = [r.code for r in build_recommendations(a)]
         assert "nutrient.rec.expert.consult" in codes
 
+    def test_remedy_still_shown_with_recent_disease(self) -> None:
+        a = corroborate(_obs(primary="potassium", confidence=90), disease_conflict=True)
+        codes = [r.code for r in build_recommendations(a)]
+        assert "nutrient.rec.potassium.deficiency" in codes
+        assert "nutrient.rec.expert.consult" in codes
+
     def test_worst_severity(self) -> None:
         soil = SoilReference(has_data=True, macro_ratings={"nitrogen": "low"})
         a = corroborate(_obs(primary="nitrogen", confidence=68, severity="severe"), soil=soil)

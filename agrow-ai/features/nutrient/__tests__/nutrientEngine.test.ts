@@ -159,6 +159,15 @@ describe("nutrientEngine (client mirror of the backend Nutrient Engine)", () => 
       );
     });
 
+    it("still gives the remedy when a recent disease overlaps", () => {
+      const a = corroborate(obs({ primary: "potassium", visualConfidence: 90 }), {
+        diseaseConflict: true,
+      });
+      const codes = buildRecommendations(a).map((r) => r.code);
+      expect(codes).toContain("nutrient.rec.potassium.deficiency");
+      expect(codes).toContain("nutrient.rec.expert.consult");
+    });
+
     it("worstSeverity ranks the highest, null for empty", () => {
       const a = corroborate(obs({ primary: "nitrogen", severity: "severe" }), {
         soil: soil({ nitrogen: "low" }),

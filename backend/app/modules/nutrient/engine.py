@@ -269,14 +269,13 @@ def build_recommendations(assessment: NutrientAssessment) -> list[Recommendation
     primary = assessment.primary_deficiency
 
     # A confirmed or clearly visible (possible) deficiency gets its remedy --
-    # organic first, then chemical -- as long as nothing contradicts it (soil
-    # measuring the nutrient as ample, or a recent disease on the farm). A
-    # possible finding also gets the soil-test recommendation below.
+    # organic first, then chemical -- unless a soil test measures the nutrient
+    # as ample. A recent disease on the farm does not hide the remedy; the
+    # expert recommendation below is added and the app warns before chemicals.
     if (
         primary
         and status in (DeficiencyStatus.CONFIRMED.value, DeficiencyStatus.POSSIBLE.value)
         and assessment.soil_supports is not False
-        and not assessment.disease_conflict
     ):
         rec_sev = _SEVERITY_TO_REC.get(assessment.severity, _REC_WARNING)
         recs.append(

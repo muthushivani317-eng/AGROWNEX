@@ -38,11 +38,20 @@ def test_low_visual_confidence_still_abstains() -> None:
     assert result.primary_finding is None
 
 
-def test_conflicting_disease_never_presented_as_nutrient_finding() -> None:
+def test_recent_disease_shows_likely_nutrient_with_expert_check() -> None:
     result = build_safe_result(assessment(status="confirmed", confidence=90, disease_conflict=True))
+    assert result.code == NutrientResultCode.POSSIBLE_FINDING  # never "supported"
+    assert result.primary_finding == "nitrogen"
+    assert result.conflicts == ["disease_or_differential_ambiguity"]
+    assert "expert_review" in result.suggested_next_evidence
+
+
+def test_disease_conflict_without_visual_finding_still_abstains() -> None:
+    result = build_safe_result(
+        assessment(status="not_confirmed", confidence=40, disease_conflict=True)
+    )
     assert result.code == NutrientResultCode.ABSTAINED
     assert result.primary_finding is None
-    assert "differential_review" in result.suggested_next_evidence
 
 
 def test_supported_finding_requires_compatible_corroboration() -> None:

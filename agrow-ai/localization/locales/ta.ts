@@ -4392,6 +4392,7 @@ export const ta: TranslationSchema = {
     recommendationsTitle: "நீங்கள் செய்யக்கூடியவை",
     organicWay: "இயற்கை முறை:",
     chemicalWay: "ரசாயன முறை:",
+    chemicalCautionDisease: "இந்தப் பண்ணையில் நோயும் கண்டறியப்பட்டுள்ளது. ரசாயனம் இடுவதற்கு முன் நிபுணரிடம் உறுதி செய்யவும்.",
     evidenceTitle: "இதனுடன் சரிபார்க்கப்பட்டது",
     evidenceSoil: "உங்கள் மண் விவரம்",
     evidenceSatellite: "செயற்கைக்கோள் தாவரம்",

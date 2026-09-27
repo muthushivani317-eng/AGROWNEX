@@ -18,8 +18,11 @@ import { NUTRIENT_UI } from "../design";
 /** A single generic agronomic recommendation (localized from its code; no brands). */
 export function NutrientRecommendationCard({
   rec,
+  diseaseConflict = false,
 }: {
   rec: NutrientRecommendation;
+  /** A recent disease was found on this farm: warn before the chemical option. */
+  diseaseConflict?: boolean;
 }) {
   const { t } = useTranslation();
 
@@ -86,6 +89,14 @@ export function NutrientRecommendationCard({
                 {t("nutrient.chemicalWay")}{" "}
               </AgText>
               {t(`${rec.code}.chemicalTip`)}
+            </AgText>
+          </View>
+        ) : null}
+        {rec.category === "nutrient" && diseaseConflict ? (
+          <View style={styles.chemicalTip}>
+            <TriangleAlert size={14} color={NUTRIENT_UI.amber} />
+            <AgText variant="bodySmall" style={styles.chemicalTipText}>
+              {t("nutrient.chemicalCautionDisease")}
             </AgText>
           </View>
         ) : null}

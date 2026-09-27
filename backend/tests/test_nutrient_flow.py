@@ -202,6 +202,27 @@ async def test_disease_conflict_downgrades_and_asks_expert(db_session, monkeypat
     assert report.analysis.status == "not_confirmed"  # never a silent override
 
 
+async def test_old_disease_report_does_not_block_nutrient_result(db_session, monkeypatch) -> None:
+    from datetime import UTC, datetime, timedelta
+
+    _accept_quality(monkeypatch)
+    user = await _make_user(db_session)
+    farm = await _make_farm(db_session, user)
+    # A disease found a month ago cannot overlap with today's leaf symptoms.
+    old = DiseaseReport(
+        user_id=user.id, farm_id=farm.id, image_url="https://r2/old.jpg",
+        disease="Leaf blast", confidence=92, language="ta",
+    )
+    db_session.add(old)
+    await db_session.flush()
+    old.created_at = datetime.now(UTC) - timedelta(days=30)
+    await db_session.flush()
+
+    service = _service(db_session, FakeProvider(make_observation(primary="nitrogen")))
+    report = await service.analyze(user, _request(farm.id))
+    assert report.analysis.disease_conflict is False
+
+
 async def test_not_confirmed_when_no_visual_finding(db_session, monkeypatch) -> None:
     _accept_quality(monkeypatch)
     service = _service(db_session, FakeProvider(make_observation(primary=None)))

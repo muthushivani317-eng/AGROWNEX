@@ -211,8 +211,7 @@ export function buildRecommendations(a: Assessment): NutrientRecommendation[] {
   if (
     primary &&
     (a.status === "confirmed" || a.status === "possible") &&
-    a.soilSupports !== false &&
-    !a.diseaseConflict
+    a.soilSupports !== false
   ) {
     const recSev = SEVERITY_TO_REC[a.severity] ?? REC_WARNING;
     recs.push(

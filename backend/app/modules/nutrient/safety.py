@@ -49,6 +49,25 @@ def build_safe_result(assessment: NutrientAssessment) -> SafeNutrientResult:
         "low" if assessment.confidence < 50 else "medium" if assessment.confidence < 75 else "high"
     )
     corroborated = assessment.soil_supports is True
+    # A recent disease on the farm does not hide a clear nutrient finding: the
+    # farmer sees the likely deficiency and its fix, flagged as overlapping with
+    # the disease and asking for an expert check (decided 2026-09-27). A soil
+    # test that contradicts the finding still abstains.
+    if (
+        conflicts == ["disease_or_differential_ambiguity"]
+        and assessment.primary_deficiency
+        and assessment.status in {"confirmed", "possible"}
+    ):
+        return SafeNutrientResult(
+            NutrientResultCode.POSSIBLE_FINDING,
+            assessment.primary_deficiency,
+            band,
+            observed,
+            missing,
+            conflicts,
+            None,
+            ["soil_or_tissue_test", "expert_review"],
+        )
     if conflicts:
         return SafeNutrientResult(
             NutrientResultCode.ABSTAINED,
