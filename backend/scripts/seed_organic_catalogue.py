@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 
+import app.main  # noqa: F401  (registers every model so foreign keys such as users resolve)
 from app.core.database import SessionLocal
 from app.modules.organic.ingestion import seed_public_source_pack
 

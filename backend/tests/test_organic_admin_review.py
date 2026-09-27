@@ -116,3 +116,20 @@ async def test_input_promotion_requires_manage_content_and_audits_reviewer(db_se
     )
     assert audit is not None
     assert audit.meta["content_hash"] == item.content_hash
+
+
+async def test_review_queue_lists_unapproved_inputs_until_promoted(db_session):
+    seeded = await seed_public_source_pack(db_session)
+    denied = await _context(db_session, AdminRole.CUSTOMER_SUPPORT.value)
+    with pytest.raises(PermissionDeniedError):
+        await OrganicAdminService(db_session).inputs_awaiting_review(denied)
+
+    reviewer = await _context(db_session, AdminRole.AGRICULTURE_OFFICER.value)
+    service = OrganicAdminService(db_session)
+    queue = await service.inputs_awaiting_review(reviewer)
+    assert len(queue) == len(seeded) >= 20
+
+    await service.promote_input(reviewer, queue[0].id, reason="source and Tamil checked")
+    remaining = await service.inputs_awaiting_review(reviewer)
+    assert len(remaining) == len(seeded) - 1
+    assert queue[0].id not in {row.id for row in remaining}

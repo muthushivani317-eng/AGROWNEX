@@ -104,6 +104,25 @@ class OrganicInputOut(BaseModel):
     review_due_on: date | None
 
 
+class OrganicInputReviewItemOut(BaseModel):
+    """An unapproved catalogue entry shown to a content reviewer."""
+
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    slug: str
+    category: str
+    name_en: str
+    name_ta: str
+    purpose_en: str
+    purpose_ta: str
+    guidance: dict
+    applicable_crops: list[str]
+    source_organization: str
+    document_reference: str
+    source_url: str
+    source_version: str
+
+
 class OrganicInputPromotionIn(BaseModel):
     reason: str = Field(min_length=3, max_length=500)
 

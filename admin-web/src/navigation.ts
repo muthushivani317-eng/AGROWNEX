@@ -13,6 +13,7 @@ export const navigation = [
   { to: '/crop-intelligence', label: 'Crop Intelligence', icon: Activity, permission: 'view_crop_intelligence' },
   { to: '/organic-pilot', label: 'Organic pilot', icon: Leaf, permission: 'view_dashboard' },
   { to: '/organic-content', label: 'Organic content', icon: ClipboardList, permission: 'manage_content' },
+  { to: '/organic-library-review', label: 'Organic library review', icon: Leaf, permission: 'manage_content' },
   { to: '/organic-certification', label: 'PGS tracking', icon: Shield, permission: 'manage_farmers' },
   { to: '/support', label: 'Farmer Support', icon: CircleHelp, permission: 'manage_support' },
   { to: '/ai', label: 'AI monitoring', icon: BrainCircuit, permission: 'view_ai' },

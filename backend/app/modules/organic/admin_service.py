@@ -101,6 +101,16 @@ class OrganicAdminService:
         await self.session.flush()
         return profile
 
+    async def inputs_awaiting_review(self, ctx: AdminContext) -> list[OrganicInput]:
+        if AdminPermission.MANAGE_CONTENT.value not in ctx.permissions:
+            raise PermissionDeniedError()
+        rows = await self.session.scalars(
+            select(OrganicInput)
+            .where(OrganicInput.review_status == "sourced_public_reference")
+            .order_by(OrganicInput.category, OrganicInput.name_en)
+        )
+        return list(rows)
+
     async def promote_input(
         self, ctx: AdminContext, input_id: uuid.UUID, *, reason: str
     ) -> OrganicInput:

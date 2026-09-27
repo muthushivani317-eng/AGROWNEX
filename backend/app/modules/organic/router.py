@@ -11,6 +11,7 @@ from app.modules.auth.dependencies import CurrentUser
 from app.modules.disease.storage import get_private_storage
 from app.modules.organic.dependencies import OrganicAdminServiceDep, OrganicServiceDep
 from app.modules.organic.schemas import (
+    OrganicInputReviewItemOut,
     CertificationDocumentCreate,
     CertificationDocumentOut,
     CertificationReviewIn,
@@ -87,6 +88,17 @@ async def upload_organic_evidence(
             upload_receipt=receipt,
         )
     )
+
+
+@router.get(
+    "/admin/organic-inputs/review-queue",
+    response_model=SuccessResponse[list[OrganicInputReviewItemOut]],
+)
+async def organic_inputs_review_queue(
+    admin_context: AdminContextDep, service: OrganicAdminServiceDep
+):
+    rows = await service.inputs_awaiting_review(admin_context)
+    return success([OrganicInputReviewItemOut.model_validate(row) for row in rows])
 
 
 @router.post(
