@@ -234,7 +234,7 @@ async def list_inputs(
     )
 
 
-@router.get("/organic-inputs/{input_id}", response_model=SuccessResponse[OrganicInputOut])
+@router.get("/organic-inputs/{input_id:uuid}", response_model=SuccessResponse[OrganicInputOut])
 async def get_input(input_id: uuid.UUID, current_user: CurrentUser, service: OrganicServiceDep):
     del current_user
     return success(OrganicInputOut.model_validate(await service.get_input(input_id)))

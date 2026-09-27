@@ -24,9 +24,11 @@ async function inputsRequest<T>(path: string, method = 'GET', body?: unknown): P
   });
   if (!response.ok) {
     const detail = (await response.json().catch(() => null)) as
-      | { detail?: { message?: string } | string }
+      | { detail?: { message?: string } | string; message?: string; error_code?: string }
       | null;
-    const message = typeof detail?.detail === 'string' ? detail.detail : detail?.detail?.message;
+    const message = detail?.error_code === 'admin_recent_auth_required'
+      ? 'For security, sign out and sign in again, then retry within 15 minutes.'
+      : typeof detail?.detail === 'string' ? detail.detail : detail?.detail?.message ?? detail?.message;
     throw new Error(message ?? `Request failed (${response.status}).`);
   }
   return response.json() as Promise<T>;
