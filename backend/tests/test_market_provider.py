@@ -111,7 +111,11 @@ async def test_mock_provider_respects_limit() -> None:
 
 
 def test_default_provider_is_unavailable_without_key(monkeypatch: pytest.MonkeyPatch) -> None:
-    # Missing credentials must never synthesize farmer-facing prices.
+    # Missing credentials (and eNAM switched off) must never synthesize
+    # farmer-facing prices.
+    import app.modules.market.provider as provider_module
+
+    monkeypatch.setattr(provider_module, "ENAM_ENABLED", False)
     provider = get_default_provider()
     assert provider.source == "unavailable"
 

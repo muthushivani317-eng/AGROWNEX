@@ -43,6 +43,26 @@ AGMARKNET_SYNC_TIMEOUT_SECONDS = float(os.getenv("AGMARKNET_SYNC_TIMEOUT_SECONDS
 AGMARKNET_SYNC_MAX_RETRIES = int(os.getenv("AGMARKNET_SYNC_MAX_RETRIES", "5"))
 AGMARKNET_SYNC_MAX_PAGES = int(os.getenv("AGMARKNET_SYNC_MAX_PAGES", "20"))
 
+# --- India price relay (Cloud Run, asia-south1) ---
+# NIC-hosted government sites (data.gov.in, eNAM) reset connections from
+# non-Indian addresses, so the Railway worker (US) reaches them through a small
+# relay in Mumbai (see /relay). Empty URL = connect directly.
+MARKET_RELAY_URL = os.getenv("MARKET_RELAY_URL", "").strip().rstrip("/")
+MARKET_RELAY_TOKEN = os.getenv("MARKET_RELAY_TOKEN", "").strip()
+
+# --- eNAM (National Agriculture Market) — second official price source ---
+# Public trade-data feed of the eNAM dashboard; no API key. Used as the
+# fallback when data.gov.in fails, and synced alongside it for coverage.
+ENAM_ENABLED = os.getenv("ENAM_ENABLED", "true").strip().lower() in {"1", "true", "yes"}
+ENAM_TRADE_DATA_URL = os.getenv(
+    "ENAM_TRADE_DATA_URL", "https://enam.gov.in/web/Ajax_ctrl/trade_data_list"
+)
+ENAM_REFERER = os.getenv("ENAM_REFERER", "https://enam.gov.in/web/dashboard/trade-data")
+ENAM_TIMEOUT_SECONDS = float(os.getenv("ENAM_TIMEOUT_SECONDS", "30"))
+ENAM_MAX_RETRIES = int(os.getenv("ENAM_MAX_RETRIES", "3"))
+# Trade data is per day and markets report late; walk back until a day has data.
+ENAM_LOOKBACK_DAYS = int(os.getenv("ENAM_LOOKBACK_DAYS", "4"))
+
 # Number of days of history returned by GET /market/history by default.
 DEFAULT_HISTORY_DAYS = 30
 MAX_HISTORY_DAYS = 365
@@ -52,6 +72,7 @@ DEFAULT_PAGE_SIZE = 20
 MAX_PAGE_SIZE = 100
 
 SOURCE_AGMARKNET = "agmarknet"
+SOURCE_ENAM = "enam"
 SOURCE_MOCK = "mock"
 
 

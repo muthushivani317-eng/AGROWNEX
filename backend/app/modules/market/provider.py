@@ -5,9 +5,14 @@ of *where* prices come from. V1 ships:
 
 * ``AgmarknetProvider`` — Open Government (data.gov.in / Agmarknet) with timeout
   + bounded retries; used when ``DATA_GOV_API_KEY`` is set.
+* ``EnamProvider`` (``enam.py``) — eNAM trade data, the second official source.
+* ``FallbackMarketProvider`` — Agmarknet first, eNAM when it is unavailable.
 * ``MockMarketProvider`` — deterministic offline data used in dev/tests.
 
-Future providers (eNAM, state agriculture APIs, local admin prices, paid feeds)
+Both official sources reach NIC servers through the India relay when
+``MARKET_RELAY_URL`` is configured (see ``relay.py``).
+
+Future providers (state agriculture APIs, local admin prices, paid feeds)
 implement the same Protocol and are selected in ``get_default_provider`` with no
 change to the service, API or frontend (docs: provider must be replaceable).
 """
@@ -21,7 +26,6 @@ from typing import Any, Protocol
 
 import httpx
 
-from app.core.http import get_http_client
 from app.core.logging import get_logger
 from app.core.provider_policy import test_mocks_enabled
 from app.modules.market.constants import (
@@ -32,11 +36,15 @@ from app.modules.market.constants import (
     AGMARKNET_TIMEOUT_SECONDS,
     DATA_GOV_API_KEY,
     DATA_GOV_BASE_URL,
+    ENAM_ENABLED,
     SOURCE_AGMARKNET,
     SOURCE_MOCK,
     PriceUnit,
 )
 from app.modules.market.exceptions import MarketDataUnavailableError
+
+# Relay-aware client under the historical name (tests patch provider.get_http_client).
+from app.modules.market.relay import get_market_http_client as get_http_client
 
 logger = get_logger("market.provider")
 
@@ -422,13 +430,66 @@ class UnavailableMarketProvider:
         raise MarketDataUnavailableError()
 
 
-def get_default_provider() -> MarketPriceProvider:
-    """Select the configured provider (docs: Agmarknet first, mock fallback)."""
+class FallbackMarketProvider:
+    """Try each official source in order; the first that answers wins.
+
+    Only an *unavailable* source moves on to the next one — a source that
+    answers with zero matching rows is a real answer and is returned as is.
+    """
+
+    def __init__(self, *providers: MarketPriceProvider) -> None:
+        if not providers:
+            raise ValueError("FallbackMarketProvider needs at least one provider")
+        self.providers = providers
+        self.source = providers[0].source
+
+    async def fetch_prices(self, query: PriceQuery) -> list[ProviderPrice]:
+        for index, provider in enumerate(self.providers):
+            try:
+                return await provider.fetch_prices(query)
+            except MarketDataUnavailableError:
+                if index == len(self.providers) - 1:
+                    raise
+                logger.warning("market provider %s unavailable; trying %s",
+                               provider.source, self.providers[index + 1].source)
+        raise MarketDataUnavailableError()  # pragma: no cover - loop always returns/raises
+
+    async def fetch_all_prices(self, query: PriceQuery, *, max_pages: int) -> list[ProviderPrice]:
+        for index, provider in enumerate(self.providers):
+            fetch_all = getattr(provider, "fetch_all_prices", None)
+            try:
+                if fetch_all is not None:
+                    return await fetch_all(query, max_pages=max_pages)
+                return await provider.fetch_prices(query)
+            except MarketDataUnavailableError:
+                if index == len(self.providers) - 1:
+                    raise
+        raise MarketDataUnavailableError()  # pragma: no cover
+
+
+def official_providers(
+    agmarknet: MarketPriceProvider | None = None,
+    enam: MarketPriceProvider | None = None,
+) -> list[MarketPriceProvider]:
+    """Configured official sources in priority order (Agmarknet, then eNAM)."""
+    from app.modules.market.enam import EnamProvider  # circular: enam imports this module
+
+    providers: list[MarketPriceProvider] = []
     if DATA_GOV_API_KEY:
-        logger.info("market provider: Agmarknet (data.gov.in)")
-        return AgmarknetProvider()
-    if test_mocks_enabled():
+        providers.append(agmarknet or AgmarknetProvider())
+    if ENAM_ENABLED:
+        providers.append(enam or EnamProvider())
+    return providers
+
+
+def get_default_provider() -> MarketPriceProvider:
+    """Select the configured provider: official sources first, mock only in tests."""
+    if test_mocks_enabled() and not DATA_GOV_API_KEY:
         logger.info("market provider: explicit development/test mock")
         return MockMarketProvider()
-    logger.warning("market provider unavailable: DATA_GOV_API_KEY is not configured")
-    return UnavailableMarketProvider()
+    providers = official_providers()
+    if not providers:
+        logger.warning("market provider unavailable: no official source configured")
+        return UnavailableMarketProvider()
+    logger.info("market provider: %s", " -> ".join(p.source for p in providers))
+    return providers[0] if len(providers) == 1 else FallbackMarketProvider(*providers)

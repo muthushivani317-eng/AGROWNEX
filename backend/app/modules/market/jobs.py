@@ -16,8 +16,14 @@ from app.modules.market.constants import (
     DATA_GOV_API_KEY,
     MARKET_SYNC_STATES,
 )
+from app.modules.market.enam import EnamProvider
 from app.modules.market.exceptions import MarketDataUnavailableError
-from app.modules.market.provider import AgmarknetProvider, MarketPriceProvider
+from app.modules.market.provider import (
+    AgmarknetProvider,
+    FallbackMarketProvider,
+    MarketPriceProvider,
+    official_providers,
+)
 from app.modules.market.repository import MarketRepository
 from app.modules.market.schemas import MarketPriceFilters
 from app.modules.market.service import MarketService
@@ -25,13 +31,24 @@ from app.modules.market.service import MarketService
 logger = get_logger("market.jobs")
 
 
-def _sync_provider() -> MarketPriceProvider | None:
-    """Agmarknet client with the worker's generous timeout/retry budget."""
-    if not DATA_GOV_API_KEY:
-        return None
-    return AgmarknetProvider(
-        timeout=AGMARKNET_SYNC_TIMEOUT_SECONDS, max_retries=AGMARKNET_SYNC_MAX_RETRIES
+def _sync_sources() -> list[MarketPriceProvider]:
+    """Official sources with the worker's generous timeout/retry budget."""
+    return official_providers(
+        agmarknet=AgmarknetProvider(
+            timeout=AGMARKNET_SYNC_TIMEOUT_SECONDS, max_retries=AGMARKNET_SYNC_MAX_RETRIES
+        )
+        if DATA_GOV_API_KEY
+        else None,
+        enam=EnamProvider(max_retries=AGMARKNET_SYNC_MAX_RETRIES),
     )
+
+
+def _sync_provider() -> MarketPriceProvider | None:
+    """Per-crop refresh: Agmarknet first, eNAM when it is unavailable."""
+    sources = _sync_sources()
+    if not sources:
+        return None
+    return sources[0] if len(sources) == 1 else FallbackMarketProvider(*sources)
 
 
 async def refresh_market_prices(
@@ -60,19 +77,38 @@ async def refresh_market_prices(
     service = MarketService(session, provider=provider or _sync_provider())
 
     # State-wide sync first: the app serves these stored prices, so a slow or
-    # briefly-down data.gov.in never reaches the farmer's screen.
+    # briefly-down source never reaches the farmer's screen. Every official
+    # source is synced (not just the first that answers) so one source being
+    # down never leaves the state without fresh prices.
+    sync_sources = [provider] if provider is not None else _sync_sources()
     synced_states = 0
     synced_prices = 0
     for state in sync_states:
-        try:
-            count = await service.sync_state(state, max_pages=AGMARKNET_SYNC_MAX_PAGES)
-        except MarketDataUnavailableError:
-            logger.info("market state sync skipped (provider unavailable): %s", state)
-            continue
-        await session.commit()
-        synced_states += 1
-        synced_prices += count
-        logger.info("market state sync: %s -> %s prices", state, count)
+        state_ok = False
+        for source in sync_sources:
+            try:
+                count = await MarketService(session, provider=source).sync_state(
+                    state, max_pages=AGMARKNET_SYNC_MAX_PAGES
+                )
+            except MarketDataUnavailableError:
+                logger.info(
+                    "market state sync skipped (%s unavailable): %s",
+                    getattr(source, "source", "provider"),
+                    state,
+                )
+                await session.rollback()
+                continue
+            await session.commit()
+            state_ok = True
+            synced_prices += count
+            logger.info(
+                "market state sync: %s via %s -> %s prices",
+                state,
+                getattr(source, "source", "provider"),
+                count,
+            )
+        if state_ok:
+            synced_states += 1
 
     refreshed_prices = 0
     refreshed_targets = 0
