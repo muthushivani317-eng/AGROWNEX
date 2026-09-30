@@ -10,7 +10,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AgDistrictDropdown, AgInput, AgPressable, AgScreen, AgSpinner, AgText } from '@/components/ui';
 import { useLanguage } from '@/hooks/useLanguage';
-import { useJoinPartnerOrganization, useMyPartnerLinks, usePartnerDirectory } from '@/features/partnerLinks';
+import { useJoinPartnerOrganization, useMyPartnerLinks, usePartnerDirectory, type PartnerLinkRequest } from '@/features/partnerLinks';
+import { TAMIL_NADU_DISTRICTS } from '@/constants/locations';
 
 import { ProductMultiSelect } from '../components/ProductMultiSelect';
 import { productLabel, toFormUnit, type OnboardingProductOption } from '../components/onboardingData';
@@ -90,6 +91,7 @@ export function CompleteProfileScreen() {
   const wantsFpo = Boolean(watch('wantsFpoSupport'));
   const wantsKvk = Boolean(watch('wantsKvkSupport'));
   const locationDetected = watch('latitude') != null && watch('longitude') != null;
+  const myLinks = useMyPartnerLinks(step === 4);
 
   const setProducts = (next: ProductForm[]) => {
     setValue('farmProducts', next, { shouldDirty: true, shouldValidate: true });
@@ -202,9 +204,9 @@ export function CompleteProfileScreen() {
       {step === 4 ? (
         <View style={styles.reviewList}>
           <ReviewCard title={copy.reviewFarmer} value={`${name || '—'}${farmerType ? ` · ${copy[farmerType as 'small' | 'tenant' | 'producer']}` : ''}`} onPress={() => setStep(0)} copy={copy} />
-          <ReviewCard title={copy.reviewLocation} value={[village, block, district].filter(Boolean).join(', ') || '—'} onPress={() => setStep(1)} copy={copy} />
+          <ReviewCard title={copy.reviewLocation} value={locationSummary(village, block, district, language)} onPress={() => setStep(1)} copy={copy} />
           <ReviewCard title={copy.reviewProducts} value={products.length ? products.map((product) => productLabel(catalog.data?.items ?? [], product.productId, language)).join(', ') : copy.none} onPress={() => setStep(2)} copy={copy} />
-          <ReviewCard title={copy.reviewSupport} value={[wantsFpo && 'FPO', wantsKvk && 'KVK'].filter(Boolean).join(' + ') || copy.none} onPress={() => setStep(3)} copy={copy} />
+          <ReviewCard title={copy.reviewSupport} value={supportSummary(myLinks.data ?? [], language) || [wantsFpo && 'FPO', wantsKvk && 'KVK'].filter(Boolean).join(' + ') || copy.none} onPress={() => setStep(3)} copy={copy} />
           <View style={styles.usefulNote}><Sprout size={22} color={GREEN} /><AgText variant="bodySmall" style={styles.primary}>{language === 'ta' ? 'இந்த விவரங்கள் பயிர் வரைபடம், கொள்முதல் திட்டம், பயிற்சி மற்றும் விவசாயி ஆதரவுக்கு உதவும்.' : 'These details support crop mapping, procurement planning, training and farmer support.'}</AgText></View>
         </View>
       ) : null}
@@ -278,6 +280,23 @@ function OrganizationDirectory({ kind, district, language, title, description, i
   </View>;
 }
 function ReviewCard({ title, value, onPress, copy }: { title: string; value: string; onPress: () => void; copy: typeof COPY.ta | typeof COPY.en }) { return <View style={styles.reviewCard}><View style={styles.flex}><AgText variant="caption" weight="bold" style={styles.muted}>{title}</AgText><AgText variant="body" weight="semibold" style={styles.primary}>{value}</AgText></View><AgPressable onPress={onPress} style={styles.editButton}><AgText variant="bodySmall" weight="bold" style={styles.greenText}>{copy.edit}</AgText></AgPressable></View>; }
+/** Village, block, district without repeats (e.g. "Thoothukudi, thoothukudi"), district by its proper name. */
+function locationSummary(village: string | undefined, block: string | undefined, districtId: string | undefined, language: Language): string {
+  const districtName = TAMIL_NADU_DISTRICTS.find((item) => item.id === districtId)?.[language] ?? districtId ?? "";
+  const parts: string[] = [];
+  for (const part of [village, block, districtName]) {
+    const text = part?.trim();
+    if (text && !parts.some((existing) => existing.toLowerCase() === text.toLowerCase())) parts.push(text);
+  }
+  return parts.join(', ') || '—';
+}
+
+/** Organizations the farmer asked to join / is a member of, with status. */
+function supportSummary(links: PartnerLinkRequest[], language: Language): string {
+  const label = (status: PartnerLinkRequest['status']) => status === 'active' ? (language === 'ta' ? 'உறுப்பினர்' : 'member') : status === 'join_requested' ? (language === 'ta' ? 'காத்திருக்கிறது' : 'waiting') : status === 'pending' ? (language === 'ta' ? 'அழைப்பு' : 'invited') : null;
+  return links.filter((link) => label(link.status)).map((link) => `${link.organizationName} (${label(link.status)})`).join('\n');
+}
+
 function nextUnit(unit: ProductForm['unit']): ProductForm['unit'] { const units: ProductForm['unit'][] = ['kg', 'quintal', 'tonne', 'bag', 'count', 'litre']; return units[(units.indexOf(unit) + 1) % units.length]; }
 
 const fieldTheme = { fieldStyle: { minHeight: 58, borderRadius: 14, borderWidth: 1.3, borderColor: BORDER, backgroundColor: WHITE }, fieldBorderColor: BORDER, fieldBackgroundColor: WHITE, focusBorderColor: GREEN, style: { color: TEXT, backgroundColor: 'transparent' }, placeholderTextColor: MUTED } as const;

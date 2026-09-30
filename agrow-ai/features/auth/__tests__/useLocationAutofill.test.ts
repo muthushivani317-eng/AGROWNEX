@@ -43,6 +43,31 @@ describe('autofillAddressFromCoordinates', () => {
     expect(reverseGeocode).toHaveBeenCalledWith({ latitude: 10.66, longitude: 76.99 });
   });
 
+  it('ignores Google plus codes and repeated names for the village', async () => {
+    reverseGeocode.mockResolvedValue([
+      {
+        city: 'Thoothukudi',
+        district: 'Thoothukudi',
+        isoCountryCode: 'IN',
+        name: 'R545+Q76',
+        postalCode: '628002',
+        region: 'Tamil Nadu',
+        street: 'Millerpuram Road',
+        streetNumber: null,
+        subregion: 'Thoothukudi',
+        timezone: null,
+        country: 'India',
+        formattedAddress: null,
+      },
+    ]);
+
+    await expect(autofillAddressFromCoordinates(8.78, 78.13)).resolves.toMatchObject({
+      status: 'success',
+      district: 'thoothukudi',
+      village: 'Millerpuram Road',
+    });
+  });
+
   it('returns unavailable fields when the device geocoder has no result', async () => {
     reverseGeocode.mockResolvedValue([]);
 

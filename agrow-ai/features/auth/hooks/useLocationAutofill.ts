@@ -22,6 +22,17 @@ const EMPTY_RESULT: LocationAutofillResult = {
   longitude: null,
 };
 
+/** Google "plus codes" (e.g. R545+Q76) come back as `name` where no named
+ * place exists; they are not a village name. */
+const PLUS_CODE = /^[23456789CFGHJMPQRVWX]{2,8}\+[23456789CFGHJMPQRVWX]{0,3}\b/i;
+
+function usablePlaceName(value: string | null | undefined, exclude: (string | null)[]): string | null {
+  const text = value?.trim();
+  if (!text || PLUS_CODE.test(text) || /^\d+$/.test(text)) return null;
+  const lower = text.toLowerCase();
+  return exclude.some((other) => other?.trim().toLowerCase() === lower) ? null : text;
+}
+
 export async function autofillAddressFromCoordinates(
   latitude: number,
   longitude: number,
@@ -39,13 +50,19 @@ export async function autofillAddressFromCoordinates(
       ))
       .find(Boolean);
 
+    const block = usablePlaceName(place.city, []) ?? usablePlaceName(place.subregion, []);
+    // `name` is normally the locality/settlement returned by Android; skip
+    // plus codes and names that just repeat the block/district, then fall
+    // back to the road name.
+    const village = [place.name, place.street]
+      .map((candidate) => usablePlaceName(candidate, [block, matched?.en ?? null]))
+      .find(Boolean) ?? null;
+
     return {
       status: matched ? 'success' : 'noDistrictMatch',
       district: matched?.id ?? null,
-      block: place.city ?? place.subregion ?? null,
-      // `name` is normally the locality/settlement returned by Android;
-      // use the road name only as a last resort for the village field.
-      village: place.name ?? place.street ?? null,
+      block,
+      village,
       rawLocationHint: place.city ?? place.subregion ?? place.district ?? place.region ?? null,
       latitude,
       longitude,
