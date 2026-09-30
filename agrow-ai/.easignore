@@ -54,3 +54,9 @@ ios/build/
 ios/Pods/
 eas-archive-check/
 empty_temp/
+
+# Local artifacts that must never be uploaded
+*.apk
+*.aab
+/dist-check/
+/android/app/google-services.json.*-backup

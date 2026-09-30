@@ -8,3 +8,6 @@ backend/model_artifacts/frozen_runtime/crop_identity_six_class_internal_v1/** -t
 # Model containers are always binary.
 *.pt binary
 *.onnx binary
+
+# EAS reads this file byte-for-byte; CRLF breaks every pattern on Windows.
+agrow-ai/.easignore text eol=lf
