@@ -38,6 +38,8 @@ from app.modules.experts.router import (
 from app.modules.farmers.router import router as farmers_router
 from app.modules.farms.router import router as farms_router
 from app.modules.farms.team_router import router as farm_team_router
+from app.modules.fpo_board.router import admin_router as fpo_board_admin_router
+from app.modules.fpo_board.router import feed_router as fpo_board_feed_router
 from app.modules.growth.router import router as growth_router
 from app.modules.inputs_marketplace.router import admin_router as inputs_admin_router
 from app.modules.inputs_marketplace.router import router as inputs_router
@@ -111,6 +113,8 @@ api_router.include_router(organic_mvp_admin_router)
 api_router.include_router(organic_partner_router)
 api_router.include_router(organic_partner_admin_router)
 api_router.include_router(organic_partner_feed_router)
+api_router.include_router(fpo_board_feed_router)
+api_router.include_router(fpo_board_admin_router)
 api_router.include_router(organic_inputs_router)
 api_router.include_router(organic_inputs_admin_router)
 api_router.include_router(experts_router)

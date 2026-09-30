@@ -29,6 +29,8 @@ class AdminRole(StrEnum):
     # Organic Inputs Marketplace staff roles (docs: AGROWAI_ORGANIC_INPUTS_MARKETPLACE).
     FIELD_VERIFIER = "field_verifier"
     QUALITY_CONTROL = "quality_control"
+    # External FPO staff: only the FPO Crop Board, scoped to their own FPO.
+    FPO_PARTNER = "fpo_partner"
 
 
 class AdminPermission(StrEnum):
@@ -53,6 +55,7 @@ class AdminPermission(StrEnum):
     MANAGE_MARKETPLACE_SUPPLIERS = "manage_marketplace_suppliers"
     MANAGE_MARKETPLACE_QC = "manage_marketplace_qc"
     MANAGE_MARKETPLACE_PROCUREMENT = "manage_marketplace_procurement"
+    VIEW_FPO_BOARD = "view_fpo_board"
 
 
 _ALL = tuple(AdminPermission)
@@ -101,6 +104,8 @@ ROLE_PERMISSIONS: dict[str, tuple[AdminPermission, ...]] = {
         # rather than inventing a separate role this phase doesn't need yet.
         AdminPermission.MANAGE_MARKETPLACE_PROCUREMENT,
     ),
+    # Row scope (which FPO) is enforced in fpo_board.router via partner staff.
+    AdminRole.FPO_PARTNER.value: (AdminPermission.VIEW_FPO_BOARD,),
 }
 
 

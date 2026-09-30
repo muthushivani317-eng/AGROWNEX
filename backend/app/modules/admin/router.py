@@ -161,6 +161,7 @@ async def list_admin_team(ctx: AdminContextDep, service: AdminServiceDep):
         [
             {
                 "id": str(admin.id),
+                "user_id": str(admin.user_id),
                 "full_name": admin.full_name,
                 "email": admin.email,
                 "role": admin.role,

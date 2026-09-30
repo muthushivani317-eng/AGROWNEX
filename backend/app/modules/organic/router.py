@@ -11,7 +11,6 @@ from app.modules.auth.dependencies import CurrentUser
 from app.modules.disease.storage import get_private_storage
 from app.modules.organic.dependencies import OrganicAdminServiceDep, OrganicServiceDep
 from app.modules.organic.schemas import (
-    OrganicInputReviewItemOut,
     CertificationDocumentCreate,
     CertificationDocumentOut,
     CertificationReviewIn,
@@ -20,6 +19,7 @@ from app.modules.organic.schemas import (
     OrganicFarmSummaryOut,
     OrganicInputOut,
     OrganicInputPromotionIn,
+    OrganicInputReviewItemOut,
     OrganicPlanBundleOut,
     OrganicProfileOut,
     OrganicProfileWrite,

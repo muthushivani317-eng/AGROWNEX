@@ -9,9 +9,12 @@ Scope, by design (docs/AGROWAI_PROJECT_STATE business-model notes):
 - INCLUDED: farmer identification (farmer_ref, district/block/village, crop)
   and agronomic monitoring signals (disease detections, disease-risk alerts,
   basic farm facts) -- what an FPO needs to support and monitor its members.
-- EXCLUDED, always: anything from Sell My Produce / procurement / buyer
+- EXCLUDED here: anything from Sell My Produce / procurement / buyer
   listings / prices / commissions, financial services, subscriptions, or
   B2B/government contracts. This router never imports from those modules.
+  (Owner decision 2026-09-30: an FPO's consented farmers' crops and Sell My
+  Produce quantities/ready dates are served separately by fpo_board -- still
+  never prices, buyers or commissions.)
 - Only farmers with an ACTIVE consent link to the calling organization are
   ever returned (organic_mvp.OrganicPartnerFarmerLink.status == "active") --
   a farmer who has not approved, or has revoked, the link is invisible here.

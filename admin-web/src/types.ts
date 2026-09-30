@@ -5,7 +5,8 @@ export type Permission =
   | 'manage_admins' | 'reveal_buyer_contact' | 'view_revenue' | 'view_ai_costs'
   | 'manage_support' | 'manage_content'
   | 'manage_marketplace_catalog' | 'manage_marketplace_suppliers'
-  | 'manage_marketplace_qc' | 'manage_marketplace_procurement';
+  | 'manage_marketplace_qc' | 'manage_marketplace_procurement'
+  | 'view_fpo_board';
 
 export interface AdminMe {
   id: string;
