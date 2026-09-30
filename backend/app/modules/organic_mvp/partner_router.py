@@ -29,6 +29,7 @@ from app.modules.organic_mvp.models import (
     OrganicReadiness,
 )
 from app.modules.organic_mvp.schemas import FpoIn
+from app.schemas.response import success
 
 router = APIRouter(prefix="/organic-partner", tags=["organic-partner"])
 admin_router = APIRouter(prefix="/admin/organic-partner", tags=["organic-partner-admin"])
@@ -451,11 +452,11 @@ async def my_link_requests(session: Session, user: CurrentUser):
         .join(OrganicPartnerOrganization, OrganicPartnerOrganization.id == OrganicPartnerFarmerLink.organization_id)
         .where(OrganicPartnerFarmerLink.farmer_user_id == user.id)
         .order_by(OrganicPartnerFarmerLink.created_at.desc()))).all()
-    return [{"id": str(link.id), "organization_id": str(organization.id),
+    return success([{"id": str(link.id), "organization_id": str(organization.id),
              "organization_name": organization.name,
              "organization_kind": organization.kind, "status": link.status,
              "initiated_by": "farmer" if link.requested_by_user_id == user.id else "organization"}
-            for link, organization in rows]
+            for link, organization in rows])
 
 
 @router.post("/my-link-requests/{link_id}/approve")
@@ -473,7 +474,7 @@ async def approve_farmer_link(link_id: uuid.UUID, session: Session, user: Curren
         target="organic_partner_farmer_link", target_id=str(link.id),
         meta={"actor_user_id": str(user.id), "organization_id": str(link.organization_id)}))
     await session.commit()
-    return {"status": link.status}
+    return success({"status": link.status})
 
 
 @router.post("/my-link-requests/{link_id}/revoke")
@@ -491,7 +492,7 @@ async def revoke_farmer_link(link_id: uuid.UUID, session: Session, user: Current
         target="organic_partner_farmer_link", target_id=str(link.id),
         meta={"actor_user_id": str(user.id), "organization_id": str(link.organization_id)}))
     await session.commit()
-    return {"status": link.status}
+    return success({"status": link.status})
 
 
 @router.get("/organizations/{organization_id}/farmers")

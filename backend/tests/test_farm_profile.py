@@ -199,7 +199,7 @@ async def test_join_flow_directory_accept_board(db_session):
     assert joined["status"] == "join_requested"
     with pytest.raises(ConflictError):
         await join_organization(fpo, JoinRequestIn(consent=True), db_session, farmer)
-    mine = await my_link_requests(db_session, farmer)
+    mine = (await my_link_requests(db_session, farmer)).data
     assert mine[0]["initiated_by"] == "farmer" and mine[0]["status"] == "join_requested"
 
     # Not on the board until the manager accepts.
@@ -383,3 +383,22 @@ async def test_all_farmers_view_before_any_fpo_and_farmer_detail(db_session):
     assert out.land_holding_acres == 4.5 and out.farmer_type == "Small farmer"
     assert out.wants_fpo_support is True and out.latitude == 8.63
     assert {i["name"] for i in out.farm_items} >= {"Paddy", "Goat", "Milk"}
+
+
+@pytest.mark.asyncio
+async def test_farmer_link_endpoints_use_standard_envelope(db_session):
+    """The app's API client always reads {success, data}; raw JSON crashed the Organizations screen."""
+    from app.modules.organic_mvp.partner_router import approve_farmer_link
+
+    platform = await _admin(db_session, AdminRole.OWNER.value)
+    fpo, manager = await _org(db_session, platform, "Envelope FPO")
+    farmer = await _user(db_session, "envelope-farmer")
+    await db_session.commit()
+    link = await request_farmer_link(fpo, LinkRequestIn(farmer_ref=farmer.farmer_ref), db_session, manager)
+
+    listed = await my_link_requests(db_session, farmer)
+    assert listed.success is True and listed.data[0]["initiated_by"] == "organization"
+    approved = await approve_farmer_link(uuid.UUID(link["id"]), db_session, farmer)
+    assert approved.success is True and approved.data == {"status": "active"}
+    revoked = await revoke_farmer_link(uuid.UUID(link["id"]), db_session, farmer)
+    assert revoked.data == {"status": "revoked"}
