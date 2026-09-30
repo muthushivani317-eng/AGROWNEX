@@ -12,7 +12,7 @@ const isControlledTesting =
 
 module.exports = {
   expo: {
-    name: "AgrowAI",
+    name: "AgrowNex",
     slug: "agrow-ai",
     version: "1.0.0",
     orientation: "portrait",

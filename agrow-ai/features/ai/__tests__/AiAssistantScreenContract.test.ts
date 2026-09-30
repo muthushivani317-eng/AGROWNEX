@@ -51,6 +51,11 @@ describe('AI Assistant screen contract', () => {
     expect(bubble).toContain("t('ai.verifyInField')");
   });
 
+  it('uses the AgrowNex name on every visible assistant brand surface', () => {
+    expect(screen).toContain('>AgrowNex</AgText>');
+    expect(screen).not.toContain('>AgrowAI</AgText>');
+  });
+
   it('uses fixed readable colors on every light chat surface', () => {
     expect(suggestions).toContain("backgroundColor: '#FFFDF8'");
     expect(suggestions).toContain("prompt: { flex: 1, minWidth: 0, color: '#173B2B' }");

@@ -56,5 +56,7 @@ describe("Disease Detection entry presentation contract", () => {
     expect(generalScreen).toContain("DISEASE_DETECTION_CROP_IDS.map");
     expect(generalScreen).not.toContain('<Camera size={24} color="#FFFFFF" />');
     expect(generalScreen).toContain("backgroundColor={ENTRY.background}");
+    expect(generalScreen).toContain("AgrowNex");
+    expect(generalScreen).not.toContain("AgrowAI");
   });
 });

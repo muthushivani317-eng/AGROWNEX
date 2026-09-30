@@ -124,6 +124,15 @@ const LIST: NotificationRule[] = [
   // AI
   rule("ai", "follow_up_reminder", "info", "low", 168, "/ai"),
   rule("ai", "conversation_reminder", "info", "low", 168, "/ai"),
+  // Organic -- reminder to log a suggested organic action before it goes stale
+  rule(
+    "organic",
+    "practice_not_logged",
+    "info",
+    "medium",
+    168,
+    "/organic/plan?farmId={farm_id}",
+  ),
 ];
 
 export const RULES: Record<string, NotificationRule> = Object.fromEntries(

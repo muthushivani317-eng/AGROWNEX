@@ -12,8 +12,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AgButton, AgErrorState, AgText } from "@/components/ui";
 import { useAppTheme } from "@/hooks/useAppTheme";
+import { useLanguage } from "@/hooks/useLanguage";
 
 import { TASK_ICON, URGENCY_LABEL_KEY } from "../constants";
+import { localizedTaskReason, localizedTaskText, localizedTaskTitle, localizedTaskWhy } from "../copy";
 import { useSnoozeTask, useTask } from "../hooks/useDailyTask";
 import { TaskResponseSheet } from "../components/TaskResponseSheet";
 import type { TaskRespondResponse } from "../types";
@@ -22,6 +24,7 @@ export function TaskDetailScreen() {
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
   const { t } = useTranslation();
   const { colors } = useAppTheme();
+  const { isTamil } = useLanguage();
   const router = useRouter();
   const { data: task, isLoading, isError, refetch } = useTask(taskId);
   const snooze = useSnoozeTask(taskId ?? "");
@@ -30,8 +33,8 @@ export function TaskDetailScreen() {
 
   const playAudio = () => {
     if (!task) return;
-    Speech.speak(`${task.title_ta}. ${task.task_text_ta}. ${task.reason_text_ta}`, {
-      language: "ta-IN",
+    Speech.speak(`${localizedTaskTitle(task, isTamil, t)}. ${localizedTaskText(task, isTamil, t)}. ${localizedTaskReason(task, isTamil, t)}`, {
+      language: isTamil ? "ta-IN" : "en-IN",
     });
   };
 
@@ -82,10 +85,10 @@ export function TaskDetailScreen() {
           </AgText>
         ) : null}
         <AgText variant="headingS" weight="bold" style={{ color: colors.text, marginBottom: 8 }}>
-          {task.task_text_ta}
+          {localizedTaskText(task, isTamil, t)}
         </AgText>
         <AgText variant="body" style={{ color: colors.text, marginBottom: 16 }}>
-          {task.reason_text_ta}
+          {localizedTaskReason(task, isTamil, t)}
         </AgText>
 
         <View style={[styles.urgencyPill, { backgroundColor: `${colors.warning}18` }]}>
@@ -103,7 +106,7 @@ export function TaskDetailScreen() {
         {showWhy ? (
           <View style={[styles.whyBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <AgText variant="body" style={{ color: colors.text }}>
-              {task.why_am_i_seeing_this_ta}
+              {localizedTaskWhy(task, isTamil, t)}
             </AgText>
           </View>
         ) : null}

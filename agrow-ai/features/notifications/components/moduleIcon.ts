@@ -9,6 +9,7 @@ import {
   Leaf,
   type LucideIcon,
   MessagesSquare,
+  Recycle,
   Satellite,
   Stethoscope,
   Sprout,
@@ -33,5 +34,6 @@ export const MODULE_ICON: Record<NotificationModuleKey, LucideIcon> = {
   satellite: Satellite,
   nutrient: Leaf,
   intelligence: Brain,
+  organic: Recycle,
   system: Bell,
 };

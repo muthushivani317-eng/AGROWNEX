@@ -1,10 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type Href, useRouter } from "expo-router";
-import { ArrowRight, Phone, ShieldCheck, Sprout } from "lucide-react-native";
-import { useEffect, useRef } from "react";
+import { ArrowRight, ShieldCheck, Sprout } from "lucide-react-native";
+import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { StyleSheet, TextInput, useWindowDimensions, View } from "react-native";
+import { Keyboard, StyleSheet, TextInput, useWindowDimensions, View } from "react-native";
 
 import { AgButton, AgInput, AgScreen, AgText } from "@/components/ui";
 import { buildProfile, isFirebaseConfigured } from "@/config/env";
@@ -31,13 +31,16 @@ export function LoginScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { height } = useWindowDimensions();
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const sendOtp = useSendOtp();
   const availabilityMessageKey = authAvailabilityMessageKey(
     isFirebaseConfigured,
     buildProfile,
   );
   const phoneInputRef = useRef<TextInput>(null);
-  const heroHeight = Math.min(310, Math.max(250, height * 0.3));
+  const heroHeight = keyboardVisible
+    ? 148
+    : Math.min(320, Math.max(260, height * 0.34));
 
   const { control, handleSubmit, formState } = useForm<PhoneForm>({
     resolver: zodResolver(phoneSchema),
@@ -60,6 +63,20 @@ export function LoginScreen() {
     if (sendOtp.isError) phoneInputRef.current?.focus();
   }, [sendOtp.isError]);
 
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener("keyboardDidShow", () => {
+      setKeyboardVisible(true);
+    });
+    const hideSubscription = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardVisible(false);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
+
   return (
     <AgScreen
       testID="phone-login-screen"
@@ -69,18 +86,32 @@ export function LoginScreen() {
       backgroundColor={LOGIN_COLORS.canvas}
       contentContainerStyle={styles.screen}
     >
-      <AuthHero height={heroHeight} showLanguageSelector />
+      <AuthHero
+        height={heroHeight}
+        showLanguageSelector
+        showWelcome={!keyboardVisible}
+      />
 
       <View style={styles.lowerSection}>
-        <View style={styles.fieldContourBack} pointerEvents="none" />
-        <View style={styles.fieldContourFront} pointerEvents="none" />
         <View style={styles.formContent}>
-          <AgText variant="headingL" weight="bold" style={styles.title}>
-            {t("auth.loginTitle")}
-          </AgText>
-          <AgText variant="body" style={styles.subtitle}>
-            {t("auth.loginSubtitle")}
-          </AgText>
+          <View style={styles.formHeading}>
+            <View
+              style={styles.sproutBadge}
+              accessible={false}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            >
+              <Sprout size={26} color={LOGIN_COLORS.primary} />
+            </View>
+            <View style={styles.formHeadingCopy}>
+              <AgText variant="headingL" weight="bold" style={styles.title}>
+                {t("auth.getStarted")}
+              </AgText>
+              <AgText variant="body" style={styles.subtitle}>
+                {t("auth.phoneEntrySubtitle")}
+              </AgText>
+            </View>
+          </View>
 
           <Controller
             control={control}
@@ -121,7 +152,6 @@ export function LoginScreen() {
                     <AgText weight="semibold" style={styles.countryCodeText}>+91</AgText>
                   </View>
                 }
-                rightAccessory={<Phone size={21} color={LOGIN_COLORS.primary} />}
                 returnKeyType="done"
                 onSubmitEditing={onSubmit}
               />
@@ -140,54 +170,54 @@ export function LoginScreen() {
             </AgText>
           ) : null}
 
-          <AgText variant="caption" style={styles.otpHint}>
-            {t("auth.otpSupport")}
-          </AgText>
-          <AgButton
-            title={t("auth.sendOtp")}
-            onPress={onSubmit}
-            loading={sendOtp.isPending}
-            disabled={!formState.isValid || sendOtp.isPending}
-            size="lg"
-            light
-            rightIcon={<ArrowRight size={20} color={LOGIN_COLORS.onAction} />}
-            className="mt-5"
-          />
+          <View style={styles.sendOtpAction}>
+            <AgButton
+              title={t("auth.sendOtp")}
+              onPress={onSubmit}
+              loading={sendOtp.isPending}
+              disabled={!formState.isValid || sendOtp.isPending}
+              size="lg"
+              variant="success"
+              light
+              rightIcon={<ArrowRight size={22} color="#FFFFFF" />}
+            />
+          </View>
 
-          <View style={styles.farmerPromise}>
+          <View style={styles.otpReassurance}>
             <View
-              style={styles.infoIcon}
+              style={styles.reassuranceIcon}
               accessible={false}
               accessibilityElementsHidden
               importantForAccessibility="no-hide-descendants"
             >
-              <Sprout size={24} color={LOGIN_COLORS.primary} />
+              <ShieldCheck size={19} color={LOGIN_COLORS.primary} />
             </View>
-            <View style={styles.infoCopy}>
-              <AgText weight="semibold" style={styles.infoTitle}>
-                {t("auth.freeForFarmers")}
-              </AgText>
-              <AgText variant="bodySmall" style={styles.infoBody}>
-                {t("auth.freeForFarmersBody")}
-              </AgText>
-            </View>
+            <AgText variant="caption" style={styles.otpHint}>
+              {t("auth.otpSupport")}
+            </AgText>
           </View>
 
-          <View style={styles.privacy}>
-            <View
-              style={styles.infoIcon}
-              accessible={false}
-              accessibilityElementsHidden
-              importantForAccessibility="no-hide-descendants"
-            >
-              <ShieldCheck size={22} color={LOGIN_COLORS.primary} />
+          {!keyboardVisible ? (
+            <View style={styles.benefits}>
+              <View style={styles.benefit}>
+                <View style={styles.benefitIcon} accessible={false}>
+                  <Sprout size={22} color={LOGIN_COLORS.primary} />
+                </View>
+                <AgText variant="caption" weight="semibold" style={styles.benefitTitle}>
+                  {t("auth.freeForFarmers")}
+                </AgText>
+              </View>
+              <View style={styles.benefitDivider} />
+              <View style={styles.benefit}>
+                <View style={styles.benefitIcon} accessible={false}>
+                  <ShieldCheck size={22} color={LOGIN_COLORS.primary} />
+                </View>
+                <AgText variant="caption" weight="semibold" style={styles.benefitTitle}>
+                  {t("auth.privacyTitle")}
+                </AgText>
+              </View>
             </View>
-            <View style={styles.infoCopy}>
-              <AgText variant="bodySmall" weight="semibold" style={styles.privacyText}>
-                {t("auth.privacyTitle")}
-              </AgText>
-            </View>
-          </View>
+          ) : null}
         </View>
       </View>
     </AgScreen>
@@ -199,12 +229,10 @@ const styles = StyleSheet.create({
   lowerSection: {
     flexGrow: 1,
     width: "100%",
-    marginTop: -42,
-    paddingTop: 64,
-    paddingBottom: 24,
-    borderTopLeftRadius: 44,
-    borderTopRightRadius: 44,
-    overflow: "hidden",
+    marginTop: -22,
+    paddingTop: 22,
+    paddingHorizontal: 18,
+    paddingBottom: 34,
     backgroundColor: LOGIN_COLORS.canvas,
   },
   formContent: {
@@ -212,63 +240,62 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 520,
     alignSelf: "center",
-    paddingHorizontal: 24,
+    padding: 22,
+    borderRadius: 24,
+    backgroundColor: LOGIN_COLORS.surface,
+    shadowColor: "#306541",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    elevation: 5,
   },
-  fieldContourBack: {
-    position: "absolute",
-    top: 18,
-    left: -28,
-    width: "118%",
+  formHeading: { flexDirection: "row", alignItems: "center", marginBottom: 22 },
+  sproutBadge: {
+    width: 50,
     height: 50,
-    borderTopWidth: 1,
-    borderColor: "#A7C98E",
-    borderRadius: 999,
-    transform: [{ rotate: "2deg" }],
+    borderRadius: 25,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#EDF6E9",
   },
-  fieldContourFront: {
-    position: "absolute",
-    top: 30,
-    right: -35,
-    width: "110%",
-    height: 44,
-    borderTopWidth: 1,
-    borderColor: "#D2E0C8",
-    borderRadius: 999,
-    transform: [{ rotate: "-2deg" }],
-  },
-  title: { marginBottom: 5, color: LOGIN_COLORS.ink },
-  subtitle: { marginBottom: 28, color: LOGIN_COLORS.muted },
-  fieldLabel: { color: LOGIN_COLORS.ink },
+  formHeadingCopy: { flex: 1, marginLeft: 13 },
+  title: { color: LOGIN_COLORS.ink },
+  subtitle: { marginTop: 3, color: LOGIN_COLORS.muted, lineHeight: 21 },
+  fieldLabel: { marginBottom: 8, color: LOGIN_COLORS.ink },
   phoneField: { backgroundColor: LOGIN_COLORS.surface },
   phoneInput: { color: LOGIN_COLORS.ink, backgroundColor: LOGIN_COLORS.surface },
   countryCode: { paddingRight: 13, marginRight: 4, borderRightWidth: 1 },
   countryCodeText: { color: LOGIN_COLORS.ink },
-  otpHint: { marginTop: 10, color: LOGIN_COLORS.muted },
+  // Keep the primary action visually separate from the phone field. The
+  // previous NativeWind utility was superseded by AgButton's inline style.
+  sendOtpAction: { marginTop: 16 },
+  otpHint: { flex: 1, color: LOGIN_COLORS.muted, lineHeight: 18 },
   devHint: { marginTop: 8, color: LOGIN_COLORS.muted },
-  farmerPromise: {
-    marginTop: 24,
-    paddingVertical: 8,
+  otpReassurance: {
+    marginTop: 18,
     flexDirection: "row",
-    alignItems: "center",
-  },
-  privacy: {
-    marginTop: 8,
-    paddingVertical: 8,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  infoIcon: {
-    width: 48,
-    height: 48,
-    borderWidth: 1,
-    borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
-    borderColor: LOGIN_COLORS.primary,
+  },
+  reassuranceIcon: { marginRight: 8 },
+  benefits: {
+    marginTop: 30,
+    paddingTop: 22,
+    borderTopWidth: 1,
+    borderTopColor: "#E3E8DF",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  benefit: { flex: 1, alignItems: "center", gap: 8 },
+  benefitIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: "#EEF5EA",
   },
-  infoCopy: { flex: 1, marginLeft: 12, gap: 2 },
-  infoTitle: { color: LOGIN_COLORS.primary },
-  infoBody: { color: LOGIN_COLORS.muted },
-  privacyText: { color: LOGIN_COLORS.ink },
+  benefitTitle: { color: LOGIN_COLORS.ink, textAlign: "center", lineHeight: 17 },
+  benefitDivider: { width: 1, height: 52, backgroundColor: "#E3E8DF" },
 });

@@ -90,7 +90,7 @@ export function ChatScreen() {
           </View>
           <View style={styles.brandCopy}>
             <AgText variant="headingS" weight="bold" numberOfLines={2} style={styles.brandTitle}>{t('ai.farmAssistant')}</AgText>
-            <AgText variant="caption" numberOfLines={1} style={styles.brandSubtitle}>AgrowAI</AgText>
+            <AgText variant="caption" numberOfLines={1} style={styles.brandSubtitle}>AgrowNex</AgText>
           </View>
         </View>
 
@@ -152,7 +152,7 @@ export function ChatScreen() {
 
             <View style={styles.heroTitle} accessibilityLabel={t('ai.welcomeTitle')}>
               <AgText variant="headingL" weight="bold" style={styles.heroTitleText}>{t('ai.askPrefix')} </AgText>
-              <AgText variant="headingL" weight="bold" style={styles.heroAccent}>AgrowAI</AgText>
+              <AgText variant="headingL" weight="bold" style={styles.heroAccent}>AgrowNex</AgText>
             </View>
             <AgText variant="body" center style={styles.heroSubtitle}>
               {t('ai.welcomeMessage')}

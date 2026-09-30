@@ -188,7 +188,7 @@ function FarmAction({
       >
         {label}
       </Text>
-      <ChevronRight size={16} color={danger ? "#B42318" : "#607068"} />
+      <ChevronRight size={16} color={danger ? "#B42318" : "#607068"} style={styles.actionChevron} />
     </Pressable>
   );
 }
@@ -271,12 +271,12 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     flexDirection: "row",
     flexWrap: "wrap",
+    justifyContent: "space-between",
     gap: 9,
   },
   action: {
     minHeight: 48,
     width: "48%",
-    flexGrow: 1,
     flexDirection: "row",
     alignItems: "center",
     gap: 7,
@@ -288,11 +288,13 @@ const styles = StyleSheet.create({
   },
   actionLabel: {
     flex: 1,
+    minWidth: 0,
     color: "#173B2B",
     fontSize: 13,
     lineHeight: 17,
     fontWeight: "700",
   },
+  actionChevron: { flexShrink: 0 },
   dangerAction: { borderColor: "#F0C8C4", backgroundColor: "#FFF2F0" },
   dangerText: { color: "#B42318" },
 });

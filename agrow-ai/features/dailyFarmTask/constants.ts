@@ -24,6 +24,30 @@ export const TASK_ICON: Record<TaskType, LucideIcon> = {
   evidence_pack_trigger: FileText,
 };
 
+export const TASK_TEXT_LABEL_KEY: Record<TaskType, string> = {
+  irrigation_inspection: "dailyTask.copy.irrigationTask",
+  uneven_growth_inspection: "dailyTask.copy.unevenGrowthTask",
+  drainage_inspection: "dailyTask.copy.drainageTask",
+  sowing_germination_check: "dailyTask.copy.germinationTask",
+  evidence_pack_trigger: "dailyTask.copy.genericTask",
+};
+
+export const TASK_REASON_LABEL_KEY: Record<TaskType, string> = {
+  irrigation_inspection: "dailyTask.copy.irrigationReason",
+  uneven_growth_inspection: "dailyTask.copy.unevenGrowthReason",
+  drainage_inspection: "dailyTask.copy.drainageReason",
+  sowing_germination_check: "dailyTask.copy.germinationReason",
+  evidence_pack_trigger: "dailyTask.copy.genericReason",
+};
+
+export const TASK_WHY_LABEL_KEY: Record<TaskType, string> = {
+  irrigation_inspection: "dailyTask.copy.satelliteWeatherWhy",
+  uneven_growth_inspection: "dailyTask.copy.satelliteWeatherWhy",
+  drainage_inspection: "dailyTask.copy.satelliteWeatherWhy",
+  sowing_germination_check: "dailyTask.copy.calendarWhy",
+  evidence_pack_trigger: "dailyTask.copy.satelliteWeatherWhy",
+};
+
 export const URGENCY_LABEL_KEY: Record<string, string> = {
   today: "dailyTask.urgencyToday",
   within_48h: "dailyTask.urgencyWithin48h",

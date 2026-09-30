@@ -81,6 +81,20 @@ export const completeProfileSchema = profileSchema
       .refine((v) => v === null || (!Number.isNaN(v) && v >= 0 && v <= 1_000_000), {
         message: 'profile.landHoldingInvalid',
       }),
+    farmerType: z.string().trim().max(40).nullable().default(null),
+    landmark: z.string().trim().max(180).optional().default(''),
+    latitude: z.number().min(-90).max(90).nullable().default(null),
+    longitude: z.number().min(-180).max(180).nullable().default(null),
+    farmProducts: z.array(z.object({
+      productId: z.string().min(1).max(80),
+      category: z.string().min(1).max(40),
+      expectedHarvestMonth: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).nullable(),
+      approximateQuantity: z.number().min(0).max(100_000_000).nullable(),
+      unit: z.enum(['kg', 'quintal', 'tonne', 'bag', 'count', 'litre']),
+      availableForSale: z.boolean(),
+    })).max(50).default([]),
+    wantsFpoSupport: z.boolean().default(false),
+    wantsKvkSupport: z.boolean().default(false),
   });
 export type CompleteProfileForm = z.input<typeof completeProfileSchema>;
 export type CompleteProfileData = z.output<typeof completeProfileSchema>;

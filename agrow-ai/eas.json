@@ -1,41 +1,52 @@
 {
-  "cli": {
-    "version": ">= 20.5.1",
-    "appVersionSource": "remote"
-  },
-  "build": {
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal",
-      "android": {
-        "buildType": "apk"
-      },
-      "env": {
-        "APP_ENV": "development",
-        "EXPO_PUBLIC_APP_ENV": "development"
-      }
-    },
-    "preview": {
-      "distribution": "internal",
-      "android": {
-        "buildType": "apk"
-      },
-      "env": {
-        "APP_ENV": "pilot",
-        "EXPO_PUBLIC_APP_ENV": "pilot",
-        "AGROWAI_BUILD_PROFILE": "pilot"
-      }
-    },
-    "production": {
-      "autoIncrement": true,
-      "env": {
-        "APP_ENV": "production",
-        "EXPO_PUBLIC_APP_ENV": "production",
-        "AGROWAI_BUILD_PROFILE": "production"
-      }
-    }
-  },
-  "submit": {
-    "production": {}
-  }
+    "cli":  {
+                "version":  "\u003e= 20.5.1",
+                "appVersionSource":  "remote"
+            },
+    "build":  {
+                  "development":  {
+                                      "developmentClient":  true,
+                                      "distribution":  "internal",
+                                      "android":  {
+                                                      "buildType":  "apk"
+                                                  },
+                                      "env":  {
+                                                  "APP_ENV":  "development",
+                                                  "EXPO_PUBLIC_APP_ENV":  "development"
+                                              }
+                                  },
+                  "preview":  {
+                                  "distribution":  "internal",
+                                  "android":  {
+                                                  "buildType":  "apk"
+                                              },
+                                  "env":  {
+                                              "APP_ENV":  "pilot",
+                                              "EXPO_PUBLIC_APP_ENV":  "pilot",
+                                              "AGROWAI_BUILD_PROFILE":  "pilot"
+                                          }
+                              },
+                  "production":  {
+                                     "autoIncrement":  true,
+                                     "env":  {
+                                                 "APP_ENV":  "production",
+                                                 "EXPO_PUBLIC_APP_ENV":  "production",
+                                                 "AGROWAI_BUILD_PROFILE":  "production",
+                                                 "EXPO_PUBLIC_AGROWAI_ORGANIC_ENABLED":  "true"
+                                             }
+                                 },
+                  "production-apk":  {
+                                         "distribution":  "internal",
+                                         "android":  {
+                                                         "buildType":  "apk"
+                                                     },
+                                         "extends":  "production",
+                                         "environment":  "production"
+                                     }
+              },
+    "submit":  {
+                   "production":  {
+
+                                  }
+               }
 }

@@ -428,7 +428,7 @@ export function DiseaseScreen() {
               <View style={entryStyles.brand} accessibilityLabel={t("auth.brandAccessibility")}>
                 <Sprout size={38} color={ENTRY_GREEN} strokeWidth={1.7} />
                 <AgText variant="bodySmall" weight="bold" style={entryStyles.brandText}>
-                  AgrowAI
+                  AgrowNex
                 </AgText>
               </View>
               <AgPressable

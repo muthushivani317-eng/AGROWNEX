@@ -8,11 +8,13 @@ import { useLanguage } from '@/hooks/useLanguage';
 
 interface AuthLanguageSelectorProps {
   variant?: 'default' | 'hero';
+  compact?: boolean;
   style?: ViewStyle;
 }
 
 export function AuthLanguageSelector({
   variant = 'default',
+  compact = false,
   style,
 }: AuthLanguageSelectorProps) {
   const { colors } = useAppTheme();
@@ -24,6 +26,8 @@ export function AuthLanguageSelector({
       style={[
         styles.row,
         variant === 'hero' && styles.heroRow,
+        compact && styles.compactRow,
+        compact && variant === 'hero' && styles.compactHeroRow,
         style,
       ]}
       accessibilityRole="tablist"
@@ -35,6 +39,7 @@ export function AuthLanguageSelector({
         style={[
           styles.option,
           variant === 'hero' && styles.heroOption,
+          compact && styles.compactOption,
           variant === 'hero' && language === 'ta' && styles.heroOptionSelected,
         ]}
         accessibilityRole="tab"
@@ -42,26 +47,31 @@ export function AuthLanguageSelector({
         accessibilityState={{ selected: language === 'ta' }}
       >
         <AgText
+          variant={compact ? 'bodySmall' : 'body'}
           weight="semibold"
           style={{
             color:
               variant === 'hero'
-                ? language === 'ta' ? '#165B33' : '#46564C'
+                ? language === 'ta' ? '#FFFFFF' : '#46564C'
                 : language === 'ta' ? colors.primary : colors.textMuted,
           }}
         >
           தமிழ்
         </AgText>
       </AgPressable>
-      {variant === 'default' ? (
-        <View style={[styles.divider, { backgroundColor: colors.border }]} />
-      ) : null}
+      <View
+        style={[
+          styles.divider,
+          { backgroundColor: variant === 'hero' ? '#D5DDD2' : colors.border },
+        ]}
+      />
       <AgPressable
         haptic={false}
         onPress={() => setLanguage('en')}
         style={[
           styles.option,
           variant === 'hero' && styles.heroOption,
+          compact && styles.compactOption,
           variant === 'hero' && language === 'en' && styles.heroOptionSelected,
         ]}
         accessibilityRole="tab"
@@ -69,15 +79,16 @@ export function AuthLanguageSelector({
         accessibilityState={{ selected: language === 'en' }}
       >
         <AgText
+          variant={compact ? 'bodySmall' : 'body'}
           weight="semibold"
           style={{
             color:
               variant === 'hero'
-                ? language === 'en' ? '#165B33' : '#46564C'
+                ? language === 'en' ? '#FFFFFF' : '#46564C'
                 : language === 'en' ? colors.primary : colors.textMuted,
           }}
         >
-          English
+          {compact ? 'EN' : 'English'}
         </AgText>
       </AgPressable>
     </View>
@@ -92,19 +103,20 @@ const styles = StyleSheet.create({
     minHeight: 48,
     gap: 0,
     padding: 3,
-    borderRadius: 16,
+    borderRadius: 18,
     backgroundColor: 'rgba(255,253,246,0.94)',
     borderWidth: 1,
     borderColor: '#C8D2C6',
   },
   heroOption: {
     minHeight: 42,
-    paddingHorizontal: 9,
-    borderRadius: 13,
+    paddingHorizontal: 10,
+    borderRadius: 15,
   },
+  compactRow: { minHeight: 44, gap: 0 },
+  compactHeroRow: { minHeight: 44, padding: 2, borderRadius: 16 },
+  compactOption: { minHeight: 40, paddingHorizontal: 5, borderRadius: 14 },
   heroOptionSelected: {
-    backgroundColor: '#E4F0DF',
-    borderWidth: 1,
-    borderColor: '#79A47F',
+    backgroundColor: '#176B3A',
   },
 });

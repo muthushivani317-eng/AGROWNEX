@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TextInput } from 'react-native';
+import { Platform, TextInput } from 'react-native';
 
 const TestRenderer = require('react-test-renderer');
 
@@ -47,8 +47,13 @@ describe('AgOtpInput Android native input contract', () => {
     expect(input.props.keyboardType).toBe('number-pad');
     expect(input.props.inputMode).toBe('numeric');
     expect(input.props.maxLength).toBe(6);
-    expect(input.props.textContentType).toBe('oneTimeCode');
-    expect(input.props.autoComplete).toBe('sms-otp');
+    expect(input.props.textContentType).toBe(
+      Platform.OS === 'ios' ? 'oneTimeCode' : undefined,
+    );
+    expect(input.props.autoComplete).toBe(
+      Platform.OS === 'android' ? 'sms-otp' : 'one-time-code',
+    );
+    expect(input.props.importantForAutofill).toBe('yes');
     expect(input.props.style).toEqual(
       expect.objectContaining({
         position: 'absolute',
@@ -60,6 +65,8 @@ describe('AgOtpInput Android native input contract', () => {
       }),
     );
     expect(input.props.style.color).toBe('transparent');
+    expect(input.props.style.fontSize).toBe(1);
+    expect(input.props.style.lineHeight).toBe(1);
     expect(input.props.caretHidden).toBe(true);
     expect(input.props.style).not.toEqual(expect.objectContaining({ opacity: 0 }));
   });
@@ -95,7 +102,7 @@ describe('AgOtpInput Android native input contract', () => {
     input = root.findByType(TextInput);
     const visualCells = root.findByProps({ testID: 'otp-visual-cells' });
 
-    expect(input.props.secureTextEntry).toBe(true);
+    expect(input.props.secureTextEntry).toBeUndefined();
     expect(visualCells.props.accessibilityElementsHidden).toBe(true);
     expect(visualCells.props.importantForAccessibility).toBe('no-hide-descendants');
     for (const digit of '123456') {

@@ -10,4 +10,12 @@ test('daily task empty state uses a readable Home surface without a text backgro
   expect(source).toContain("backgroundColor: 'transparent'");
   expect(source).toContain('t("dailyTask.emptyState")');
   expect(source).toContain('<TaskResponseSheet');
+  expect(source).toContain('localizedTaskText(task, isTamil, t)');
+  expect(source).toContain('style={[styles.taskText, { color: colors.text }]}');
+  expect(source).not.toContain('numberOfLines={2}');
+  expect(source).toContain("backgroundColor: '#FFFDF8'");
+  expect(source).toContain("borderColor: '#DED9CA'");
+  expect(source).toContain('event.stopPropagation()');
+  expect(source).toContain('style={styles.audioButton}');
+  expect(source).not.toContain('{task.task_text_ta}');
 });

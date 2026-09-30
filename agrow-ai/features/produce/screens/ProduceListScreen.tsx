@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   ArrowLeft,
   History,
@@ -29,9 +29,13 @@ import type { ProduceView } from "../types";
 export function ProduceListScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const params = useLocalSearchParams<{ organicOnly?: string | string[] }>();
+  const organicOnlyParam = Array.isArray(params.organicOnly)
+    ? params.organicOnly[0]
+    : params.organicOnly;
   useProduceSync();
   const [view, setView] = useState<ProduceView>("all");
-  const [organicOnly, setOrganicOnly] = useState(false);
+  const [organicOnly, setOrganicOnly] = useState(organicOnlyParam === "true");
   const refreshLock = useRef(false);
   const [refreshing, setRefreshing] = useState(false);
   const listQuery = useProduceList({ pageSize: 50, organicOnly }, view === "all");

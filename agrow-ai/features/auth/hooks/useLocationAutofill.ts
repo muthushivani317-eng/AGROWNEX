@@ -8,6 +8,8 @@ export interface LocationAutofillResult {
   block: string | null;
   village: string | null;
   rawLocationHint: string | null;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 const EMPTY_RESULT: LocationAutofillResult = {
@@ -16,6 +18,8 @@ const EMPTY_RESULT: LocationAutofillResult = {
   block: null,
   village: null,
   rawLocationHint: null,
+  latitude: null,
+  longitude: null,
 };
 
 export async function autofillAddressFromCoordinates(
@@ -43,6 +47,8 @@ export async function autofillAddressFromCoordinates(
       // use the road name only as a last resort for the village field.
       village: place.name ?? place.street ?? null,
       rawLocationHint: place.city ?? place.subregion ?? place.district ?? place.region ?? null,
+      latitude,
+      longitude,
     };
   } catch {
     return EMPTY_RESULT;
@@ -53,7 +59,7 @@ export async function autofillAddressFromGPS(): Promise<LocationAutofillResult> 
   try {
     const permission = await Location.requestForegroundPermissionsAsync();
     if (!permission.granted) {
-      return { status: 'permissionDenied', district: null, block: null, village: null, rawLocationHint: null };
+      return { ...EMPTY_RESULT, status: 'permissionDenied' };
     }
 
     const position = await Location.getCurrentPositionAsync({

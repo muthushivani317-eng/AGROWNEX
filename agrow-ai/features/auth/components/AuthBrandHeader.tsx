@@ -5,7 +5,7 @@ import { AgText } from '@/components/ui';
 
 export function AuthBrandHeader() {
   return (
-    <View style={styles.container} accessibilityLabel="AgrowAI">
+    <View style={styles.container} accessibilityLabel="AgrowNex">
       <Image
         source={require('../../../assets/images/android-icon-foreground.png')}
         style={styles.logo}
@@ -14,7 +14,7 @@ export function AuthBrandHeader() {
       />
       <View style={styles.wordmarkRow}>
         <AgText variant="headingL" weight="bold" style={styles.wordmark}>Agrow</AgText>
-        <AgText variant="headingL" weight="bold" style={styles.ai}>AI</AgText>
+        <AgText variant="headingL" weight="bold" style={styles.ai}>Nex</AgText>
       </View>
     </View>
   );

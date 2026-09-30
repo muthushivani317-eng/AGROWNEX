@@ -5,12 +5,21 @@
  * (a stable farmer reference code, a consent-gated link, approve/revoke) is
  * generic and reused here for general FPO monitoring.
  */
-export type PartnerLinkStatus = 'pending' | 'active' | 'revoked';
+export type PartnerLinkStatus = 'pending' | 'join_requested' | 'active' | 'revoked';
 export type PartnerOrgKind = 'fpo' | 'kvk' | 'agri_community';
 
 export interface PartnerLinkRequest {
   id: string;
+  organizationId: string;
   organizationName: string;
   organizationKind: PartnerOrgKind;
   status: PartnerLinkStatus;
+  initiatedBy: 'farmer' | 'organization';
+}
+
+export interface PartnerDirectoryEntry {
+  id: string;
+  name: string;
+  kind: Extract<PartnerOrgKind, 'fpo' | 'kvk'>;
+  district: string | null;
 }

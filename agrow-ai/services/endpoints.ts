@@ -21,6 +21,7 @@ export const endpoints = {
   },
   farmers: {
     me: "/farmers/me",
+    farmCatalog: "/farm-catalog",
     preferences: "/farmers/preferences",
     languages: "/farmers/languages",
   },
@@ -65,6 +66,9 @@ export const endpoints = {
   // consent. See backend/app/modules/organic_mvp/partner_router.py.
   partnerLinks: {
     myRequests: "/organic-partner/my-link-requests",
+    directory: "/organic-partner/directory",
+    join: (organizationId: string) =>
+      `/organic-partner/organizations/${organizationId}/join`,
     approve: (linkId: string) =>
       `/organic-partner/my-link-requests/${linkId}/approve`,
     revoke: (linkId: string) =>

@@ -21,6 +21,7 @@ export type NotificationModuleKey =
   | 'satellite'
   | 'nutrient'
   | 'intelligence'
+  | 'organic'
   | 'system';
 
 export type Severity = 'info' | 'warning' | 'critical';

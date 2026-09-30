@@ -44,22 +44,28 @@ function LinkRow({ link }: { link: PartnerLinkRequest }) {
         { text: t('common.cancel'), style: 'cancel' },
         {
           text: t('partnerLinks.approve'),
-          onPress: () => approve.mutate(link.id),
+          onPress: () => approve.mutate(link.id, {
+            onError: () => Alert.alert(t('partnerLinks.approveFailed')),
+          }),
         },
       ],
     );
   };
 
   const confirmRevoke = () => {
+    const isWaiting = link.status === 'join_requested';
+    const isMember = link.status === 'active';
     Alert.alert(
-      t('partnerLinks.revokeConfirmTitle'),
-      t('partnerLinks.revokeConfirmMessage', { name: link.organizationName }),
+      isWaiting ? t('partnerLinks.cancelConfirmTitle') : t('partnerLinks.leaveConfirmTitle'),
+      isWaiting ? t('partnerLinks.cancelConfirmMessage', { name: link.organizationName }) : t('partnerLinks.leaveConfirmMessage', { name: link.organizationName }),
       [
         { text: t('common.cancel'), style: 'cancel' },
         {
-          text: t('partnerLinks.revoke'),
+          text: isWaiting ? t('partnerLinks.cancelRequest') : isMember ? t('partnerLinks.leave') : t('partnerLinks.reject'),
           style: 'destructive',
-          onPress: () => revoke.mutate(link.id),
+          onPress: () => revoke.mutate(link.id, {
+            onError: () => Alert.alert(t('partnerLinks.revokeFailed')),
+          }),
         },
       ],
     );
@@ -83,6 +89,8 @@ function LinkRow({ link }: { link: PartnerLinkRequest }) {
           label={
             link.status === 'pending'
               ? t('partnerLinks.statusPending')
+              : link.status === 'join_requested'
+                ? t('partnerLinks.statusWaiting')
               : link.status === 'active'
                 ? t('partnerLinks.statusActive')
                 : t('partnerLinks.statusRevoked')
@@ -90,6 +98,8 @@ function LinkRow({ link }: { link: PartnerLinkRequest }) {
           tone={
             link.status === 'pending'
               ? 'warning'
+              : link.status === 'join_requested'
+                ? 'warning'
               : link.status === 'active'
                 ? 'success'
                 : 'neutral'
@@ -97,7 +107,7 @@ function LinkRow({ link }: { link: PartnerLinkRequest }) {
         />
       </View>
 
-      {link.status === 'pending' ? (
+      {link.status === 'pending' && link.initiatedBy === 'organization' ? (
         <View className="flex-row gap-2">
           <AgButton
             title={t('partnerLinks.approve')}
@@ -118,9 +128,9 @@ function LinkRow({ link }: { link: PartnerLinkRequest }) {
             className="flex-1"
           />
         </View>
-      ) : link.status === 'active' ? (
+      ) : link.status === 'active' || link.status === 'join_requested' ? (
         <AgButton
-          title={t('partnerLinks.revoke')}
+          title={link.status === 'join_requested' ? t('partnerLinks.cancelRequest') : t('partnerLinks.leave')}
           onPress={confirmRevoke}
           loading={revoke.isPending}
           disabled={busy}

@@ -1,4 +1,4 @@
-import { Check, ChevronDown, Search, X } from 'lucide-react-native';
+import { Check, ChevronDown, Leaf, Search, Sprout, X } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, Modal, StyleSheet, TextInput, TouchableOpacity, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
@@ -15,6 +15,8 @@ export interface AgDropdownOption {
   value: string;
   label: string;
   sublabel?: string;
+  /** Expanded, illustrated selector row for curated organic product choices. */
+  description?: string;
 }
 
 export interface AgDropdownProps {
@@ -34,6 +36,7 @@ export interface AgDropdownProps {
   fieldStyle?: ViewStyle;
   textStyle?: StyleProp<TextStyle>;
   labelStyle?: StyleProp<TextStyle>;
+  optionVariant?: 'default' | 'organicProduct';
 }
 
 /**
@@ -57,9 +60,10 @@ export function AgDropdown({
   fieldStyle,
   textStyle,
   labelStyle,
+  optionVariant = 'default',
 }: AgDropdownProps) {
   const { t } = useTranslation();
-  const { colors } = useAppTheme();
+  const { colors, isDark } = useAppTheme();
   const palette = light
     ? {
         bg: '#F8F5E9', surface: '#FFFDF8', text: '#173B2B', muted: '#5F6F67',
@@ -134,7 +138,7 @@ export function AgDropdown({
         onRequestClose={() => setOpen(false)}
       >
         <SafeAreaView style={[styles.modal, { backgroundColor: palette.bg }]} edges={['top', 'bottom']}>
-          <View style={[styles.modalHeader, { borderBottomColor: palette.border }]}>
+          <View style={[styles.modalHeader, optionVariant === 'organicProduct' && styles.productModalHeader, { borderBottomColor: palette.border }]}>
             <View accessible={false} style={[styles.modalMark, { backgroundColor: palette.soft }]}>
               <Check size={22} color={palette.primary} />
             </View>
@@ -178,6 +182,10 @@ export function AgDropdown({
             contentContainerStyle={styles.listContent}
             renderItem={({ item }) => {
               const isSel = item.value === value;
+              if (optionVariant === 'organicProduct') {
+                const Icon = item.value.toLowerCase().includes('seed') ? Sprout : Leaf;
+                return <TouchableOpacity activeOpacity={0.76} onPress={() => { onChange(item.value); setQuery(''); setOpen(false); }} accessibilityRole="radio" accessibilityState={{ checked: isSel }} style={[styles.productOption, { backgroundColor: isSel ? palette.soft : palette.surface, borderColor: isSel ? palette.primary : palette.border }]}><View style={[styles.productArt, { backgroundColor: isDark ? '#25462D' : '#EAF6E6' }]}><View style={[styles.productGlow, { backgroundColor: palette.primary }]} /><Icon size={40} color={palette.primary} /></View><View style={styles.optionCopy}><AgText variant="headingS" weight="bold" style={{ color: palette.text }}>{item.label}</AgText>{item.description || item.sublabel ? <AgText variant="bodySmall" numberOfLines={3} style={[styles.productDescription, { color: palette.muted }]}>{item.description ?? item.sublabel}</AgText> : null}</View><View style={[styles.productRadio, { borderColor: isSel ? palette.primary : palette.muted, backgroundColor: isSel ? palette.primary : palette.surface }]}>{isSel ? <Check size={22} color={palette.onPrimary} /> : null}</View></TouchableOpacity>;
+              }
               return (
                 <TouchableOpacity
                   activeOpacity={0.76}
@@ -222,6 +230,7 @@ const styles = StyleSheet.create({
   fieldText: { flexShrink: 1 },
   modal: { flex: 1 },
   modalHeader: { minHeight: 80, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 12, gap: 12, borderBottomWidth: StyleSheet.hairlineWidth },
+  productModalHeader: { minHeight: 102, paddingTop: 20, paddingBottom: 16 },
   modalMark: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   modalTitle: { flex: 1 },
   closeButton: { width: 48, height: 48, borderRadius: 16, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
@@ -229,6 +238,11 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, height: '100%', marginLeft: 8, fontSize: 16 },
   listContent: { paddingHorizontal: 20, paddingBottom: 32, gap: 10 },
   option: { minHeight: 64, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 18, borderWidth: 1 },
+  productOption: { minHeight: 132, flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: 22, borderWidth: 1.5, gap: 13 },
+  productArt: { width: 86, height: 96, borderRadius: 18, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  productGlow: { position: 'absolute', width: 78, height: 78, borderRadius: 39, opacity: 0.16, transform: [{ translateX: 19 }, { translateY: -20 }] },
+  productDescription: { marginTop: 5, lineHeight: 20 },
+  productRadio: { width: 48, height: 48, borderRadius: 24, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   optionCopy: { flex: 1, minWidth: 0, paddingRight: 12 },
   radio: { width: 28, height: 28, borderRadius: 14, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
 });

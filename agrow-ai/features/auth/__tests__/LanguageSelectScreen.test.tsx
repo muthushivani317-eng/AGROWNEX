@@ -27,6 +27,28 @@ import { LanguageSelectScreen } from "../screens/LanguageSelectScreen";
 describe("LanguageSelectScreen physical-layout regression", () => {
   beforeEach(() => jest.clearAllMocks());
 
+  it("uses the AgrowNex brand name on the language-selection header", () => {
+    let tree!: TestRenderer.ReactTestRenderer;
+    act(() => {
+      tree = TestRenderer.create(<LanguageSelectScreen />);
+    });
+
+    expect(
+      tree.root.findByProps({
+        accessibilityLabel: "language.tagline, AgrowNex",
+      }),
+    ).toBeTruthy();
+    expect(
+      tree.root.findAll((node) => node.children.includes("Agrow")),
+    ).toHaveLength(1);
+    expect(
+      tree.root.findAll((node) => node.children.includes("Nex")),
+    ).toHaveLength(1);
+    expect(
+      tree.root.findAll((node) => node.children.includes("AI")),
+    ).toHaveLength(0);
+  });
+
   it("keeps both languages in full-width selectable cards with contained indicators", () => {
     let tree!: TestRenderer.ReactTestRenderer;
     act(() => {
@@ -39,9 +61,7 @@ describe("LanguageSelectScreen physical-layout regression", () => {
       });
       expect(card.props.accessibilityRole).toBe("radio");
       expect(typeof card.props.style).not.toBe("function");
-      expect(
-        StyleSheet.flatten(card.props.style).width,
-      ).toBe("100%");
+      expect(StyleSheet.flatten(card.props.style).width).toBe("100%");
       expect(
         card.findByProps({ testID: `language-indicator-${language}` }),
       ).toBeTruthy();
@@ -67,9 +87,7 @@ describe("LanguageSelectScreen physical-layout regression", () => {
     expect(continueButton.props.accessibilityState).toEqual({
       disabled: false,
     });
-    expect(
-      StyleSheet.flatten(continueButton.props.style),
-    ).toMatchObject({
+    expect(StyleSheet.flatten(continueButton.props.style)).toMatchObject({
       width: "100%",
       minHeight: 58,
       backgroundColor: "#78DB50",
@@ -105,7 +123,9 @@ describe("LanguageSelectScreen physical-layout regression", () => {
     });
 
     await act(async () => {
-      await tree.root.findByProps({ testID: "language-option-en" }).props.onPress();
+      await tree.root
+        .findByProps({ testID: "language-option-en" })
+        .props.onPress();
     });
 
     expect(

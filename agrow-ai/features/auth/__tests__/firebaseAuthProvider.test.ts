@@ -148,6 +148,7 @@ describe('firebaseAuthProvider.sendOtp — native Play Integrity (no reCAPTCHA)'
 
     expect(credential.uid).toBe('auto_verified_phone_user');
     expect(credential.phone).toBe(PHONE);
+    expect(user.getIdTokenResult).toHaveBeenCalledWith(true);
     expect(mockPhoneCredential).not.toHaveBeenCalled();
     expect(mockSignInWithCredential).not.toHaveBeenCalled();
   });

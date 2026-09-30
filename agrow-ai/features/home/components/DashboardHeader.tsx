@@ -31,7 +31,7 @@ export function DashboardHeader({ user }: { user: AuthUser | null }) {
   return (
     <View>
       <View style={styles.topRow}>
-        <View style={styles.brand} accessibilityLabel="AgrowAI">
+        <View style={styles.brand} accessibilityLabel="AgrowNex">
           <Image
             source={require('@/assets/images/android-icon-foreground.png')}
             contentFit="contain"
@@ -40,7 +40,7 @@ export function DashboardHeader({ user }: { user: AuthUser | null }) {
           />
           <View style={styles.wordmarkRow}>
             <AgText variant="headingM" weight="bold" numberOfLines={1} maxFontSizeMultiplier={1.2} style={styles.wordmark}>Agrow</AgText>
-            <AgText variant="headingM" weight="bold" numberOfLines={1} maxFontSizeMultiplier={1.2} style={styles.wordmarkAI}>AI</AgText>
+            <AgText variant="headingM" weight="bold" numberOfLines={1} maxFontSizeMultiplier={1.2} style={styles.wordmarkAI}>Nex</AgText>
           </View>
         </View>
         <View style={styles.actions}>

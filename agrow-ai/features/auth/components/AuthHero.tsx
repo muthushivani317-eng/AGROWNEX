@@ -10,6 +10,7 @@ interface AuthHeroProps {
   height: number;
   compact?: boolean;
   showLanguageSelector?: boolean;
+  showWelcome?: boolean;
   style?: ViewStyle;
 }
 
@@ -17,6 +18,7 @@ export function AuthHero({
   height,
   compact = false,
   showLanguageSelector = false,
+  showWelcome = false,
   style,
 }: AuthHeroProps) {
   const { colors } = useAppTheme();
@@ -42,29 +44,43 @@ export function AuthHero({
           />
         </View>
       ) : (
-        <View style={styles.heroTopBar}>
-          <View
-            style={styles.nativeBrand}
-            accessible
-            accessibilityLabel={t('auth.brandAccessibility')}
-          >
-            <Image
-              source={require('@/assets/images/android-icon-foreground.png')}
-              contentFit="contain"
-              style={styles.emblem}
-              accessible={false}
-            />
-            <View style={styles.wordmarkRow}>
-              <AgText variant="headingS" weight="bold" style={styles.nativeWordmark}>
-                Agrow
+        <>
+          <View style={styles.heroTopBar}>
+            <View
+              style={styles.nativeBrand}
+              accessible
+              accessibilityLabel={t('auth.brandAccessibility')}
+            >
+              <Image
+                source={require('@/assets/images/android-icon-foreground.png')}
+                contentFit="contain"
+                style={styles.emblem}
+                accessible={false}
+              />
+              <View>
+                <View style={styles.wordmarkRow}>
+                  <AgText variant="headingS" weight="bold" style={styles.nativeWordmark}>
+                    Agrow
+                  </AgText>
+                  <AgText variant="headingS" weight="bold" style={styles.nativeNex}>
+                    Nex
+                  </AgText>
+                </View>
+              </View>
+            </View>
+            {showLanguageSelector ? <AuthLanguageSelector variant="hero" /> : null}
+          </View>
+          {showWelcome ? (
+            <View style={styles.welcomeCopy}>
+              <AgText variant="headingXL" weight="bold" style={styles.welcomeTitle}>
+                {t('auth.heroWelcome')}
               </AgText>
-              <AgText variant="headingS" weight="bold" style={styles.nativeAi}>
-                AI
+              <AgText variant="bodyLarge" weight="semibold" style={styles.welcomeSubtitle}>
+                {t('auth.loginSubtitle')}
               </AgText>
             </View>
-          </View>
-          {showLanguageSelector ? <AuthLanguageSelector variant="hero" /> : null}
-        </View>
+          ) : null}
+        </>
       )}
     </View>
   );
@@ -79,13 +95,13 @@ const styles = StyleSheet.create({
   compactWordmark: { width: 150, height: 58 },
   heroTopBar: {
     position: 'absolute',
-    top: 16,
-    right: 16,
-    left: 16,
+    top: 12,
+    right: 14,
+    left: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 12,
+    gap: 8,
   },
   nativeBrand: {
     minWidth: 0,
@@ -93,8 +109,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  emblem: { width: 58, height: 58 },
+  emblem: { width: 46, height: 46 },
   wordmarkRow: { marginLeft: -5, flexDirection: 'row', alignItems: 'baseline' },
   nativeWordmark: { color: '#165B33', letterSpacing: -0.8 },
-  nativeAi: { color: '#D99800', letterSpacing: -0.8 },
+  nativeNex: { color: '#F28A16', letterSpacing: -0.8 },
+  welcomeCopy: {
+    position: 'absolute',
+    left: 20,
+    right: '47%',
+    bottom: 30,
+  },
+  welcomeTitle: {
+    color: '#073F2A',
+    fontSize: 31,
+    letterSpacing: -1,
+    lineHeight: 37,
+    textShadowColor: 'rgba(255,253,248,0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 8,
+  },
+  welcomeSubtitle: {
+    marginTop: 8,
+    color: '#2F5144',
+    fontSize: 16,
+    lineHeight: 21,
+    textShadowColor: 'rgba(255,253,248,0.85)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 7,
+  },
 });

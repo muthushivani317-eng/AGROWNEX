@@ -13,16 +13,20 @@ describe("bilingual login presentation contract", () => {
   const english = read("localization/locales/en.ts");
   const tamil = read("localization/locales/ta.ts");
 
-  it("keeps the approved compact field-gate layout and existing OTP action", () => {
+  it("keeps the Agronex field-gate layout and existing OTP action", () => {
     expect(login).toContain(
-      "<AuthHero height={heroHeight} showLanguageSelector />",
+      "showWelcome={!keyboardVisible}",
     );
-    expect(login).toContain("styles.fieldContourBack");
-    expect(login).toContain("styles.fieldContourFront");
+    expect(login).toContain("styles.sproutBadge");
+    expect(login).toContain("styles.otpReassurance");
     expect(login).toContain("sendOtp.mutate(phone");
     expect(login).toContain(
       "disabled={!formState.isValid || sendOtp.isPending}",
     );
+    expect(login).toContain('Keyboard.addListener("keyboardDidShow"');
+    expect(login).toContain('Keyboard.addListener("keyboardDidHide"');
+    expect(login).toContain('paddingHorizontal: 18');
+    expect(login).not.toContain('marginHorizontal: 20');
   });
 
   it("provides an accessible 48dp language selector in the hero", () => {
@@ -30,6 +34,7 @@ describe("bilingual login presentation contract", () => {
     expect(languageSelector).toContain('accessibilityRole="tablist"');
     expect(languageSelector).toContain('accessibilityRole="tab"');
     expect(languageSelector).toContain("minHeight: 48");
+    expect(languageSelector).toContain("{compact ? 'EN' : 'English'}");
   });
 
   it("ships complete English and Tamil login copy", () => {

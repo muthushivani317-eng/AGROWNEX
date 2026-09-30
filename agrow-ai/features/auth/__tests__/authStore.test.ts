@@ -27,6 +27,7 @@ jest.mock('../services/authProvider', () => ({
 }));
 
 import { appStorage, initSecureStorage, secureStorage, StorageKeys } from '@/lib/storage';
+import { api } from '@/services/apiClient';
 
 import { authProvider } from '../services/authProvider';
 import { useAuthStore } from '../store/authStore';
@@ -73,6 +74,17 @@ describe('authStore', () => {
     expect(state.user?.role).toBe('farmer'); // RBAC default
     expect(state.tokens?.idToken).toBe('id-token');
     expect(secureStorage.getString(StorageKeys.authTokens)).toContain('id-token');
+  });
+
+  it('signIn accepts an older backend response without farmer_ref', async () => {
+    (api.post as jest.Mock).mockResolvedValueOnce({ profile: null });
+
+    await useAuthStore.getState().signIn(credential, 'ta');
+
+    const state = useAuthStore.getState();
+    expect(state.status).toBe('authenticated');
+    expect(state.user?.farmerRef).toBeNull();
+    expect(state.tokens?.idToken).toBe('id-token');
   });
 
   it('refreshSession(force) rotates the id token via the provider', async () => {

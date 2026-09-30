@@ -16,8 +16,8 @@ import { AuthError } from '../types';
 
 const RESEND_SECONDS = 30;
 const OTP_COLORS = {
-  background: '#F7F3E8', card: '#FFFFFF', ink: '#101713', muted: '#536158',
-  green: '#176B36', paleGreen: '#EAF3E6', border: '#D9D6C8',
+  background: '#F7F4E8', card: '#FFFDF8', ink: '#073F2A', muted: '#617069',
+  green: '#176B36', paleGreen: '#EAF3E6', border: '#D7DDCF',
 };
 
 export function VerifyOtpScreen() {
@@ -98,12 +98,12 @@ export function VerifyOtpScreen() {
           <ArrowLeft size={23} color={OTP_COLORS.ink} />
         </AgPressable>
 
-        <View style={styles.brand} accessible accessibilityLabel="AgrowAI">
+        <View style={styles.brand} accessible accessibilityLabel={t('auth.brandAccessibility')}>
           <Image source={require('@/assets/images/android-icon-foreground.png')}
             contentFit="contain" style={styles.emblem} accessible={false} />
           <View style={styles.wordmark}>
-            <AgText variant="headingS" weight="bold" style={styles.brandAgrow}>Agrow</AgText>
-            <AgText variant="headingS" weight="bold" style={styles.brandAi}>AI</AgText>
+            <AgText variant="headingS" weight="bold" style={styles.brandAgro}>Agro</AgText>
+            <AgText variant="headingS" weight="bold" style={styles.brandNex}>nex</AgText>
           </View>
         </View>
         <AuthLanguageSelector variant="hero" style={styles.languageSelector} />
@@ -111,7 +111,13 @@ export function VerifyOtpScreen() {
 
       <View style={styles.content}>
         <View style={styles.card}>
-          <View style={styles.securityMark}><ShieldCheck size={31} color={OTP_COLORS.green} /></View>
+          <Image
+            source={require('@/assets/images/android-icon-foreground.png')}
+            contentFit="contain"
+            style={styles.cardLeafTop}
+            accessible={false}
+          />
+          <View style={styles.securityMark}><ShieldCheck size={36} strokeWidth={2.2} color={OTP_COLORS.green} /></View>
           <AgText variant="headingL" weight="bold" center style={styles.title}>{t('auth.otpTitle')}</AgText>
           <AgText variant="body" center style={styles.subtitle}>
             {t('auth.otpSubtitle', { phone: displayPhone ?? '' })}
@@ -120,7 +126,7 @@ export function VerifyOtpScreen() {
           <AgOtpInput light value={code} onChange={(value) => {
             setCode(value);
             if (showError) verify.reset();
-          }} error={showError} />
+          }} onComplete={submit} error={showError} />
 
           {showError ? <AuthErrorBanner testID="otp-verification-error" message={errorMessage} /> : null}
           {resendErrorMessage ? (
@@ -142,11 +148,13 @@ export function VerifyOtpScreen() {
             />
           ) : null}
 
-          <AgButton light title={t('auth.verify')} onPress={() => submit(code)}
-            loading={verify.isPending}
-            disabled={code.length !== 6 || !hasConfirmation || verify.isPending || resend.isPending}
-            size="lg"
-            rightIcon={<ArrowRight size={20} color={OTP_COLORS.ink} />} className="mt-6" />
+          <View style={styles.verifyAction}>
+            <AgButton light title={t('auth.verify')} onPress={() => submit(code)}
+              loading={verify.isPending}
+              disabled={code.length !== 6 || !hasConfirmation || verify.isPending || resend.isPending}
+              size="lg"
+              rightIcon={<ArrowRight size={20} color={OTP_COLORS.ink} />} />
+          </View>
 
           <View style={styles.resendRow}>
             {seconds > 0 ? (
@@ -177,24 +185,26 @@ export function VerifyOtpScreen() {
 
 const styles = StyleSheet.create({
   screen: { flexGrow: 1, paddingBottom: 24 },
-  topBar: { minHeight: 92, paddingTop: 18, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 4 },
-  backButton: { width: 48, height: 48, borderRadius: 16, borderWidth: 1, borderColor: OTP_COLORS.border, backgroundColor: OTP_COLORS.card, alignItems: 'center', justifyContent: 'center' },
+  topBar: { minHeight: 108, paddingTop: 18, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 4 },
+  backButton: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   brand: { flexDirection: 'row', alignItems: 'center', minWidth: 0 },
-  emblem: { width: 40, height: 40 },
+  emblem: { width: 48, height: 48 },
   wordmark: { marginLeft: -5, flexDirection: 'row', alignItems: 'baseline' },
-  brandAgrow: { color: '#165B33', letterSpacing: -0.6 },
-  brandAi: { color: '#D99800', letterSpacing: -0.6 },
+  brandAgro: { color: '#165B33', letterSpacing: -0.7 },
+  brandNex: { color: '#E99818', letterSpacing: -0.7 },
   languageSelector: { flexShrink: 0 },
-  content: { flexGrow: 1, width: '100%', maxWidth: 540, alignSelf: 'center', justifyContent: 'center', paddingHorizontal: 20, paddingBottom: 18 },
-  card: { backgroundColor: OTP_COLORS.card, paddingHorizontal: 20, paddingTop: 26, paddingBottom: 20, borderRadius: 24, borderWidth: 1, borderColor: OTP_COLORS.border, shadowColor: '#35483C', shadowOpacity: 0.1, shadowRadius: 14, shadowOffset: { width: 0, height: 6 }, elevation: 3 },
-  securityMark: { width: 62, height: 62, borderRadius: 20, backgroundColor: OTP_COLORS.paleGreen, alignSelf: 'center', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  content: { flexGrow: 1, width: '100%', maxWidth: 540, alignSelf: 'center', justifyContent: 'center', paddingHorizontal: 20, paddingBottom: 24 },
+  card: { overflow: 'hidden', backgroundColor: OTP_COLORS.card, paddingHorizontal: 24, paddingTop: 42, paddingBottom: 22, borderRadius: 32, borderWidth: 1, borderColor: OTP_COLORS.border, shadowColor: '#315C42', shadowOpacity: 0.14, shadowRadius: 20, shadowOffset: { width: 0, height: 9 }, elevation: 4 },
+  cardLeafTop: { position: 'absolute', top: -28, left: -30, width: 132, height: 132, opacity: 0.1, transform: [{ rotate: '-24deg' }] },
+  securityMark: { width: 88, height: 88, borderRadius: 44, backgroundColor: OTP_COLORS.paleGreen, alignSelf: 'center', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
   title: { color: OTP_COLORS.ink },
-  subtitle: { color: OTP_COLORS.muted, marginTop: 7, marginBottom: 28, alignSelf: 'center', maxWidth: 350 },
-  resendRow: { minHeight: 48, marginTop: 16, alignItems: 'center', justifyContent: 'center' },
+  subtitle: { color: OTP_COLORS.muted, marginTop: 8, marginBottom: 30, alignSelf: 'center', maxWidth: 350, lineHeight: 25 },
+  verifyAction: { marginTop: 20 },
+  resendRow: { minHeight: 48, marginTop: 18, alignItems: 'center', justifyContent: 'center' },
   textButton: { minHeight: 44, alignSelf: 'center', justifyContent: 'center', paddingHorizontal: 8 },
   timerText: { color: '#737B75' }, actionText: { color: OTP_COLORS.green },
-  changeButton: { minHeight: 50, borderRadius: 14, borderWidth: 1, borderColor: OTP_COLORS.border, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
+  changeButton: { minHeight: 50, alignSelf: 'flex-start', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4, marginTop: 2 },
   changeText: { color: OTP_COLORS.green },
-  securityNote: { marginTop: 18, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9 },
+  securityNote: { marginTop: 24, paddingHorizontal: 22, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
   securityCopy: { color: OTP_COLORS.muted, flexShrink: 1 },
 });

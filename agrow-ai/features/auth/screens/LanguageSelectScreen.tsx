@@ -109,7 +109,7 @@ export function LanguageSelectScreen() {
         <View
           accessible
           style={[styles.brand, compact && styles.brandCompact]}
-          accessibilityLabel={`${t("language.tagline")}, AgrowAI`}
+          accessibilityLabel={`${t("language.tagline")}, AgrowNex`}
         >
           <View
             style={[styles.logoSurface, compact && styles.logoSurfaceCompact]}
@@ -129,9 +129,9 @@ export function LanguageSelectScreen() {
               Agrow
             </Text>
             <Text
-              style={[styles.wordmarkAI, compact && styles.wordmarkCompact]}
+              style={[styles.wordmarkNex, compact && styles.wordmarkCompact]}
             >
-              AI
+              Nex
             </Text>
           </View>
           <Text style={styles.tagline}>{t("language.tagline")}</Text>
@@ -236,7 +236,11 @@ export function LanguageSelectScreen() {
           ) : (
             <>
               <Text style={styles.continueText}>{t("common.continue")}</Text>
-              <ArrowRight size={26} strokeWidth={2.5} color={COLORS.onPrimary} />
+              <ArrowRight
+                size={26}
+                strokeWidth={2.5}
+                color={COLORS.onPrimary}
+              />
             </>
           )}
         </TouchableOpacity>
@@ -320,8 +324,8 @@ const styles = StyleSheet.create({
     lineHeight: 42,
     letterSpacing: -1.2,
   },
-  wordmarkAI: {
-    color: COLORS.primary,
+  wordmarkNex: {
+    color: "#E78312",
     fontFamily: "Inter_700Bold",
     fontSize: 36,
     lineHeight: 42,

@@ -52,6 +52,8 @@ describe('autofillAddressFromCoordinates', () => {
       block: null,
       village: null,
       rawLocationHint: null,
+      latitude: null,
+      longitude: null,
     });
   });
 });

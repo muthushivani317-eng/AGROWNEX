@@ -10,7 +10,9 @@ import { ActivityIndicator, Modal, Pressable, StyleSheet, View } from "react-nat
 
 import { AgText } from "@/components/ui";
 import { useAppTheme } from "@/hooks/useAppTheme";
+import { useLanguage } from "@/hooks/useLanguage";
 
+import { localizedTaskText } from "../copy";
 import { useRespondToTask } from "../hooks/useDailyTask";
 import type { ResponseType, TaskCard, TaskRespondResponse } from "../types";
 import { PhotoUploadFlow } from "./PhotoUploadFlow";
@@ -28,6 +30,7 @@ type MediaStep = "none" | "photo" | "voice";
 export function TaskResponseSheet({ visible, task, onClose, onResponded }: Props) {
   const { t } = useTranslation();
   const { colors } = useAppTheme();
+  const { isTamil } = useLanguage();
   const respond = useRespondToTask(task.id);
   const [mediaStep, setMediaStep] = useState<MediaStep>("none");
   const [submittingType, setSubmittingType] = useState<ResponseType | null>(null);
@@ -71,7 +74,7 @@ export function TaskResponseSheet({ visible, task, onClose, onResponded }: Props
           {mediaStep === "none" && (
             <>
               <AgText variant="bodyLarge" weight="bold" center style={styles.title}>
-                {task.task_text_ta}
+                {localizedTaskText(task, isTamil, t)}
               </AgText>
               <View style={styles.buttonList}>
                 {BUTTONS.map((btn) => {

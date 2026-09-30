@@ -55,6 +55,14 @@ export interface ApiFarmerMe {
   preferred_crops: string[];
   phone_number: string | null;
   email: string | null;
+  land_holding_acres?: number | null;
+  farmer_type?: string | null;
+  landmark?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  farm_products?: ApiFarmProduct[];
+  wants_fpo_support?: boolean;
+  wants_kvk_support?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -70,6 +78,23 @@ export interface ApiFarmerMeUpdate {
   education: string | null;
   profile_photo: string | null;
   preferred_crops: string[];
+  land_holding_acres?: number | null;
+  farmer_type?: string | null;
+  landmark?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  farm_products?: ApiFarmProduct[];
+  wants_fpo_support?: boolean;
+  wants_kvk_support?: boolean;
+}
+
+export interface ApiFarmProduct {
+  product_id: string;
+  category: string;
+  expected_harvest_month: string | null;
+  approximate_quantity: number | null;
+  unit: 'kg' | 'quintal' | 'tonne' | 'bag' | 'count' | 'litre';
+  available_for_sale: boolean;
 }
 
 export interface ApiFarmerPreferences {

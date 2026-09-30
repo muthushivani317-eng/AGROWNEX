@@ -61,6 +61,22 @@ describe('OTP verification screen release contract', () => {
     expect(otpInput).not.toContain('Keyboard.dismiss');
   });
 
+  it('supports operating-system one-time-code suggestions and SMS autofill', () => {
+    expect(otpInput).toContain("Platform.OS === 'ios' ? 'oneTimeCode' : undefined");
+    expect(otpInput).toContain("Platform.OS === 'android' ? 'sms-otp' : 'one-time-code'");
+    expect(otpInput).toContain('importantForAutofill="yes"');
+    expect(otpInput).toContain('onChangeText={handleChange}');
+    expect(otpInput).toContain('opacity: 1');
+    expect(otpInput).toContain('fontSize: 1');
+    expect(otpInput).not.toContain('secureTextEntry');
+  });
+
+  it('keeps clear space between the code cells and Verify action', () => {
+    expect(otpScreen).toContain('<View style={styles.verifyAction}>');
+    expect(otpScreen).toContain('verifyAction: { marginTop: 20 }');
+    expect(otpScreen).not.toContain('className="mt-6"');
+  });
+
   it('uses Android keyboard-aware scrolling and reproducible adjustResize config', () => {
     expect(screen).toContain('keyboardShouldPersistTaps="handled"');
     expect(screen).toContain("behavior={Platform.OS === 'ios' ? 'padding' : 'height'}");

@@ -9,7 +9,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AgErrorState, AgText } from "@/components/ui";
 import { useAppTheme } from "@/hooks/useAppTheme";
+import { useLanguage } from "@/hooks/useLanguage";
 
+import { localizedTaskText } from "../copy";
 import { RESPONSE_LABEL_KEY, TASK_ICON } from "../constants";
 import { useTaskHistory } from "../hooks/useDailyTask";
 import { EmptyState } from "../components/EmptyState";
@@ -26,6 +28,7 @@ const RESPONSE_TONE: Record<ResponseType, "success" | "warning" | "muted" | "dan
 export function TaskHistoryScreen() {
   const { t } = useTranslation();
   const { colors } = useAppTheme();
+  const { isTamil } = useLanguage();
   const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } =
     useTaskHistory();
 
@@ -80,7 +83,7 @@ export function TaskHistoryScreen() {
               <Icon size={22} color={colors.textMuted} />
               <View style={styles.rowCopy}>
                 <AgText variant="body" weight="semibold" style={{ color: colors.text }}>
-                  {item.task_text_ta}
+                  {localizedTaskText(item, isTamil, t)}
                 </AgText>
                 {item.field_label ? (
                   <AgText variant="bodySmall" style={{ color: colors.textMuted }}>

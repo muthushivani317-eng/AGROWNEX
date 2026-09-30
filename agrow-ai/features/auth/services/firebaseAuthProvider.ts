@@ -133,7 +133,11 @@ async function toCredential(
   user: FirebaseUser,
   provider: AuthCredential['provider'],
 ): Promise<AuthCredential> {
-  const tokenResult = await getIdTokenResult(user);
+  // Always mint a fresh token at the authentication boundary. Android phone
+  // auth can auto-verify and expose `currentUser` before the Verify button is
+  // pressed; reading its cached token here has produced tokens that the Admin
+  // SDK rejects even though the OTP itself succeeded.
+  const tokenResult = await getIdTokenResult(user, true);
   return {
     uid: user.uid,
     phone: user.phoneNumber,

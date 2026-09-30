@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AppState,
   InteractionManager,
+  Platform,
   Pressable,
   StyleSheet,
   TextInput,
@@ -160,13 +161,17 @@ export function AgOtpInput({
         inputMode="numeric"
         showSoftInputOnFocus
         editable
-        textContentType="oneTimeCode"
-        autoComplete="sms-otp"
-        secureTextEntry
+        textContentType={Platform.OS === 'ios' ? 'oneTimeCode' : undefined}
+        autoComplete={Platform.OS === 'android' ? 'sms-otp' : 'one-time-code'}
+        importantForAutofill="yes"
+        autoCorrect={false}
+        autoCapitalize="none"
         maxLength={length}
         style={styles.nativeInput}
         caretHidden
+        cursorColor="transparent"
         selectionColor="transparent"
+        underlineColorAndroid="transparent"
         accessibilityLabel="One-time password"
         accessibilityHint="Enter the six-digit verification code"
       />
@@ -198,11 +203,13 @@ const styles = StyleSheet.create({
     zIndex: 2,
     color: 'transparent',
     backgroundColor: 'transparent',
-    // Keep the Android input technically visible so the IME/SMS autofill can
-    // focus it, but reduce it below the threshold that ghosted a duplicate
-    // first digit over the segmented cells on some devices.
-    opacity: 0.001,
+    // Keep the native input fully present for SMS autofill. Android IMEs may
+    // override a transparent foreground while composing an autofilled value,
+    // so a 1px glyph size prevents the raw code from appearing over the cells.
+    opacity: 1,
     fontSize: 1,
+    lineHeight: 1,
+    textShadowColor: 'transparent',
     padding: 0,
   },
 });

@@ -15,7 +15,7 @@ export function SplashScreen({ onReady }: SplashScreenProps) {
     <View
       testID="branded-splash-screen"
       style={styles.container}
-      accessibilityLabel="AgrowAI is preparing your farm intelligence"
+      accessibilityLabel="AgrowNex is preparing your farm intelligence"
       accessibilityLiveRegion="polite"
     >
       <StatusBar style="dark" />
@@ -35,7 +35,7 @@ export function SplashScreen({ onReady }: SplashScreenProps) {
         </View>
 
         <Text style={styles.wordmark} accessibilityRole="header">
-          Agrow<Text style={styles.wordmarkAccent}>AI</Text>
+          Agrow<Text style={styles.wordmarkAccent}>Nex</Text>
         </Text>
         <View style={styles.promiseRule}>
           <View style={styles.rule} />

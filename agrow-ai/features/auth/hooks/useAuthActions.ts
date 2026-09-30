@@ -123,9 +123,7 @@ export function useVerifyOtp() {
  * Previously this only wrote to local device storage via `updateUser` and
  * never called the backend at all, so a farmer's onboarding data (name,
  * district, crops, etc.) was silently lost on reinstall or a second device
- * (see farmer-release-readiness audit, 2026-08-18). Land holding acres is
- * intentionally not sent — see the comment on `completeProfileSchema` in
- * ../schemas: the backend has no field for it, by product decision.
+ * (see farmer-release-readiness audit, 2026-08-18).
  */
 export function useCompleteProfile() {
   const updateUser = useAuthStore((s) => s.updateUser);
@@ -143,6 +141,21 @@ export function useCompleteProfile() {
         education: null,
         profile_photo: data.photoUrl,
         preferred_crops: data.preferredCrops,
+        land_holding_acres: data.landHoldingAcres,
+        farmer_type: data.farmerType,
+        landmark: data.landmark || null,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        farm_products: data.farmProducts.map((product) => ({
+          product_id: product.productId,
+          category: product.category,
+          expected_harvest_month: product.expectedHarvestMonth,
+          approximate_quantity: product.approximateQuantity,
+          unit: product.unit,
+          available_for_sale: product.availableForSale,
+        })),
+        wants_fpo_support: data.wantsFpoSupport,
+        wants_kvk_support: data.wantsKvkSupport,
       };
 
       try {

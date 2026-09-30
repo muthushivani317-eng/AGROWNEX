@@ -42,3 +42,15 @@ yarn-error.*
 # and must be included only in the encrypted EAS build archive.
 !/google-services.json
 !/android/app/google-services.json
+
+# Added: local build output and scratch folders
+android.backup-before-standalone-20260801-185713/
+android/app/build/
+android/app/.cxx/
+android/build/
+android/.gradle/
+android/.kotlin/
+ios/build/
+ios/Pods/
+eas-archive-check/
+empty_temp/

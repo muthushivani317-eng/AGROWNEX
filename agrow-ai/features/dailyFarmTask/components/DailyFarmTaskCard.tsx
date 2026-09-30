@@ -16,21 +16,13 @@ import { Pressable, StyleSheet, View } from "react-native";
 
 import { AgCard, AgErrorState, AgSkeleton, AgText } from "@/components/ui";
 import { useAppTheme } from "@/hooks/useAppTheme";
+import { useLanguage } from "@/hooks/useLanguage";
 
 import { TASK_ICON, URGENCY_LABEL_KEY } from "../constants";
+import { localizedTaskReason, localizedTaskText, localizedTaskTitle } from "../copy";
 import { useTodayTasks } from "../hooks/useDailyTask";
 import type { TaskCard as TaskCardModel } from "../types";
 import { TaskResponseSheet } from "./TaskResponseSheet";
-
-function playAudio(task: TaskCardModel, language: string) {
-  const script = `${task.title_ta}. ${task.task_text_ta}. ${task.reason_text_ta}`;
-  // Task copy is generated server-side in Tamil today regardless of the
-  // app's language setting (backend app/modules/daily_task/task_copy.py) --
-  // matching that with the "ta-IN" voice here rather than the UI's current
-  // language avoids the TTS engine trying to read Tamil script with an
-  // English voice. See the integration report's "remaining risks" section.
-  Speech.speak(script, { language: "ta-IN" });
-}
 
 function TaskRow({
   task,
@@ -43,22 +35,33 @@ function TaskRow({
 }) {
   const { t } = useTranslation();
   const { colors } = useAppTheme();
+  const { isTamil } = useLanguage();
   const Icon = TASK_ICON[task.task_type] ?? TASK_ICON.irrigation_inspection;
   const isUrgent = task.urgency === "today" || task.urgency === "before_rain";
+  const taskText = localizedTaskText(task, isTamil, t);
+
+  const playAudio = () => {
+    const script = [
+      localizedTaskTitle(task, isTamil, t),
+      taskText,
+      localizedTaskReason(task, isTamil, t),
+    ].join(". ");
+    Speech.speak(script, { language: isTamil ? "ta-IN" : "en-IN" });
+  };
 
   return (
     <Pressable
       onPress={onPress}
       style={[styles.row, !isLast && { borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth }]}
       accessibilityRole="button"
-      accessibilityLabel={`${task.title_ta}. ${task.task_text_ta}`}
+      accessibilityLabel={`${localizedTaskTitle(task, isTamil, t)}. ${taskText}`}
     >
       <View style={[styles.iconTile, { backgroundColor: `${colors.primary}12` }]}>
         <Icon size={20} color={isUrgent ? colors.danger : colors.primary} />
       </View>
       <View style={styles.rowCopy}>
-        <AgText variant="body" weight="semibold" numberOfLines={2} style={{ color: colors.text }}>
-          {task.task_text_ta}
+        <AgText variant="body" weight="semibold" style={[styles.taskText, { color: colors.text }]}>
+          {taskText}
         </AgText>
         {task.field_label ? (
           <AgText variant="bodySmall" style={{ color: colors.textMuted }}>
@@ -72,8 +75,13 @@ function TaskRow({
         </View>
       </View>
       <Pressable
-        onPress={() => playAudio(task, "ta")}
+        onPress={(event) => {
+          event.stopPropagation();
+          playAudio();
+        }}
+        style={styles.audioButton}
         hitSlop={10}
+        accessibilityRole="button"
         accessibilityLabel={t("dailyTask.playAudio")}
       >
         <Volume2 size={20} color={colors.primary} />
@@ -156,9 +164,17 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     flexShrink: 1,
   },
-  card: { paddingVertical: 4, paddingHorizontal: 13 },
+  card: {
+    paddingVertical: 4,
+    paddingHorizontal: 13,
+    borderRadius: 17,
+    borderColor: '#DED9CA',
+    backgroundColor: '#FFFDF8',
+  },
   row: { flexDirection: "row", alignItems: "center", gap: 11, paddingVertical: 12 },
   iconTile: { width: 38, height: 38, borderRadius: 13, alignItems: "center", justifyContent: "center" },
   rowCopy: { flex: 1, minWidth: 0, gap: 3 },
+  taskText: { flexShrink: 1, lineHeight: 22 },
+  audioButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   urgencyPill: { alignSelf: "flex-start", borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2, marginTop: 2 },
 });

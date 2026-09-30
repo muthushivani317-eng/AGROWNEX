@@ -32,8 +32,12 @@ interface BackendFarmerProfile {
 }
 
 interface OtpVerifyResponse {
-  user: { farmer_ref: string };
-  profile: BackendFarmerProfile | null;
+  // `farmer_ref` was added after the original OTP response contract. Keep the
+  // client compatible with backends that have not rolled that migration yet:
+  // authentication itself must not fail because a display/reference field is
+  // absent from an otherwise valid session response.
+  user?: { farmer_ref?: string | null };
+  profile?: BackendFarmerProfile | null;
 }
 
 interface AuthState {
@@ -168,8 +172,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const result = await api.post<OtpVerifyResponse>('/auth/otp/verify', {
         id_token: credential.idToken,
       });
-      backendProfile = result.profile;
-      user.farmerRef = result.user.farmer_ref;
+      backendProfile = result?.profile ?? null;
+      user.farmerRef = result?.user?.farmer_ref ?? null;
     } catch (e) {
       const failure = backendAuthFailure(e);
       logger.error('authStore.signIn', `error_category=${failure.category}`);

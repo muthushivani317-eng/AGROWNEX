@@ -32,6 +32,7 @@ export const FILTERABLE_MODULES: NotificationModuleKey[] = [
   'satellite',
   'nutrient',
   'intelligence',
+  'organic',
 ];
 
 export const MODULE_LABEL_KEY: Record<NotificationModuleKey, string> = {
@@ -48,6 +49,7 @@ export const MODULE_LABEL_KEY: Record<NotificationModuleKey, string> = {
   satellite: 'notifications.moduleSatellite',
   nutrient: 'notifications.moduleNutrient',
   intelligence: 'notifications.moduleIntelligence',
+  organic: 'notifications.moduleOrganic',
   system: 'notifications.moduleSystem',
 };
 
