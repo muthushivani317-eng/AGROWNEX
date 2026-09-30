@@ -247,7 +247,7 @@ export function ProfileScreen() {
         />
       }
     >
-      <View style={[styles.pageHeader, compact && styles.pageHeaderCompact]}>
+      <View style={styles.pageHeader}>
         <View style={styles.headerCopy}>
           <AgText variant="headingL" weight="bold" style={styles.primaryText}>
             {t("tabs.profile")}
@@ -261,10 +261,15 @@ export function ProfileScreen() {
           accessibilityLabel={t("profile.editProfileButton")}
           activeOpacity={0.72}
           onPress={editProfile}
-          style={[styles.editButton, compact && styles.editButtonCompact]}
+          style={styles.editButton}
         >
           <Pencil size={18} color={GREEN} />
-          <AgText variant="body" weight="semibold" style={styles.greenText}>
+          <AgText
+            variant="body"
+            weight="semibold"
+            numberOfLines={1}
+            style={[styles.greenText, styles.editButtonText]}
+          >
             {t("profile.editProfileButton")}
           </AgText>
         </TouchableOpacity>
@@ -440,14 +445,9 @@ const styles = StyleSheet.create({
   secondaryText: { color: SECONDARY_TEXT },
   greenText: { color: GREEN },
   accentText: { color: GREEN },
-  pageHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: 14,
-  },
-  pageHeaderCompact: { flexDirection: "column" },
-  headerCopy: { flex: 1, minWidth: 0 },
+  // Stacked: Tamil title + edit label are too long to share one row.
+  pageHeader: { flexDirection: "column", gap: 14 },
+  headerCopy: { alignSelf: "stretch" },
   editButton: {
     minHeight: 48,
     flexDirection: "row",
@@ -459,8 +459,9 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: GREEN,
     backgroundColor: CARD_BG,
+    alignSelf: "stretch",
   },
-  editButtonCompact: { alignSelf: "stretch" },
+  editButtonText: { flexShrink: 1 },
   refreshWarning: {
     marginTop: 16,
     minHeight: 52,
