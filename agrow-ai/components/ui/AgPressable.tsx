@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { useState, type ReactNode } from 'react';
-import { Pressable, type PressableProps, type PressableStateCallbackType } from 'react-native';
+import { Pressable, StyleSheet, type PressableProps, type PressableStateCallbackType } from 'react-native';
 
 export interface AgPressableProps extends PressableProps {
   children: ReactNode;
@@ -31,10 +31,17 @@ export function AgPressable({
   const [pressed, setPressed] = useState(false);
   const state = { pressed, hovered: false } as PressableStateCallbackType;
   const resolved = typeof style === 'function' ? style(state) : style;
+  // NativeWind's Pressable interop can discard nested style arrays on Android.
+  // Flatten to the plain object promised by this component's contract so
+  // borders, row direction and button surfaces render consistently on device.
+  const nativeStyle = StyleSheet.flatten([
+    resolved,
+    pressed && scaleTo !== 1 ? { transform: [{ scale: scaleTo }] } : null,
+  ]);
 
   return (
     <Pressable
-      style={[resolved, pressed && scaleTo !== 1 ? { transform: [{ scale: scaleTo }] } : null]}
+      style={nativeStyle}
       disabled={disabled}
       onPressIn={(e) => {
         setPressed(true);

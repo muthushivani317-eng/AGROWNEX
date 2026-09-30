@@ -55,4 +55,5 @@ test("shared pressable has no Reanimated update surviving screen unmount", () =>
   expect(source).not.toContain("react-native-reanimated");
   expect(source).not.toContain("useSharedValue");
   expect(source).not.toContain("withTiming");
+  expect(source).toContain("StyleSheet.flatten");
 });
