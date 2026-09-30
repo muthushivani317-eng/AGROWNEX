@@ -23,17 +23,20 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Query, Request, Response, status
+from fastapi import APIRouter, Depends, Query, Request, Response, status
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.exceptions import UnauthorizedError
+from app.core.database import get_session
+from app.core.exceptions import ForbiddenError, UnauthorizedError
 from app.core.security import create_session_cookie, verify_id_token
 from app.modules.admin.constants import (
     DEFAULT_PAGE_SIZE,
     MAX_PAGE_SIZE,
     ROLE_PERMISSIONS,
     AdminPermission,
+    AdminRole,
 )
 from app.modules.admin.dependencies import AdminContextDep, AdminServiceDep
 from app.modules.admin.schemas import (
@@ -326,6 +329,35 @@ async def get_farmers(
             total_pages=page_data.total_pages,
         )
     )
+
+
+@router.post("/farmers/sync-firebase", response_model=SuccessResponse[dict])
+async def sync_farmers_with_firebase(ctx: AdminContextDep, session: AsyncSession = Depends(get_session)):
+    """Close Agrownex accounts whose Firebase account was deleted (Owner/Super Admin)."""
+    from app.modules.admin.farmer_deletion import sync_deleted_firebase_users
+
+    _require_platform(ctx)
+    result = await sync_deleted_firebase_users(session, actor_admin=ctx)
+    return success(result.as_dict())
+
+
+@router.delete("/farmers/{user_id}", response_model=SuccessResponse[dict])
+async def delete_farmer(
+    user_id: uuid.UUID,
+    ctx: AdminContextDep,
+    confirm_ref: str = Query(..., min_length=5, max_length=24),
+    session: AsyncSession = Depends(get_session),
+):
+    """Delete a farmer: their Firebase login, then their Agrownex account (Owner/Super Admin)."""
+    from app.modules.admin.farmer_deletion import admin_delete_farmer
+
+    _require_platform(ctx)
+    return success(await admin_delete_farmer(session, ctx, user_id, confirm_ref=confirm_ref))
+
+
+def _require_platform(ctx) -> None:
+    if ctx.admin.role not in {AdminRole.OWNER.value, AdminRole.SUPER_ADMIN.value}:
+        raise ForbiddenError("Only the Owner or a Super Admin can delete farmers.")
 
 
 @router.get("/farmers/{user_id}", response_model=SuccessResponse[FarmerDetailOut])

@@ -69,6 +69,20 @@ async def refresh_market_prices(ctx: dict[str, Any]) -> dict:
     return await _run(_refresh_market_prices)
 
 
+async def _firebase_account_sync(session: AsyncSession) -> dict:
+    from app.modules.admin.farmer_deletion import FirebaseUnavailableError, sync_deleted_firebase_users
+
+    try:
+        return (await sync_deleted_firebase_users(session)).as_dict()
+    except FirebaseUnavailableError:
+        return {"skipped": "firebase_not_configured"}
+
+
+async def sync_firebase_deletions(ctx: dict[str, Any]) -> dict:
+    """Close farmers whose Firebase account was deleted in the Firebase console."""
+    return await _run(_firebase_account_sync)
+
+
 async def evaluate_weather_alerts(ctx: dict[str, Any]) -> dict:
     return await _run(_evaluate_weather_alerts)
 
@@ -110,6 +124,7 @@ class WorkerSettings:
     on_startup = on_startup
     functions = [
         refresh_market_prices,
+        sync_firebase_deletions,
         evaluate_weather_alerts,
         retry_failed_notifications,
         expire_stale_offers,
@@ -121,6 +136,7 @@ class WorkerSettings:
         # State-wide price sync + targets; long budget for a slow data.gov.in.
         cron(refresh_market_prices, hour=set(range(0, 24, 2)), minute=0, timeout=1800),
         cron(evaluate_weather_alerts, minute={0, 30}),
+        cron(sync_firebase_deletions, minute={20}),
         cron(retry_failed_notifications, minute=set(range(0, 60, 5))),
         cron(expire_stale_offers, hour={3}, minute=0),
         # Fires well after the satellite/weather refresh cadence above so

@@ -37,7 +37,7 @@ class AdminQueries:
         base = (
             select(FarmerProfile, User)
             .join(User, User.id == FarmerProfile.user_id)
-            .where(FarmerProfile.is_deleted.is_(False))
+            .where(FarmerProfile.is_deleted.is_(False), User.deleted_at.is_(None))
         )
         if district:
             base = base.where(FarmerProfile.district == district)
