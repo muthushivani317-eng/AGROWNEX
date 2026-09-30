@@ -390,14 +390,14 @@ function Row({
   const { colors } = useAppTheme();
   return (
     <View className="flex-row items-center justify-between gap-3">
-      <AgText variant="bodySmall" color="muted">
+      <AgText variant="bodySmall" color="muted" style={{ flex: 1, minWidth: 0 }}>
         {label}
       </AgText>
-      <View className="items-end">
+      <View className="items-end" style={{ flexShrink: 1, maxWidth: '55%' }}>
         <AgText
           variant="body"
           weight={strong ? 'bold' : 'semibold'}
-          style={strong ? { color: colors.primary } : undefined}
+          style={[{ textAlign: 'right' }, strong ? { color: colors.primary } : null]}
         >
           {value}
         </AgText>

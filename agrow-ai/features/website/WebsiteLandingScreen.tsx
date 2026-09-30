@@ -33,12 +33,12 @@ type Language = 'en' | 'ta';
 const COPY = {
   en: {
     nav: ['Capabilities', 'How it works', 'Trust'],
-    open: 'Open AgrowAI',
+    open: 'Open AgrowNex',
     eyebrow: 'FIELD INTELLIGENCE, MADE PRACTICAL',
     title: 'One field. One clear next step.',
     lead:
-      'AgrowAI brings satellite, weather, soil, crop health and farm records together—then turns them into guidance a farmer can actually use.',
-    primary: 'Start with AgrowAI',
+      'AgrowNex brings satellite, weather, soil, crop health and farm records together—then turns them into guidance a farmer can actually use.',
+    primary: 'Start with AgrowNex',
     secondary: 'Explore capabilities',
     safety: 'AI-assisted estimates. Important decisions stay with the farmer and agricultural experts.',
     scene: 'KVK Farm · Latest field view',
@@ -76,7 +76,7 @@ const COPY = {
     howTitle: 'Useful in the field, not just impressive on a screen.',
     steps: [
       ['Add your farm', 'Mark the boundary, crop, sowing date and location once.'],
-      ['Build the evidence', 'AgrowAI checks available satellite, weather, soil and farm records.'],
+      ['Build the evidence', 'AgrowNex checks available satellite, weather, soil and farm records.'],
       ['Get a clear next step', 'See what needs attention, why it matters and what to verify in the field.'],
     ],
     tamilTitle: 'Built for Tamil and English from the first screen.',
@@ -86,24 +86,24 @@ const COPY = {
     switch: 'Switch language anytime',
     small: 'Designed for small screens',
     trustEyebrow: 'TRUSTED DECISIONS NEED HONEST DATA',
-    trustTitle: 'AgrowAI shows what it knows—and what it does not.',
+    trustTitle: 'AgrowNex shows what it knows—and what it does not.',
     trustBody:
       'Confidence, source, scene age and missing evidence are shown clearly. Satellite screening is not a lab result; AI screening is not a diagnosis.',
     trustItems: ['Evidence source on every insight', 'Estimated vs measured labels', 'Expert verification for critical decisions'],
     finalTitle: 'Give every field a clearer next step.',
     finalBody: 'Bring your farm, crop and local context together in one bilingual assistant.',
     finalCta: 'Open the app',
-    footer: 'AgrowAI · AI for every farmer, growth for every field.',
+    footer: 'AgrowNex · AI for every farmer, growth for every field.',
     disclaimer: 'General agricultural guidance. Verify critical decisions with an official source or agricultural expert.',
   },
   ta: {
     nav: ['வசதிகள்', 'எப்படி செயல்படுகிறது', 'நம்பிக்கை'],
-    open: 'AgrowAI திறக்கவும்',
+    open: 'AgrowNex திறக்கவும்',
     eyebrow: 'பயனுள்ள பண்ணை நுண்ணறிவு',
     title: 'ஒரு வயல். ஒரு தெளிவான அடுத்த படி.',
     lead:
-      'செயற்கைக்கோள், வானிலை, மண், பயிர் ஆரோக்கியம் மற்றும் பண்ணைப் பதிவுகளை AgrowAI ஒருங்கிணைத்து, விவசாயி பயன்படுத்தக்கூடிய வழிகாட்டலாக மாற்றுகிறது.',
-    primary: 'AgrowAI தொடங்கவும்',
+      'செயற்கைக்கோள், வானிலை, மண், பயிர் ஆரோக்கியம் மற்றும் பண்ணைப் பதிவுகளை AgrowNex ஒருங்கிணைத்து, விவசாயி பயன்படுத்தக்கூடிய வழிகாட்டலாக மாற்றுகிறது.',
+    primary: 'AgrowNex தொடங்கவும்',
     secondary: 'வசதிகளைப் பார்க்கவும்',
     safety: 'AI உதவியுடன் மதிப்பீடுகள். முக்கிய முடிவுகள் விவசாயி மற்றும் வேளாண் நிபுணர்களிடமே இருக்கும்.',
     scene: 'KVK பண்ணை · சமீபத்திய வயல் காட்சி',
@@ -140,7 +140,7 @@ const COPY = {
     howTitle: 'திரையில் மட்டும் அல்ல—வயலில் பயனுள்ளதாக.',
     steps: [
       ['பண்ணையைச் சேர்க்கவும்', 'எல்லை, பயிர், விதைப்பு தேதி மற்றும் இடத்தை ஒருமுறை பதிவு செய்யவும்.'],
-      ['ஆதாரங்களை உருவாக்கவும்', 'செயற்கைக்கோள், வானிலை, மண் மற்றும் பண்ணைப் பதிவுகளை AgrowAI பார்க்கும்.'],
+      ['ஆதாரங்களை உருவாக்கவும்', 'செயற்கைக்கோள், வானிலை, மண் மற்றும் பண்ணைப் பதிவுகளை AgrowNex பார்க்கும்.'],
       ['தெளிவான அடுத்த படியைப் பெறவும்', 'எதை கவனிக்க வேண்டும், ஏன், வயலில் எதை உறுதி செய்ய வேண்டும் என்பதைக் காணவும்.'],
     ],
     tamilTitle: 'முதல் திரையிலிருந்தே தமிழ் மற்றும் ஆங்கிலத்திற்காக.',
@@ -149,13 +149,13 @@ const COPY = {
     switch: 'எப்போது வேண்டுமானாலும் மொழி மாற்றம்',
     small: 'சிறிய திரைகளுக்கான வடிவமைப்பு',
     trustEyebrow: 'நம்பகமான முடிவுக்கு நேர்மையான தரவு',
-    trustTitle: 'AgrowAI தெரிந்ததையும் தெரியாததையும் தெளிவாகக் காட்டுகிறது.',
+    trustTitle: 'AgrowNex தெரிந்ததையும் தெரியாததையும் தெளிவாகக் காட்டுகிறது.',
     trustBody: 'நம்பிக்கை, ஆதாரம், காட்சி வயது மற்றும் இல்லாத ஆதாரங்கள் தெளிவாகக் காட்டப்படும். செயற்கைக்கோள் மதிப்பீடு ஆய்வக முடிவு அல்ல; AI மதிப்பீடு நோய் தீர்ப்பு அல்ல.',
     trustItems: ['ஒவ்வொரு நுண்ணறிவுக்கும் ஆதாரம்', 'மதிப்பீடு மற்றும் அளவீடு குறிச்சொற்கள்', 'முக்கிய முடிவுகளுக்கு நிபுணர் உறுதிப்படுத்தல்'],
     finalTitle: 'ஒவ்வொரு வயலுக்கும் தெளிவான அடுத்த படி.',
     finalBody: 'உங்கள் பண்ணை, பயிர் மற்றும் உள்ளூர் சூழலை ஒரே இருமொழி உதவியாளரில் இணைக்கவும்.',
     finalCta: 'செயலியைத் திறக்கவும்',
-    footer: 'AgrowAI · ஒவ்வொரு விவசாயிக்கும் AI, ஒவ்வொரு வயலுக்கும் வளர்ச்சி.',
+    footer: 'AgrowNex · ஒவ்வொரு விவசாயிக்கும் AI, ஒவ்வொரு வயலுக்கும் வளர்ச்சி.',
     disclaimer: 'பொதுவான வேளாண் வழிகாட்டல். முக்கிய முடிவுகளை அதிகாரப்பூர்வ ஆதாரம் அல்லது வேளாண் நிபுணருடன் உறுதி செய்யவும்.',
   },
 } as const;
@@ -195,7 +195,7 @@ export function WebsiteLandingScreen() {
       <View style={[styles.header, { width: contentWidth }]}>
         <View style={styles.brand}>
           <Image source={require('@/assets/images/brand-logo-source.png')} style={styles.logo} contentFit="contain" />
-          <Text style={styles.brandName}>AgrowAI</Text>
+          <Text style={styles.brandName}>AgrowNex</Text>
         </View>
         {desktop ? (
           <View style={styles.nav}>
@@ -338,7 +338,7 @@ export function WebsiteLandingScreen() {
       <View style={[styles.footer, { width: contentWidth }]}>
         <Text style={styles.footerBrand}>{copy.footer}</Text>
         <Text style={styles.footerDisclaimer}>{copy.disclaimer}</Text>
-        <Text style={styles.copyright}>© 2026 AgrowAI</Text>
+        <Text style={styles.copyright}>© 2026 AgrowNex</Text>
       </View>
     </ScrollView>
   );

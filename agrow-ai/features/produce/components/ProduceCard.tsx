@@ -65,7 +65,7 @@ export function ProduceCard({ offer }: { offer: ProduceOffer }) {
               variant="headingS"
               weight="bold"
               numberOfLines={2}
-              style={styles.ink}
+              style={[styles.ink, { flex: 1, minWidth: 0 }]}
             >
               {offer.productName || offer.cropName}
             </AgText>
@@ -198,6 +198,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: C.border,
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "center",
     gap: 6,
   },

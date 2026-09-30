@@ -157,13 +157,13 @@ export function DiseaseHistoryScreen() {
                     {item.disease ? formatDiagnosisName(item.disease) : t('disease.cropUnknown')}
                   </AgText>
                   {item.testMode?.display_required ? (
-                    <AgText variant="caption" color="danger" className="mt-1" numberOfLines={1}>
+                    <AgText variant="caption" color="danger" className="mt-1" numberOfLines={3}>
                       {item.testMode.banner_text}
                     </AgText>
                   ) : null}
-                  <View className="mt-1 flex-row items-center gap-2">
+                  <View className="mt-1 flex-row flex-wrap items-center gap-2">
                     <SeverityBadge severity={item.severity} />
-                    <AgText variant="caption" color="muted">
+                    <AgText variant="caption" color="muted" style={{ flexShrink: 1 }}>
                       {Number.isFinite(item.confidence)
                         ? `${item.confidence}%`
                         : t('disease.confidenceUnavailable')}{' '}

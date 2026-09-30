@@ -153,7 +153,7 @@ export function TaskCard({
             <View
               style={[styles.priorityDot, { backgroundColor: priorityColor }]}
             />
-            <AgText variant="bodySmall" style={{ color: priorityColor }}>
+            <AgText variant="bodySmall" style={{ flexShrink: 1, color: priorityColor }}>
               {t(PRIORITY_LABEL_KEY[event.priority])}{" "}
               {t("calendar.prioritySuffix")}
             </AgText>
@@ -161,7 +161,7 @@ export function TaskCard({
           {advisoryKey ? (
             <View style={styles.metaRow}>
               <CloudRain size={15} color={PALETTE.gold} />
-              <AgText variant="bodySmall" style={{ color: PALETTE.gold }}>
+              <AgText variant="bodySmall" style={{ flex: 1, minWidth: 0, color: PALETTE.gold }}>
                 {t(advisoryKey)}
               </AgText>
             </View>

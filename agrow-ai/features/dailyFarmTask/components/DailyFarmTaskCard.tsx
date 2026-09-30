@@ -104,10 +104,10 @@ export function DailyFarmTaskCard() {
   return (
     <View>
       <View style={styles.headingRow}>
-        <AgText variant="bodyLarge" weight="bold" color="inherit" style={{ color: colors.text }}>
+        <AgText variant="bodyLarge" weight="bold" color="inherit" style={[styles.shrinkText, { color: colors.text }]}>
           {hasUrgent ? t("dailyTask.headerUrgent") : t("dailyTask.header")}
         </AgText>
-        <Pressable onPress={() => router.push("/daily-task" as never)} accessibilityRole="button">
+        <Pressable onPress={() => router.push("/daily-task" as never)} accessibilityRole="button" style={styles.noShrink}>
           <AgText variant="bodySmall" weight="semibold" color="inherit" style={{ color: colors.primary }}>
             {t("dailyTask.viewHistory")}
           </AgText>
@@ -150,6 +150,8 @@ export function DailyFarmTaskCard() {
 }
 
 const styles = StyleSheet.create({
+  shrinkText: { flex: 1, minWidth: 0 },
+  noShrink: { flexShrink: 0 },
   headingRow: { marginBottom: 9, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
   skeleton: { width: "100%", height: 110, borderRadius: 17 },
   emptyCard: {

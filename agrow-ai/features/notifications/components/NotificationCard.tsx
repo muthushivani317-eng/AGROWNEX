@@ -42,7 +42,7 @@ export const NotificationCard = memo(function NotificationCard({ item, onPress }
           <AgText variant="caption" weight="semibold" style={{ color }}>{t(SEVERITY_LABEL_KEY[item.severity])}</AgText>
         </View>
         <View style={styles.titleRow}>
-          <AgText variant="bodyLarge" weight="bold" numberOfLines={2} style={styles.primaryText}>{t(item.titleKey, item.payload)}</AgText>
+          <AgText variant="bodyLarge" weight="bold" numberOfLines={3} style={[styles.primaryText, { flex: 1, minWidth: 0 }]}>{t(item.titleKey, item.payload)}</AgText>
           {!item.read ? <View style={styles.unreadDot} accessibilityLabel={t('notifications.unreadDot')} /> : null}
         </View>
         <AgText variant="bodySmall" numberOfLines={3} style={styles.secondaryText}>{t(item.messageKey, item.payload)}</AgText>
@@ -65,8 +65,8 @@ const styles = StyleSheet.create({
   unreadCard: { borderColor: '#8EC49B', backgroundColor: '#FBFFF8' },
   severityRail: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 5 },
   pressed: { opacity: 0.8 },
-  iconTile: { width: 68, height: 68, alignItems: 'center', justifyContent: 'center', borderRadius: 25, borderWidth: 1 },
-  copy: { flex: 1, alignItems: 'flex-start', gap: 6 },
+  iconTile: { width: 52, height: 52, alignItems: 'center', justifyContent: 'center', borderRadius: 25, borderWidth: 1 },
+  copy: { flex: 1, minWidth: 0, alignItems: 'flex-start', gap: 6 },
   badge: { alignSelf: 'flex-start', paddingHorizontal: 9, paddingVertical: 4, borderRadius: 8 },
   titleRow: { width: '100%', flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   primaryText: { flex: 1, color: nt.ink },

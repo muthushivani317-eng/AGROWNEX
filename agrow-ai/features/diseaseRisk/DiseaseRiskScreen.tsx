@@ -349,7 +349,7 @@ export function DiseaseRiskScreen() {
       {current.data && !failed ? (
         <View style={styles.section}>
           <View style={styles.sectionHeading}>
-            <AgText variant="headingM" weight="bold" style={styles.ink}>
+            <AgText variant="headingM" weight="bold" style={[styles.ink, styles.shrinkText]}>
               {t("diseaseRisk.latestTitle")}
             </AgText>
             <View style={styles.liveBadge}>
@@ -382,7 +382,7 @@ export function DiseaseRiskScreen() {
       {earlierAssessments.length > 0 && !history.isError ? (
         <View style={styles.section}>
           <View style={styles.sectionHeading}>
-            <AgText variant="headingM" weight="bold" style={styles.ink}>
+            <AgText variant="headingM" weight="bold" style={[styles.ink, styles.shrinkText]}>
               {t("diseaseRisk.history")}
             </AgText>
             <AgText variant="bodySmall" style={styles.muted}>
@@ -409,6 +409,8 @@ export function DiseaseRiskScreen() {
 }
 
 const styles = StyleSheet.create({
+  shrinkText: { flex: 1, minWidth: 0 },
+  noShrink: { flexShrink: 0 },
   page: { paddingTop: 8, paddingBottom: 48, gap: 16 },
   flexCopy: { flex: 1, gap: 5 },
   ink: { color: C.ink },
@@ -501,6 +503,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   liveBadge: {
+    flexShrink: 0,
     minHeight: 32,
     paddingHorizontal: 11,
     borderRadius: 16,

@@ -531,6 +531,8 @@ export function FarmFormScreen({ farmId }: { farmId?: string }) {
                 title={t("common.confirm")}
                 size="sm"
                 light
+                fullWidth={false}
+                className="flex-1"
                 onPress={() => {
                   setValue("crop", cropSuggestion.matchedId, {
                     shouldValidate: true,
@@ -544,6 +546,8 @@ export function FarmFormScreen({ farmId }: { farmId?: string }) {
                 variant="ghost"
                 size="sm"
                 light
+                fullWidth={false}
+                className="flex-1"
                 onPress={() => setCropSuggestion(null)}
               />
             </View>

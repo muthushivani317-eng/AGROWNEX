@@ -207,7 +207,7 @@ export function CompleteProfileScreen() {
           <ReviewCard title={copy.reviewLocation} value={locationSummary(village, block, district, language)} onPress={() => setStep(1)} copy={copy} />
           <ReviewCard title={copy.reviewProducts} value={products.length ? products.map((product) => productLabel(catalog.data?.items ?? [], product.productId, language)).join(', ') : copy.none} onPress={() => setStep(2)} copy={copy} />
           <ReviewCard title={copy.reviewSupport} value={supportSummary(myLinks.data ?? [], language) || [wantsFpo && 'FPO', wantsKvk && 'KVK'].filter(Boolean).join(' + ') || copy.none} onPress={() => setStep(3)} copy={copy} />
-          <View style={styles.usefulNote}><Sprout size={22} color={GREEN} /><AgText variant="bodySmall" style={styles.primary}>{language === 'ta' ? 'இந்த விவரங்கள் பயிர் வரைபடம், கொள்முதல் திட்டம், பயிற்சி மற்றும் விவசாயி ஆதரவுக்கு உதவும்.' : 'These details support crop mapping, procurement planning, training and farmer support.'}</AgText></View>
+          <View style={styles.usefulNote}><Sprout size={22} color={GREEN} /><AgText variant="bodySmall" style={[styles.primary, { flex: 1, minWidth: 0 }]}>{language === 'ta' ? 'இந்த விவரங்கள் பயிர் வரைபடம், கொள்முதல் திட்டம், பயிற்சி மற்றும் விவசாயி ஆதரவுக்கு உதவும்.' : 'These details support crop mapping, procurement planning, training and farmer support.'}</AgText></View>
         </View>
       ) : null}
 

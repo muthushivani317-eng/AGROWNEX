@@ -144,7 +144,7 @@ export function AdminConsoleNavigation() {
   return (
     <AgCard className="gap-1 p-2">
       <View className="px-3 pb-2 pt-3">
-        <AgText variant="caption" weight="bold" color="muted">AGROWAI ADMIN</AgText>
+        <AgText variant="caption" weight="bold" color="muted">AGROWNEX ADMIN</AgText>
         <AgText variant="headingS" weight="bold">Operations console</AgText>
       </View>
 

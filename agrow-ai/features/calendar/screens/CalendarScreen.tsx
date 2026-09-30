@@ -168,10 +168,10 @@ export function CalendarScreen() {
     <View style={styles.headerBlock}>
       <View style={styles.brandBar}>
         {backButton}
-        <View style={styles.brand} accessibilityLabel="AgrowAI">
+        <View style={styles.brand} accessibilityLabel="AgrowNex">
           <Sprout size={28} color={CALENDAR_COLORS.primary} />
           <AgText variant="headingS" weight="bold" style={styles.brandText}>
-            AgrowAI
+            AgrowNex
           </AgText>
         </View>
         {events.length > 0 ? (

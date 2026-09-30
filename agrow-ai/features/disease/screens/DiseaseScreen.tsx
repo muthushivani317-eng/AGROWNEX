@@ -1113,8 +1113,8 @@ export function DiseaseScreen() {
 
   return (
     <AgScreen scroll>
-      <View className="mt-2 flex-row items-center justify-between">
-        <View className="flex-row items-center gap-2">
+      <View className="mt-2 flex-row items-center justify-between gap-2">
+        <View className="flex-row items-center gap-2" style={{ flex: 1, minWidth: 0 }}>
           <AgPressable
             onPress={() => router.back()}
             accessibilityRole="button"
@@ -1123,7 +1123,7 @@ export function DiseaseScreen() {
           >
             <ArrowLeft size={24} color={colors.text} />
           </AgPressable>
-          <AgText variant="headingM" weight="bold">
+          <AgText variant="headingM" weight="bold" style={{ flexShrink: 1 }}>
             {`${cropDisplayName(crop)} ${t("disease.title")}`}
           </AgText>
         </View>

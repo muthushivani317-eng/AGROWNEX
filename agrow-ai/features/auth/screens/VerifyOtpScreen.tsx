@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, ArrowRight, ShieldCheck } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AppState, StyleSheet, View } from 'react-native';
+import { AppState, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { AgButton, AgOtpInput, AgPressable, AgScreen, AgText } from '@/components/ui';
 
@@ -23,6 +23,7 @@ const OTP_COLORS = {
 export function VerifyOtpScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { width } = useWindowDimensions();
   const displayPhone = useOtpFlowStore((s) => s.displayPhone);
   const phoneE164 = useOtpFlowStore((s) => s.phoneE164);
   const hasConfirmation = useOtpFlowStore((s) => Boolean(s.confirmation));
@@ -102,11 +103,11 @@ export function VerifyOtpScreen() {
           <Image source={require('@/assets/images/android-icon-foreground.png')}
             contentFit="contain" style={styles.emblem} accessible={false} />
           <View style={styles.wordmark}>
-            <AgText variant="headingS" weight="bold" style={styles.brandAgro}>Agro</AgText>
-            <AgText variant="headingS" weight="bold" style={styles.brandNex}>nex</AgText>
+            <AgText variant="headingS" weight="bold" style={styles.brandAgro}>Agrow</AgText>
+            <AgText variant="headingS" weight="bold" style={styles.brandNex}>Nex</AgText>
           </View>
         </View>
-        <AuthLanguageSelector variant="hero" style={styles.languageSelector} />
+        <AuthLanguageSelector variant="hero" compact={width < 400} style={styles.languageSelector} />
       </View>
 
       <View style={styles.content}>

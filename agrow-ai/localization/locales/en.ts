@@ -63,7 +63,7 @@ export const en = {
     missingEvidenceLabel: "Required evidence",
     confirmCropStage: "Confirm the current crop stage in Crop-stage tracking.",
     sourcedNotReviewedNotice:
-      "This guidance is compiled from a public agricultural source, not personally reviewed by an agronomist for AgrowAI.",
+      "This guidance is compiled from a public agricultural source, not personally reviewed by an agronomist for AgrowNex.",
     verified: {
       blackgram: {
         prepare_land: {
@@ -303,7 +303,7 @@ export const en = {
     title: "App configuration error",
     message: "A secure server connection has not been configured.",
     supportMessage:
-      "Secure server configuration is unavailable. Please contact AgrowAI support.",
+      "Secure server configuration is unavailable. Please contact AgrowNex support.",
   },
   language: {
     title: "Choose your language",
@@ -347,7 +347,7 @@ export const en = {
     brandTagline: "Cultivating Agriculture with Intelligence.",
     heroTaglineTamil: "Strength for farmers, trust in technology.",
     heroTaglineEnglish: "Smart Farming. Better Tomorrow.",
-    heroWelcome: "Welcome to Agronex",
+    heroWelcome: "Welcome to AgrowNex",
     getStarted: "Let's get started",
     phoneEntrySubtitle:
       "Enter your mobile number to receive a verification code.",
@@ -382,7 +382,7 @@ export const en = {
     sessionExpired: "Your session has expired. Please sign in again.",
     otpCodeExpired: "This verification code has expired. Request a new code.",
     resendNewCode: "Resend new code",
-    notAuthorized: "This account is not authorized to access AgrowAI",
+    notAuthorized: "This account is not authorized to access AgrowNex",
     otpSendFailed: "Couldn't send the verification code. Please try again.",
     otpConfirmFailed: "Couldn't verify the code. Please try again.",
     somethingWrong: "Couldn't complete authentication. Please try again.",
@@ -391,9 +391,9 @@ export const en = {
       "The authentication service is temporarily unavailable. Please try again later.",
     otpQuotaExceeded: "Too many attempts. Please try again later.",
     otpBillingRequired:
-      "SMS verification is not enabled for this service. Please contact AgrowAI support.",
+      "SMS verification is not enabled for this service. Please contact AgrowNex support.",
     otpPhoneSignInDisabled:
-      "Phone sign-in is not enabled. Please contact AgrowAI support.",
+      "Phone sign-in is not enabled. Please contact AgrowNex support.",
     otpNetworkError:
       "No internet connection. Check your network and try again.",
     otpVerificationUnavailable:
@@ -404,7 +404,7 @@ export const en = {
     title: "Support tickets",
     reportIssue: "Report an issue",
     subtitle:
-      "Tell the AgrowAI team what went wrong. You can track progress and read replies here.",
+      "Tell the AgrowNex team what went wrong. You can track progress and read replies here.",
     profileDescription: "Get help and track reported issues",
     newTicket: "Raise a support ticket",
     category: "Issue category",
@@ -418,12 +418,12 @@ export const en = {
     submit: "Send ticket",
     sending: "Sending…",
     sentTitle: "Ticket sent",
-    sentMessage: "The AgrowAI support team can now review your issue.",
+    sentMessage: "The AgrowNex support team can now review your issue.",
     errorTitle: "Ticket not sent",
     errorMessage: "Check your connection and try again.",
     myTickets: "My reported issues",
     noTickets: "No support tickets yet",
-    adminReply: "AgrowAI support reply",
+    adminReply: "AgrowNex support reply",
     replyPlaceholder: "Reply to the support team",
     sendReply: "Send reply",
     categories: {
@@ -819,7 +819,7 @@ export const en = {
     title: "Equipment requests",
     testMode: "KVK CONTROLLED TEST",
     noPayments:
-      "Request and approval coordination only. Payments, deposits, pricing and delivery are not handled by AgrowAI.",
+      "Request and approval coordination only. Payments, deposits, pricing and delivery are not handled by AgrowNex.",
     addListing: "List equipment",
     name: "Equipment name",
     publish: "Publish listing",
@@ -865,7 +865,7 @@ export const en = {
     empty: "No team members have been added.",
     remove: "Remove",
     addFailed:
-      "The member could not be added. Confirm that this phone number belongs to an active AgrowAI account.",
+      "The member could not be added. Confirm that this phone number belongs to an active AgrowNex account.",
     loadFailed: "The farm team could not be loaded.",
     roles: {
       manager: "Manager",
@@ -1049,7 +1049,7 @@ export const en = {
       '**சுருக்கம்:** உங்கள் கேள்விக்கு ("{{question}}") உதவ நான் இங்கே இருக்கிறேன்.\n**பரிந்துரை:** உங்கள் பயிர், மண் மற்றும் தற்போதைய வானிலைக்கு ஏற்ப செயல்படுங்கள்.\n**எச்சரிக்கை:** உறுதியாகத் தெரியாவிட்டால் உள்ளூர் வேளாண் அலுவலரை அணுகவும்.\n**அடுத்த படி:** மேலும் துல்லியமான ஆலோசனைக்குப் பண்ணை விவரங்களைச் சேர்க்கவும்.\n(டெமோ பதில்)',
     historyTitle: "Chat history",
     noConversationsTitle: "No conversations yet",
-    noConversationsMessage: "Your past chats with AgrowAI will appear here.",
+    noConversationsMessage: "Your past chats with AgrowNex will appear here.",
     deleteConfirmTitle: "Delete this chat?",
     deleteConfirmMessage:
       "This conversation will be removed. This cannot be undone.",
@@ -1403,7 +1403,7 @@ export const en = {
     prioritySuffix: "priority",
     officialGuidance: "Verify against official agricultural guidance.",
     sourcedNotReviewedNotice:
-      "This schedule is compiled from a public agricultural source, not personally reviewed by an agronomist for AgrowAI.",
+      "This schedule is compiled from a public agricultural source, not personally reviewed by an agronomist for AgrowNex.",
     tipTitle: "Tip",
     tipMessage:
       "Keep your farm activities updated to make your calendar easier to follow.",
@@ -1488,7 +1488,7 @@ export const en = {
       },
       disease_inspection: {
         title: "Disease inspection",
-        desc: "Inspect leaves; use AgrowAI disease detection if unsure.",
+        desc: "Inspect leaves; use AgrowNex disease detection if unsure.",
       },
       flowering: {
         title: "Flowering check",
@@ -2972,7 +2972,7 @@ export const en = {
     upcomingTitle: "Upcoming harvests",
     historyTitle: "Harvest history",
     procurementNote:
-      "AgrowAI shares this with procurement partners — no sales happen in the app.",
+      "AgrowNex shares this with procurement partners — no sales happen in the app.",
     viewAll: "All",
     viewAvailable: "Available now",
     viewUpcoming: "Upcoming",
@@ -3073,7 +3073,7 @@ export const en = {
     offerQuantity: "Quantity",
     offerPrice: "Buyer price",
     transportCost: "Transport cost",
-    commission: "AgrowAI commission",
+    commission: "AgrowNex commission",
     estimatedFarmerAmount: "Estimated amount to you",
     acceptOffer: "Accept offer",
     rejectOffer: "Reject offer",
@@ -4089,8 +4089,8 @@ export const en = {
     },
   },
   inputsSell: {
-    title: "Sell to Agrownex",
-    intro: "Make organic inputs like vermicompost or panchagavya? Agrownex buys them after a quality check and sells them to other farmers.",
+    title: "Sell to AgrowNex",
+    intro: "Make organic inputs like vermicompost or panchagavya? AgrowNex buys them after a quality check and sells them to other farmers.",
     entryTitle: "Sell your organic products to us",
     entryBody: "We check quality, buy your batch and resell it.",
     applyTitle: "Apply as a seller",
@@ -4106,7 +4106,7 @@ export const en = {
     applicationReview: "Application under review",
     applicationReviewBody: "Our team is checking your application. We will call you, and may visit your farm.",
     applicationClosed: "Application not approved",
-    applicationClosedBody: "Please contact Agrownex support for details.",
+    applicationClosedBody: "Please contact AgrowNex support for details.",
     approvedTitle: "You are an approved seller",
     approvedBody: "Offer a batch whenever you have product ready. We check quality and send you a purchase offer.",
     offerBatch: "Offer a new batch",
@@ -4196,7 +4196,7 @@ export const en = {
       "Not for fertilizer decisions. This number is not a verified physical-card reading. Ask your local agricultural extension officer for crop-specific advice.",
     educationalResult: "Educational colour estimate",
     educationalGuidance:
-      "This compares the photo with AgrowAI's approximate digital palette. It cannot determine nitrogen deficiency or fertilizer requirements.",
+      "This compares the photo with AgrowNex's approximate digital palette. It cannot determine nitrogen deficiency or fertilizer requirements.",
     learnMore: "Learn about rice LCC — TNAU",
     sourceUnavailable:
       "The TNAU learning page could not be opened. Please try again later.",
@@ -5147,7 +5147,7 @@ export const en = {
   admin: {
     title: "Admin dashboard",
     subtitle:
-      "AgrowAI team operations — read-only visibility across every module.",
+      "AgrowNex team operations — read-only visibility across every module.",
     entry: "Admin dashboard",
     entryDesc: "Team operations, procurement and monitoring",
     sampleNotice: "Sample data (development) — not real operational figures.",
@@ -5365,7 +5365,7 @@ export const en = {
     modelProbability: "Model probability: {{value}}%",
     alternatives: "Other model outputs",
     disclaimer:
-      "Not agronomic advice. This model has not completed independent AgrowAI field evaluation. Verify with a KVK officer or qualified agronomist before planting or spending money.",
+      "Not agronomic advice. This model has not completed independent AgrowNex field evaluation. Verify with a KVK officer or qualified agronomist before planting or spending money.",
     error:
       "The provisional recommendation could not be completed. Check the values and connection, then try again.",
     fields: {

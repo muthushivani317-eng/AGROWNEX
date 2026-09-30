@@ -38,7 +38,7 @@ describe('OTP verification screen release contract', () => {
   });
 
   it('keeps the resend cooldown accurate after backgrounding the app', () => {
-    expect(otpScreen).toContain("import { AppState, StyleSheet, View } from 'react-native';");
+    expect(otpScreen).toContain("import { AppState, StyleSheet, useWindowDimensions, View } from 'react-native';");
     expect(otpScreen).toContain('resendAvailableAt - Date.now()');
     expect(otpScreen).toContain("AppState.addEventListener('change'");
     expect(otpScreen).toContain("if (state === 'active') updateCountdown();");

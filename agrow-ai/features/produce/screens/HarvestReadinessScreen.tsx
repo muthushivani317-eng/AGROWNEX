@@ -275,7 +275,7 @@ export function HarvestReadinessScreen() {
       {!loading && !error && cycleId ? (
         <>
           <View style={styles.sectionHeading}>
-            <AgText variant="headingM" weight="bold" style={styles.ink}>
+            <AgText variant="headingM" weight="bold" style={[styles.ink, styles.shrinkText]}>
               {t("harvestReadiness.status")}
             </AgText>
             {value?.cached ? (
@@ -438,7 +438,7 @@ export function HarvestReadinessScreen() {
       {!loading && !error && !history.isError && history.data?.length ? (
         <View style={styles.historySection}>
           <View style={styles.sectionHeading}>
-            <AgText variant="headingM" weight="bold" style={styles.ink}>
+            <AgText variant="headingM" weight="bold" style={[styles.ink, styles.shrinkText]}>
               {t("harvestReadiness.history")}
             </AgText>
             <AgText variant="bodySmall" style={styles.muted}>
@@ -478,6 +478,8 @@ export function HarvestReadinessScreen() {
 }
 
 const styles = StyleSheet.create({
+  shrinkText: { flex: 1, minWidth: 0 },
+  noShrink: { flexShrink: 0 },
   page: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 48, gap: 16 },
   ink: { color: C.ink },
   muted: { color: C.muted },

@@ -514,7 +514,7 @@ export function GrowthMonitorScreen() {
       ) : null}
       {view !== "compare" ? (
         <View style={styles.sectionHeading}>
-          <AgText variant="headingS" weight="bold" style={styles.inkText}>
+          <AgText variant="headingS" weight="bold" style={[styles.inkText, { flex: 1, minWidth: 0 }]}>
             {view === "timeline"
               ? t("growth.timelineHeading")
               : t("growth.historyHeading")}
@@ -631,10 +631,10 @@ function Header({
         >
           <ArrowLeft size={25} color={GROWTH_COLORS.ink} />
         </AgPressable>
-        <View style={styles.brand} accessibilityLabel="AgrowAI">
+        <View style={styles.brand} accessibilityLabel="AgrowNex">
           <Sprout size={27} color={GROWTH_COLORS.primary} />
           <AgText variant="headingS" weight="bold" style={styles.primaryText}>
-            AgrowAI
+            AgrowNex
           </AgText>
         </View>
         <AgPressable

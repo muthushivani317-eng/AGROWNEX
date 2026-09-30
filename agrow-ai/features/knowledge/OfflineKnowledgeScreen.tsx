@@ -141,7 +141,7 @@ export function OfflineKnowledgeScreen() {
         </AgText>
       </View>
       <View style={styles.topBar}>
-        <AgText style={styles.sectionTitle}>{tamil ? "இயற்கை செய்முறை மொழி" : "Organic recipe language"}</AgText>
+        <AgText style={[styles.sectionTitle, { flex: 1, minWidth: 0 }]}>{tamil ? "இயற்கை செய்முறை மொழி" : "Organic recipe language"}</AgText>
         <AgPressable accessibilityRole="button" accessibilityState={{ selected: tamil }} onPress={() => setRecipeLanguage("ta")} style={styles.offlinePill}>
           <AgText style={styles.offlinePillText}>தமிழ்</AgText>
         </AgPressable>
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: UI.border,
   },
-  offlinePill: {
+  offlinePill: { flexShrink: 0,
     minHeight: 40,
     maxWidth: "78%",
     flexDirection: "row",

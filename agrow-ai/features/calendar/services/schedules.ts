@@ -138,7 +138,7 @@ export const DEFAULT_SCHEDULE: ActivityTemplate[] = [
     "vegetative",
     "none",
     "Disease inspection",
-    "Inspect leaves; use AgrowAI disease detection if unsure.",
+    "Inspect leaves; use AgrowNex disease detection if unsure.",
   ),
   t(
     "flowering",

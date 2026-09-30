@@ -43,7 +43,7 @@ export const OFFLINE_KNOWLEDGE: readonly OfflineKnowledgeArticle[] = [
     titleKey: 'offlineKnowledge.photoGuideTitle',
     summaryKey: 'offlineKnowledge.photoGuideSummary',
     stepsKey: 'offlineKnowledge.photoGuideSteps',
-    sourceTitle: 'AgrowAI field-test capture guidance',
+    sourceTitle: 'AgrowNex field-test capture guidance',
     sourceUrl: 'https://agritech.tnau.ac.in/crop_protection/crop_prot.html',
   },
   {
