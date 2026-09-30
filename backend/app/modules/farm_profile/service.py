@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,9 +11,15 @@ from app.core.exceptions import ConflictError, NotFoundError
 from app.modules.admin.models import AuditLog
 from app.modules.auth.models import User
 from app.modules.auth.profile_models import FarmerProfile
-from app.modules.farm_profile.catalog import ITEMS, item_label
+from app.modules.farm_profile.catalog import APP_ITEM_ALIASES_REVERSE, ITEMS, item_label
 from app.modules.farm_profile.models import FarmerFarmItem
-from app.modules.farm_profile.schemas import ONBOARDING_FIELDS, FarmItemIn, FarmItemOut
+from app.modules.farm_profile.schemas import (
+    ONBOARDING_FIELDS,
+    AppFarmProductIn,
+    AppFarmProductOut,
+    FarmItemIn,
+    FarmItemOut,
+)
 from app.modules.organic_mvp.models import OrganicFpo, OrganicPartnerFarmerLink, OrganicPartnerOrganization
 
 JOIN_REQUESTED = "join_requested"
@@ -24,7 +30,49 @@ def apply_onboarding_fields(profile: FarmerProfile, data) -> None:
     """Copy only the onboarding fields the client sent (see OnboardingProfileFields)."""
     for name in ONBOARDING_FIELDS:
         if name in data.model_fields_set:
-            setattr(profile, name, getattr(data, name))
+            value = getattr(data, name)
+            if name.startswith("wants_") and value is None:
+                continue
+            setattr(profile, name, value)
+
+
+async def apply_app_farm_products(session: AsyncSession, user_id: uuid.UUID, data) -> None:
+    """Store the app's ``farm_products`` (PUT /farmers/me) as farm items.
+
+    Only when the client sent the field; the list replaces the farmer's items.
+    """
+    products: list[AppFarmProductIn] | None = getattr(data, "farm_products", None)
+    if products is None or "farm_products" not in data.model_fields_set:
+        return
+    items: dict[tuple[str, str], FarmItemIn] = {}
+    for product in products:
+        item = product.to_item()
+        items[(item.item_code, (item.custom_name or "").lower())] = item  # last one wins
+    await _replace_rows(session, user_id, list(items.values()))
+
+
+def app_products_out(rows: list[FarmerFarmItem], today: date | None = None) -> list[AppFarmProductOut]:
+    """Farm items in the app's ``farm_products`` shape (next harvest month as YYYY-MM)."""
+    today = today or date.today()
+    out = []
+    for row in rows:
+        month = None
+        if row.harvest_months:
+            upcoming = [m for m in row.harvest_months if m >= today.month]
+            m = upcoming[0] if upcoming else row.harvest_months[0]
+            month = f"{today.year + (0 if upcoming else 1)}-{m:02d}"
+        is_other = row.item_code not in ITEMS
+        out.append(
+            AppFarmProductOut(
+                product_id=(row.custom_name or "other") if is_other else APP_ITEM_ALIASES_REVERSE.get(row.item_code, row.item_code),
+                category=row.category,
+                expected_harvest_month=month,
+                approximate_quantity=row.approx_quantity,
+                unit="count" if row.unit in ("nos", "head") else row.unit,
+                available_for_sale=row.available_for_sale,
+            )
+        )
+    return out
 
 
 def item_out(row: FarmerFarmItem) -> FarmItemOut:
@@ -47,6 +95,12 @@ async def list_items(session: AsyncSession, user_id: uuid.UUID) -> list[FarmerFa
 
 
 async def replace_items(session: AsyncSession, user_id: uuid.UUID, items: list[FarmItemIn]) -> list[FarmerFarmItem]:
+    await _replace_rows(session, user_id, items)
+    await session.commit()
+    return await list_items(session, user_id)
+
+
+async def _replace_rows(session: AsyncSession, user_id: uuid.UUID, items: list[FarmItemIn]) -> None:
     await session.execute(delete(FarmerFarmItem).where(FarmerFarmItem.user_id == user_id))
     session.add_all(
         [
@@ -64,8 +118,7 @@ async def replace_items(session: AsyncSession, user_id: uuid.UUID, items: list[F
             for item in items
         ]
     )
-    await session.commit()
-    return await list_items(session, user_id)
+    await session.flush()
 
 
 async def directory(session: AsyncSession, *, kind: str | None, district: str | None) -> list[dict]:

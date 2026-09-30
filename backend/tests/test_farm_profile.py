@@ -273,3 +273,76 @@ async def test_join_edge_cases(db_session):
         await accept_join_request(fpo, uuid.UUID(link["id"]), db_session, platform)
     # Rejected farmer may ask again later.
     assert _data(await join_organization(fpo, JoinRequestIn(consent=True), db_session, other))["status"] == "join_requested"
+
+
+# --- App onboarding payload (PUT /farmers/me from CompleteProfileScreen) ---
+APP_PAYLOAD = {
+    "full_name": "Muthu",
+    "language": "ta",
+    "district": "Thoothukudi",
+    "block": "Srivaikuntam",
+    "village": "Kovil",
+    "experience_years": 12,
+    "preferred_crops": ["paddy"],
+    "land_holding_acres": 4.5,
+    "farmer_type": "small",
+    "landmark": "Near school",
+    "latitude": 8.63,
+    "longitude": 77.91,
+    "farm_products": [
+        {"product_id": "paddy", "category": "crops", "expected_harvest_month": "2027-01",
+         "approximate_quantity": 40, "unit": "quintal", "available_for_sale": True},
+        {"product_id": "redgram", "category": "crops", "expected_harvest_month": None,
+         "approximate_quantity": None, "unit": "kg", "available_for_sale": False},
+        {"product_id": "goat", "category": "livestock", "approximate_quantity": 6, "unit": "count"},
+        {"product_id": "cow_milk", "category": "livestock", "approximate_quantity": 20, "unit": "litre",
+         "available_for_sale": True},
+        {"product_id": "compost", "category": "other", "approximate_quantity": 2, "unit": "tonne"},
+        {"product_id": "dragon_fruit", "category": "fruits", "approximate_quantity": 50, "unit": "kg"},
+    ],
+    "wants_fpo_support": True,
+    "wants_kvk_support": False,
+}
+
+
+@pytest.mark.asyncio
+async def test_app_onboarding_payload_lands_in_farm_items_and_board(db_session):
+    from datetime import date
+
+    from app.modules.farm_profile.service import app_products_out, list_items
+    from app.modules.farmers.schemas import FarmerMeUpdate
+    from app.modules.farmers.service import FarmerService
+
+    farmer = await _user(db_session, "app-farmer", phone="+919222222222")
+    await db_session.commit()
+    profile = await FarmerService(db_session).update_me(farmer, FarmerMeUpdate(**APP_PAYLOAD))
+    await db_session.commit()
+
+    assert profile.farmer_type == "small_farmer" and profile.land_holding_acres == 4.5
+    assert profile.latitude == 8.63 and profile.wants_fpo_support is True and profile.wants_kvk_support is False
+    rows = {r.item_code if r.item_code != "other" else r.custom_name: r for r in await list_items(db_session, farmer.id)}
+    assert set(rows) == {"paddy", "red_gram", "goat", "milk", "compost", "dragon fruit"}
+    assert rows["paddy"].harvest_months == [1] and rows["paddy"].available_for_sale is True
+    assert rows["goat"].unit == "head" and rows["goat"].approx_quantity == 6
+    assert rows["milk"].category == "other_products" and rows["dragon fruit"].category == "fruits"
+
+    # Round-trips back in the app's shape.
+    out = {p.product_id: p for p in app_products_out(list(rows.values()), today=date(2026, 9, 30))}
+    assert out["redgram"].unit == "kg" and out["cow_milk"].available_for_sale is True
+    assert out["paddy"].expected_harvest_month == "2027-01" and out["goat"].unit == "count"
+
+    # Old app build without farm_products / flags keeps them.
+    await FarmerService(db_session).update_me(farmer, FarmerMeUpdate(full_name="Muthu K", wants_fpo_support=None))
+    await db_session.commit()
+    assert len(await list_items(db_session, farmer.id)) == 6
+    assert profile.wants_fpo_support is True
+
+    # FPO sees it once linked.
+    platform = await _admin(db_session, AdminRole.OWNER.value)
+    fpo, manager = await _org(db_session, platform, "App FPO")
+    await join_organization(fpo, JoinRequestIn(consent=True), db_session, farmer)
+    [request] = await list_link_requests(fpo, db_session, platform)
+    await accept_join_request(fpo, uuid.UUID(request["id"]), db_session, platform)
+    board = await build_board(db_session, fpo)
+    assert {i["code"] for i in board["farm_items"]} >= {"paddy", "goat", "milk"}
+    assert board["summary"]["farmer_types"][0]["code"] == "small_farmer"

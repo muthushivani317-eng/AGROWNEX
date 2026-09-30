@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
+from app.modules.farm_profile import service as farm_profile_service
 from app.modules.farmers.dependencies import CurrentUser, FarmerServiceDep
 from app.modules.farmers.schemas import (
     FarmerLanguageOut,
@@ -31,7 +32,7 @@ router = APIRouter(prefix="/farmers", tags=["farmers"])
 async def get_me(current_user: CurrentUser, service: FarmerServiceDep):
     """Return the authenticated farmer's profile."""
     profile = await service.get_me(current_user)
-    return success(FarmerMeOut.from_profile(profile, current_user))
+    return success(await _me_out(service, profile, current_user))
 
 
 @router.put("/me", response_model=SuccessResponse[FarmerMeOut])
@@ -40,9 +41,15 @@ async def update_me(
 ):
     """Create or update the authenticated farmer's profile."""
     profile = await service.update_me(current_user, payload)
-    return success(
-        FarmerMeOut.from_profile(profile, current_user), message="Profile saved"
+    return success(await _me_out(service, profile, current_user), message="Profile saved")
+
+
+async def _me_out(service, profile, user) -> FarmerMeOut:
+    out = FarmerMeOut.from_profile(profile, user)
+    out.farm_products = farm_profile_service.app_products_out(
+        await farm_profile_service.list_items(service.session, user.id)
     )
+    return out
 
 
 # ----- /farmers/preferences -----

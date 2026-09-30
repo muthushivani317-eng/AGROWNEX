@@ -18,7 +18,7 @@ from app.modules.auth.profile_models import (
     FarmerProfile,
 )
 from app.modules.auth.repositories import FarmerProfileRepository
-from app.modules.farm_profile.service import apply_onboarding_fields
+from app.modules.farm_profile.service import apply_app_farm_products, apply_onboarding_fields
 from app.modules.farmers.constants import DEFAULT_LANGUAGE
 from app.modules.farmers.repositories import (
     FarmerLanguageRepository,
@@ -74,6 +74,7 @@ class FarmerService:
         profile.primary_crop = primary
         profile.secondary_crop = secondary
         apply_onboarding_fields(profile, data)
+        await apply_app_farm_products(self.session, user.id, data)
         await self.session.flush()
 
         await self._ensure_defaults(profile)

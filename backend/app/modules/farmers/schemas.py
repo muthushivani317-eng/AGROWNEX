@@ -84,6 +84,10 @@ class FarmerMeOut(OnboardingProfileOut):
             landmark=getattr(profile, "landmark", None),
             needs=getattr(profile, "needs", None),
             needs_note=getattr(profile, "needs_note", None),
+            latitude=getattr(profile, "latitude", None),
+            longitude=getattr(profile, "longitude", None),
+            wants_fpo_support=bool(getattr(profile, "wants_fpo_support", False)),
+            wants_kvk_support=bool(getattr(profile, "wants_kvk_support", False)),
         )
 
 

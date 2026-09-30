@@ -5,7 +5,18 @@ import uuid
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from app.modules.farm_profile.catalog import CATEGORIES, FARMER_TYPES, ITEMS, NEEDS, OTHER_CODE, UNITS
+from app.modules.farm_profile.catalog import (
+    APP_CATEGORY_ALIASES,
+    APP_ITEM_ALIASES,
+    APP_UNIT_ALIASES,
+    CATEGORIES,
+    FARMER_TYPE_ALIASES,
+    FARMER_TYPES,
+    ITEMS,
+    NEEDS,
+    OTHER_CODE,
+    UNITS,
+)
 
 MAX_ITEMS = 60
 
@@ -22,10 +33,17 @@ class OnboardingProfileFields(BaseModel):
     landmark: str | None = Field(default=None, max_length=160)
     needs: list[str] | None = Field(default=None, max_length=len(NEEDS))
     needs_note: str | None = Field(default=None, max_length=300)
+    latitude: float | None = Field(default=None, ge=-90, le=90)
+    longitude: float | None = Field(default=None, ge=-180, le=180)
+    wants_fpo_support: bool | None = None
+    wants_kvk_support: bool | None = None
+    # App onboarding shape; stored in farmer_farm_items (see farm_profile.service).
+    farm_products: list[AppFarmProductIn] | None = Field(default=None, max_length=MAX_ITEMS)
 
-    @field_validator("farmer_type")
+    @field_validator("farmer_type", mode="before")
     @classmethod
     def _farmer_type(cls, value: str | None) -> str | None:
+        value = FARMER_TYPE_ALIASES.get(value, value) if isinstance(value, str) else value
         if value is not None and value not in FARMER_TYPES:
             raise ValueError(f"farmer_type must be one of: {', '.join(FARMER_TYPES)}")
         return value
@@ -46,7 +64,55 @@ class OnboardingProfileFields(BaseModel):
         return (value.strip() or None) if isinstance(value, str) else value
 
 
-ONBOARDING_FIELDS = tuple(OnboardingProfileFields.model_fields)
+# Scalar columns copied straight onto FarmerProfile (farm_products is separate;
+# the wants_* flags are non-null so None means "not sent").
+ONBOARDING_FIELDS = tuple(name for name in OnboardingProfileFields.model_fields if name != "farm_products")
+
+
+class AppFarmProductIn(BaseModel):
+    """One product as the app's onboarding sends it (PUT /farmers/me)."""
+
+    product_id: str = Field(min_length=1, max_length=80)
+    category: str = Field(min_length=1, max_length=40)
+    expected_harvest_month: str | None = Field(default=None, pattern=r"^\d{4}-(0[1-9]|1[0-2])$")
+    approximate_quantity: float | None = Field(default=None, ge=0, le=10_000_000)
+    unit: str | None = Field(default=None, max_length=16)
+    available_for_sale: bool = False
+
+    def to_item(self) -> FarmItemIn:
+        code = APP_ITEM_ALIASES.get(self.product_id, self.product_id)
+        category = APP_CATEGORY_ALIASES.get(self.category, self.category)
+        unit = APP_UNIT_ALIASES.get(self.unit, self.unit) if self.unit else None
+        if code in ITEMS:
+            if unit == "nos" and ITEMS[code]["default_unit"] == "head":
+                unit = "head"
+            if unit is not None and unit not in UNITS:
+                unit = None
+            return FarmItemIn(
+                item_code=code,
+                harvest_months=[int(self.expected_harvest_month[5:7])] if self.expected_harvest_month else [],
+                approx_quantity=self.approximate_quantity if unit or self.approximate_quantity is None else None,
+                unit=unit,
+                available_for_sale=self.available_for_sale,
+            )
+        return FarmItemIn(
+            item_code=OTHER_CODE,
+            category=category if category in CATEGORIES else "other_products",
+            custom_name=self.product_id.replace("_", " ")[:80],
+            harvest_months=[int(self.expected_harvest_month[5:7])] if self.expected_harvest_month else [],
+            approx_quantity=self.approximate_quantity if unit in UNITS else None,
+            unit=unit if unit in UNITS else None,
+            available_for_sale=self.available_for_sale,
+        )
+
+
+class AppFarmProductOut(BaseModel):
+    product_id: str
+    category: str
+    expected_harvest_month: str | None = None
+    approximate_quantity: float | None = None
+    unit: str | None = None
+    available_for_sale: bool = False
 
 
 class OnboardingProfileOut(BaseModel):
@@ -55,6 +121,11 @@ class OnboardingProfileOut(BaseModel):
     landmark: str | None = None
     needs: list[str] | None = None
     needs_note: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+    wants_fpo_support: bool = False
+    wants_kvk_support: bool = False
+    farm_products: list[AppFarmProductOut] = Field(default_factory=list)
 
 
 class FarmItemIn(BaseModel):
@@ -134,3 +205,6 @@ class JoinRequestIn(BaseModel):
         if not value:
             raise ValueError("Consent is required to join.")
         return value
+
+
+OnboardingProfileFields.model_rebuild()

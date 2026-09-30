@@ -47,6 +47,10 @@ class FarmerProfile(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     landmark: Mapped[str | None] = mapped_column(String(160))
     needs: Mapped[list | None] = mapped_column(JSON)
     needs_note: Mapped[str | None] = mapped_column(String(300))
+    latitude: Mapped[float | None] = mapped_column(Float)
+    longitude: Mapped[float | None] = mapped_column(Float)
+    wants_fpo_support: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    wants_kvk_support: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
 
 class FarmerPreference(UUIDMixin, TimestampMixin, Base):

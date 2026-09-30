@@ -100,6 +100,7 @@ _ITEMS: list[tuple[str, str, str, str, str]] = [
     ("palm_jaggery", "other_products", "Palm jaggery", "கருப்பட்டி", "kg"),
     ("vermicompost", "other_products", "Vermicompost", "மண்புழு உரம்", "kg"),
     ("farmyard_manure", "other_products", "Farmyard manure", "தொழு உரம்", "tonne"),
+    ("compost", "other_products", "Farm compost", "இயற்கை உரம்", "tonne"),
     ("panchagavya", "other_products", "Panchagavya", "பஞ்சகவ்யா", "litre"),
     ("seeds", "other_products", "Farm-saved seeds", "விதைகள்", "kg"),
     ("flowers", "other_products", "Flowers", "பூக்கள்", "kg"),
@@ -113,6 +114,8 @@ ITEMS: dict[str, dict] = {
 OTHER_CODE = "other"
 
 FARMER_TYPES: dict[str, dict] = {
+    "small_farmer": {"en": "Small farmer", "ta": "சிறு விவசாயி"},
+    "farm_producer": {"en": "Farm producer", "ta": "விவசாய உற்பத்தியாளர்"},
     "full_time_farmer": {"en": "Full-time farmer", "ta": "முழு நேர விவசாயி"},
     "part_time_farmer": {"en": "Part-time farmer", "ta": "பகுதி நேர விவசாயி"},
     "tenant_farmer": {"en": "Tenant farmer", "ta": "குத்தகை விவசாயி"},
@@ -141,6 +144,14 @@ NEEDS: dict[str, dict] = {
 }
 
 MONTHS = list(range(1, 13))
+
+# The app's onboarding list (agrow-ai/features/auth/components/onboardingData.ts)
+# uses a few different ids; map them to catalog codes and back.
+APP_ITEM_ALIASES = {"redgram": "red_gram", "cow_milk": "milk"}
+APP_ITEM_ALIASES_REVERSE = {v: k for k, v in APP_ITEM_ALIASES.items()}
+FARMER_TYPE_ALIASES = {"small": "small_farmer", "tenant": "tenant_farmer", "producer": "farm_producer"}
+APP_UNIT_ALIASES = {"count": "nos"}
+APP_CATEGORY_ALIASES = {"other": "other_products"}
 
 
 def item_label(code: str, custom_name: str | None = None) -> str:
