@@ -50,6 +50,10 @@ AGMARKNET_SYNC_MAX_PAGES = int(os.getenv("AGMARKNET_SYNC_MAX_PAGES", "20"))
 MARKET_RELAY_URL = os.getenv("MARKET_RELAY_URL", "").strip().rstrip("/")
 MARKET_RELAY_TOKEN = os.getenv("MARKET_RELAY_TOKEN", "").strip()
 
+# --- Backup ingest (plan 2): an uploader in India posts official reports ---
+# Empty = POST /market/backup/ingest is disabled (fails closed).
+MARKET_INGEST_TOKEN = os.getenv("MARKET_INGEST_TOKEN", "").strip()
+
 # --- Agmarknet 2.0 (agmarknet.gov.in) — second official price source ---
 # The new Agmarknet portal's public API: a state-wide daily report of every
 # APMC and Uzhavar Sandhai (min/max/modal ₹/quintal). No API key. Used as the

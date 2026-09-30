@@ -7,6 +7,8 @@
     GET    /market/favourites      (the farmer's saved markets + latest price)
     POST   /market/favourites      (add a favourite)
     DELETE /market/favourites/{id} (remove a favourite)
+    GET    /market/sync-status     (price freshness; no personal data)
+    POST   /market/backup/ingest   (official report upload; ingest token)
 
 Thin routes — filtering, provider orchestration, caching and offline fallback
 live in ``MarketService``. Every response uses the global envelope.
@@ -14,9 +16,20 @@ live in ``MarketService``. Every response uses the global envelope.
 from __future__ import annotations
 
 import uuid
+from typing import Annotated
 
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, Depends, Header, Query, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.database import get_session
+from app.modules.market.backup import (
+    BackupIngestIn,
+    BackupIngestOut,
+    SyncStatusOut,
+    ingest_state_report,
+    sync_status,
+    verify_ingest_token,
+)
 from app.modules.market.constants import DEFAULT_HISTORY_DAYS, MAX_HISTORY_DAYS
 from app.modules.market.dependencies import CurrentUser, MarketServiceDep
 from app.modules.market.schemas import (
@@ -149,3 +162,27 @@ async def remove_favourite(
     """Remove a favourite market."""
     await service.remove_favourite(current_user, favourite_id)
     return success(None, message="Removed from favourites")
+
+
+SessionDep = Annotated[AsyncSession, Depends(get_session)]
+
+
+@router.get("/sync-status", response_model=SuccessResponse[SyncStatusOut])
+async def market_sync_status(
+    session: SessionDep,
+    state: str = Query("Tamil Nadu", min_length=2, max_length=60),
+):
+    """How fresh the stored prices are (read by the backup uploader and the
+    nightly check). Aggregate counts only — no personal data."""
+    return success(await sync_status(session, state=state))
+
+
+@router.post("/backup/ingest", response_model=SuccessResponse[BackupIngestOut])
+async def backup_ingest(
+    payload: BackupIngestIn,
+    session: SessionDep,
+    x_market_ingest_token: Annotated[str | None, Header()] = None,
+):
+    """Store one official Agmarknet 2.0 state report uploaded from India."""
+    verify_ingest_token(x_market_ingest_token)
+    return success(await ingest_state_report(session, payload), message="Prices stored")

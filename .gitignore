@@ -103,3 +103,7 @@ artifacts/
 release-worktrees/
 lcc-*/
 mobile-security-release-*/
+
+# Market price backup uploader (local secrets + log)
+scripts/market_backup/market_backup.env
+scripts/market_backup/market_backup.log
