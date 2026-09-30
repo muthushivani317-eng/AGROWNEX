@@ -1,0 +1,68 @@
+# EAS reads .easignore from the REPOSITORY root (not agrow-ai/).
+# Upload only the mobile app; everything else (backend, models, caches) stays local.
+/*
+!/agrow-ai/
+
+# --- rules below mirror agrow-ai/.easignore, scoped to /agrow-ai ---
+# EAS uses this file instead of .gitignore when preparing the remote archive.
+# Keep its exclusions aligned with .gitignore and omit generated native output.
+node_modules/
+.expo/
+dist/
+dist-check/
+web-build/
+expo-env.d.ts
+coverage/
+.env
+.kotlin/
+*.orig.*
+/agrow-ai/google-services.json
+/agrow-ai/GoogleService-Info.plist
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+.metro-health-check*
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.DS_Store
+*.pem
+.env*.local
+*.tsbuildinfo
+/agrow-ai/ios
+/agrow-ai/android/app/google-services.json
+/agrow-ai/android.backup-before-standalone-*/
+
+# Gradle/CMake output is regenerated remotely. Including it makes the archive
+# enormous and can exhaust the local temporary disk before upload.
+/agrow-ai/android/.gradle/
+/agrow-ai/android/build/
+/agrow-ai/android/app/build/
+/agrow-ai/android/app/.cxx/
+/agrow-ai/android/.cxx/
+
+# Firebase Android client settings are required by the checked-in bare Android
+# project. They contain public client configuration (not a server credential)
+# and must be included only in the encrypted EAS build archive.
+!/agrow-ai/google-services.json
+!/agrow-ai/android/app/google-services.json
+
+# Added: local build output and scratch folders
+android.backup-before-standalone-20260801-185713/
+/agrow-ai/android/app/build/
+/agrow-ai/android/app/.cxx/
+/agrow-ai/android/build/
+/agrow-ai/android/.gradle/
+/agrow-ai/android/.kotlin/
+/agrow-ai/ios/build/
+/agrow-ai/ios/Pods/
+eas-archive-check/
+empty_temp/
+
+# Local artifacts that must never be uploaded
+*.apk
+*.aab
+/agrow-ai/dist-check/
+/agrow-ai/android/app/google-services.json.*-backup
