@@ -18,7 +18,7 @@ another admin from the farmer directory.
 from __future__ import annotations
 
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
 from sqlalchemy import select, update
@@ -56,6 +56,9 @@ class SyncResult:
     closed: int
     skipped_admins: int
     aborted: bool = False
+    # Farmer refs (non-admin) whose Firebase account is gone -- shown to the
+    # Owner so an aborted run can be confirmed knowingly.
+    missing_refs: list[str] = field(default_factory=list)
 
     def as_dict(self) -> dict:
         return self.__dict__.copy()
@@ -148,16 +151,22 @@ async def admin_delete_farmer(session: AsyncSession, ctx, user_id: uuid.UUID, *,
     return {"farmer_ref": user.farmer_ref, "deleted": True, "firebase_account_deleted": firebase_deleted}
 
 
-async def sync_deleted_firebase_users(session: AsyncSession, *, actor_admin=None) -> SyncResult:
-    """Close Agrownex accounts whose Firebase account was deleted in the console."""
+async def sync_deleted_firebase_users(session: AsyncSession, *, actor_admin=None, confirm: bool = False) -> SyncResult:
+    """Close Agrownex accounts whose Firebase account was deleted in the console.
+
+    ``confirm=True`` (Owner clicked "Remove these" after seeing the list)
+    bypasses the share guard; the scheduled job never passes it.
+    """
     rows = (
         await session.execute(select(User.id, User.firebase_uid).where(User.deleted_at.is_(None), User.is_deleted.is_(False)))
     ).all()
     uid_to_user = {uid: user_id for user_id, uid in rows if uid}
     missing = firebase_missing_uids(list(uid_to_user))
     result = SyncResult(checked=len(uid_to_user), missing_in_firebase=len(missing), closed=0, skipped_admins=0)
+    missing_users = [u for u in [await session.get(User, uid_to_user[uid]) for uid in sorted(missing)] if u is not None]
+    result.missing_refs = [u.farmer_ref for u in missing_users if not await _is_admin(session, u.id)]
 
-    if len(uid_to_user) >= MIN_USERS_FOR_SHARE_GUARD and len(missing) > MAX_SYNC_DELETE_SHARE * len(uid_to_user):
+    if not confirm and len(uid_to_user) >= MIN_USERS_FOR_SHARE_GUARD and len(missing) > MAX_SYNC_DELETE_SHARE * len(uid_to_user):
         logger.error(
             "firebase sync aborted: %s of %s users missing in Firebase (safety limit)", len(missing), len(uid_to_user)
         )
@@ -165,10 +174,7 @@ async def sync_deleted_firebase_users(session: AsyncSession, *, actor_admin=None
         return result
 
     now = datetime.now(UTC)
-    for uid in sorted(missing):
-        user = await session.get(User, uid_to_user[uid])
-        if user is None:
-            continue
+    for user in missing_users:
         if await _is_admin(session, user.id):
             result.skipped_admins += 1
             continue

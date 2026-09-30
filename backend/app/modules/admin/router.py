@@ -332,12 +332,16 @@ async def get_farmers(
 
 
 @router.post("/farmers/sync-firebase", response_model=SuccessResponse[dict])
-async def sync_farmers_with_firebase(ctx: AdminContextDep, session: AsyncSession = Depends(get_session)):
+async def sync_farmers_with_firebase(
+    ctx: AdminContextDep,
+    confirm: bool = Query(False),
+    session: AsyncSession = Depends(get_session),
+):
     """Close Agrownex accounts whose Firebase account was deleted (Owner/Super Admin)."""
     from app.modules.admin.farmer_deletion import sync_deleted_firebase_users
 
     _require_platform(ctx)
-    result = await sync_deleted_firebase_users(session, actor_admin=ctx)
+    result = await sync_deleted_firebase_users(session, actor_admin=ctx, confirm=confirm)
     return success(result.as_dict())
 
 

@@ -55,18 +55,30 @@ function DirectoryResults({path,draft,setDraft,setFilters,page,setPage,size,setS
 }
 
 function FirebaseSyncButton({ onDone }: { onDone: () => void }) {
+  type Sync = { checked: number; closed: number; aborted: boolean; missing_refs: string[] };
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState('');
-  async function sync() {
+  const [pending, setPending] = useState<string[] | null>(null);
+  async function sync(confirm = false) {
     setBusy(true); setNote('');
     try {
-      const r = await api<{ checked: number; closed: number; aborted: boolean }>('/admin/farmers/sync-firebase', { method: 'POST' });
-      setNote(r.aborted ? 'Stopped: too many accounts looked missing — check Firebase.' : r.closed ? `Removed ${r.closed} farmer(s) deleted in Firebase.` : 'Already in sync with Firebase.');
+      const r = await api<Sync>(`/admin/farmers/sync-firebase${confirm ? '?confirm=true' : ''}`, { method: 'POST' });
+      if (r.aborted) { setPending(r.missing_refs); return; }
+      setPending(null);
+      setNote(r.closed ? `Removed ${r.closed} farmer(s) deleted in Firebase.` : 'Already in sync with Firebase.');
       onDone();
     } catch (e) { setNote(e instanceof Error ? e.message : 'Sync failed.'); }
     finally { setBusy(false); }
   }
-  return <><button className="directory-refresh" onClick={() => void sync()} disabled={busy} title="Remove farmers whose Firebase account was deleted"><RefreshCw size={16}/>{busy ? 'Syncing…' : 'Sync with Firebase'}</button>{note && <small className="directory-sync-note" role="status">{note}</small>}</>;
+  return <>
+    <button className="directory-refresh" onClick={() => void sync()} disabled={busy} title="Remove farmers whose Firebase account was deleted"><RefreshCw size={16}/>{busy ? 'Syncing…' : 'Sync with Firebase'}</button>
+    {note && <small className="directory-sync-note" role="status">{note}</small>}
+    {pending && <div className="farmer-delete-confirm directory-sync-confirm" role="alertdialog">
+      <p><strong>{pending.length} account(s) no longer exist in Firebase:</strong> {pending.join(', ') || '(admin accounts only — nothing to remove)'}</p>
+      <p>Remove them from the admin portal? Their history is kept.</p>
+      <div><button className="secondary-button" onClick={() => setPending(null)}>Cancel</button>{pending.length > 0 && <button className="farmer-delete" disabled={busy} onClick={() => void sync(true)}>Yes, remove {pending.length}</button>}</div>
+    </div>}
+  </>;
 }
 
 function DeleteFarmer({ farmer, onDeleted }: { farmer: Farmer; onDeleted: () => void }) {

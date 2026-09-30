@@ -113,3 +113,20 @@ async def test_sync_aborts_when_too_many_users_look_missing(db_session, monkeypa
     assert result.aborted is True and result.closed == 0
     refs = await _directory_refs(db_session)
     assert all(user.farmer_ref in refs for user in users)
+
+
+@pytest.mark.asyncio
+async def test_owner_can_confirm_an_aborted_sync_after_seeing_the_list(db_session, monkeypatch):
+    owner = await _owner(db_session)
+    users = [await _farmer(db_session, f"c-{i}") for i in range(6)]
+    await db_session.commit()
+    gone = {u.firebase_uid for u in users[:4]}
+    monkeypatch.setattr(farmer_deletion, "firebase_missing_uids", lambda uids: gone)
+
+    preview = await sync_deleted_firebase_users(db_session, actor_admin=owner)
+    assert preview.aborted and sorted(preview.missing_refs) == sorted(u.farmer_ref for u in users[:4])
+
+    done = await sync_deleted_firebase_users(db_session, actor_admin=owner, confirm=True)
+    assert done.closed == 4 and not done.aborted
+    refs = await _directory_refs(db_session)
+    assert {u.farmer_ref for u in users[4:]} <= refs and not ({u.farmer_ref for u in users[:4]} & refs)
