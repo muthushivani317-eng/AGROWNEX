@@ -1,6 +1,6 @@
 """AgrowNex price relay.
 
-Government mandi-price sites (data.gov.in, eNAM — both hosted by NIC) reset
+Government mandi-price sites (data.gov.in, Agmarknet 2.0) reset
 connections from non-Indian addresses, so our Railway worker (US) cannot reach
 them. This tiny service runs on Cloud Run in Mumbai and forwards the worker's
 requests to an allow-listed set of hosts only.
@@ -38,7 +38,7 @@ RELAY_TOKEN = os.getenv("RELAY_TOKEN", "")
 ALLOWED_HOSTS = frozenset(
     h.strip().lower()
     for h in os.getenv(
-        "RELAY_ALLOWED_HOSTS", "api.data.gov.in,enam.gov.in,www.enam.gov.in"
+        "RELAY_ALLOWED_HOSTS", "api.data.gov.in,api.agmarknet.gov.in"
     ).split(",")
     if h.strip()
 )

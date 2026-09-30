@@ -82,8 +82,8 @@ def test_passes_through_status_body_and_forwards_only_safe_headers(relay):
         "/fetch",
         json={
             "method": "POST",
-            "url": "https://enam.gov.in/web/Ajax_ctrl/trade_data_list",
-            "headers": {"Referer": "https://enam.gov.in/", "Cookie": "leak", "Authorization": "x"},
+            "url": "https://api.agmarknet.gov.in/v1/prices-and-arrivals/x",
+            "headers": {"Referer": "https://agmarknet.gov.in/", "Cookie": "leak", "Authorization": "x"},
             "body_b64": base64.b64encode(b"a=1&b=2").decode(),
         },
         headers=AUTH,
@@ -92,7 +92,7 @@ def test_passes_through_status_body_and_forwards_only_safe_headers(relay):
     assert res.json() == {"data": [1]}
     assert res.headers["x-relay-upstream"] == "1"
     assert seen["body"] == b"a=1&b=2"
-    assert seen["headers"]["referer"] == "https://enam.gov.in/"
+    assert seen["headers"]["referer"] == "https://agmarknet.gov.in/"
     assert "cookie" not in seen["headers"]
     assert "authorization" not in seen["headers"]
 

@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.modules.farms.repositories import FarmRepository
+from app.modules.market.agmarknet_v2 import AgmarknetV2Provider
 from app.modules.market.constants import (
     AGMARKNET_SYNC_MAX_PAGES,
     AGMARKNET_SYNC_MAX_RETRIES,
@@ -16,7 +17,6 @@ from app.modules.market.constants import (
     DATA_GOV_API_KEY,
     MARKET_SYNC_STATES,
 )
-from app.modules.market.enam import EnamProvider
 from app.modules.market.exceptions import MarketDataUnavailableError
 from app.modules.market.provider import (
     AgmarknetProvider,
@@ -39,12 +39,12 @@ def _sync_sources() -> list[MarketPriceProvider]:
         )
         if DATA_GOV_API_KEY
         else None,
-        enam=EnamProvider(max_retries=AGMARKNET_SYNC_MAX_RETRIES),
+        agmarknet_v2=AgmarknetV2Provider(max_retries=AGMARKNET_SYNC_MAX_RETRIES),
     )
 
 
 def _sync_provider() -> MarketPriceProvider | None:
-    """Per-crop refresh: Agmarknet first, eNAM when it is unavailable."""
+    """Per-crop refresh: data.gov.in first, Agmarknet 2.0 when it is unavailable."""
     sources = _sync_sources()
     if not sources:
         return None

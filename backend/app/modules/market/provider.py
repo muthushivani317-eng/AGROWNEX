@@ -5,8 +5,9 @@ of *where* prices come from. V1 ships:
 
 * ``AgmarknetProvider`` — Open Government (data.gov.in / Agmarknet) with timeout
   + bounded retries; used when ``DATA_GOV_API_KEY`` is set.
-* ``EnamProvider`` (``enam.py``) — eNAM trade data, the second official source.
-* ``FallbackMarketProvider`` — Agmarknet first, eNAM when it is unavailable.
+* ``AgmarknetV2Provider`` (``agmarknet_v2.py``) — Agmarknet 2.0 state daily
+  report, the second official source.
+* ``FallbackMarketProvider`` — data.gov.in first, Agmarknet 2.0 when it is unavailable.
 * ``MockMarketProvider`` — deterministic offline data used in dev/tests.
 
 Both official sources reach NIC servers through the India relay when
@@ -34,9 +35,9 @@ from app.modules.market.constants import (
     AGMARKNET_MAX_RETRIES,
     AGMARKNET_RESOURCE_ID,
     AGMARKNET_TIMEOUT_SECONDS,
+    AGMARKNET_V2_ENABLED,
     DATA_GOV_API_KEY,
     DATA_GOV_BASE_URL,
-    ENAM_ENABLED,
     SOURCE_AGMARKNET,
     SOURCE_MOCK,
     PriceUnit,
@@ -469,16 +470,16 @@ class FallbackMarketProvider:
 
 def official_providers(
     agmarknet: MarketPriceProvider | None = None,
-    enam: MarketPriceProvider | None = None,
+    agmarknet_v2: MarketPriceProvider | None = None,
 ) -> list[MarketPriceProvider]:
-    """Configured official sources in priority order (Agmarknet, then eNAM)."""
-    from app.modules.market.enam import EnamProvider  # circular: enam imports this module
+    """Configured official sources in priority order (data.gov.in, then Agmarknet 2.0)."""
+    from app.modules.market.agmarknet_v2 import AgmarknetV2Provider  # circular import
 
     providers: list[MarketPriceProvider] = []
     if DATA_GOV_API_KEY:
         providers.append(agmarknet or AgmarknetProvider())
-    if ENAM_ENABLED:
-        providers.append(enam or EnamProvider())
+    if AGMARKNET_V2_ENABLED:
+        providers.append(agmarknet_v2 or AgmarknetV2Provider())
     return providers
 
 

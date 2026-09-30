@@ -1,9 +1,9 @@
 # AgrowNex price relay (Cloud Run, Mumbai)
 
-**Why:** data.gov.in and eNAM are hosted by NIC, which refuses connections from
-non-Indian addresses. Our Railway worker runs in the US, so every price fetch
+**Why:** government price APIs (data.gov.in, Agmarknet 2.0) refuse connections
+from non-Indian addresses. Our Railway worker runs in the US, so every price fetch
 was reset in ~0.3 s. This relay runs in `asia-south1` (Mumbai) and forwards
-the worker's requests. It only talks to `api.data.gov.in` and `enam.gov.in`,
+the worker's requests. It only talks to `api.data.gov.in` and `api.agmarknet.gov.in`,
 and only with the secret token.
 
 ## 1. Check the sources from your laptop (India)
@@ -12,7 +12,7 @@ and only with the secret token.
 python relay\check_sources.py
 ```
 
-You should see `eNAM OK - <date>: N rows`. (Set `DATA_GOV_API_KEY` first to test data.gov.in too.)
+You should see `Agmarknet 2.0 OK - <date>: N markets, M price rows`. (Set `DATA_GOV_API_KEY` first to test data.gov.in too.)
 
 ## 2. Deploy (once)
 
@@ -47,7 +47,7 @@ MARKET_RELAY_TOKEN=<the token>
 ```
 
 The next worker run (every 2 hours) syncs Tamil Nadu from **both**
-data.gov.in and eNAM. If one is down, the other still fills the prices.
+data.gov.in and Agmarknet 2.0. If one is down, the other still fills the prices.
 
 ## Tests
 

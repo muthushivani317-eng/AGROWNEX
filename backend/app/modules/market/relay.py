@@ -1,6 +1,6 @@
 """HTTP client for market providers, optionally routed through the India relay.
 
-data.gov.in and eNAM (both hosted by NIC) reset TCP connections from our
+data.gov.in and Agmarknet 2.0 (government-hosted) reset TCP connections from our
 Railway worker's US address. When ``MARKET_RELAY_URL`` is set, every market
 provider request is tunnelled through the relay on Cloud Run (Mumbai) — see
 ``/relay`` at the repo root. Providers keep using a normal ``httpx`` client;

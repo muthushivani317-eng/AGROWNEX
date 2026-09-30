@@ -50,18 +50,16 @@ AGMARKNET_SYNC_MAX_PAGES = int(os.getenv("AGMARKNET_SYNC_MAX_PAGES", "20"))
 MARKET_RELAY_URL = os.getenv("MARKET_RELAY_URL", "").strip().rstrip("/")
 MARKET_RELAY_TOKEN = os.getenv("MARKET_RELAY_TOKEN", "").strip()
 
-# --- eNAM (National Agriculture Market) — second official price source ---
-# Public trade-data feed of the eNAM dashboard; no API key. Used as the
+# --- Agmarknet 2.0 (agmarknet.gov.in) — second official price source ---
+# The new Agmarknet portal's public API: a state-wide daily report of every
+# APMC and Uzhavar Sandhai (min/max/modal ₹/quintal). No API key. Used as the
 # fallback when data.gov.in fails, and synced alongside it for coverage.
-ENAM_ENABLED = os.getenv("ENAM_ENABLED", "true").strip().lower() in {"1", "true", "yes"}
-ENAM_TRADE_DATA_URL = os.getenv(
-    "ENAM_TRADE_DATA_URL", "https://enam.gov.in/web/Ajax_ctrl/trade_data_list"
-)
-ENAM_REFERER = os.getenv("ENAM_REFERER", "https://enam.gov.in/web/dashboard/trade-data")
-ENAM_TIMEOUT_SECONDS = float(os.getenv("ENAM_TIMEOUT_SECONDS", "30"))
-ENAM_MAX_RETRIES = int(os.getenv("ENAM_MAX_RETRIES", "3"))
-# Trade data is per day and markets report late; walk back until a day has data.
-ENAM_LOOKBACK_DAYS = int(os.getenv("ENAM_LOOKBACK_DAYS", "4"))
+AGMARKNET_V2_ENABLED = os.getenv("AGMARKNET_V2_ENABLED", "true").strip().lower() in {"1", "true", "yes"}
+AGMARKNET_V2_BASE_URL = os.getenv("AGMARKNET_V2_BASE_URL", "https://api.agmarknet.gov.in/v1").rstrip("/")
+AGMARKNET_V2_TIMEOUT_SECONDS = float(os.getenv("AGMARKNET_V2_TIMEOUT_SECONDS", "60"))
+AGMARKNET_V2_MAX_RETRIES = int(os.getenv("AGMARKNET_V2_MAX_RETRIES", "3"))
+# Markets report late and not on holidays; walk back until a day has data.
+AGMARKNET_V2_LOOKBACK_DAYS = int(os.getenv("AGMARKNET_V2_LOOKBACK_DAYS", "4"))
 
 # Number of days of history returned by GET /market/history by default.
 DEFAULT_HISTORY_DAYS = 30
@@ -72,7 +70,7 @@ DEFAULT_PAGE_SIZE = 20
 MAX_PAGE_SIZE = 100
 
 SOURCE_AGMARKNET = "agmarknet"
-SOURCE_ENAM = "enam"
+SOURCE_AGMARKNET_V2 = "agmarknet_v2"
 SOURCE_MOCK = "mock"
 
 

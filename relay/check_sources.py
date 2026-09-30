@@ -1,6 +1,6 @@
 """Check both price sources from a computer in India (no install needed).
 
-    python relay/check_sources.py                   # direct: eNAM (+ data.gov.in if DATA_GOV_API_KEY set)
+    python relay/check_sources.py                   # direct: Agmarknet 2.0 (+ data.gov.in if DATA_GOV_API_KEY set)
     python relay/check_sources.py --relay URL TOKEN # same, but through the deployed relay
 
 Prints how many Tamil Nadu price rows each source returned. Standard library only.
@@ -15,14 +15,13 @@ import urllib.parse
 import urllib.request
 from datetime import date, timedelta
 
-ENAM_URL = "https://enam.gov.in/web/Ajax_ctrl/trade_data_list"
+AGM2 = "https://api.agmarknet.gov.in/v1"
 DATA_GOV_URL = "https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070"
 HEADERS = {
-    "Accept": "application/json, text/javascript, */*; q=0.01",
-    "X-Requested-With": "XMLHttpRequest",
-    "Referer": "https://enam.gov.in/web/dashboard/trade-data",
-    "Origin": "https://enam.gov.in",
-    "User-Agent": "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/126.0 Mobile Safari/537.36",
+    "Accept": "application/json",
+    "Referer": "https://agmarknet.gov.in/",
+    "Origin": "https://agmarknet.gov.in",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/126.0 Safari/537.36",
 }
 
 
@@ -43,25 +42,26 @@ def _send(method: str, url: str, body: bytes | None, headers: dict, relay: tuple
         )
     else:
         req = urllib.request.Request(url, data=body, method=method, headers=headers)
-    with urllib.request.urlopen(req, timeout=90) as res:
+    with urllib.request.urlopen(req, timeout=120) as res:
         return json.loads(res.read().decode("utf-8", "replace"))
 
 
-def check_enam(relay) -> None:
-    for back in range(5):
+def check_agmarknet_v2(relay) -> None:
+    states = _send("GET", f"{AGM2}/location/state?page_size=100", None, HEADERS, relay)["states"]
+    sid = next(s["id"] for s in states if s["state_name"].lower() == "tamil nadu")
+    for back in range(1, 5):
         day = (date.today() - timedelta(days=back)).isoformat()
-        form = urllib.parse.urlencode({
-            "language": "en", "stateName": "TAMIL NADU", "apmcName": "-- Select APMCs --",
-            "commodityName": "-- Select Commodity --", "fromDate": day, "toDate": day,
-        }).encode()
-        headers = {**HEADERS, "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
-        data = _send("POST", ENAM_URL, form, headers, relay)
-        rows = data.get("data", []) if isinstance(data, dict) else data
+        query = urllib.parse.urlencode({"date": day, "stateIds": sid, "includeExcel": "false"})
+        data = _send("GET", f"{AGM2}/prices-and-arrivals/commodity-wise/daily-report-state?{query}",
+                     None, HEADERS, relay)
+        markets = data.get("markets") or []
+        rows = sum(len(c.get("data") or []) for m in markets for g in m.get("commodityGroups") or []
+                   for c in g.get("commodities") or [])
         if rows:
-            print(f"eNAM OK  - {day}: {len(rows)} rows. Sample: {json.dumps(rows[0])[:300]}")
+            print(f"Agmarknet 2.0 OK - {day}: {len(markets)} markets, {rows} price rows")
             return
-        print(f"eNAM     - {day}: no trades, trying the day before")
-    print("eNAM reachable but no Tamil Nadu trades in the last 5 days")
+        print(f"Agmarknet 2.0    - {day}: no reports, trying the day before")
+    print("Agmarknet 2.0 reachable but no Tamil Nadu reports in the last 4 days")
 
 
 def check_data_gov(relay) -> None:
@@ -79,7 +79,7 @@ def check_data_gov(relay) -> None:
 if __name__ == "__main__":
     relay = (sys.argv[2], sys.argv[3]) if len(sys.argv) == 4 and sys.argv[1] == "--relay" else None
     print("Checking through relay" if relay else "Checking directly from this computer")
-    for check in (check_enam, check_data_gov):
+    for check in (check_agmarknet_v2, check_data_gov):
         try:
             check(relay)
         except Exception as exc:  # report and continue with the next source

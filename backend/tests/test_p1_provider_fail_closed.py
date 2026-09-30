@@ -32,8 +32,8 @@ def test_unconfigured_default_provider_fails_closed(
     if credential_name:
         monkeypatch.setattr(module, credential_name, "")
     if module is market:
-        # eNAM needs no credential; "unconfigured" means it is switched off too.
-        monkeypatch.setattr(market, "ENAM_ENABLED", False)
+        # Agmarknet 2.0 needs no credential; "unconfigured" means it is off too.
+        monkeypatch.setattr(market, "AGMARKNET_V2_ENABLED", False)
     monkeypatch.setenv("APP_ENV", "production")
     monkeypatch.delenv("AGROWAI_ENABLE_TEST_MOCKS", raising=False)
 
@@ -43,15 +43,15 @@ def test_unconfigured_default_provider_fails_closed(
     assert not isinstance(selected, mock_type)
 
 
-def test_market_without_data_gov_key_uses_enam_not_mock(monkeypatch):
+def test_market_without_data_gov_key_uses_agmarknet_v2_not_mock(monkeypatch):
     monkeypatch.setattr(market, "DATA_GOV_API_KEY", "")
-    monkeypatch.setattr(market, "ENAM_ENABLED", True)
+    monkeypatch.setattr(market, "AGMARKNET_V2_ENABLED", True)
     monkeypatch.setenv("APP_ENV", "production")
     monkeypatch.delenv("AGROWAI_ENABLE_TEST_MOCKS", raising=False)
 
     selected = market.get_default_provider()
 
-    assert type(selected).__name__ == "EnamProvider"
+    assert type(selected).__name__ == "AgmarknetV2Provider"
 
 
 def test_schemes_default_provider_is_curated_not_unavailable(monkeypatch):
