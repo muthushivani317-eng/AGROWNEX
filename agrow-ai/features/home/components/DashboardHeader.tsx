@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { CalendarDays } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { AgAvatar, AgPressable, AgText } from '@/components/ui';
 import type { AuthUser } from '@/features/auth';
@@ -38,10 +38,19 @@ export function DashboardHeader({ user }: { user: AuthUser | null }) {
             transition={0}
             style={styles.logo}
           />
-          <View style={styles.wordmarkRow}>
-            <AgText variant="headingM" weight="bold" numberOfLines={1} maxFontSizeMultiplier={1.2} style={styles.wordmark}>Agrow</AgText>
-            <AgText variant="headingM" weight="bold" numberOfLines={1} maxFontSizeMultiplier={1.2} style={styles.wordmarkAI}>Nex</AgText>
-          </View>
+          {/* One text node that shrinks to fit, so the name is never clipped
+              by the language / bell / avatar buttons on narrow phones. */}
+          <AgText
+            variant="headingM"
+            weight="bold"
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+            maxFontSizeMultiplier={1.2}
+            style={styles.wordmark}
+          >
+            Agrow<Text style={styles.wordmarkAI}>Nex</Text>
+          </AgText>
         </View>
         <View style={styles.actions}>
           <AgPressable
@@ -62,7 +71,7 @@ export function DashboardHeader({ user }: { user: AuthUser | null }) {
             hitSlop={4}
             style={styles.profileButton}
           >
-            <AgAvatar uri={user?.photoUrl} name={displayName} size={42} light />
+            <AgAvatar uri={user?.photoUrl} name={displayName} size={38} light />
           </AgPressable>
         </View>
       </View>
@@ -85,14 +94,13 @@ export function DashboardHeader({ user }: { user: AuthUser | null }) {
 const styles = StyleSheet.create({
   topRow: { minHeight: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   brand: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center' },
-  logo: { width: 54, height: 54 },
-  wordmarkRow: { marginLeft: -8, flexDirection: 'row', alignItems: 'baseline' },
-  wordmark: { color: '#173B2B' },
+  logo: { width: 44, height: 44, flexShrink: 0 },
+  wordmark: { flexShrink: 1, marginLeft: -4, color: '#173B2B' },
   wordmarkAI: { color: '#165B33' },
-  actions: { flexShrink: 0, flexDirection: 'row', alignItems: 'center', gap: 8, paddingRight: 1 },
-  languageButton: { minWidth: 70, minHeight: 44, paddingHorizontal: 12, borderRadius: 22, borderWidth: 1, borderColor: '#B9CCBC', backgroundColor: '#FFFDF8', alignItems: 'center', justifyContent: 'center' },
+  actions: { flexShrink: 0, flexDirection: 'row', alignItems: 'center', gap: 6, paddingRight: 1 },
+  languageButton: { minHeight: 40, paddingHorizontal: 10, borderRadius: 20, borderWidth: 1, borderColor: '#B9CCBC', backgroundColor: '#FFFDF8', alignItems: 'center', justifyContent: 'center' },
   languageText: { color: '#173B2B' },
-  profileButton: { width: 48, height: 48, borderRadius: 24, borderWidth: 1.5, borderColor: '#165B33', backgroundColor: '#FFFDF8', alignItems: 'center', justifyContent: 'center' },
+  profileButton: { width: 44, height: 44, borderRadius: 22, borderWidth: 1.5, borderColor: '#165B33', backgroundColor: '#FFFDF8', alignItems: 'center', justifyContent: 'center' },
   greeting: { marginTop: 16 },
   name: { color: '#173B2B', lineHeight: 30 },
   timeRow: { marginTop: 7, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 7 },
