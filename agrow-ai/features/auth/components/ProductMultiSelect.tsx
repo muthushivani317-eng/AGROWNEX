@@ -99,6 +99,7 @@ export function ProductMultiSelect({ language, selectedIds, onChange, label, pla
               data={[{ code: 'all', en: 'All', ta: 'அனைத்தும்' }, ...categories]}
               keyExtractor={(item) => item.code}
               showsHorizontalScrollIndicator={false}
+              style={styles.categoryList}
               contentContainerStyle={styles.categories}
               renderItem={({ item }) => {
                 const active = category === item.code;
@@ -116,6 +117,7 @@ export function ProductMultiSelect({ language, selectedIds, onChange, label, pla
               data={rows}
               keyExtractor={(item) => item.code}
               keyboardShouldPersistTaps="handled"
+              style={styles.flexList}
               contentContainerStyle={styles.list}
               ListEmptyComponent={<AgText variant="body" style={styles.empty}>{language === 'ta' ? 'பொருள் கிடைக்கவில்லை' : 'No products found'}</AgText>}
               renderItem={({ item }) => {
@@ -163,6 +165,8 @@ const styles = StyleSheet.create({
   close: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F0EEE5' },
   search: { minHeight: 58, marginHorizontal: 20, marginTop: 10, borderWidth: 1.3, borderColor: BORDER, borderRadius: 16, backgroundColor: '#FFFFFF', paddingHorizontal: 15, flexDirection: 'row', alignItems: 'center', gap: 10 },
   searchInput: { flex: 1, minHeight: 56, color: TEXT, fontSize: 17 },
+  categoryList: { flexGrow: 0 },
+  flexList: { flex: 1 },
   categories: { paddingHorizontal: 20, paddingVertical: 14, gap: 8 },
   category: { minHeight: 44, borderWidth: 1, borderColor: BORDER, borderRadius: 22, paddingHorizontal: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' },
   categoryActive: { borderColor: GREEN, backgroundColor: GREEN },

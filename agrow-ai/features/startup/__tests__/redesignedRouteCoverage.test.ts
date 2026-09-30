@@ -38,7 +38,8 @@ describe('approved redesign route coverage', () => {
   it('keeps the profile location action visible and accessible', () => {
     const profile = read('features/auth/screens/CompleteProfileScreen.tsx');
     expect(profile).toContain('accessibilityLabel={t("profile.useMyLocation")}');
-    expect(profile).toContain('styles.locationActionStacked');
-    expect(profile).toContain('t("profile.useLocationAction")');
+    // Onboarding v2: GPS autofill is a full-width card on the Location step.
+    expect(profile).toContain('style={styles.gpsCard}');
+    expect(profile).toContain('onPress={onUseMyLocation}');
   });
 });

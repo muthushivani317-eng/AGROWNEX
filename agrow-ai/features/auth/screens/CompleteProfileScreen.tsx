@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowRight, Building2, CalendarDays, Check, ChevronDown, Gra
 import { useMemo, useState, type ReactNode } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Alert, Modal, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AgDistrictDropdown, AgInput, AgPressable, AgScreen, AgSpinner, AgText } from '@/components/ui';
@@ -171,12 +171,12 @@ export function CompleteProfileScreen() {
 
       {step === 1 ? (
         <>
-          <AgPressable onPress={onUseMyLocation} disabled={locating} style={styles.gpsCard} accessibilityRole="button">
+          <AgPressable onPress={onUseMyLocation} disabled={locating} style={styles.gpsCard} accessibilityRole="button" accessibilityLabel={t("profile.useMyLocation")}>
             <View style={[styles.gpsIcon, locationDetected && styles.gpsIconDone]}>{locating ? <ActivityIndicator color={GREEN} /> : locationDetected ? <Check size={26} color="#FFFFFF" /> : <LocateFixed size={28} color={GREEN} />}</View>
             <View style={styles.flex}><AgText variant="bodyLarge" weight="bold" style={styles.primary}>{locationDetected ? copy.detected : copy.gps}</AgText><AgText variant="bodySmall" style={styles.muted}>{copy.gpsHelp}</AgText></View><ArrowRight size={24} color={GREEN} />
           </AgPressable>
           <Card icon={<MapPinned size={25} color={GREEN} />}>
-            <Controller control={control} name="district" render={({ field: { onChange, value }, fieldState }) => <AgDistrictDropdown label={t('profile.district')} required placeholder={t('profile.selectDistrict')} value={value} openRequest={districtPickerRequest} onChange={(nextDistrict) => { if (nextDistrict !== value) { setValue('block', ''); setValue('village', ''); } onChange(nextDistrict); }} error={fieldState.error ? t(fieldState.error.message ?? '') : undefined} leftAccessory={<MapPinned size={21} color={GREEN} />} fieldStyle={styles.field} textStyle={styles.inputText} />} />
+            <Controller control={control} name="district" render={({ field: { onChange, value }, fieldState }) => <AgDistrictDropdown label={t('profile.district')} required placeholder={t('profile.selectDistrict')} value={value} openRequest={districtPickerRequest} onChange={(nextDistrict) => { if (nextDistrict !== value) { setValue('block', '', { shouldDirty: true }); setValue('village', '', { shouldDirty: true }); } onChange(nextDistrict); }} error={fieldState.error ? t(fieldState.error.message ?? '') : undefined} leftAccessory={<MapPinned size={21} color={GREEN} />} fieldStyle={styles.field} textStyle={styles.inputText} />} />
             <Controller control={control} name="block" render={({ field: { onChange, value } }) => <AgInput {...fieldTheme} label={t('profile.block')} placeholder={t('profile.blockPlaceholder')} value={value} onChangeText={onChange} leftAccessory={<MapIcon size={21} color={GREEN} />} />} />
             <Controller control={control} name="village" render={({ field: { onChange, value } }) => <AgInput {...fieldTheme} label={t('profile.village')} placeholder={t('profile.villagePlaceholder')} value={value} onChangeText={onChange} leftAccessory={<Warehouse size={21} color={GREEN} />} />} />
             <Controller control={control} name="landmark" render={({ field: { onChange, value } }) => <AgInput {...fieldTheme} label={copy.landmark} placeholder={language === 'ta' ? 'எ.கா. கோவில் அருகில்' : 'e.g. near temple'} value={value} onChangeText={onChange} leftAccessory={<Landmark size={21} color={GREEN} />} />} />
@@ -220,7 +220,7 @@ export function CompleteProfileScreen() {
 }
 
 function Progress({ step, labels, onPress }: { step: number; labels: readonly string[]; onPress: (step: number) => void }) {
-  return <View style={styles.progress}>{labels.map((label, index) => <View key={label} style={styles.progressItem}><AgPressable disabled={index > step} onPress={() => onPress(index)} style={[styles.stepCircle, index < step && styles.stepDone, index === step && styles.stepCurrent]}>{index < step ? <Check size={16} color="#FFFFFF" strokeWidth={3} /> : <AgText variant="caption" weight="bold" style={index === step ? styles.currentStepText : styles.stepText}>{index + 1}</AgText>}</AgPressable><AgText variant="caption" weight={index === step ? 'bold' : 'medium'} numberOfLines={1} style={[styles.stepLabel, index === step && styles.stepLabelActive]}>{label}</AgText>{index < 4 ? <View style={[styles.stepLine, index < step && styles.stepLineDone]} /> : null}</View>)}</View>;
+  return <View style={styles.progress}>{labels.map((label, index) => <View key={label} style={styles.progressItem}><AgPressable disabled={index > step} onPress={() => onPress(index)} style={[styles.stepCircle, index < step && styles.stepDone, index === step && styles.stepCurrent]}>{index < step ? <Check size={16} color="#FFFFFF" strokeWidth={3} /> : <AgText variant="caption" weight="bold" style={index === step ? styles.currentStepText : styles.stepText}>{index + 1}</AgText>}</AgPressable><AgText variant="caption" weight={index === step ? 'bold' : 'medium'} numberOfLines={2} style={[styles.stepLabel, index === step && styles.stepLabelActive]}>{label}</AgText>{index < 4 ? <View style={[styles.stepLine, index < step && styles.stepLineDone]} /> : null}</View>)}</View>;
 }
 
 function Card({ icon, children }: { icon: ReactNode; children: ReactNode }) { return <View style={styles.card}><View style={styles.cardIcon}>{icon}</View><View style={styles.cardContent}>{children}</View></View>; }
@@ -231,16 +231,27 @@ function ProductDetails({ language, copy, product, catalogItems, onChange, onRem
   return <View style={styles.productCard}>
     <View style={styles.productHeader}><View style={styles.productBadge}><Sprout size={21} color={GREEN} /></View><View style={styles.flex}><AgText variant="bodyLarge" weight="bold" style={styles.primary}>{productLabel(catalogItems, product.productId, language)}</AgText><AgText variant="caption" style={styles.muted}>{productLabel(catalogItems, product.productId, language === 'ta' ? 'en' : 'ta')}</AgText></View><AgPressable onPress={onRemove} accessibilityRole="button" style={styles.removeButton}><Trash2 size={20} color="#A43E35" /></AgPressable></View>
     <MonthPicker language={language} value={product.expectedHarvestMonth} label={copy.harvest} placeholder={copy.month} onChange={(value) => onChange({ expectedHarvestMonth: value })} />
-    <View style={styles.quantityRow}><TextInput value={product.approximateQuantity == null ? '' : String(product.approximateQuantity)} onChangeText={(value) => onChange({ approximateQuantity: value.trim() ? Number(value.replace(/[^0-9.]/g, '')) : null })} placeholder={copy.quantity} placeholderTextColor={MUTED} keyboardType="decimal-pad" style={styles.quantityInput} /><AgPressable onPress={() => onChange({ unit: nextUnit(product.unit) })} style={styles.unitButton}><AgText variant="bodySmall" weight="bold" style={styles.primary}>{product.unit}</AgText><ChevronDown size={17} color={GREEN} /></AgPressable></View>
+    <View style={styles.quantityRow}><QuantityInput value={product.approximateQuantity} placeholder={copy.quantity} onChange={(value) => onChange({ approximateQuantity: value })} /><AgPressable onPress={() => onChange({ unit: nextUnit(product.unit) })} style={styles.unitButton}><AgText variant="bodySmall" weight="bold" style={styles.primary}>{product.unit}</AgText><ChevronDown size={17} color={GREEN} /></AgPressable></View>
     <AgPressable onPress={() => onChange({ availableForSale: !product.availableForSale })} style={[styles.saleToggle, product.availableForSale && styles.saleToggleActive]} accessibilityRole="switch" accessibilityState={{ checked: product.availableForSale }}><View style={[styles.switchTrack, product.availableForSale && styles.switchTrackActive]}><View style={[styles.switchThumb, product.availableForSale && styles.switchThumbActive]} /></View><AgText variant="bodySmall" weight="semibold" style={styles.primary}>{product.availableForSale ? copy.sale : copy.notSale}</AgText></AgPressable>
   </View>;
+}
+
+/** Keeps the typed text (e.g. "2.") so decimals can be entered; reports a number or null. */
+function QuantityInput({ value, placeholder, onChange }: { value: number | null | undefined; placeholder: string; onChange: (value: number | null) => void }) {
+  const [text, setText] = useState(value == null ? '' : String(value));
+  return <TextInput value={text} onChangeText={(raw) => {
+    const cleaned = raw.replace(/,/g, '.').replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+    setText(cleaned);
+    const parsed = Number(cleaned);
+    onChange(cleaned && cleaned !== '.' && Number.isFinite(parsed) ? parsed : null);
+  }} placeholder={placeholder} placeholderTextColor={MUTED} keyboardType="decimal-pad" style={styles.quantityInput} />;
 }
 
 function MonthPicker({ language, value, label, placeholder, onChange }: { language: Language; value: string | null; label: string; placeholder: string; onChange: (value: string) => void }) {
   const [visible, setVisible] = useState(false);
   const months = useMemo(() => Array.from({ length: 18 }, (_, index) => { const date = new Date(); date.setDate(1); date.setMonth(date.getMonth() + index); return { value: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`, label: new Intl.DateTimeFormat(language === 'ta' ? 'ta-IN' : 'en-IN', { month: 'long', year: 'numeric' }).format(date) }; }), [language]);
   const selected = months.find((month) => month.value === value);
-  return <><AgText variant="caption" weight="semibold" style={styles.primary}>{label}</AgText><AgPressable onPress={() => setVisible(true)} style={styles.monthField}><CalendarDays size={20} color={GREEN} /><AgText variant="bodySmall" style={selected ? styles.primary : styles.muted}>{selected?.label ?? placeholder}</AgText><ChevronDown size={19} color={GREEN} /></AgPressable><Modal transparent visible={visible} animationType="fade" onRequestClose={() => setVisible(false)}><View style={styles.modalBackdrop}><SafeAreaView style={styles.monthModal}>{months.map((month) => <AgPressable key={month.value} onPress={() => { onChange(month.value); setVisible(false); }} style={[styles.monthRow, value === month.value && styles.monthRowSelected]}><AgText variant="body" weight={value === month.value ? 'bold' : 'medium'} style={styles.primary}>{month.label}</AgText>{value === month.value ? <Check size={20} color={GREEN} /> : null}</AgPressable>)}</SafeAreaView></View></Modal></>;
+  return <><AgText variant="caption" weight="semibold" style={styles.primary}>{label}</AgText><AgPressable onPress={() => setVisible(true)} style={styles.monthField}><CalendarDays size={20} color={GREEN} /><AgText variant="bodySmall" style={selected ? styles.primary : styles.muted}>{selected?.label ?? placeholder}</AgText><ChevronDown size={19} color={GREEN} /></AgPressable><Modal transparent visible={visible} animationType="fade" onRequestClose={() => setVisible(false)}><View style={styles.modalBackdrop}><SafeAreaView style={styles.monthModal}><ScrollView>{months.map((month) => <AgPressable key={month.value} onPress={() => { onChange(month.value); setVisible(false); }} style={[styles.monthRow, value === month.value && styles.monthRowSelected]}><AgText variant="body" weight={value === month.value ? 'bold' : 'medium'} style={styles.primary}>{month.label}</AgText>{value === month.value ? <Check size={20} color={GREEN} /> : null}</AgPressable>)}</ScrollView></SafeAreaView></View></Modal></>;
 }
 
 function CatalogError({ language, onRetry, message }: { language: Language; onRetry: () => void; message?: string }) {

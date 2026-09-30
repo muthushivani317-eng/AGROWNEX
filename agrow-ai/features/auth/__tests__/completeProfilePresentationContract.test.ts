@@ -16,10 +16,10 @@ describe("bilingual complete-profile presentation contract", () => {
     expect(screen).toContain("complete.mutate(data");
     expect(screen).toContain("autofillAddressFromGPS()");
     expect(screen).toMatch(
-      /setValue\(["']block["'], ["']["']\)/,
+      /setValue\(["']block["'], ["']["'](, \{ shouldDirty: true \})?\)/,
     );
     expect(screen).toMatch(
-      /setValue\(["']village["'], ["']["']\)/,
+      /setValue\(["']village["'], ["']["'](, \{ shouldDirty: true \})?\)/,
     );
   });
 
