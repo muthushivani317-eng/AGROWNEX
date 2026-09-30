@@ -38,21 +38,22 @@ type FarmItem = Coded & {
 };
 type Board = {
   organization: { id: string; name: string; kind: string; district: string | null; listed_in_app: boolean };
-  summary: { farmer_count: number; total_land_holding_acres: number; farmers_with_farm_items: number; farmer_types: Coded[] };
+  summary: { farmer_count: number; total_land_holding_acres: number; farmers_with_farm_items: number; farmer_types: Coded[]; wants_fpo_support: number; wants_kvk_support: number };
   farm_items: FarmItem[];
   harvest_calendar: { month: number; month_name: string; items: { code: string; name: string; farmer_count: number }[] }[];
   needs: Coded[];
 };
 type Member = {
   farmer_ref: string; name: string | null; phone: string | null; village: string | null; district: string | null;
-  land_holding_acres: number | null; farmer_type: string | null; needs: string[];
+  land_holding_acres: number | null; farmer_type: string | null; needs: string[]; wants_fpo_support: boolean; wants_kvk_support: boolean;
   farm_items: { name: string; harvest_months: number[]; approx_quantity: number | null; unit: string | null; available_for_sale: boolean }[];
 };
-type Filter = { need?: string; harvest_month?: string; crop?: string; label: string } | null;
+type Filter = { need?: string; harvest_month?: string; crop?: string; support?: 'fpo' | 'kvk'; label: string } | null;
+const ALL = 'all';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const qty = (map: Record<string, number>) => Object.entries(map).map(([u, v]) => `${v.toLocaleString('en-IN')} ${u}`).join(', ') || '—';
-const kindLabel = (kind: string) => (kind === 'kvk' ? 'KVK' : kind === 'fpo' ? 'FPO' : 'Community');
+const kindLabel = (kind: string) => (kind === 'kvk' ? 'KVK' : kind === 'fpo' ? 'FPO' : kind === ALL ? 'Agrownex' : 'Community');
 const titleCase = (code: string) => code.replaceAll('_', ' ').replace(/^./, (c) => c.toUpperCase());
 
 function Settings({ org, onSaved }: { org: Board['organization']; onSaved: () => void }) {
@@ -123,22 +124,27 @@ export function FpoKvkMembersPage({ isPlatformAdmin }: { isPlatformAdmin: boolea
   const [filter, setFilter] = useState<Filter>(null);
   const [exportError, setExportError] = useState('');
 
+  // Platform admins start on every Agrownex farmer (works before any FPO/KVK exists).
   useEffect(() => {
-    if (!orgId && organizations.data?.length) setOrgId(organizations.data[0].id);
-  }, [orgId, organizations.data]);
+    if (orgId || !organizations.data) return;
+    if (isPlatformAdmin) setOrgId(ALL);
+    else if (organizations.data.length) setOrgId(organizations.data[0].id);
+  }, [orgId, organizations.data, isPlatformAdmin]);
 
-  const board = useResource(() => (orgId ? getJson<Board>(`/admin/fpo-board/organizations/${orgId}`) : Promise.resolve(null)), [orgId]);
+  const isAll = orgId === ALL;
+  const base = isAll ? '/admin/fpo-board/all' : `/admin/fpo-board/organizations/${orgId}`;
+  const board = useResource(() => (orgId ? getJson<Board>(base) : Promise.resolve(null)), [base]);
   const params = filter ? new URLSearchParams(Object.entries(filter).filter(([k, v]) => k !== 'label' && v) as [string, string][]).toString() : '';
   const members = useResource(
-    () => (orgId && filter ? getJson<Member[]>(`/admin/fpo-board/organizations/${orgId}/farmers${params ? `?${params}` : ''}`) : Promise.resolve(null)),
-    [orgId, params, filter !== null],
+    () => (orgId && filter ? getJson<Member[]>(`${base}/farmers${params ? `?${params}` : ''}`) : Promise.resolve(null)),
+    [base, params, filter !== null],
   );
   const refresh = () => { void organizations.reload(); void board.reload(); if (filter) void members.reload(); };
 
   async function downloadCsv() {
     setExportError('');
     try {
-      const blob = await (await call(`/admin/fpo-board/organizations/${orgId}/farmers.csv${params ? `?${params}` : ''}`)).blob();
+      const blob = await (await call(`${base}/farmers.csv${params ? `?${params}` : ''}`)).blob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -152,7 +158,7 @@ export function FpoKvkMembersPage({ isPlatformAdmin }: { isPlatformAdmin: boolea
 
   if (organizations.loading) return <Loading />;
   if (organizations.error) return <ErrorPanel message={organizations.error} retry={() => void organizations.reload()} />;
-  if (!organizations.data?.length) {
+  if (!organizations.data?.length && !isPlatformAdmin) {
     return <><PageTitle title="FPO / KVK Members" subtitle="Farmers who joined your organization from the app." /><Empty title="No organization yet" body="Agrownex team: create the FPO or KVK in Partner organizations and add its staff." /></>;
   }
 
@@ -162,10 +168,11 @@ export function FpoKvkMembersPage({ isPlatformAdmin }: { isPlatformAdmin: boolea
     <>
       <PageTitle
         title="FPO / KVK Members"
-        subtitle="What members grow, rear and produce, when they harvest, and what they need."
-        action={organizations.data.length > 1 ? (
+        subtitle={isAll ? 'Every farmer on Agrownex: what they grow, when they harvest, what they need. FPOs and KVKs you add will see only their own members.' : 'What members grow, rear and produce, when they harvest, and what they need.'}
+        action={(organizations.data?.length ?? 0) + (isPlatformAdmin ? 1 : 0) > 1 ? (
           <label>Organization<select value={orgId} onChange={(e) => { setOrgId(e.target.value); setFilter(null); }}>
-            {organizations.data.map((o) => <option key={o.id} value={o.id}>{kindLabel(o.kind)} · {o.name} ({o.farmer_count}{o.join_request_count ? `, ${o.join_request_count} waiting` : ''})</option>)}
+            {isPlatformAdmin && <option value={ALL}>All Agrownex farmers</option>}
+            {(organizations.data ?? []).map((o) => <option key={o.id} value={o.id}>{kindLabel(o.kind)} · {o.name} ({o.farmer_count}{o.join_request_count ? `, ${o.join_request_count} waiting` : ''})</option>)}
           </select></label>
         ) : undefined}
       />
@@ -174,14 +181,26 @@ export function FpoKvkMembersPage({ isPlatformAdmin }: { isPlatformAdmin: boolea
       {data && (
         <>
           <div className="metrics">
-            <Metric label="Members" value={data.summary.farmer_count} />
+            <Metric label={isAll ? 'Farmers' : 'Members'} value={data.summary.farmer_count} />
             <Metric label="Total land (acres)" value={data.summary.total_land_holding_acres} />
             <Metric label="Filled farm details" value={data.summary.farmers_with_farm_items} />
             <Metric label="Items grown / reared" value={data.farm_items.length} />
+            <Metric label="Want FPO support" value={data.summary.wants_fpo_support} />
+            <Metric label="Want KVK support" value={data.summary.wants_kvk_support} />
           </div>
 
-          {isPlatformAdmin && <Settings org={data.organization} onSaved={refresh} />}
-          <JoinRequests orgId={orgId} onChanged={refresh} />
+          {isAll && (
+            <Card>
+              <div className="section-head"><h2>FPO / KVK interest</h2><span>Farmers who asked for help at sign-up — share with the FPO/KVK once it is added</span></div>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
+                <button disabled={!data.summary.wants_fpo_support} onClick={() => setFilter({ support: 'fpo', label: 'wanting FPO support' })}>Farmers wanting FPO ({data.summary.wants_fpo_support})</button>
+                <button disabled={!data.summary.wants_kvk_support} onClick={() => setFilter({ support: 'kvk', label: 'wanting KVK support' })}>Farmers wanting KVK ({data.summary.wants_kvk_support})</button>
+              </div>
+              {!organizations.data?.length && <p className="panel-message">No FPO or KVK yet. Add one in Partner organizations, then open it here and click “Show in app” — farmers then see it in the app and can join.</p>}
+            </Card>
+          )}
+          {!isAll && isPlatformAdmin && <Settings org={data.organization} onSaved={refresh} />}
+          {!isAll && <JoinRequests orgId={orgId} onChanged={refresh} />}
 
           <Card>
             <div className="section-head"><h2>Crops, livestock &amp; products</h2><span>As entered by farmers at sign-up (approximate)</span></div>
@@ -252,7 +271,7 @@ export function FpoKvkMembersPage({ isPlatformAdmin }: { isPlatformAdmin: boolea
             {members.error && <ErrorPanel message={members.error} retry={() => void members.reload()} />}
             {filter && members.data && (members.data.length ? (
               <DataTable
-                columns={['Farmer', 'Phone', 'Village', 'Land', 'Type', 'Grows / rears', 'Needs']}
+                columns={['Farmer', 'Phone', 'Village', 'Land', 'Type', 'Grows / rears', 'Needs', 'Wants']}
                 rows={members.data.map((f) => [
                   <span key="f"><strong>{f.name ?? 'Unnamed'}</strong><br /><small>{f.farmer_ref}</small></span>,
                   f.phone ? <a key="p" href={`tel:${f.phone}`}>{f.phone}</a> : '—',
@@ -261,6 +280,7 @@ export function FpoKvkMembersPage({ isPlatformAdmin }: { isPlatformAdmin: boolea
                   f.farmer_type ? titleCase(f.farmer_type) : '—',
                   f.farm_items.map((i) => `${i.name}${i.approx_quantity && i.unit ? ` ${i.approx_quantity.toLocaleString('en-IN')} ${i.unit}` : ''}${i.harvest_months.length ? ` (${i.harvest_months.map((m) => MONTHS[m - 1]).join('/')})` : ''}${i.available_for_sale ? ' · for sale' : ''}`).join('; ') || '—',
                   f.needs.map(titleCase).join(', ') || '—',
+                  [f.wants_fpo_support && 'FPO', f.wants_kvk_support && 'KVK'].filter(Boolean).join(', ') || '—',
                 ])}
               />
             ) : <p className="panel-message">No members match.</p>)}

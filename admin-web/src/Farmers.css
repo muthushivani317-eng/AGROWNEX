@@ -7,3 +7,6 @@
 
 .farmer-delete{display:inline-flex;align-items:center;gap:8px;background:#a83b32;color:#fff;margin-top:18px}.farmer-delete:disabled{opacity:.45;cursor:not-allowed}.farmer-delete-confirm{margin-top:18px;border:1px solid #ecd5cd;background:#fff4ef;border-radius:12px;padding:14px;display:grid;gap:10px}.farmer-delete-confirm p{margin:0;font-size:13px;line-height:1.5}.farmer-delete-confirm>div{display:flex;gap:8px;justify-content:flex-end}.farmer-delete-confirm .farmer-delete{margin-top:0}.directory-sync-note{align-self:center;color:var(--muted);font-size:12px;max-width:220px}
 .directory-sync-confirm{position:fixed;right:32px;top:90px;z-index:8;max-width:420px;box-shadow:0 12px 30px #0f2a1f30}
+
+.farmer-onboarding { margin-top: 18px; display: grid; gap: 10px; }
+.farmer-onboarding h3 { margin: 6px 0 0; font-size: 1rem; }

@@ -73,6 +73,7 @@ FARMER_CSV_COLUMNS = [
     "farm_items",
     "products",
     "needs",
+    "wants_support",
 ]
 # Farm-item categories that are crops on the land (merged into the crop table).
 CROP_CATEGORIES = ("crops", "vegetables", "fruits", "plantation")
@@ -132,21 +133,31 @@ class _Data:
     farm_items: list[FarmerFarmItem] = field(default_factory=list)
 
 
-async def _load(session: AsyncSession, organization_id: uuid.UUID) -> _Data:
-    farmers = {
-        user.id: user
-        for user in (
-            await session.scalars(
-                select(User)
-                .join(OrganicPartnerFarmerLink, OrganicPartnerFarmerLink.farmer_user_id == User.id)
-                .where(
-                    OrganicPartnerFarmerLink.organization_id == organization_id,
-                    OrganicPartnerFarmerLink.status == "active",
-                    User.deleted_at.is_(None),
-                )
+async def _load(session: AsyncSession, organization_id: uuid.UUID | None) -> _Data:
+    """``organization_id=None`` = every Agrownex farmer (platform admins only)."""
+    if organization_id is None:
+        from app.modules.admin.models import AdminUser
+
+        stmt = (
+            select(User)
+            .join(FarmerProfile, FarmerProfile.user_id == User.id)
+            .where(
+                User.deleted_at.is_(None),
+                FarmerProfile.is_deleted.is_(False),
+                User.id.not_in(select(AdminUser.user_id).where(AdminUser.deleted_at.is_(None))),
             )
-        ).unique()
-    }
+        )
+    else:
+        stmt = (
+            select(User)
+            .join(OrganicPartnerFarmerLink, OrganicPartnerFarmerLink.farmer_user_id == User.id)
+            .where(
+                OrganicPartnerFarmerLink.organization_id == organization_id,
+                OrganicPartnerFarmerLink.status == "active",
+                User.deleted_at.is_(None),
+            )
+        )
+    farmers = {user.id: user for user in (await session.scalars(stmt)).unique()}
     ids = list(farmers)
     if not ids:
         return _Data(farmers={}, profiles={}, farms=[], locations={})
@@ -236,7 +247,7 @@ def _village(data: _Data, farm: Farm) -> str:
     return (profile.village if profile and profile.village else None) or "Unknown"
 
 
-async def build_board(session: AsyncSession, organization_id: uuid.UUID, *, today: date | None = None) -> dict:
+async def build_board(session: AsyncSession, organization_id: uuid.UUID | None, *, today: date | None = None) -> dict:
     today = today or date.today()
     data = await _load(session, organization_id)
 
@@ -366,6 +377,8 @@ async def build_board(session: AsyncSession, organization_id: uuid.UUID, *, toda
                 sum(p.land_holding_acres or 0.0 for p in data.profiles.values() if p.user_id in data.farmers), 2
             ),
             "farmers_with_farm_items": len({i.user_id for i in data.farm_items}),
+            "wants_fpo_support": sum(1 for p in data.profiles.values() if p.user_id in data.farmers and p.wants_fpo_support),
+            "wants_kvk_support": sum(1 for p in data.profiles.values() if p.user_id in data.farmers and p.wants_kvk_support),
             "farmer_types": _count_codes(
                 [p.farmer_type for p in data.profiles.values() if p.user_id in data.farmers and p.farmer_type], FARMER_TYPES
             ),
@@ -463,12 +476,13 @@ def _sum_by_unit(items: list[_Item]) -> dict[str, float]:
 
 async def farmer_rows(
     session: AsyncSession,
-    organization_id: uuid.UUID,
+    organization_id: uuid.UUID | None,
     *,
     crop: str | None = None,
     product: str | None = None,
     need: str | None = None,
     harvest_month: int | None = None,
+    support: str | None = None,
 ) -> list[dict]:
     """One row per consented farmer: who they are, what they grow, what they have."""
     data = await _load(session, organization_id)
@@ -504,6 +518,10 @@ async def farmer_rows(
             continue
         if harvest_month and not any(harvest_month in (d.harvest_months or []) for d in declared):
             continue
+        if support == "fpo" and not (profile and profile.wants_fpo_support):
+            continue
+        if support == "kvk" and not (profile and profile.wants_kvk_support):
+            continue
         location = next((data.locations.get(f.id) for f in farms if data.locations.get(f.id)), None)
         rows.append(
             {
@@ -515,6 +533,8 @@ async def farmer_rows(
                 "land_holding_acres": profile.land_holding_acres if profile else None,
                 "farmer_type": profile.farmer_type if profile else None,
                 "needs": list(profile.needs or []) if profile else [],
+                "wants_fpo_support": bool(profile and profile.wants_fpo_support),
+                "wants_kvk_support": bool(profile and profile.wants_kvk_support),
                 "farm_items": [
                     {
                         "code": d.item_code,
@@ -588,6 +608,7 @@ def rows_to_csv(rows: list[dict]) -> str:
                 farm_items,
                 products,
                 needs,
+                "/".join(k for k, v in (("FPO", row["wants_fpo_support"]), ("KVK", row["wants_kvk_support"])) if v),
             ]
         )
     return buffer.getvalue()

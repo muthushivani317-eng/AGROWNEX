@@ -346,3 +346,40 @@ async def test_app_onboarding_payload_lands_in_farm_items_and_board(db_session):
     board = await build_board(db_session, fpo)
     assert {i["code"] for i in board["farm_items"]} >= {"paddy", "goat", "milk"}
     assert board["summary"]["farmer_types"][0]["code"] == "small_farmer"
+
+
+@pytest.mark.asyncio
+async def test_all_farmers_view_before_any_fpo_and_farmer_detail(db_session):
+    from app.modules.admin.queries import AdminQueries
+    from app.modules.admin.schemas import FarmerDetailOut
+    from app.modules.farmers.schemas import FarmerMeUpdate
+    from app.modules.farmers.service import FarmerService
+    from app.modules.fpo_board.router import all_farmers_board, all_farmers_csv, all_farmers_list
+
+    farmer = await _user(db_session, "no-fpo-farmer", phone="+919333333333")
+    await db_session.commit()
+    await FarmerService(db_session).update_me(farmer, FarmerMeUpdate(**APP_PAYLOAD))
+    await db_session.commit()
+    platform = await _admin(db_session, AdminRole.OWNER.value)
+    await db_session.commit()
+
+    board = await all_farmers_board(db_session, platform)
+    assert board["organization"]["id"] == "all"
+    assert board["summary"]["farmer_count"] >= 1 and board["summary"]["wants_fpo_support"] == 1
+    assert "paddy" in {i["code"] for i in board["farm_items"]}
+    rows = await all_farmers_list(db_session, platform, support="fpo")
+    assert [r["farmer_ref"] for r in rows] == [farmer.farmer_ref]
+    assert await all_farmers_list(db_session, platform, support="kvk") == []
+    csv_text = (await all_farmers_csv(db_session, platform)).body.decode()
+    assert "wants_support" in csv_text.splitlines()[0] and "FPO" in csv_text
+
+    fpo_partner = await _admin(db_session, AdminRole.FPO_PARTNER.value)
+    with pytest.raises(ForbiddenError):
+        await all_farmers_board(db_session, fpo_partner)
+
+    detail = await AdminQueries(db_session).farmer_detail(farmer.id)
+    detail["consents"] = []
+    out = FarmerDetailOut.from_detail(farmer.id, detail)
+    assert out.land_holding_acres == 4.5 and out.farmer_type == "Small farmer"
+    assert out.wants_fpo_support is True and out.latitude == 8.63
+    assert {i["name"] for i in out.farm_items} >= {"Paddy", "Goat", "Milk"}

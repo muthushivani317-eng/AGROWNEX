@@ -50,7 +50,7 @@ function DirectoryResults({path,draft,setDraft,setFilters,page,setPage,size,setS
     <section className="directory-table-card" aria-label="Farmer directory"><form className="directory-filters" onSubmit={e=>{e.preventDefault();setFilters({...draft});setPage(1);setSelected(null);}}><label className="directory-search"><Search size={18}/><input aria-label="Search by farmer, reference or phone" placeholder="Search by farmer, reference or phone" value={draft.search} onChange={e=>setDraft({...draft,search:e.target.value})}/></label><input aria-label="District filter" placeholder="District" list="directory-districts" value={draft.district} onChange={e=>setDraft({...draft,district:e.target.value})}/><datalist id="directory-districts">{districts.filter(([x])=>x!=='Not specified').map(([x])=><option key={x} value={x}/>)}</datalist><input aria-label="Crop filter" placeholder="Crop" list="directory-crops" value={draft.crop} onChange={e=>setDraft({...draft,crop:e.target.value})}/><datalist id="directory-crops">{crops.filter(([x])=>x!=='Not specified').map(([x])=><option key={x} value={x}/>)}</datalist><button type="submit">Apply filters</button><button type="button" className="directory-clear" onClick={clear}>Clear filters</button></form>
     {state.loading ? <Loading/> : state.error ? <ErrorPanel message={state.error} retry={()=>void state.reload()}/> : rows.length ? <DataTable columns={['Reference','Farmer','Phone','District','Primary crop','Farms','Joined','Actions']} rows={rows.map(x=>[x.farmer_ref ?? '—',<span className="farmer-identity"><span className="farmer-avatar">{(x.full_name ?? '?').split(/\s+/).map(s=>s.charAt(0)).slice(0,2).join('')}</span><strong>{x.full_name ?? 'Unnamed farmer'}</strong></span>,maskFarmerPhone(x.phone_number),x.district ?? '—',<span className="farmer-crop">{x.primary_crop ?? 'Not specified'}</span>,x.farm_count,formatDate(x.created_at),<button className="farmer-view" aria-expanded={selected===x.user_id} onClick={()=>setSelected(selected===x.user_id ? null : x.user_id)}>{selected===x.user_id ? 'Close' : 'View'}</button>])}/> : <div className="directory-empty"><Users size={30}/><h2>No farmers found</h2><p>Try a different name, reference, phone, district or crop.</p><button onClick={clear}>Clear filters</button></div>}
     <footer className="directory-pagination"><span aria-live="polite">{state.loading ? 'Loading records…' : state.error ? 'Records unavailable' : `Showing ${rows.length ? (page-1)*size+1 : 0}–${(page-1)*size+rows.length} of ${state.data?.total ?? 0} farmers`}</span><label>Rows per page<select value={size} onChange={e=>{setSize(Number(e.target.value));setPage(1);setSelected(null);}}>{[10,25,50].map(n=><option key={n}>{n}</option>)}</select></label><div><button aria-label="Previous page" disabled={page===1 || state.loading} onClick={()=>{setPage(page-1);setSelected(null);}}><ChevronLeft size={17}/></button><span>Page {page}</span><button aria-label="Next page" disabled={state.loading || !!state.error || page >= (state.data?.total_pages ?? 1)} onClick={()=>{setPage(page+1);setSelected(null);}}><ChevronRight size={17}/></button></div></footer></section>
-    {current && !state.loading && !state.error && <section className="farmer-record" aria-label="Selected farmer record"><div><h2>{current.full_name ?? 'Unnamed farmer'}</h2><button className="farmer-view" onClick={()=>setSelected(null)}>Close</button></div><dl>{[['Reference',current.farmer_ref],['Phone',maskFarmerPhone(current.phone_number)],['Village',current.village],['District',current.district],['Primary crop',current.primary_crop],['Farms',current.farm_count],['Joined',formatDate(current.created_at)]].map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value ?? 'Not provided'}</dd></div>)}</dl>{canDelete&&<DeleteFarmer farmer={current} onDeleted={()=>{setSelected(null);void state.reload();}}/>}</section>}
+    {current && !state.loading && !state.error && <section className="farmer-record" aria-label="Selected farmer record"><div><h2>{current.full_name ?? 'Unnamed farmer'}</h2><button className="farmer-view" onClick={()=>setSelected(null)}>Close</button></div><dl>{[['Reference',current.farmer_ref],['Phone',maskFarmerPhone(current.phone_number)],['Village',current.village],['District',current.district],['Primary crop',current.primary_crop],['Farms',current.farm_count],['Joined',formatDate(current.created_at)]].map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value ?? 'Not provided'}</dd></div>)}</dl><FarmerOnboarding userId={current.user_id}/>{canDelete&&<DeleteFarmer farmer={current} onDeleted={()=>{setSelected(null);void state.reload();}}/>}</section>}
   </section><section className="directory-insights" aria-label="Directory insights"><h2>Directory insights</h2><p className="insights-scope">Based on this result page</p>{[[MapPin,'District coverage',districts],[Leaf,'Crop mix',crops]].map(([icon,title,items])=>{const Icon=icon as typeof Leaf;return <div className="insights-group" key={String(title)}><h3><Icon size={20}/>{String(title)}</h3>{state.loading ? <p>Loading…</p> : state.error ? <p>Unavailable</p> : (items as [string,number][]).length ? (items as [string,number][]).map(([label,count])=><div key={label}><span>{label}</span><strong>{count}</strong></div>) : <p>No records on this page</p>}</div>;})}<div className="directory-privacy"><ShieldCheck size={20}/><p>Phone numbers are masked in this view and exported files.</p></div></section></div>;
 }
 
@@ -101,5 +101,43 @@ function DeleteFarmer({ farmer, onDeleted }: { farmer: Farmer; onDeleted: () => 
     <label>Type <code>{ref}</code> to confirm<input value={typed} onChange={e => setTyped(e.target.value)} autoFocus/></label>
     {error && <p className="form-error">{error}</p>}
     <div><button className="secondary-button" onClick={() => { setOpen(false); setTyped(''); }}>Cancel</button><button className="farmer-delete" disabled={busy || typed.trim().toUpperCase() !== ref.toUpperCase()} onClick={() => void remove()}>{busy ? 'Deleting…' : 'Delete permanently'}</button></div>
+  </div>;
+}
+
+type OnboardingDetail = {
+  experience_years: number | null; land_holding_acres: number | null; farmer_type: string | null; landmark: string | null;
+  latitude: number | null; longitude: number | null; needs: string[]; wants_fpo_support: boolean; wants_kvk_support: boolean;
+  farm_items: { name: string; category: string; harvest_months: number[]; approx_quantity: number | null; unit: string | null; available_for_sale: boolean }[];
+  organizations: { name: string; kind: string; status: string }[];
+};
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+/** Sign-up details from the app (land, type, products, harvest months, needs, FPO/KVK interest). */
+export function FarmerOnboarding({ userId }: { userId: string }) {
+  const detail = useResource(() => api<OnboardingDetail>(`/admin/farmers/${userId}`), [userId]);
+  if (detail.loading) return <Loading/>;
+  if (detail.error) return <ErrorPanel message={detail.error} retry={()=>void detail.reload()}/>;
+  const d = detail.data;
+  if (!d) return null;
+  const wants = [d.wants_fpo_support && 'FPO', d.wants_kvk_support && 'KVK'].filter(Boolean).join(', ');
+  const facts: [string, string | null][] = [
+    ['Land holding', d.land_holding_acres != null ? `${d.land_holding_acres} acres` : null],
+    ['Farmer type', d.farmer_type],
+    ['Experience', d.experience_years != null ? `${d.experience_years} years` : null],
+    ['Landmark', d.landmark],
+    ['Wants support from', wants || null],
+    ['Member of', d.organizations.filter(o => o.status === 'active').map(o => o.name).join(', ') || null],
+  ];
+  return <div className="farmer-onboarding">
+    <h3>Sign-up details</h3>
+    <dl>{facts.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value ?? 'Not provided'}</dd></div>)}
+      <div><dt>Location</dt><dd>{d.latitude != null && d.longitude != null ? <a href={`https://maps.google.com/?q=${d.latitude},${d.longitude}`} target="_blank" rel="noreferrer">Open map</a> : 'Not provided'}</dd></div>
+    </dl>
+    <h3>Grows / rears / produces</h3>
+    {d.farm_items.length ? <DataTable columns={['Item','Type','Approx. quantity','Harvest','For sale']} rows={d.farm_items.map(i => [
+      <strong key="n">{i.name}</strong>, i.category.replaceAll('_',' '),
+      i.approx_quantity != null ? `${i.approx_quantity.toLocaleString('en-IN')} ${i.unit ?? ''}` : '—',
+      i.harvest_months.map(m => MONTHS[m-1]).join(', ') || '—', i.available_for_sale ? 'Yes' : 'No'])}/> : <p className="panel-message">No products added yet.</p>}
+    {d.needs.length > 0 && <><h3>Needs</h3><p>{d.needs.join(', ')}</p></>}
   </div>;
 }

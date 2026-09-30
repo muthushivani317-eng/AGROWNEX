@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Query, Response
 from pydantic import BaseModel, Field
@@ -121,6 +121,74 @@ async def list_organizations(session: Session, admin: AdminContextDep):
         }
         for o in organizations
     ]
+
+
+def _require_platform(admin) -> None:
+    _require_permission(admin)
+    if admin.admin.role not in PLATFORM_ROLES:
+        raise ForbiddenError("Only the Owner or a Super Admin can view all farmers.")
+
+
+def _all_audit(session: AsyncSession, admin, action: str, meta: dict) -> None:
+    session.add(
+        AuditLog(
+            admin_id=admin.admin.id,
+            role=admin.admin.role,
+            action=action,
+            target="farmer_network",
+            target_id="all",
+            ip_address=admin.ip_address,
+            meta=meta,
+        )
+    )
+
+
+@admin_router.get("/all")
+async def all_farmers_board(session: Session, admin: AdminContextDep):
+    """Same board across every Agrownex farmer (before any FPO/KVK exists)."""
+    _require_platform(admin)
+    board = await build_board(session, None)
+    return {"organization": {"id": "all", "name": "All Agrownex farmers", "kind": "all", "district": None, "listed_in_app": False}, **board}
+
+
+@admin_router.get("/all/farmers")
+async def all_farmers_list(
+    session: Session,
+    admin: AdminContextDep,
+    crop: Annotated[str | None, Query(max_length=80)] = None,
+    product: Annotated[str | None, Query(max_length=160)] = None,
+    need: Annotated[str | None, Query(max_length=40)] = None,
+    harvest_month: Annotated[int | None, Query(ge=1, le=12)] = None,
+    support: Annotated[Literal["fpo", "kvk"] | None, Query()] = None,
+):
+    _require_platform(admin)
+    filters = {"crop": crop, "product": product, "need": need, "harvest_month": harvest_month, "support": support}
+    rows = await farmer_rows(session, None, **filters)
+    _all_audit(session, admin, "farmer_network_viewed", {**filters, "rows": len(rows)})
+    await session.commit()
+    return rows
+
+
+@admin_router.get("/all/farmers.csv")
+async def all_farmers_csv(
+    session: Session,
+    admin: AdminContextDep,
+    crop: Annotated[str | None, Query(max_length=80)] = None,
+    product: Annotated[str | None, Query(max_length=160)] = None,
+    need: Annotated[str | None, Query(max_length=40)] = None,
+    harvest_month: Annotated[int | None, Query(ge=1, le=12)] = None,
+    support: Annotated[Literal["fpo", "kvk"] | None, Query()] = None,
+):
+    _require_platform(admin)
+    filters = {"crop": crop, "product": product, "need": need, "harvest_month": harvest_month, "support": support}
+    rows = await farmer_rows(session, None, **filters)
+    _all_audit(session, admin, "farmer_network_exported", {**filters, "rows": len(rows)})
+    await session.commit()
+    return Response(
+        content=rows_to_csv(rows),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="agrownex-farmers.csv"', "Cache-Control": "no-store"},
+    )
 
 
 @admin_router.patch("/organizations/{organization_id}")

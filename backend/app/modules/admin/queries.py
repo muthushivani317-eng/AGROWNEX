@@ -158,7 +158,33 @@ class AdminQueries:
                 select(Notification).where(Notification.user_id == user_id)
             ),
         }
-        return {"profile": profile, "user": user, "farms": list(farms), "counts": counts}
+        from app.modules.farm_profile.models import FarmerFarmItem
+        from app.modules.organic_mvp.models import OrganicPartnerFarmerLink, OrganicPartnerOrganization
+
+        farm_items = (
+            await self.session.scalars(
+                select(FarmerFarmItem)
+                .where(FarmerFarmItem.user_id == user_id)
+                .order_by(FarmerFarmItem.category, FarmerFarmItem.item_code)
+            )
+        ).all()
+        links = (
+            await self.session.execute(
+                select(OrganicPartnerFarmerLink, OrganicPartnerOrganization)
+                .join(OrganicPartnerOrganization, OrganicPartnerOrganization.id == OrganicPartnerFarmerLink.organization_id)
+                .where(OrganicPartnerFarmerLink.farmer_user_id == user_id)
+            )
+        ).all()
+        return {
+            "profile": profile,
+            "user": user,
+            "farms": list(farms),
+            "counts": counts,
+            "farm_items": list(farm_items),
+            "organizations": [
+                {"name": org.name, "kind": org.kind, "status": link.status} for link, org in links
+            ],
+        }
 
     # ----------------------------------------------------------------- #
     # Procurement

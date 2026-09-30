@@ -6,7 +6,10 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'prompt',
+      // autoUpdate + skipWaiting: a new deploy replaces the cached app on the
+      // next load (the old 'prompt' mode had no prompt UI, so admins stayed on
+      // stale builds and never saw new pages).
+      registerType: 'autoUpdate',
       manifest: {
         name: 'AgrowAI Admin Control Centre',
         short_name: 'AgrowAI Admin',
@@ -23,6 +26,9 @@ export default defineConfig({
       },
       workbox: {
         navigateFallbackDenylist: [/^\/api\//, /^\/admin\/api\//],
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
         runtimeCaching: []
       }
     })

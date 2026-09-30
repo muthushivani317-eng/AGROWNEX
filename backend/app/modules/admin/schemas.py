@@ -141,12 +141,48 @@ class FarmerDetailOut(BaseModel):
     farms: list[FarmSummaryOut]
     counts: dict[str, int]
     consents: list[ConsentSummaryOut]
+    # Onboarding (app sign-up): shown in the farmer View panel.
+    experience_years: int | None = None
+    land_holding_acres: float | None = None
+    farmer_type: str | None = None
+    landmark: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+    needs: list[str] = []
+    wants_fpo_support: bool = False
+    wants_kvk_support: bool = False
+    farm_items: list[dict] = []
+    organizations: list[dict] = []
 
     @classmethod
     def from_detail(cls, user_id: uuid.UUID, detail: dict) -> FarmerDetailOut:
+        from app.modules.farm_profile.catalog import FARMER_TYPES, NEEDS, item_label
+
         profile = detail["profile"]
         user = detail["user"]
+        farmer_type = getattr(profile, "farmer_type", None)
         return cls(
+            experience_years=getattr(profile, "experience_years", None),
+            land_holding_acres=getattr(profile, "land_holding_acres", None),
+            farmer_type=FARMER_TYPES.get(farmer_type or "", {}).get("en", farmer_type),
+            landmark=getattr(profile, "landmark", None),
+            latitude=getattr(profile, "latitude", None),
+            longitude=getattr(profile, "longitude", None),
+            needs=[NEEDS.get(code, {}).get("en", code) for code in (getattr(profile, "needs", None) or [])],
+            wants_fpo_support=bool(getattr(profile, "wants_fpo_support", False)),
+            wants_kvk_support=bool(getattr(profile, "wants_kvk_support", False)),
+            farm_items=[
+                {
+                    "name": item_label(i.item_code, i.custom_name),
+                    "category": i.category,
+                    "harvest_months": list(i.harvest_months or []),
+                    "approx_quantity": i.approx_quantity,
+                    "unit": i.unit,
+                    "available_for_sale": i.available_for_sale,
+                }
+                for i in detail.get("farm_items", [])
+            ],
+            organizations=detail.get("organizations", []),
             user_id=user_id,
             farmer_ref=user.farmer_ref,
             full_name=getattr(profile, "full_name", None),
