@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Card, DataTable, Empty, ErrorPanel, Loading, Metric, PageTitle, formatDate } from './components';
+import { getCsrfToken } from './api';
 import { getConfig } from './config';
 import { reportReauthRequired } from './sessionTimeout';
 import { useResource } from './useResource';
@@ -15,6 +16,69 @@ async function boardFetch(path: string): Promise<Response> {
   return response;
 }
 const boardJson = async <T,>(path: string): Promise<T> => (await boardFetch(path)).json() as Promise<T>;
+
+async function boardPost<T>(path: string, body: unknown): Promise<T> {
+  const csrf = getCsrfToken();
+  const response = await fetch(`${getConfig().apiBaseUrl}${path}`, {
+    method: 'POST',
+    credentials: 'include',
+    cache: 'no-store',
+    headers: { 'Content-Type': 'application/json', ...(csrf ? { 'X-CSRF-Token': csrf } : {}) },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string; error_code?: string; detail?: unknown } | null;
+    if (data?.error_code === 'admin_recent_auth_required') reportReauthRequired();
+    throw new Error(data?.message ?? (typeof data?.detail === 'string' ? data.detail : `Request failed (${response.status}).`));
+  }
+  return response.json() as Promise<T>;
+}
+
+type LinkRequest = { id: string; farmer_ref: string; status: 'pending' | 'active' | 'revoked'; requested_at: string; approved_at: string | null };
+
+function AddFarmers({ orgId, onLinked }: { orgId: string; onLinked: () => void }) {
+  const links = useResource(() => boardJson<LinkRequest[]>(`/admin/fpo-board/organizations/${orgId}/link-requests`), [orgId]);
+  const [farmerRef, setFarmerRef] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    setBusy(true); setError(''); setMessage('');
+    try {
+      const ref = farmerRef.trim().toUpperCase();
+      await boardPost(`/admin/fpo-board/organizations/${orgId}/link-requests`, { farmer_ref: ref });
+      setMessage(`Request sent to ${ref}. They must approve it in the app: Profile → Organizations.`);
+      setFarmerRef('');
+      await links.reload();
+      onLinked();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Could not send the request.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const pending = (links.data ?? []).filter((l) => l.status === 'pending');
+  return (
+    <Card>
+      <div className="section-head"><h2>Add farmers</h2><span>Farmer finds their ID in the app: Profile → Account settings (AGF-…)</span></div>
+      <form className="stack" onSubmit={(e) => void submit(e)} style={{ display: 'flex', gap: 10, alignItems: 'end', flexWrap: 'wrap', marginTop: 12 }}>
+        <label style={{ flex: '1 1 240px' }}>Farmer ID<input value={farmerRef} onChange={(e) => setFarmerRef(e.target.value)} placeholder="AGF-000000123" pattern="\s*[Aa][Gg][Ff]-[0-9]{9}\s*" required /></label>
+        <button disabled={busy}>{busy ? 'Sending…' : 'Send request'}</button>
+      </form>
+      {message && <p className="panel-message">{message}</p>}
+      {error && <p className="form-error">{error}</p>}
+      {pending.length > 0 && (
+        <>
+          <p className="panel-message">Waiting for farmer approval ({pending.length}):</p>
+          <DataTable columns={['Farmer ID', 'Requested']} rows={pending.map((l) => [l.farmer_ref, formatDate(l.requested_at)])} />
+        </>
+      )}
+    </Card>
+  );
+}
 
 type Organization = { id: string; name: string; kind: string; farmer_count: number };
 type Window = { farmer_count: number; quantity: Record<string, number> };
@@ -79,7 +143,7 @@ export function FpoCropBoardPage() {
   if (organizations.loading) return <Loading />;
   if (organizations.error) return <ErrorPanel message={organizations.error} retry={() => void organizations.reload()} />;
   if (!organizations.data?.length) {
-    return <><PageTitle title="FPO Crop Board" subtitle="What your farmers grow and have to sell." /><Empty title="No FPO linked to your account" body="Ask the Agrownex team to add you as staff of your FPO." /></>;
+    return <><PageTitle title="FPO Crop Board" subtitle="What your farmers grow and have to sell." /><Empty title="No FPO yet" body="Agrownex team: create the FPO in Partner organizations (FPO → organization → staff). FPO staff: ask the Agrownex team to add you to your FPO." /></>;
   }
 
   const data = board.data;
@@ -104,6 +168,8 @@ export function FpoCropBoardPage() {
             <Metric label="Products" value={data.summary.product_count} />
           </div>
           {data.summary.farmers_without_farm > 0 && <p className="panel-message">{data.summary.farmers_without_farm} linked farmer(s) have not added a farm yet.</p>}
+
+          <AddFarmers orgId={orgId} onLinked={() => void board.reload()} />
 
           <Card>
             <div className="section-head"><h2>Crops</h2><span>Harvest windows use dates farmers entered in Sell My Produce</span></div>

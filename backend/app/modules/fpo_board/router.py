@@ -17,10 +17,11 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session
-from app.core.exceptions import ForbiddenError, NotFoundError
+from app.core.exceptions import ConflictError, ForbiddenError, NotFoundError
 from app.modules.admin.constants import AdminPermission, AdminRole
 from app.modules.admin.dependencies import AdminContextDep
 from app.modules.admin.models import AuditLog
+from app.modules.auth.models import User
 from app.modules.fpo_board.service import build_board, farmer_rows, rows_to_csv
 from app.modules.organic_mvp.models import (
     OrganicPartnerFarmerLink,
@@ -28,6 +29,7 @@ from app.modules.organic_mvp.models import (
     OrganicPartnerStaff,
 )
 from app.modules.organic_mvp.partner_api_auth import PartnerApiKeyDep
+from app.modules.organic_mvp.partner_router import LinkRequestIn
 
 admin_router = APIRouter(prefix="/admin/fpo-board", tags=["fpo-board"])
 feed_router = APIRouter(prefix="/partner-feed/crop-board", tags=["partner-feed"])
@@ -141,6 +143,88 @@ async def organization_farmer_csv(
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": f'attachment; filename="{safe_name}-farmers.csv"', "Cache-Control": "no-store"},
     )
+
+
+async def _require_manager(session: AsyncSession, admin, organization_id: uuid.UUID) -> None:
+    """Adding farmers is a write: platform admins, or this FPO's manager staff."""
+    if admin.admin.role in PLATFORM_ROLES:
+        return
+    staff = await session.scalar(
+        select(OrganicPartnerStaff).where(
+            OrganicPartnerStaff.organization_id == organization_id,
+            OrganicPartnerStaff.user_id == admin.admin.user_id,
+            OrganicPartnerStaff.status == "active",
+        )
+    )
+    if staff is None or staff.role != "manager":
+        raise ForbiddenError("Only the FPO manager can add farmers.")
+
+
+@admin_router.get("/organizations/{organization_id}/link-requests")
+async def list_link_requests(organization_id: uuid.UUID, session: Session, admin: AdminContextDep):
+    """Farmer links for this FPO. Only the farmer ID is shown -- a farmer's
+    details appear on the board only after they approve in the app."""
+    await _org_for_admin(session, admin, organization_id)
+    rows = (
+        await session.execute(
+            select(OrganicPartnerFarmerLink, User.farmer_ref)
+            .join(User, User.id == OrganicPartnerFarmerLink.farmer_user_id)
+            .where(OrganicPartnerFarmerLink.organization_id == organization_id)
+            .order_by(OrganicPartnerFarmerLink.created_at.desc())
+            .limit(500)
+        )
+    ).all()
+    return [
+        {
+            "id": str(link.id),
+            "farmer_ref": farmer_ref,
+            "status": link.status,
+            "requested_at": link.created_at,
+            "approved_at": link.approved_at,
+            "revoked_at": link.revoked_at,
+        }
+        for link, farmer_ref in rows
+    ]
+
+
+@admin_router.post("/organizations/{organization_id}/link-requests")
+async def create_link_request(organization_id: uuid.UUID, body: LinkRequestIn, session: Session, admin: AdminContextDep):
+    """Ask a farmer (by Farmer ID) to share their data with this FPO.
+
+    Nothing is shared until the farmer approves in the app
+    (Profile -> Organizations); they can revoke any time.
+    """
+    await _org_for_admin(session, admin, organization_id)
+    await _require_manager(session, admin, organization_id)
+    farmer = await session.scalar(select(User).where(User.farmer_ref == body.farmer_ref, User.deleted_at.is_(None)))
+    if farmer is None:
+        raise NotFoundError("No farmer with this Farmer ID.")
+    existing = await session.scalar(
+        select(OrganicPartnerFarmerLink).where(
+            OrganicPartnerFarmerLink.organization_id == organization_id,
+            OrganicPartnerFarmerLink.farmer_user_id == farmer.id,
+        )
+    )
+    if existing and existing.status != "revoked":
+        raise ConflictError("This farmer is already requested or linked.")
+    if existing:
+        existing.status = "pending"
+        existing.requested_by_user_id = admin.admin.user_id
+        existing.approved_at = None
+        existing.revoked_at = None
+        link = existing
+    else:
+        link = OrganicPartnerFarmerLink(
+            organization_id=organization_id,
+            farmer_user_id=farmer.id,
+            requested_by_user_id=admin.admin.user_id,
+            status="pending",
+        )
+        session.add(link)
+    await session.flush()
+    _audit(session, admin, "fpo_board_link_requested", organization_id, {"farmer_ref": body.farmer_ref})
+    await session.commit()
+    return {"id": str(link.id), "farmer_ref": body.farmer_ref, "status": "pending"}
 
 
 @feed_router.get("")

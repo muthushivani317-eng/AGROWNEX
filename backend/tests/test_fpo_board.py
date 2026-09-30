@@ -212,3 +212,48 @@ async def test_partner_feed_board_is_scoped_to_key_organization(db_session):
     board_b = await feed_board(db_session, PartnerApiKeyContext(organization_id=org_b, organization_name="FPO Beta", key_id=uuid.uuid4()))
     assert [c["crop"] for c in board_b["crops"]] == ["Paddy"]
     assert board_b["products"] == []
+
+
+@pytest.mark.asyncio
+async def test_manager_adds_farmer_by_id_and_board_waits_for_consent(db_session):
+    from app.modules.fpo_board.router import create_link_request, list_link_requests
+
+    platform, org_a, _, manager_a, _ = await _setup(db_session)
+    newcomer = User(firebase_uid="newcomer", status="active")
+    db_session.add(newcomer)
+    await db_session.flush()
+    db_session.add(Farm(user_id=newcomer.id, name="new farm", crop="brinjal", area_hectares=0.4))
+    await db_session.commit()
+
+    fpo_manager = await _admin(db_session, AdminRole.FPO_PARTNER.value, user=manager_a)
+    result = await create_link_request(org_a, LinkRequestIn(farmer_ref=newcomer.farmer_ref.lower()), db_session, fpo_manager)
+    assert result["status"] == "pending"
+    requests = await list_link_requests(org_a, db_session, fpo_manager)
+    assert {r["farmer_ref"]: r["status"] for r in requests}[newcomer.farmer_ref] == "pending"
+
+    # Not on the board until the farmer approves.
+    board = await build_board(db_session, org_a, today=TODAY)
+    assert "Brinjal" not in [c["crop"] for c in board["crops"]]
+    await approve_farmer_link(result["id"], db_session, newcomer)
+    board = await build_board(db_session, org_a, today=TODAY)
+    assert "Brinjal" in [c["crop"] for c in board["crops"]]
+
+    # Duplicate request is refused.
+    from app.core.exceptions import ConflictError
+
+    with pytest.raises(ConflictError):
+        await create_link_request(org_a, LinkRequestIn(farmer_ref=newcomer.farmer_ref), db_session, fpo_manager)
+
+
+@pytest.mark.asyncio
+async def test_non_manager_fpo_staff_cannot_add_farmers(db_session):
+    from app.modules.fpo_board.router import create_link_request
+
+    platform, org_a, _, _, _ = await _setup(db_session)
+    viewer = User(firebase_uid="viewer-staff", status="active")
+    db_session.add(viewer)
+    await db_session.flush()
+    await add_staff(org_a, StaffIn(user_id=viewer.id, role="viewer"), db_session, platform)
+    fpo_viewer = await _admin(db_session, AdminRole.FPO_PARTNER.value, user=viewer)
+    with pytest.raises(ForbiddenError):
+        await create_link_request(org_a, LinkRequestIn(farmer_ref="AGF-000000001"), db_session, fpo_viewer)
