@@ -12,13 +12,14 @@ from app.modules.auth.profile_models import (
     FarmerPreference,
     FarmerProfile,
 )
+from app.modules.farm_profile.schemas import OnboardingProfileFields, OnboardingProfileOut
 from app.modules.farmers.constants import LANGUAGE_PATTERN
 
 
 # --------------------------------------------------------------------------- #
 # /farmers/me
 # --------------------------------------------------------------------------- #
-class FarmerMeUpdate(BaseModel):
+class FarmerMeUpdate(OnboardingProfileFields):
     """Editable farmer profile fields (docs/USER_FLOWS.md → Profile flow)."""
 
     full_name: str = Field(min_length=2, max_length=120)
@@ -33,7 +34,7 @@ class FarmerMeUpdate(BaseModel):
     preferred_crops: list[str] = Field(default_factory=list)
 
 
-class FarmerMeOut(BaseModel):
+class FarmerMeOut(OnboardingProfileOut):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
@@ -78,6 +79,11 @@ class FarmerMeOut(BaseModel):
             email=user.email,
             created_at=profile.created_at,
             updated_at=profile.updated_at,
+            land_holding_acres=getattr(profile, "land_holding_acres", None),
+            farmer_type=getattr(profile, "farmer_type", None),
+            landmark=getattr(profile, "landmark", None),
+            needs=getattr(profile, "needs", None),
+            needs_note=getattr(profile, "needs_note", None),
         )
 
 

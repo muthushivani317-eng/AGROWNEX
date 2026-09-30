@@ -1,4 +1,4 @@
-import { Activity, BrainCircuit, Building2, CircleHelp, ClipboardList, LayoutDashboard, Leaf, Scale, ScrollText, Shield, ShoppingBasket, Sprout, UserCog, Users, Wheat } from 'lucide-react';
+import { Activity, BrainCircuit, Building2, CircleHelp, ClipboardList, Handshake, LayoutDashboard, Leaf, Scale, ScrollText, Shield, ShoppingBasket, Sprout, UserCog, Users, Wheat } from 'lucide-react';
 import type { Permission } from './types';
 
 export const navigation = [
@@ -11,6 +11,7 @@ export const navigation = [
   { to: '/inputs', label: 'Inputs Catalog', icon: ShoppingBasket, permission: 'manage_procurement' },
   { to: '/organic-inputs', label: 'Organic Inputs (QC)', icon: Sprout, permission: ['manage_marketplace_catalog', 'manage_marketplace_suppliers', 'manage_marketplace_qc', 'manage_marketplace_procurement'] as const },
   { to: '/fpo-crop-board', label: 'FPO Crop Board', icon: Wheat, permission: 'view_fpo_board' },
+  { to: '/fpo-kvk-members', label: 'FPO / KVK Members', icon: Handshake, permission: 'view_fpo_board' },
   { to: '/crop-intelligence', label: 'Crop Intelligence', icon: Activity, permission: 'view_crop_intelligence' },
   { to: '/organic-pilot', label: 'Organic pilot', icon: Leaf, permission: 'view_dashboard' },
   { to: '/organic-content', label: 'Organic content', icon: ClipboardList, permission: 'manage_content' },

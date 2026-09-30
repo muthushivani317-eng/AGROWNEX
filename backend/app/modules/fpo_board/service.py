@@ -11,7 +11,10 @@ included because the farmer explicitly approved the link to this FPO.
 
 Nothing here estimates harvests from a crop calendar: harvest windows count
 only dated produce listings the farmer entered (same rule as admin crop
-intelligence -- no invented inventory).
+intelligence -- no invented inventory). The onboarding "farm items" (what the
+farmer grows/rears, harvest months, rough quantity, for sale or not) are the
+farmer's own declaration and are shown as such (``farm_items``,
+``harvest_calendar``, ``needs``).
 """
 from __future__ import annotations
 
@@ -27,6 +30,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.auth.models import User
 from app.modules.auth.profile_models import FarmerProfile
+from app.modules.farm_profile.catalog import CATEGORIES, FARMER_TYPES, ITEMS, NEEDS, item_label
+from app.modules.farm_profile.models import FarmerFarmItem
 from app.modules.farms.models import Farm, FarmLocation
 from app.modules.organic_inputs.constants import BatchStatus
 from app.modules.organic_inputs.models import MarketplaceProductType as ProductType
@@ -56,7 +61,22 @@ INACTIVE_BATCH_STATUSES = (
     BatchStatus.RELEASED_FOR_SALE.value,
 )
 
-FARMER_CSV_COLUMNS = ["farmer_ref", "name", "phone", "village", "district", "crops", "products"]
+FARMER_CSV_COLUMNS = [
+    "farmer_ref",
+    "name",
+    "phone",
+    "village",
+    "district",
+    "land_acres",
+    "farmer_type",
+    "crops",
+    "farm_items",
+    "products",
+    "needs",
+]
+# Farm-item categories that are crops on the land (merged into the crop table).
+CROP_CATEGORIES = ("crops", "vegetables", "fruits", "plantation")
+MONTH_NAMES = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 
 
 def _acres(hectares: float | None) -> float:
@@ -70,6 +90,22 @@ def _key(name: str | None) -> str:
 def _label(name: str | None) -> str:
     text = (name or "").strip()
     return text[:1].upper() + text[1:] if text else "Unknown"
+
+
+def _crop_key(name: str | None) -> str:
+    """Catalog code when the free-text crop matches one, else the lower-case name."""
+    key = _key(name)
+    code = key.replace(" ", "_")
+    return code if code in ITEMS else key
+
+
+def _crop_label(name: str | None) -> str:
+    key = _crop_key(name)
+    return ITEMS[key]["en"] if key in ITEMS else _label(name)
+
+
+def _farm_item_key(item: FarmerFarmItem) -> str:
+    return item.item_code if item.item_code in ITEMS else _key(item.custom_name)
 
 
 @dataclass
@@ -93,6 +129,7 @@ class _Data:
     farms: list[Farm]
     locations: dict[uuid.UUID, FarmLocation]
     items: list[_Item] = field(default_factory=list)
+    farm_items: list[FarmerFarmItem] = field(default_factory=list)
 
 
 async def _load(session: AsyncSession, organization_id: uuid.UUID) -> _Data:
@@ -132,6 +169,9 @@ async def _load(session: AsyncSession, organization_id: uuid.UUID) -> _Data:
     farms = [row[0] for row in farm_rows]
     locations = {row[0].id: row[1] for row in farm_rows if row[1] is not None}
     data = _Data(farmers=farmers, profiles=profiles, farms=farms, locations=locations)
+    data.farm_items = list(
+        (await session.scalars(select(FarmerFarmItem).where(FarmerFarmItem.user_id.in_(ids)))).all()
+    )
 
     offers = (
         await session.scalars(
@@ -201,13 +241,17 @@ async def build_board(session: AsyncSession, organization_id: uuid.UUID, *, toda
     data = await _load(session, organization_id)
 
     crops: dict[str, dict] = {}
+
+    def crop_entry(key: str, label: str) -> dict:
+        return crops.setdefault(
+            key,
+            {"crop": label, "farmers": set(), "farm_count": 0, "area_acres": 0.0, "villages": {}, "varieties": set()},
+        )
+
     for farm in data.farms:
         if not farm.crop:
             continue
-        entry = crops.setdefault(
-            _key(farm.crop),
-            {"crop": _label(farm.crop), "farmers": set(), "farm_count": 0, "area_acres": 0.0, "villages": {}, "varieties": set()},
-        )
+        entry = crop_entry(_crop_key(farm.crop), _crop_label(farm.crop))
         entry["farmers"].add(farm.user_id)
         entry["farm_count"] += 1
         entry["area_acres"] += _acres(farm.area_hectares)
@@ -217,10 +261,27 @@ async def build_board(session: AsyncSession, organization_id: uuid.UUID, *, toda
         village["farmers"].add(farm.user_id)
         village["area_acres"] += _acres(farm.area_hectares)
 
+    # Onboarding farm items add farmers who have not registered a farm for
+    # that crop (their declared area counts only then -- no double counting).
+    for item in data.farm_items:
+        if item.category not in CROP_CATEGORIES:
+            continue
+        entry = crop_entry(_farm_item_key(item), item_label(item.item_code, item.custom_name))
+        if item.user_id in entry["farmers"]:
+            continue
+        entry["farmers"].add(item.user_id)
+        entry["area_acres"] += item.area_acres or 0.0
+        profile = data.profiles.get(item.user_id)
+        village = entry["villages"].setdefault(
+            (profile.village if profile and profile.village else None) or "Unknown", {"farmers": set(), "area_acres": 0.0}
+        )
+        village["farmers"].add(item.user_id)
+        village["area_acres"] += item.area_acres or 0.0
+
     produce_by_crop: dict[str, list[_Item]] = {}
     for item in data.items:
         if item.source == "produce":
-            produce_by_crop.setdefault(_key(item.name), []).append(item)
+            produce_by_crop.setdefault(_crop_key(item.name), []).append(item)
 
     crop_rows = []
     for key, entry in crops.items():
@@ -291,6 +352,7 @@ async def build_board(session: AsyncSession, organization_id: uuid.UUID, *, toda
     )
 
     farmers_with_farm = {farm.user_id for farm in data.farms}
+    farm_item_rows, calendar = _farm_item_summary(data)
     return {
         "generated_on": today,
         "summary": {
@@ -300,10 +362,96 @@ async def build_board(session: AsyncSession, organization_id: uuid.UUID, *, toda
             "total_area_acres": round(sum(_acres(f.area_hectares) for f in data.farms), 2),
             "crop_count": len(crop_rows),
             "product_count": len(product_rows),
+            "total_land_holding_acres": round(
+                sum(p.land_holding_acres or 0.0 for p in data.profiles.values() if p.user_id in data.farmers), 2
+            ),
+            "farmers_with_farm_items": len({i.user_id for i in data.farm_items}),
+            "farmer_types": _count_codes(
+                [p.farmer_type for p in data.profiles.values() if p.user_id in data.farmers and p.farmer_type], FARMER_TYPES
+            ),
         },
         "crops": crop_rows,
         "products": product_rows,
+        "farm_items": farm_item_rows,
+        "harvest_calendar": calendar,
+        "needs": _count_codes(
+            [code for p in data.profiles.values() if p.user_id in data.farmers for code in (p.needs or [])], NEEDS
+        ),
     }
+
+
+def _count_codes(codes: list[str], names: dict[str, dict]) -> list[dict]:
+    counts: dict[str, int] = {}
+    for code in codes:
+        counts[code] = counts.get(code, 0) + 1
+    return sorted(
+        (
+            {"code": code, "name": names.get(code, {}).get("en", code), "name_ta": names.get(code, {}).get("ta"), "farmer_count": n}
+            for code, n in counts.items()
+        ),
+        key=lambda r: (-r["farmer_count"], r["name"]),
+    )
+
+
+def _farm_item_summary(data: _Data) -> tuple[list[dict], list[dict]]:
+    """Per item: farmers, declared area/quantity, harvest months, for-sale share."""
+    grouped: dict[str, dict] = {}
+    for item in data.farm_items:
+        key = _farm_item_key(item)
+        entry = grouped.setdefault(
+            key,
+            {
+                "code": item.item_code,
+                "name": item_label(item.item_code, item.custom_name),
+                "name_ta": ITEMS.get(item.item_code, {}).get("ta"),
+                "category": item.category,
+                "farmers": set(),
+                "for_sale_farmers": set(),
+                "area_acres": 0.0,
+                "quantity": {},
+                "for_sale_quantity": {},
+                "harvest_months": {},
+            },
+        )
+        entry["farmers"].add(item.user_id)
+        entry["area_acres"] += item.area_acres or 0.0
+        if item.approx_quantity and item.unit:
+            entry["quantity"][item.unit] = round(entry["quantity"].get(item.unit, 0.0) + item.approx_quantity, 3)
+            if item.available_for_sale:
+                entry["for_sale_quantity"][item.unit] = round(
+                    entry["for_sale_quantity"].get(item.unit, 0.0) + item.approx_quantity, 3
+                )
+        if item.available_for_sale:
+            entry["for_sale_farmers"].add(item.user_id)
+        for month in item.harvest_months or []:
+            entry["harvest_months"].setdefault(month, set()).add(item.user_id)
+
+    rows = []
+    calendar: dict[int, list[dict]] = {m: [] for m in range(1, 13)}
+    for entry in grouped.values():
+        rows.append(
+            {
+                "code": entry["code"],
+                "name": entry["name"],
+                "name_ta": entry["name_ta"],
+                "category": entry["category"],
+                "category_name": CATEGORIES.get(entry["category"], {}).get("en", entry["category"]),
+                "farmer_count": len(entry["farmers"]),
+                "for_sale_farmer_count": len(entry["for_sale_farmers"]),
+                "area_acres": round(entry["area_acres"], 2),
+                "approx_quantity": entry["quantity"],
+                "for_sale_quantity": entry["for_sale_quantity"],
+                "harvest_months": sorted(entry["harvest_months"]),
+            }
+        )
+        for month, farmers in entry["harvest_months"].items():
+            calendar[month].append({"code": entry["code"], "name": entry["name"], "farmer_count": len(farmers)})
+    rows.sort(key=lambda r: (-r["farmer_count"], r["name"]))
+    calendar_rows = [
+        {"month": m, "month_name": MONTH_NAMES[m - 1], "items": sorted(calendar[m], key=lambda i: (-i["farmer_count"], i["name"]))}
+        for m in range(1, 13)
+    ]
+    return rows, calendar_rows
 
 
 def _sum_by_unit(items: list[_Item]) -> dict[str, float]:
@@ -319,6 +467,8 @@ async def farmer_rows(
     *,
     crop: str | None = None,
     product: str | None = None,
+    need: str | None = None,
+    harvest_month: int | None = None,
 ) -> list[dict]:
     """One row per consented farmer: who they are, what they grow, what they have."""
     data = await _load(session, organization_id)
@@ -328,20 +478,32 @@ async def farmer_rows(
     items_by_farmer: dict[uuid.UUID, list[_Item]] = {}
     for item in data.items:
         items_by_farmer.setdefault(item.farmer_id, []).append(item)
+    farm_items_by_farmer: dict[uuid.UUID, list[FarmerFarmItem]] = {}
+    for farm_item in data.farm_items:
+        farm_items_by_farmer.setdefault(farm_item.user_id, []).append(farm_item)
 
-    crop_key, product_key = _key(crop), _key(product)
+    crop_key, product_key = (_crop_key(crop) if crop else ""), _key(product)
     rows = []
     for farmer_id, user in data.farmers.items():
         farms = farms_by_farmer.get(farmer_id, [])
         items = items_by_farmer.get(farmer_id, [])
+        declared = farm_items_by_farmer.get(farmer_id, [])
+        profile = data.profiles.get(farmer_id)
         if crop_key and not (
-            any(_key(f.crop) == crop_key for f in farms)
-            or any(i.source == "produce" and _key(i.name) == crop_key for i in items)
+            any(_crop_key(f.crop) == crop_key for f in farms)
+            or any(i.source == "produce" and _crop_key(i.name) == crop_key for i in items)
+            or any(_farm_item_key(d) == crop_key for d in declared)
         ):
             continue
-        if product_key and not any(_key(i.name) == product_key for i in items):
+        if product_key and not (
+            any(_key(i.name) == product_key for i in items)
+            or any(_key(item_label(d.item_code, d.custom_name)) == product_key or d.item_code == product_key for d in declared)
+        ):
             continue
-        profile = data.profiles.get(farmer_id)
+        if need and not (profile and need in (profile.needs or [])):
+            continue
+        if harvest_month and not any(harvest_month in (d.harvest_months or []) for d in declared):
+            continue
         location = next((data.locations.get(f.id) for f in farms if data.locations.get(f.id)), None)
         rows.append(
             {
@@ -350,9 +512,25 @@ async def farmer_rows(
                 "phone": user.phone_number,
                 "village": (location.village if location and location.village else None) or (profile.village if profile else None),
                 "district": (location.district if location and location.district else None) or (profile.district if profile else None),
+                "land_holding_acres": profile.land_holding_acres if profile else None,
+                "farmer_type": profile.farmer_type if profile else None,
+                "needs": list(profile.needs or []) if profile else [],
+                "farm_items": [
+                    {
+                        "code": d.item_code,
+                        "name": item_label(d.item_code, d.custom_name),
+                        "category": d.category,
+                        "harvest_months": list(d.harvest_months or []),
+                        "approx_quantity": d.approx_quantity,
+                        "unit": d.unit,
+                        "area_acres": d.area_acres,
+                        "available_for_sale": d.available_for_sale,
+                    }
+                    for d in sorted(declared, key=lambda d: (d.category, d.item_code))
+                ],
                 "crops": [
                     {
-                        "crop": _label(f.crop),
+                        "crop": _crop_label(f.crop),
                         "variety": f.crop_variety,
                         "area_acres": _acres(f.area_hectares),
                         "sowing_date": f.sowing_date,
@@ -387,5 +565,29 @@ def rows_to_csv(rows: list[dict]) -> str:
             f"{p['name']} {p['quantity']:g} {p['unit']}" + ("" if p["available_now"] or not p["ready_date"] else f" ready {p['ready_date']}")
             for p in row["products"]
         )
-        writer.writerow([row["farmer_ref"], row["name"] or "", row["phone"] or "", row["village"] or "", row["district"] or "", crops, products])
+        farm_items = "; ".join(
+            f"{d['name']}"
+            + (f" {d['approx_quantity']:g} {d['unit']}" if d["approx_quantity"] and d["unit"] else "")
+            + (f" harvest {'/'.join(MONTH_NAMES[m - 1] for m in d['harvest_months'])}" if d["harvest_months"] else "")
+            + (" [for sale]" if d["available_for_sale"] else "")
+            for d in row["farm_items"]
+        )
+        needs = "; ".join(NEEDS.get(code, {}).get("en", code) for code in row["needs"])
+        farmer_type = FARMER_TYPES.get(row["farmer_type"] or "", {}).get("en", row["farmer_type"] or "")
+        land = "" if row["land_holding_acres"] is None else f"{row['land_holding_acres']:g}"
+        writer.writerow(
+            [
+                row["farmer_ref"],
+                row["name"] or "",
+                row["phone"] or "",
+                row["village"] or "",
+                row["district"] or "",
+                land,
+                farmer_type,
+                crops,
+                farm_items,
+                products,
+                needs,
+            ]
+        )
     return buffer.getvalue()

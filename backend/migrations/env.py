@@ -21,6 +21,7 @@ from app.modules.calendar import models as _calendar_models  # noqa: F401
 from app.modules.community import models as _community_models  # noqa: F401
 from app.modules.disease import models as _disease_models  # noqa: F401
 from app.modules.equipment import models as _equipment_models  # noqa: F401
+from app.modules.farm_profile import models as _farm_profile_models  # noqa: F401
 from app.modules.farms import models as _farm_models  # noqa: F401
 from app.modules.intelligence import models as _intelligence_models  # noqa: F401
 from app.modules.memory import models as _memory_models  # noqa: F401

@@ -451,8 +451,10 @@ async def my_link_requests(session: Session, user: CurrentUser):
         .join(OrganicPartnerOrganization, OrganicPartnerOrganization.id == OrganicPartnerFarmerLink.organization_id)
         .where(OrganicPartnerFarmerLink.farmer_user_id == user.id)
         .order_by(OrganicPartnerFarmerLink.created_at.desc()))).all()
-    return [{"id": str(link.id), "organization_name": organization.name,
-             "organization_kind": organization.kind, "status": link.status}
+    return [{"id": str(link.id), "organization_id": str(organization.id),
+             "organization_name": organization.name,
+             "organization_kind": organization.kind, "status": link.status,
+             "initiated_by": "farmer" if link.requested_by_user_id == user.id else "organization"}
             for link, organization in rows]
 
 
@@ -479,7 +481,7 @@ async def revoke_farmer_link(link_id: uuid.UUID, session: Session, user: Current
     link = await session.scalar(select(OrganicPartnerFarmerLink).where(
         OrganicPartnerFarmerLink.id == link_id,
         OrganicPartnerFarmerLink.farmer_user_id == user.id,
-        OrganicPartnerFarmerLink.status.in_(["pending", "active"]),
+        OrganicPartnerFarmerLink.status.in_(["pending", "active", "join_requested"]),
     ))
     if link is None:
         raise NotFoundError("Link request not found.")

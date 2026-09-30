@@ -35,6 +35,10 @@ class OrganicPartnerOrganization(UUIDMixin, TimestampMixin, Base):
     kind: Mapped[str] = mapped_column(String(24), nullable=False)
     fpo_id: Mapped[uuid.UUID | None] = mapped_column(GUID(), ForeignKey("organic_fpos.id"), unique=True)
     is_test: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    # Farmer-facing directory (app onboarding "Join FPO / KVK"). Only
+    # organizations a platform admin lists appear to farmers.
+    district: Mapped[str | None] = mapped_column(String(80), index=True)
+    listed_in_app: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
 
 class OrganicPartnerStaff(UUIDMixin, TimestampMixin, Base):

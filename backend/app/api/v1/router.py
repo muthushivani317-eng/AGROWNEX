@@ -35,6 +35,7 @@ from app.modules.experts.router import (
     consultations_router,
     experts_router,
 )
+from app.modules.farm_profile.router import router as farm_profile_router
 from app.modules.farmers.router import router as farmers_router
 from app.modules.farms.router import router as farms_router
 from app.modules.farms.team_router import router as farm_team_router
@@ -76,6 +77,7 @@ api_router.include_router(action_verification_router)
 api_router.include_router(health_router)
 api_router.include_router(auth_router)
 api_router.include_router(consents_router)
+api_router.include_router(farm_profile_router)
 api_router.include_router(farmers_router)
 api_router.include_router(farms_router)
 api_router.include_router(farm_team_router)

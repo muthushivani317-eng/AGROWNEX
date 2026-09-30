@@ -5,6 +5,8 @@ import uuid
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.modules.farm_profile.schemas import OnboardingProfileFields, OnboardingProfileOut
+
 
 # --- Requests ---
 class OtpSendRequest(BaseModel):
@@ -23,7 +25,7 @@ class RefreshRequest(BaseModel):
     refresh_token: str = Field(min_length=10)
 
 
-class ProfileUpdateRequest(BaseModel):
+class ProfileUpdateRequest(OnboardingProfileFields):
     full_name: str = Field(min_length=2, max_length=120)
     language: str = Field(default="ta", pattern="^(ta|en)$")
     district: str | None = Field(default=None, max_length=80)
@@ -58,7 +60,7 @@ class OtpSendResponse(BaseModel):
     expires_in: int
 
 
-class ProfileOut(BaseModel):
+class ProfileOut(OnboardingProfileOut):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID

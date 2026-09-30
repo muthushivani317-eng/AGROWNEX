@@ -10,9 +10,11 @@
 from __future__ import annotations
 
 import uuid
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Response
+from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,6 +24,10 @@ from app.modules.admin.constants import AdminPermission, AdminRole
 from app.modules.admin.dependencies import AdminContextDep
 from app.modules.admin.models import AuditLog
 from app.modules.auth.models import User
+from app.modules.auth.profile_models import FarmerProfile
+from app.modules.farm_profile.catalog import item_label
+from app.modules.farm_profile.models import FarmerFarmItem
+from app.modules.farm_profile.service import JOIN_REQUESTED
 from app.modules.fpo_board.service import build_board, farmer_rows, rows_to_csv
 from app.modules.organic_mvp.models import (
     OrganicPartnerFarmerLink,
@@ -35,6 +41,11 @@ admin_router = APIRouter(prefix="/admin/fpo-board", tags=["fpo-board"])
 feed_router = APIRouter(prefix="/partner-feed/crop-board", tags=["partner-feed"])
 Session = Annotated[AsyncSession, Depends(get_session)]
 PLATFORM_ROLES = {AdminRole.OWNER.value, AdminRole.SUPER_ADMIN.value}
+
+
+class OrganizationSettingsIn(BaseModel):
+    district: str | None = Field(default=None, max_length=80)
+    listed_in_app: bool | None = None
 
 
 def _require_permission(admin) -> None:
@@ -88,26 +99,68 @@ async def list_organizations(session: Session, admin: AdminContextDep):
             return []
         stmt = stmt.where(OrganicPartnerOrganization.id.in_(visible))
     organizations = (await session.scalars(stmt)).all()
-    counts = dict(
-        (
+    counts: dict[tuple[uuid.UUID, str], int] = {
+        (org_id, status): n
+        for org_id, status, n in (
             await session.execute(
-                select(OrganicPartnerFarmerLink.organization_id, func.count())
-                .where(OrganicPartnerFarmerLink.status == "active")
-                .group_by(OrganicPartnerFarmerLink.organization_id)
+                select(OrganicPartnerFarmerLink.organization_id, OrganicPartnerFarmerLink.status, func.count())
+                .where(OrganicPartnerFarmerLink.status.in_(["active", JOIN_REQUESTED]))
+                .group_by(OrganicPartnerFarmerLink.organization_id, OrganicPartnerFarmerLink.status)
             )
         ).all()
-    )
+    }
     return [
-        {"id": str(o.id), "name": o.name, "kind": o.kind, "farmer_count": counts.get(o.id, 0)}
+        {
+            "id": str(o.id),
+            "name": o.name,
+            "kind": o.kind,
+            "district": o.district,
+            "listed_in_app": o.listed_in_app,
+            "farmer_count": counts.get((o.id, "active"), 0),
+            "join_request_count": counts.get((o.id, JOIN_REQUESTED), 0),
+        }
         for o in organizations
     ]
+
+
+@admin_router.patch("/organizations/{organization_id}")
+async def update_organization_settings(
+    organization_id: uuid.UUID, body: OrganizationSettingsIn, session: Session, admin: AdminContextDep
+):
+    """Platform admins set the district and whether farmers can find it in the app."""
+    if admin.admin.role not in PLATFORM_ROLES:
+        raise ForbiddenError("Only the Owner or a Super Admin can change this.")
+    organization = await session.get(OrganicPartnerOrganization, organization_id)
+    if organization is None:
+        raise NotFoundError("Organization not found.")
+    changes = body.model_dump(exclude_unset=True)
+    if "district" in changes:
+        organization.district = (changes["district"] or "").strip() or None
+    if changes.get("listed_in_app") is not None:
+        organization.listed_in_app = changes["listed_in_app"]
+    _audit(session, admin, "fpo_board_org_settings_updated", organization_id, changes)
+    await session.commit()
+    return {
+        "id": str(organization.id),
+        "district": organization.district,
+        "listed_in_app": organization.listed_in_app,
+    }
 
 
 @admin_router.get("/organizations/{organization_id}")
 async def organization_board(organization_id: uuid.UUID, session: Session, admin: AdminContextDep):
     organization = await _org_for_admin(session, admin, organization_id)
     board = await build_board(session, organization_id)
-    return {"organization": {"id": str(organization.id), "name": organization.name, "kind": organization.kind}, **board}
+    return {
+        "organization": {
+            "id": str(organization.id),
+            "name": organization.name,
+            "kind": organization.kind,
+            "district": organization.district,
+            "listed_in_app": organization.listed_in_app,
+        },
+        **board,
+    }
 
 
 @admin_router.get("/organizations/{organization_id}/farmers")
@@ -117,10 +170,13 @@ async def organization_farmer_list(
     admin: AdminContextDep,
     crop: Annotated[str | None, Query(max_length=80)] = None,
     product: Annotated[str | None, Query(max_length=160)] = None,
+    need: Annotated[str | None, Query(max_length=40)] = None,
+    harvest_month: Annotated[int | None, Query(ge=1, le=12)] = None,
 ):
     await _org_for_admin(session, admin, organization_id)
-    rows = await farmer_rows(session, organization_id, crop=crop, product=product)
-    _audit(session, admin, "fpo_board_farmers_viewed", organization_id, {"crop": crop, "product": product, "rows": len(rows)})
+    filters = {"crop": crop, "product": product, "need": need, "harvest_month": harvest_month}
+    rows = await farmer_rows(session, organization_id, **filters)
+    _audit(session, admin, "fpo_board_farmers_viewed", organization_id, {**filters, "rows": len(rows)})
     await session.commit()
     return rows
 
@@ -132,10 +188,13 @@ async def organization_farmer_csv(
     admin: AdminContextDep,
     crop: Annotated[str | None, Query(max_length=80)] = None,
     product: Annotated[str | None, Query(max_length=160)] = None,
+    need: Annotated[str | None, Query(max_length=40)] = None,
+    harvest_month: Annotated[int | None, Query(ge=1, le=12)] = None,
 ):
     organization = await _org_for_admin(session, admin, organization_id)
-    rows = await farmer_rows(session, organization_id, crop=crop, product=product)
-    _audit(session, admin, "fpo_board_farmers_exported", organization_id, {"crop": crop, "product": product, "rows": len(rows)})
+    filters = {"crop": crop, "product": product, "need": need, "harvest_month": harvest_month}
+    rows = await farmer_rows(session, organization_id, **filters)
+    _audit(session, admin, "fpo_board_farmers_exported", organization_id, {**filters, "rows": len(rows)})
     await session.commit()
     safe_name = "".join(ch if ch.isalnum() else "-" for ch in organization.name).strip("-").lower() or "fpo"
     return Response(
@@ -157,34 +216,99 @@ async def _require_manager(session: AsyncSession, admin, organization_id: uuid.U
         )
     )
     if staff is None or staff.role != "manager":
-        raise ForbiddenError("Only the FPO manager can add farmers.")
+        raise ForbiddenError("Only the organization manager can add or approve farmers.")
 
 
 @admin_router.get("/organizations/{organization_id}/link-requests")
 async def list_link_requests(organization_id: uuid.UUID, session: Session, admin: AdminContextDep):
-    """Farmer links for this FPO. Only the farmer ID is shown -- a farmer's
-    details appear on the board only after they approve in the app."""
+    """Farmer links for this organization.
+
+    Organization-initiated requests show only the Farmer ID until the farmer
+    approves. A farmer's own join request (status ``join_requested``) was sent
+    with their consent, so name, village and declared items are shown to let
+    the manager decide.
+    """
     await _org_for_admin(session, admin, organization_id)
     rows = (
         await session.execute(
-            select(OrganicPartnerFarmerLink, User.farmer_ref)
+            select(OrganicPartnerFarmerLink, User)
             .join(User, User.id == OrganicPartnerFarmerLink.farmer_user_id)
-            .where(OrganicPartnerFarmerLink.organization_id == organization_id)
-            .order_by(OrganicPartnerFarmerLink.created_at.desc())
+            .where(OrganicPartnerFarmerLink.organization_id == organization_id, User.deleted_at.is_(None))
+            .order_by(OrganicPartnerFarmerLink.updated_at.desc())
             .limit(500)
         )
     ).all()
-    return [
-        {
+    joiners = [user.id for link, user in rows if link.status == JOIN_REQUESTED]
+    profiles, items = {}, {}
+    if joiners:
+        profiles = {
+            p.user_id: p
+            for p in (await session.scalars(select(FarmerProfile).where(FarmerProfile.user_id.in_(joiners)))).all()
+        }
+        for item in (await session.scalars(select(FarmerFarmItem).where(FarmerFarmItem.user_id.in_(joiners)))).all():
+            items.setdefault(item.user_id, []).append(item_label(item.item_code, item.custom_name))
+    result = []
+    for link, user in rows:
+        row = {
             "id": str(link.id),
-            "farmer_ref": farmer_ref,
+            "farmer_ref": user.farmer_ref,
             "status": link.status,
-            "requested_at": link.created_at,
+            "initiated_by": "farmer" if link.requested_by_user_id == user.id else "organization",
+            "requested_at": link.updated_at if link.status == JOIN_REQUESTED else link.created_at,
             "approved_at": link.approved_at,
             "revoked_at": link.revoked_at,
         }
-        for link, farmer_ref in rows
-    ]
+        if link.status == JOIN_REQUESTED:
+            profile = profiles.get(user.id)
+            row["farmer"] = {
+                "name": profile.full_name if profile else None,
+                "phone": user.phone_number,
+                "village": profile.village if profile else None,
+                "block": profile.block if profile else None,
+                "district": profile.district if profile else None,
+                "land_holding_acres": profile.land_holding_acres if profile else None,
+                "items": sorted(items.get(user.id, [])),
+            }
+        result.append(row)
+    return result
+
+
+async def _join_request(session: AsyncSession, organization_id: uuid.UUID, link_id: uuid.UUID) -> OrganicPartnerFarmerLink:
+    link = await session.scalar(
+        select(OrganicPartnerFarmerLink).where(
+            OrganicPartnerFarmerLink.id == link_id,
+            OrganicPartnerFarmerLink.organization_id == organization_id,
+            OrganicPartnerFarmerLink.status == JOIN_REQUESTED,
+        )
+    )
+    if link is None:
+        raise NotFoundError("Join request not found.")
+    return link
+
+
+@admin_router.post("/organizations/{organization_id}/link-requests/{link_id}/accept")
+async def accept_join_request(organization_id: uuid.UUID, link_id: uuid.UUID, session: Session, admin: AdminContextDep):
+    """Manager accepts a farmer's own join request (farmer already consented)."""
+    await _org_for_admin(session, admin, organization_id)
+    await _require_manager(session, admin, organization_id)
+    link = await _join_request(session, organization_id, link_id)
+    link.status = "active"
+    link.approved_at = datetime.now(UTC)
+    _audit(session, admin, "fpo_board_join_accepted", organization_id, {"link_id": str(link.id)})
+    await session.commit()
+    return {"id": str(link.id), "status": link.status}
+
+
+@admin_router.post("/organizations/{organization_id}/link-requests/{link_id}/reject")
+async def reject_join_request(organization_id: uuid.UUID, link_id: uuid.UUID, session: Session, admin: AdminContextDep):
+    await _org_for_admin(session, admin, organization_id)
+    await _require_manager(session, admin, organization_id)
+    link = await _join_request(session, organization_id, link_id)
+    link.status = "revoked"
+    link.revoked_at = datetime.now(UTC)
+    _audit(session, admin, "fpo_board_join_rejected", organization_id, {"link_id": str(link.id)})
+    await session.commit()
+    return {"id": str(link.id), "status": link.status}
 
 
 @admin_router.post("/organizations/{organization_id}/link-requests")
@@ -205,6 +329,8 @@ async def create_link_request(organization_id: uuid.UUID, body: LinkRequestIn, s
             OrganicPartnerFarmerLink.farmer_user_id == farmer.id,
         )
     )
+    if existing and existing.status == JOIN_REQUESTED:
+        raise ConflictError("This farmer already asked to join -- accept their request instead.")
     if existing and existing.status != "revoked":
         raise ConflictError("This farmer is already requested or linked.")
     if existing:
@@ -238,5 +364,9 @@ async def feed_farmers(
     partner: PartnerApiKeyDep,
     crop: Annotated[str | None, Query(max_length=80)] = None,
     product: Annotated[str | None, Query(max_length=160)] = None,
+    need: Annotated[str | None, Query(max_length=40)] = None,
+    harvest_month: Annotated[int | None, Query(ge=1, le=12)] = None,
 ):
-    return await farmer_rows(session, partner.organization_id, crop=crop, product=product)
+    return await farmer_rows(
+        session, partner.organization_id, crop=crop, product=product, need=need, harvest_month=harvest_month
+    )

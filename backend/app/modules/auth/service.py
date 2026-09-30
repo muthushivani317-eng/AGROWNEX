@@ -57,6 +57,7 @@ from app.modules.auth.repositories import (
 from app.modules.auth.repository import UserRepository
 from app.modules.auth.schemas import ProfileUpdateRequest
 from app.modules.auth.security import generate_refresh_token, hash_token
+from app.modules.farm_profile.service import apply_onboarding_fields
 
 logger = get_logger("auth.service")
 
@@ -305,6 +306,7 @@ class AuthService:
         profile.profile_photo = data.profile_photo
         profile.primary_crop = primary
         profile.secondary_crop = secondary
+        apply_onboarding_fields(profile, data)
         await self.session.flush()
 
         await self._ensure_profile_defaults(profile, data.language)

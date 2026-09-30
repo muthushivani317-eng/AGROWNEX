@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import uuid
 
-from sqlalchemy import Boolean, ForeignKey, Integer, String
+from sqlalchemy import JSON, Boolean, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.shared.base_model import (
@@ -40,6 +40,13 @@ class FarmerProfile(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     education: Mapped[str | None] = mapped_column(String(80))
     primary_crop: Mapped[str | None] = mapped_column(String(80), index=True)
     secondary_crop: Mapped[str | None] = mapped_column(String(80))
+    # Onboarding v2 (Profile + Needs steps). Codes come from
+    # app.modules.farm_profile.catalog.
+    land_holding_acres: Mapped[float | None] = mapped_column(Float)
+    farmer_type: Mapped[str | None] = mapped_column(String(30))
+    landmark: Mapped[str | None] = mapped_column(String(160))
+    needs: Mapped[list | None] = mapped_column(JSON)
+    needs_note: Mapped[str | None] = mapped_column(String(300))
 
 
 class FarmerPreference(UUIDMixin, TimestampMixin, Base):
