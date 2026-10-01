@@ -6,6 +6,7 @@ import {
   Building2,
   ChevronRight,
   Hash,
+  FileText,
   Headphones,
   Languages,
   Leaf,
@@ -225,6 +226,8 @@ function InfoLine({
   );
 }
 
+const PRIVACY_POLICY_URL = 'https://www.agrowai.in/privacy';
+
 const THEME_OPTIONS: { value: ThemePreference; labelKey: string; icon: LucideIcon }[] = [
   { value: 'light', labelKey: 'settings.themeLight', icon: Sun },
   { value: 'dark', labelKey: 'settings.themeDark', icon: Moon },
@@ -286,7 +289,7 @@ function orgSummary(
 }
 
 export function AccountSettingsScreen() {
-  const { t: tr } = useTranslation();
+  const { t: tr, i18n } = useTranslation();
   const router = useRouter();
   const { colors, isDark } = useAppTheme();
   const t = tint(isDark);
@@ -561,6 +564,15 @@ export function AccountSettingsScreen() {
           description={tr('support.profileDescription')}
           trailing={chevron}
           onPress={() => router.push('/support' as never)}
+          colors={colors}
+          t={t}
+        />
+        <Row
+          icon={FileText}
+          label={tr('settings.privacyPolicy')}
+          description={tr('settings.privacyPolicyDesc')}
+          trailing={chevron}
+          onPress={() => void Linking.openURL(`${PRIVACY_POLICY_URL}?lang=${i18n.language === 'ta' ? 'ta' : 'en'}`)}
           colors={colors}
           t={t}
         />

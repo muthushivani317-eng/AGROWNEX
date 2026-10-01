@@ -1,6 +1,6 @@
 FROM nginx:alpine
 
-COPY index.html /usr/share/nginx/html/index.html
+COPY index.html privacy.html delete-account.html legal.css legal.js /usr/share/nginx/html/
 COPY default.conf.template /etc/nginx/templates/default.conf.template
 
 # Railway injects $PORT; the base image's entrypoint runs envsubst on

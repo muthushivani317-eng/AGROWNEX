@@ -546,7 +546,7 @@ export const en = {
     closeAccount: "Close account",
     closeAccountConfirm: "Close my account",
     closeAccountWarning:
-      "You will be signed out immediately and will no longer be able to use this account. Records required for transactions, safety and legal compliance may be retained under the privacy policy.",
+      "You will be signed out immediately. Your profile, farms, photos, voice notes and chats will be permanently deleted within 30 days. Records required by law (consent, sales, certification) are kept without your phone number.",
     closeAccountFailed:
       "Account could not be closed. Please try again or contact support.",
     notSet: "Not set",
@@ -5143,6 +5143,8 @@ export const en = {
     securitySupportDesc: "Get help and manage your account",
     logoutDesc: "Sign out of the app on this phone",
     closeAccountDesc: "Permanently stop using this account",
+    privacyPolicy: "Privacy policy",
+    privacyPolicyDesc: "What data we collect and how to delete it",
   },
   admin: {
     title: "Admin dashboard",
