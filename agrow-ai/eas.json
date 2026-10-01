@@ -32,7 +32,7 @@
                                                  "APP_ENV":  "production",
                                                  "EXPO_PUBLIC_APP_ENV":  "production",
                                                  "AGROWAI_BUILD_PROFILE":  "production",
-                                                 "EXPO_PUBLIC_AGROWAI_ORGANIC_ENABLED":  "true"
+                                                 "EXPO_PUBLIC_AGROWAI_ORGANIC_ENABLED":  "false"
                                              }
                                  },
                   "production-apk":  {
@@ -41,7 +41,10 @@
                                                          "buildType":  "apk"
                                                      },
                                          "extends":  "production",
-                                         "environment":  "production"
+                                         "environment":  "production",
+                                         "env":  {
+                                                     "EXPO_PUBLIC_AGROWAI_ORGANIC_ENABLED":  "true"
+                                                 }
                                      }
               },
     "submit":  {
