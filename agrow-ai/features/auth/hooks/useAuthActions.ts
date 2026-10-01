@@ -125,20 +125,26 @@ export function useVerifyOtp() {
  * district, crops, etc.) was silently lost on reinstall or a second device
  * (see farmer-release-readiness audit, 2026-08-18).
  */
+/** Saved values the onboarding form does not edit but must not wipe (Edit profile). */
+export interface PreservedProfileFields {
+  gender?: string | null;
+  education?: string | null;
+}
+
 export function useCompleteProfile() {
   const updateUser = useAuthStore((s) => s.updateUser);
 
   return useMutation({
-    mutationFn: async (data: CompleteProfileData) => {
+    mutationFn: async ({ preserve, ...data }: CompleteProfileData & { preserve?: PreservedProfileFields }) => {
       const payload: ApiFarmerMeUpdate = {
         full_name: data.name,
-        gender: null,
+        gender: preserve?.gender ?? null,
         language: data.language,
         district: data.district,
         block: data.block || null,
         village: data.village || null,
         experience_years: data.experienceYears,
-        education: null,
+        education: preserve?.education ?? null,
         profile_photo: data.photoUrl,
         preferred_crops: data.preferredCrops,
         land_holding_acres: data.landHoldingAcres,
@@ -189,6 +195,13 @@ export function useCompleteProfile() {
         photoUrl: data.photoUrl,
         profileCompleted: true,
       });
+    },
+    // Profile tab, Edit profile and Account settings read cached copies; a
+    // missing invalidation left them showing "Set up your profile" (the
+    // pre-onboarding 404) until the app restarted.
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['profile'] });
+      void queryClient.invalidateQueries({ queryKey: ['partnerLinks'] });
     },
   });
 }

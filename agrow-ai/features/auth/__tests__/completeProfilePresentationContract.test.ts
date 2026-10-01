@@ -13,7 +13,7 @@ describe("bilingual complete-profile presentation contract", () => {
   const tamil = read("localization/locales/ta.ts");
 
   it("preserves the working submission, GPS and dependent location behavior", () => {
-    expect(screen).toContain("complete.mutate(data");
+    expect(screen).toContain("complete.mutate({ ...data, preserve }");
     expect(screen).toContain("autofillAddressFromGPS()");
     expect(screen).toMatch(
       /setValue\(["']block["'], ["']["'](, \{ shouldDirty: true \})?\)/,

@@ -1,3 +1,6 @@
-import { EditProfileScreen } from '@/features/profile';
+import { CompleteProfileScreen } from '@/features/auth';
 
-export default EditProfileScreen;
+/** Edit profile reuses the onboarding flow, pre-filled from the saved record. */
+export default function EditProfileRoute() {
+  return <CompleteProfileScreen mode="edit" />;
+}

@@ -1,8 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, ArrowRight, Building2, CalendarDays, Check, ChevronDown, GraduationCap, Landmark, LocateFixed, Map as MapIcon, MapPinned, PackageOpen, Phone, Sprout, Trash2, UserRound, Warehouse } from 'lucide-react-native';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, TextInput, View } from 'react-native';
@@ -17,6 +18,7 @@ import { ProductMultiSelect } from '../components/ProductMultiSelect';
 import { productLabel, toFormUnit, type OnboardingProductOption } from '../components/onboardingData';
 import { useAuth } from '../hooks/useAuth';
 import { useCompleteProfile } from '../hooks/useAuthActions';
+import { farmerToProfileForm, useEditProfileDefaults } from '../hooks/useEditProfileDefaults';
 import { useFarmCatalog } from '../hooks/useFarmCatalog';
 import { autofillAddressFromGPS } from '../hooks/useLocationAutofill';
 import { completeProfileSchema, type CompleteProfileData, type CompleteProfileForm } from '../schemas';
@@ -39,7 +41,7 @@ const COPY = {
     steps: ['விவசாயி', 'இருப்பிடம்', 'விளைபொருட்கள்', 'FPO / KVK', 'சரிபார்ப்பு'],
     titles: ['விவசாயி விவரங்கள்', 'பண்ணை இருப்பிடம்', 'பயிர்கள் & விளைபொருட்கள்', 'ஆதரவு அமைப்புகள்', 'சரிபார்த்து சமர்ப்பிக்கவும்'],
     subtitles: ['உங்களைப் பற்றிய அடிப்படை தகவல்', 'GPS மூலம் விரைவாக நிரப்புங்கள்', 'நீங்கள் வளர்ப்பது அல்லது உற்பத்தி செய்வது', 'தேவையான உள்ளூர் ஆதரவைத் தேர்வு செய்க', 'உங்கள் விவரங்கள் சரியா என்று பாருங்கள்'],
-    next: 'தொடர்க', back: 'பின்னால்', submit: 'சமர்ப்பிக்கவும்',
+    next: 'தொடர்க', back: 'பின்னால்', submit: 'சமர்ப்பிக்கவும்', editTitle: 'சுயவிவரத்தைத் திருத்து', save: 'மாற்றங்களைச் சேமி', saved: 'சேமிக்கப்பட்டது', loadFailed: 'உங்கள் விவரங்களை ஏற்ற முடியவில்லை', retry: 'மீண்டும் முயல்க',
     phone: 'பதிவு செய்யப்பட்ட கைபேசி', farmerType: 'விவசாயி வகை', small: 'சிறு விவசாயி', tenant: 'குத்தகை விவசாயி', producer: 'விவசாய உற்பத்தியாளர்',
     gps: 'எனது இருப்பிடத்தைத் தானாக நிரப்பு', gpsHelp: 'மாவட்டம், வட்டம், கிராமம் மற்றும் GPS இடம்', detected: 'இருப்பிடம் கண்டறியப்பட்டது', landmark: 'அடையாள இடம் (விருப்பம்)',
     productPicker: 'விளைபொருட்களைச் சேர்க்கவும்', productPlaceholder: 'தேடி பலவற்றைத் தேர்வு செய்க', noProducts: 'இன்னும் விளைபொருள் சேர்க்கவில்லை', noProductsHelp: 'பயிர், காய்கறி, பழம், தோட்டப் பயிர், கால்நடை அல்லது மற்ற பொருட்களைச் சேர்க்கவும்.',
@@ -51,7 +53,7 @@ const COPY = {
     steps: ['Farmer', 'Location', 'Products', 'FPO / KVK', 'Review'],
     titles: ['Farmer information', 'Farm location', 'Crops & farm products', 'Support network', 'Review & submit'],
     subtitles: ['Basic information about you', 'Use GPS to fill details faster', 'What you grow or produce', 'Choose the local support you need', 'Check that your details are correct'],
-    next: 'Continue', back: 'Back', submit: 'Submit profile',
+    next: 'Continue', back: 'Back', submit: 'Submit profile', editTitle: 'Edit profile', save: 'Save changes', saved: 'Saved', loadFailed: 'Could not load your details', retry: 'Try again',
     phone: 'Registered mobile', farmerType: 'Farmer type', small: 'Small farmer', tenant: 'Tenant farmer', producer: 'Farm producer',
     gps: 'Autofill my location', gpsHelp: 'District, block, village and GPS position', detected: 'Location detected', landmark: 'Nearby landmark (optional)',
     productPicker: 'Add farm products', productPlaceholder: 'Search and select multiple', noProducts: 'No products added yet', noProductsHelp: 'Add crops, vegetables, fruits, plantation crops, livestock or other farm products.',
@@ -61,7 +63,14 @@ const COPY = {
   },
 } as const;
 
-export function CompleteProfileScreen() {
+/** Onboarding (mode="complete") and Edit profile (mode="edit") share one flow:
+ * edit pre-fills from the saved record, lets every step be opened directly
+ * and returns to the profile on save. */
+export function CompleteProfileScreen({ mode = 'complete' }: { mode?: 'complete' | 'edit' } = {}) {
+  const isEdit = mode === 'edit';
+  const router = useRouter();
+  const saved = useEditProfileDefaults(isEdit);
+  const prefilled = useRef(false);
   const { t } = useTranslation();
   const { language, setLanguage } = useLanguage();
   const { user } = useAuth();
@@ -72,7 +81,7 @@ export function CompleteProfileScreen() {
   const [locating, setLocating] = useState(false);
   const [districtPickerRequest, setDistrictPickerRequest] = useState(0);
 
-  const { control, handleSubmit, watch, setValue, trigger, formState } = useForm<CompleteProfileForm, unknown, CompleteProfileData>({
+  const { control, handleSubmit, watch, setValue, trigger, formState, reset } = useForm<CompleteProfileForm, unknown, CompleteProfileData>({
     resolver: zodResolver(completeProfileSchema),
     defaultValues: {
       name: '', language, district: '', block: '', village: '', experienceYears: '', landHoldingAcres: '', preferredCrops: [], photoUrl: null,
@@ -80,6 +89,13 @@ export function CompleteProfileScreen() {
     },
     mode: 'onChange',
   });
+
+  useEffect(() => {
+    if (!isEdit || prefilled.current || !saved.data) return;
+    prefilled.current = true;
+    reset(farmerToProfileForm(saved.data, language));
+    void trigger();
+  }, [isEdit, saved.data, reset, trigger, language]);
 
   const products = watch('farmProducts') ?? [];
   const selectedIds = products.map((product) => product.productId);
@@ -135,23 +151,48 @@ export function CompleteProfileScreen() {
   };
 
   const onSubmit = handleSubmit((data) => {
-    if (!complete.isPending) complete.mutate(data, { onError: () => Alert.alert(t('profile.saveFailed')) });
+    if (complete.isPending) return;
+    const preserve = isEdit ? { gender: saved.data?.gender ?? null, education: saved.data?.education ?? null } : undefined;
+    complete.mutate({ ...data, preserve }, {
+      onError: () => Alert.alert(t('profile.saveFailed')),
+      onSuccess: () => { if (isEdit) router.back(); },
+    });
   });
+
+  if (isEdit && !prefilled.current && !saved.data) {
+    return (
+      <AgScreen testID="edit-profile-loading" backgroundColor={CREAM} contentContainerStyle={styles.centerFill}>
+        {saved.isError ? (
+          <View style={styles.loadError}>
+            <AgText variant="body" weight="bold" style={styles.primary}>{copy.loadFailed}</AgText>
+            <AgPressable onPress={() => void saved.refetch()} style={styles.nextButton} accessibilityRole="button"><AgText variant="body" weight="bold" style={styles.primary}>{copy.retry}</AgText></AgPressable>
+          </View>
+        ) : <ActivityIndicator color={GREEN} size="large" />}
+      </AgScreen>
+    );
+  }
 
   return (
     <AgScreen testID="complete-profile-screen" scroll keyboardAvoiding backgroundColor={CREAM} contentContainerStyle={styles.screen}>
       <StatusBar style="dark" />
       <View style={styles.topBar}>
+        {isEdit ? (
+          <View style={styles.editBrand}>
+            <AgPressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel={t('common.back')} style={styles.headerBack}><ArrowLeft size={23} color={GREEN} /></AgPressable>
+            <AgText variant="headingS" weight="bold" numberOfLines={2} style={styles.editTitle}>{copy.editTitle}</AgText>
+          </View>
+        ) : (
         <View style={styles.brand} accessibilityLabel="AgrowNex">
           <Image source={require('@/assets/images/android-icon-foreground.png')} contentFit="contain" transition={0} style={styles.logo} />
           <AgText variant="headingS" weight="bold" style={styles.wordmark}>AgrowNex</AgText>
         </View>
+        )}
         <AgPressable onPress={() => { const nextLanguage = language === 'ta' ? 'en' : 'ta'; setValue('language', nextLanguage); void setLanguage(nextLanguage); }} style={styles.languageButton} accessibilityRole="button">
           <AgText variant="bodySmall" weight="bold" style={styles.primary}>{language === 'ta' ? 'EN' : 'தமிழ்'}</AgText>
         </AgPressable>
       </View>
 
-      <Progress step={step} labels={copy.steps} onPress={setStep} />
+      <Progress step={step} labels={copy.steps} onPress={setStep} allowAll={isEdit} />
       <View style={styles.headingBlock}>
         <AgText variant="caption" weight="bold" style={styles.eyebrow}>{language === 'ta' ? `படி ${step + 1} / 5` : `STEP ${step + 1} OF 5`}</AgText>
         <AgText variant="headingL" weight="bold" style={styles.heading}>{copy.titles[step]}</AgText>
@@ -214,15 +255,15 @@ export function CompleteProfileScreen() {
       <View style={styles.actions}>
         {step > 0 ? <AgPressable onPress={() => setStep((value) => value - 1)} style={styles.backButton}><ArrowLeft size={22} color={GREEN} /><AgText variant="body" weight="bold" style={styles.primary}>{copy.back}</AgText></AgPressable> : null}
         <AgPressable testID={step === 4 ? 'finish-setup-button' : 'onboarding-next-button'} onPress={step === 4 ? onSubmit : next} disabled={complete.isPending || (step === 4 && !formState.isValid)} style={styles.nextButton} accessibilityRole="button">
-          {complete.isPending ? <ActivityIndicator color={TEXT} /> : <><AgText variant="bodyLarge" weight="bold" style={styles.primary}>{step === 4 ? copy.submit : copy.next}</AgText><ArrowRight size={23} color={TEXT} /></>}
+          {complete.isPending ? <ActivityIndicator color={TEXT} /> : <><AgText variant="bodyLarge" weight="bold" style={styles.primary}>{step === 4 ? (isEdit ? copy.save : copy.submit) : copy.next}</AgText><ArrowRight size={23} color={TEXT} /></>}
         </AgPressable>
       </View>
     </AgScreen>
   );
 }
 
-function Progress({ step, labels, onPress }: { step: number; labels: readonly string[]; onPress: (step: number) => void }) {
-  return <View style={styles.progress}>{labels.map((label, index) => <View key={label} style={styles.progressItem}><AgPressable disabled={index > step} onPress={() => onPress(index)} style={[styles.stepCircle, index < step && styles.stepDone, index === step && styles.stepCurrent]}>{index < step ? <Check size={16} color="#FFFFFF" strokeWidth={3} /> : <AgText variant="caption" weight="bold" style={index === step ? styles.currentStepText : styles.stepText}>{index + 1}</AgText>}</AgPressable><AgText variant="caption" weight={index === step ? 'bold' : 'medium'} numberOfLines={2} style={[styles.stepLabel, index === step && styles.stepLabelActive]}>{label}</AgText>{index < 4 ? <View style={[styles.stepLine, index < step && styles.stepLineDone]} /> : null}</View>)}</View>;
+function Progress({ step, labels, onPress, allowAll = false }: { step: number; labels: readonly string[]; onPress: (step: number) => void; allowAll?: boolean }) {
+  return <View style={styles.progress}>{labels.map((label, index) => <View key={label} style={styles.progressItem}><AgPressable disabled={!allowAll && index > step} onPress={() => onPress(index)} style={[styles.stepCircle, index < step && styles.stepDone, index === step && styles.stepCurrent]}>{index < step ? <Check size={16} color="#FFFFFF" strokeWidth={3} /> : <AgText variant="caption" weight="bold" style={index === step ? styles.currentStepText : styles.stepText}>{index + 1}</AgText>}</AgPressable><AgText variant="caption" weight={index === step ? 'bold' : 'medium'} numberOfLines={2} style={[styles.stepLabel, index === step && styles.stepLabelActive]}>{label}</AgText>{index < 4 ? <View style={[styles.stepLine, index < step && styles.stepLineDone]} /> : null}</View>)}</View>;
 }
 
 function Card({ icon, children }: { icon: ReactNode; children: ReactNode }) { return <View style={styles.card}><View style={styles.cardIcon}>{icon}</View><View style={styles.cardContent}>{children}</View></View>; }
@@ -302,6 +343,7 @@ function nextUnit(unit: ProductForm['unit']): ProductForm['unit'] { const units:
 const fieldTheme = { fieldStyle: { minHeight: 58, borderRadius: 14, borderWidth: 1.3, borderColor: BORDER, backgroundColor: WHITE }, fieldBorderColor: BORDER, fieldBackgroundColor: WHITE, focusBorderColor: GREEN, style: { color: TEXT, backgroundColor: 'transparent' }, placeholderTextColor: MUTED } as const;
 
 const styles = StyleSheet.create({
+  editBrand: { flex: 1, minWidth: 0, marginRight: 10, flexDirection: 'row', alignItems: 'center', gap: 12 }, editTitle: { flex: 1, minWidth: 0, color: GREEN }, headerBack: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: '#D5DFD0', backgroundColor: CARD, alignItems: 'center', justifyContent: 'center' }, centerFill: { flexGrow: 1, alignItems: 'center', justifyContent: 'center' }, loadError: { alignItems: 'center', gap: 14 },
   screen: { flexGrow: 1, paddingTop: 4, paddingBottom: 24 }, topBar: { minHeight: 62, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, brand: { flexDirection: 'row', alignItems: 'center' }, logo: { width: 54, height: 54 }, wordmark: { marginLeft: -5, color: GREEN, letterSpacing: -0.7 }, languageButton: { minWidth: 54, minHeight: 44, borderWidth: 1, borderColor: '#C6CDBD', borderRadius: 22, backgroundColor: CARD, alignItems: 'center', justifyContent: 'center' },
   progress: { marginTop: 10, flexDirection: 'row', justifyContent: 'space-between' }, progressItem: { width: '20%', alignItems: 'center', position: 'relative' }, stepCircle: { width: 34, height: 34, borderRadius: 17, borderWidth: 1.4, borderColor: '#C8C7BD', backgroundColor: '#F0EEE5', alignItems: 'center', justifyContent: 'center', zIndex: 2 }, stepDone: { borderColor: '#4E9B45', backgroundColor: '#4E9B45' }, stepCurrent: { borderColor: GOLD, backgroundColor: GOLD }, stepLine: { position: 'absolute', top: 16, left: '68%', width: '64%', height: 2, backgroundColor: '#D5D2C8' }, stepLineDone: { backgroundColor: '#4E9B45' }, stepText: { color: MUTED }, currentStepText: { color: TEXT }, stepLabel: { width: '100%', marginTop: 5, color: MUTED, textAlign: 'center', fontSize: 10 }, stepLabelActive: { color: TEXT },
   headingBlock: { marginTop: 26, marginBottom: 18 }, eyebrow: { color: '#A16207', letterSpacing: 0.7 }, heading: { marginTop: 7, color: TEXT, lineHeight: 39 }, subtitle: { marginTop: 7, color: MUTED, lineHeight: 22 }, primary: { color: TEXT }, muted: { color: MUTED }, greenText: { color: GREEN }, whiteText: { color: '#FFFFFF' }, flex: { flex: 1, minWidth: 0 }, centerMuted: { color: MUTED, textAlign: 'center', lineHeight: 20 },
