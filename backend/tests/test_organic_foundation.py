@@ -109,17 +109,19 @@ async def test_profile_write_preserves_omitted_pending_certification_fields(db_s
     owner = await _user(db_session, "pending-cert-owner", "+919000000199")
     farm = await _farm(db_session, owner, "Pending certificate field")
     service = OrganicService(db_session)
-    await service.upsert_profile(
+    created = await service.upsert_profile(
         owner,
         farm.id,
         OrganicProfileWrite(
             mode="transitioning",
-            certification_status="document_submitted",
+            certification_status="self_declared",
             certification_scheme="NPOP",
             certification_identifier="PENDING-1",
         ),
         "pending-cert-create",
     )
+    created.certification_status = "document_submitted"  # set by the document upload flow
+    await db_session.flush()
     updated = await service.upsert_profile(
         owner,
         farm.id,
@@ -225,3 +227,21 @@ async def test_input_library_fails_closed_on_provenance_and_expiry(db_session):
         category=None, crop="paddy", search=None, page=1, page_size=20
     )
     assert rows == [] and total == 0
+
+
+async def test_farmer_cannot_wipe_a_rejection_or_self_assign_review_states(db_session):
+    owner = await _user(db_session, "rejected-cert-owner", "+919000000198")
+    farm = await _farm(db_session, owner, "Rejected certificate")
+    service = OrganicService(db_session)
+    profile = await service.upsert_profile(
+        owner, farm.id, OrganicProfileWrite(mode="transitioning", certification_status="document_submitted"),
+        "reject-1",
+    )
+    assert profile.certification_status == "not_claimed"  # cannot self-assign a review state
+    profile.certification_status = "rejected"  # staff decision
+    await db_session.flush()
+    updated = await service.upsert_profile(
+        owner, farm.id, OrganicProfileWrite(mode="transitioning", certification_status="self_declared"),
+        "reject-2",
+    )
+    assert updated.certification_status == "rejected"

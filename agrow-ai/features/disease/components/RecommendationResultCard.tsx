@@ -14,10 +14,11 @@ import {
 } from 'lucide-react-native';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Linking, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AgText } from '@/components/ui';
 import { useAppTheme } from '@/hooks/useAppTheme';
+import { openExternalUrl } from '@/lib/safeLinks';
 
 export type DiseaseRecommendation = {
   canonical_disease_name_en: string;
@@ -123,7 +124,7 @@ export function RecommendationResultCard({
           {recommendation.official_sources.map((source, index) => (
             <Pressable
               key={source.url}
-              onPress={() => void Linking.openURL(source.url)}
+              onPress={() => void openExternalUrl(source.url)}
               accessibilityRole="link"
               accessibilityLabel={source.title}
               style={({ pressed }) => [

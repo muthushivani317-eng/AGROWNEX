@@ -10,7 +10,7 @@ import { useLocalSearchParams } from "expo-router";
 import { Download, Share2, Users } from "lucide-react-native";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, Image, Linking, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AgButton, AgErrorState, AgText } from "@/components/ui";
@@ -18,6 +18,7 @@ import { useAppTheme } from "@/hooks/useAppTheme";
 
 import { useEvidencePack, useShareEvidencePack } from "../hooks/useDailyTask";
 import type { EvidencePackShareTarget } from "../types";
+import { openExternalUrl } from "@/lib/safeLinks";
 
 const CONFIDENCE_LABEL_KEY: Record<string, string> = {
   high: "dailyTask.confidenceHigh",
@@ -50,7 +51,7 @@ export function EvidencePackScreen() {
     try {
       await share.mutateAsync({ shareWith: target });
       if (target === "self_download" && pack.pdf_download_url) {
-        await Linking.openURL(pack.pdf_download_url);
+        await openExternalUrl(pack.pdf_download_url);
       }
     } finally {
       setPendingTarget(null);

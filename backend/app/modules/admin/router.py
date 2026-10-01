@@ -24,7 +24,7 @@ from __future__ import annotations
 import uuid
 
 from fastapi import APIRouter, Depends, Query, Request, Response, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -38,7 +38,12 @@ from app.modules.admin.constants import (
     AdminPermission,
     AdminRole,
 )
-from app.modules.admin.dependencies import AdminContextDep, AdminServiceDep
+from app.modules.admin.dependencies import (
+    AdminContextDep,
+    AdminServiceDep,
+    require_admin_mfa,
+    revoke_admin_session,
+)
 from app.modules.admin.schemas import (
     AdminMeOut,
     AICostsOut,
@@ -102,7 +107,7 @@ class AdminInvitationIn(BaseModel):
     email: str
     role: str
     district_scope: str | None = None
-    expires_in_hours: int = 48
+    expires_in_hours: int = Field(default=48, ge=1, le=168)
 
 
 class AdminInvitationAcceptIn(BaseModel):
@@ -197,13 +202,7 @@ async def create_admin_web_session(
     if not authorization.startswith("Bearer "):
         raise UnauthorizedError("Firebase authentication is required.")
     claims = verify_id_token(authorization[7:])
-    if settings.admin_require_mfa and not (claims.get("firebase") or {}).get(
-        "sign_in_second_factor"
-    ):
-        raise UnauthorizedError(
-            "Multi-factor authentication is required for Admin access.",
-            error_code="admin_mfa_required",
-        )
+    require_admin_mfa(claims)
     max_age = settings.admin_session_ttl_hours * 60 * 60
     cookie = create_session_cookie(authorization[7:], expires_in_seconds=max_age)
     response.set_cookie(
@@ -220,8 +219,15 @@ async def create_admin_web_session(
 
 
 @router.delete("/web-session", response_model=SuccessResponse[dict])
-async def delete_admin_web_session(response: Response, ctx: AdminContextDep):
-    """End the current browser session. CSRF/origin checks run in AdminContextDep."""
+async def delete_admin_web_session(request: Request, response: Response, ctx: AdminContextDep):
+    """End the session server-side too. CSRF/origin checks run in AdminContextDep.
+
+    Deleting the cookie alone would leave a copied cookie valid until its TTL,
+    so this exact session is denylisted (checked on every admin request).
+    """
+    cookie = request.cookies.get(settings.admin_session_cookie_name)
+    if cookie:
+        revoke_admin_session(cookie)
     response.delete_cookie(
         settings.admin_session_cookie_name,
         secure=settings.is_production,

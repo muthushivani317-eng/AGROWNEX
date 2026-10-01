@@ -14,9 +14,29 @@ const mimeTypes = {
   '.webmanifest': 'application/manifest+json',
 };
 
-createServer((request, response) => {
+export function resolveRequestPath(rawUrl) {
+  // A malformed escape (e.g. "/%E0%A4%A") throws; never let it crash the server.
+  try {
+    return decodeURIComponent(new URL(rawUrl || '/', 'http://localhost').pathname);
+  } catch {
+    return null;
+  }
+}
+
+const server = createServer((request, response) => {
   applySecurityHeaders(response);
-  const pathname = decodeURIComponent(new URL(request.url || '/', 'http://localhost').pathname);
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    response.statusCode = 405;
+    response.setHeader('Allow', 'GET, HEAD');
+    response.end();
+    return;
+  }
+  const pathname = resolveRequestPath(request.url);
+  if (pathname === null || pathname.includes('\0')) {
+    response.statusCode = 400;
+    response.end('Bad request');
+    return;
+  }
   const relativePath = normalize(pathname).replace(/^(\.\.[/\\])+/, '').replace(/^[/\\]+/, '');
   let filePath = join(root, relativePath);
 
@@ -29,7 +49,22 @@ createServer((request, response) => {
     'Cache-Control',
     filePath.includes(`${join(root, 'assets')}`) ? 'public, max-age=31536000, immutable' : 'no-cache',
   );
-  createReadStream(filePath).pipe(response);
-}).listen(port, '0.0.0.0', () => {
-  console.log(`AgrowAI Admin Web listening on port ${port}`);
+  const stream = createReadStream(filePath);
+  stream.on('error', () => {
+    if (!response.headersSent) response.statusCode = 500;
+    response.end();
+  });
+  stream.pipe(response);
 });
+
+server.on('clientError', (_error, socket) => {
+  if (socket.writable) socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
+});
+
+if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
+  server.listen(port, '0.0.0.0', () => {
+    console.log(`AgrowAI Admin Web listening on port ${port}`);
+  });
+}
+
+export { server };

@@ -6,7 +6,7 @@ jest.mock('@/localization', () => ({
 
 import { useAuthStore } from '@/features/auth/store/authStore';
 import type { AuthUser } from '@/features/auth/types';
-import { appStorage } from '@/lib/storage';
+import { appStorage, initSecureStorage } from '@/lib/storage';
 
 import { PREFERENCES_STORAGE_KEY } from '../constants';
 import { localProfileProvider } from '../services/localProfileProvider';
@@ -30,6 +30,10 @@ const baseUser: AuthUser = {
   profileCompleted: true,
   createdAt: '2026-01-01T00:00:00.000Z',
 };
+
+beforeAll(async () => {
+  await initSecureStorage(); // the app's bootstrap does this before any profile write
+});
 
 describe('localProfileProvider', () => {
   beforeEach(() => {

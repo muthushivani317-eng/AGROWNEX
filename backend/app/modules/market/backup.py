@@ -62,9 +62,17 @@ class SyncStatusOut(BaseModel):
     sources_on_latest_date: list[SourceCount]
 
 
+MIN_INGEST_TOKEN_LENGTH = 32
+
+
 def verify_ingest_token(token: str | None) -> None:
     """Fail closed: no configured token means the ingest route is disabled."""
-    if not MARKET_INGEST_TOKEN or not token or not hmac.compare_digest(token, MARKET_INGEST_TOKEN):
+    # A short shared secret is guessable, so treat it as "not configured".
+    if (
+        len(MARKET_INGEST_TOKEN) < MIN_INGEST_TOKEN_LENGTH
+        or not token
+        or not hmac.compare_digest(token.encode(), MARKET_INGEST_TOKEN.encode())
+    ):
         raise UnauthorizedError("Invalid ingest token.")
 
 

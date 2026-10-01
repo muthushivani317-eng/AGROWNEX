@@ -115,3 +115,33 @@ async def test_district_manager_cannot_read_another_district_farmer(db_session) 
     assert [row.user_id for row in page.items] == [local.id]
     with pytest.raises(FarmerNotFoundError):
         await service.farmer_detail(context, remote.id)
+
+
+def test_admin_mfa_is_required_on_every_admin_path(monkeypatch) -> None:
+    """A phone-OTP-only token (e.g. after a SIM swap) must not reach admin APIs.
+
+    It must be a 403, never a 401: the farmer app signs the user out on 401,
+    and every farmer's Profile tab calls GET /admin/me.
+    """
+    from app.core.exceptions import ForbiddenError
+    from app.modules.admin import dependencies as admin_deps
+
+    monkeypatch.setattr(admin_deps.settings, "admin_require_mfa", True)
+    with pytest.raises(ForbiddenError):
+        admin_deps.require_admin_mfa({"uid": "u", "firebase": {"sign_in_provider": "phone"}})
+    admin_deps.require_admin_mfa(
+        {"uid": "u", "firebase": {"sign_in_provider": "phone", "sign_in_second_factor": "phone"}}
+    )
+    source = inspect.getsource(admin_deps.get_admin_context)
+    after_resolve = source.split("service.resolve_admin(")[1]
+    assert "if bearer:" in after_resolve and "require_admin_mfa(claims)" in after_resolve
+
+
+def test_signed_out_admin_session_cannot_be_reused() -> None:
+    from app.modules.admin import dependencies as admin_deps
+
+    cookie = "session-cookie-value-for-test"
+    assert not admin_deps.is_admin_session_revoked(cookie)
+    admin_deps.revoke_admin_session(cookie)
+    assert admin_deps.is_admin_session_revoked(cookie)
+    assert not admin_deps.is_admin_session_revoked("another-session")

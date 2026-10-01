@@ -101,9 +101,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       await initSecureStorage();
       const rawTokens = secureStorage.getString(StorageKeys.authTokens);
-      const rawUser = appStorage.getString(StorageKeys.authUser);
+      // Profile (name, phone, village) lives in the encrypted store. Move a
+      // copy left in the plain store by older app versions.
+      const legacyUser = appStorage.getString(StorageKeys.authUser);
+      if (legacyUser !== null) {
+        if (secureStorage.getString(StorageKeys.authUser) === null) {
+          secureStorage.set(StorageKeys.authUser, legacyUser);
+        }
+        appStorage.remove(StorageKeys.authUser);
+      }
+      const rawUser = secureStorage.getString(StorageKeys.authUser);
       const tokens = secureStorage.getJSON<AuthTokens>(StorageKeys.authTokens);
-      const user = appStorage.getJSON<AuthUser>(StorageKeys.authUser);
+      const user = secureStorage.getJSON<AuthUser>(StorageKeys.authUser);
       const rawOnboarded = appStorage.getString(StorageKeys.onboarded);
       const rawLanguageSelected = appStorage.getString(StorageKeys.languageSelected);
       const hasOnboarded = rawOnboarded === 'true';
@@ -118,7 +127,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (corruptSession) {
         logger.warn('authStore.bootstrap', 'invalid_persisted_session_reset');
         secureStorage.remove(StorageKeys.authTokens);
-        appStorage.remove(StorageKeys.authUser);
+        secureStorage.remove(StorageKeys.authUser);
         appStorage.remove(StorageKeys.lastActiveAt);
       }
       if (rawOnboarded !== null && rawOnboarded !== 'true' && rawOnboarded !== 'false') {
@@ -222,7 +231,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     };
     const now = Date.now();
     secureStorage.setJSON(StorageKeys.authTokens, tokens);
-    appStorage.setJSON(StorageKeys.authUser, user);
+    secureStorage.setJSON(StorageKeys.authUser, user);
     appStorage.set(StorageKeys.lastActiveAt, String(now));
     set({ status: 'authenticated', tokens, user, lastActiveAt: now });
   },
@@ -231,7 +240,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const current = get().user;
     if (!current) return;
     const next: AuthUser = { ...current, ...patch };
-    appStorage.setJSON(StorageKeys.authUser, next);
+    secureStorage.setJSON(StorageKeys.authUser, next);
     if (patch.language && patch.language !== current.language) {
       await setLanguage(patch.language);
     }
@@ -250,7 +259,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   async resetStartupState() {
     secureStorage.remove(StorageKeys.authTokens);
-    appStorage.remove(StorageKeys.authUser);
+    secureStorage.remove(StorageKeys.authUser);
     appStorage.remove(StorageKeys.lastActiveAt);
     appStorage.remove(StorageKeys.onboarded);
     appStorage.remove(StorageKeys.languageSelected);
@@ -308,7 +317,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   async signOut() {
     secureStorage.remove(StorageKeys.authTokens);
-    appStorage.remove(StorageKeys.authUser);
+    secureStorage.remove(StorageKeys.authUser);
     appStorage.remove(StorageKeys.lastActiveAt);
     set({ status: 'unauthenticated', tokens: null, user: null });
   },

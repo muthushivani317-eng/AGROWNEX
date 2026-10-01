@@ -257,3 +257,19 @@ async def test_non_manager_fpo_staff_cannot_add_farmers(db_session):
     fpo_viewer = await _admin(db_session, AdminRole.FPO_PARTNER.value, user=viewer)
     with pytest.raises(ForbiddenError):
         await create_link_request(org_a, LinkRequestIn(farmer_ref="AGF-000000001"), db_session, fpo_viewer)
+
+
+@pytest.mark.asyncio
+async def test_partner_feed_farmers_never_carry_name_or_phone(db_session):
+    from sqlalchemy import select
+
+    from app.modules.admin.models import AuditLog
+    from app.modules.fpo_board.router import feed_farmers
+
+    _, org_a, _, _, raja = await _setup(db_session)
+    ctx = PartnerApiKeyContext(organization_id=org_a, organization_name="FPO Alpha", key_id=uuid.uuid4())
+    rows = await feed_farmers(db_session, ctx)
+    assert raja.farmer_ref in [r["farmer_ref"] for r in rows]
+    assert all("name" not in r and "phone" not in r for r in rows)
+    audit = (await db_session.scalars(select(AuditLog).where(AuditLog.action == "partner_feed_farmers_read"))).all()
+    assert len(audit) == 1 and audit[0].meta["rows"] == len(rows)

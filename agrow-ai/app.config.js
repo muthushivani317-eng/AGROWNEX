@@ -35,6 +35,7 @@ module.exports = {
     android: {
       package: "com.agrowai.app",
       softwareKeyboardLayoutMode: "resize",
+      allowBackup: false,
       googleServicesFile:
         process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json",
       adaptiveIcon: {

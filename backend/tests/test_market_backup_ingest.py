@@ -15,7 +15,7 @@ from app.modules.market import backup as backup_module
 from app.modules.market.models import MarketPrice
 from app.modules.market.router import router
 
-TOKEN = "ingest-secret"
+TOKEN = "test-ingest-token-" + "x" * 32  # fixture, not a secret
 
 
 def _report():
@@ -106,3 +106,10 @@ async def test_sync_status_reports_stale_then_fresh(app):
     assert status["days_old"] == 1
     assert status["prices_on_latest_date"] == 1
     assert status["sources_on_latest_date"] == [{"source": "agmarknet_v2", "prices": 1}]
+
+
+async def test_ingest_refuses_a_short_configured_token(app, monkeypatch):
+    monkeypatch.setattr(backup_module, "MARKET_INGEST_TOKEN", "short")
+    res = await _call(app, "POST", "/market/backup/ingest", json=_body(),
+                      headers={"X-Market-Ingest-Token": "short"})
+    assert res.status_code == 401

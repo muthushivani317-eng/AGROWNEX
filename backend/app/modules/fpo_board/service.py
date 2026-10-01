@@ -39,6 +39,7 @@ from app.modules.organic_inputs.models import ProductionBatch, SupplierProfile
 from app.modules.organic_mvp.models import OrganicPartnerFarmerLink
 from app.modules.produce.constants import ProduceAvailabilityType, ProduceStatus
 from app.modules.produce.models import ProduceOffer
+from app.shared.csv_safety import safe_row
 
 HECTARE_TO_ACRE = 2.47105
 HARVEST_WINDOWS = (30, 60, 90)
@@ -596,7 +597,7 @@ def rows_to_csv(rows: list[dict]) -> str:
         farmer_type = FARMER_TYPES.get(row["farmer_type"] or "", {}).get("en", row["farmer_type"] or "")
         land = "" if row["land_holding_acres"] is None else f"{row['land_holding_acres']:g}"
         writer.writerow(
-            [
+            safe_row([
                 row["farmer_ref"],
                 row["name"] or "",
                 row["phone"] or "",
@@ -609,6 +610,6 @@ def rows_to_csv(rows: list[dict]) -> str:
                 products,
                 needs,
                 "/".join(k for k, v in (("FPO", row["wants_fpo_support"]), ("KVK", row["wants_kvk_support"])) if v),
-            ]
+            ])
         )
     return buffer.getvalue()

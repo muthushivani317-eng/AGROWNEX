@@ -1,0 +1,18 @@
+# gitleaks config: default rules + reviewed false positives.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Reviewed false positives"
+regexTarget = "match"
+paths = [
+  # Firebase Android client config: public by design, restricted by package + SHA-1.
+  '''agrow-ai/android/app/google-services\.json\.production-backup''',
+]
+regexes = [
+  # idempotency keys / storage key names in tests and the offline queue
+  '''idempotency_?[kK]ey\s*[:=]\s*"[^"]*"''',
+  '''KEY = "[a-z]+(\.[a-z]+)*\.v[0-9]+"''',
+  # test fixture token (backend/tests/test_market_backup_ingest.py, earlier revision)
+  '''TOKEN = "ingest-secret-0123456789-abcdefghijklmnop"''',
+]

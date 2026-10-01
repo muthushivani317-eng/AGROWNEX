@@ -216,3 +216,19 @@ async def test_partner_api_key_missing_garbled_wrong_or_revoked_is_rejected(db_s
     await revoke_api_key(org_a, uuid.UUID(key["id"]), db_session, platform)
     with pytest.raises(UnauthorizedError):
         await get_partner_api_key_context(db_session, key["api_key"])
+
+
+async def test_partner_api_key_expires_after_max_age(db_session):
+    from datetime import UTC, datetime, timedelta
+
+    from app.modules.organic_mvp.models import OrganicPartnerApiKey
+    from app.modules.organic_mvp.partner_api_auth import PARTNER_API_KEY_MAX_AGE_DAYS
+
+    platform = await _platform_admin(db_session)
+    org, _ = await _fpo_with_staff(db_session, platform, name="FPO Old", district="Madurai", roles=["manager"])
+    key = await create_api_key(org, ApiKeyIn(label="old"), db_session, platform)
+    row = await db_session.get(OrganicPartnerApiKey, uuid.UUID(key["id"]))
+    row.created_at = datetime.now(UTC) - timedelta(days=PARTNER_API_KEY_MAX_AGE_DAYS + 1)
+    await db_session.flush()
+    with pytest.raises(UnauthorizedError):
+        await get_partner_api_key_context(db_session, key["api_key"])

@@ -52,6 +52,7 @@ beforeAll(async () => {
 describe('authStore', () => {
   beforeEach(() => {
     secureStorage.remove(StorageKeys.authTokens);
+    secureStorage.remove(StorageKeys.authUser);
     appStorage.remove(StorageKeys.authUser);
     appStorage.remove(StorageKeys.onboarded);
     appStorage.remove(StorageKeys.languageSelected);
@@ -171,5 +172,18 @@ describe('authStore', () => {
     });
     expect(secureStorage.getString(StorageKeys.authTokens)).toBeNull();
     expect(appStorage.getString(StorageKeys.authUser)).toBeNull();
+    expect(secureStorage.getString(StorageKeys.authUser)).toBeNull();
+  });
+
+  it('moves a profile left in plain storage by older versions into encrypted storage', async () => {
+    secureStorage.setJSON(StorageKeys.authTokens, {
+      idToken: 'a', refreshToken: 'r', expiresAt: Date.now() + 3_600_000,
+    });
+    appStorage.setJSON(StorageKeys.authUser, { id: 'legacy_1', phone: '+919000000000' });
+
+    await useAuthStore.getState().bootstrap();
+
+    expect(appStorage.getString(StorageKeys.authUser)).toBeNull();
+    expect(secureStorage.getJSON<{ id: string }>(StorageKeys.authUser)?.id).toBe('legacy_1');
   });
 });

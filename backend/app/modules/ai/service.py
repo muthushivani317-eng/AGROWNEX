@@ -163,8 +163,12 @@ class AIService:
                 raise ConversationNotFoundError()
             return conversation, list(conversation.messages)
 
+        # Never persist another farmer's farm id against this conversation.
+        farm_id = req.farm_id
+        if farm_id is not None and await self._load_farm(user, farm_id) is None:
+            farm_id = None
         conversation = AIConversation(
-            user_id=user.id, farm_id=req.farm_id, language=language
+            user_id=user.id, farm_id=farm_id, language=language
         )
         self.session.add(conversation)
         await self.session.flush()

@@ -35,7 +35,7 @@ from app.modules.disease.models import DiseaseReport
 from app.modules.disease_risk.models import DiseaseRiskAlert
 from app.modules.farms.models import Farm
 from app.modules.organic_mvp.models import OrganicPartnerFarmerLink
-from app.modules.organic_mvp.partner_api_auth import PartnerApiKeyDep
+from app.modules.organic_mvp.partner_api_auth import PartnerApiKeyDep, record_partner_read
 
 router = APIRouter(prefix="/partner-feed", tags=["partner-feed"])
 Session = Annotated[AsyncSession, Depends(get_session)]
@@ -78,6 +78,8 @@ async def list_farmers(
         ).all()
         for farm in farms:
             farms_by_user.setdefault(farm.user_id, []).append(farm)
+    record_partner_read(session, partner, "partner_feed_linked_farmers_read", len(rows))
+    await session.commit()
     return {
         "organization": partner.organization_name,
         "count": len(rows),
@@ -109,6 +111,8 @@ async def _farmer_or_404(session: AsyncSession, organization_id: uuid.UUID, farm
 @router.get("/farmers/{farmer_ref}/summary")
 async def farmer_summary(farmer_ref: str, session: Session, partner: PartnerApiKeyDep):
     farmer = await _farmer_or_404(session, partner.organization_id, farmer_ref)
+    record_partner_read(session, partner, "partner_feed_farmer_summary_read", 1, target_id=farmer.farmer_ref)
+    await session.commit()
     farms = (
         await session.scalars(select(Farm).where(Farm.user_id == farmer.id, Farm.deleted_at.is_(None)))
     ).all()
@@ -132,7 +136,7 @@ async def farmer_summary(farmer_ref: str, session: Session, partner: PartnerApiK
         "farmer_ref": farmer.farmer_ref,
         "farms": [
             {
-                "name": farm.name,
+                # No farm "name": farmers often name a farm after themselves.
                 "crop": farm.crop,
                 "crop_variety": farm.crop_variety,
                 "area_hectares": farm.area_hectares,

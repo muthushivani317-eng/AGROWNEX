@@ -18,6 +18,7 @@ from app.modules.farms.constants import (
 )
 from app.modules.farms.geo import InvalidPolygonError, extract_ring, validate_ring
 from app.modules.farms.models import Farm
+from app.shared.url_safety import HttpsUrl
 
 
 # --------------------------------------------------------------------------- #
@@ -72,7 +73,7 @@ class FarmWrite(BaseModel):
 # Farm media
 # --------------------------------------------------------------------------- #
 class FarmMediaCreate(BaseModel):
-    file_url: str = Field(min_length=1, max_length=512)
+    file_url: HttpsUrl = Field(min_length=1, max_length=512)
     file_name: str | None = Field(default=None, max_length=255)
     mime_type: str | None = Field(default=None, max_length=80)
     file_size: int | None = Field(default=None, ge=0)

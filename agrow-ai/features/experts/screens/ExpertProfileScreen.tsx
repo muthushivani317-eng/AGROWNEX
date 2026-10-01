@@ -14,6 +14,7 @@ import {
 } from '../constants';
 import { useExpertDetail } from '../hooks/useExperts';
 import type { ConsultationCategory, ExpertType } from '../types';
+import { openExternalUrl } from '@/lib/safeLinks';
 
 /** A verified expert desk profile with an "ask this expert" action. */
 export function ExpertProfileScreen({ id }: { id: string }) {
@@ -126,7 +127,7 @@ export function ExpertProfileScreen({ id }: { id: string }) {
           variant="ghost"
           title={t('experts.officialSource')}
           leftIcon={<ExternalLink size={18} color={colors.primary} />}
-          onPress={() => expert.source && void Linking.openURL(expert.source)}
+          onPress={() => void openExternalUrl(expert.source)}
         />
       ) : null}
 

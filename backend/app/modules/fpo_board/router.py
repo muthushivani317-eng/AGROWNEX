@@ -34,11 +34,12 @@ from app.modules.organic_mvp.models import (
     OrganicPartnerOrganization,
     OrganicPartnerStaff,
 )
-from app.modules.organic_mvp.partner_api_auth import PartnerApiKeyDep
+from app.modules.organic_mvp.partner_api_auth import PartnerApiKeyDep, record_partner_read
 from app.modules.organic_mvp.partner_router import LinkRequestIn
 
 admin_router = APIRouter(prefix="/admin/fpo-board", tags=["fpo-board"])
 feed_router = APIRouter(prefix="/partner-feed/crop-board", tags=["partner-feed"])
+FEED_REDACTED_FIELDS = frozenset({"name", "phone"})
 Session = Annotated[AsyncSession, Depends(get_session)]
 PLATFORM_ROLES = {AdminRole.OWNER.value, AdminRole.SUPER_ADMIN.value}
 
@@ -423,7 +424,10 @@ async def create_link_request(organization_id: uuid.UUID, body: LinkRequestIn, s
 
 @feed_router.get("")
 async def feed_board(session: Session, partner: PartnerApiKeyDep):
-    return await build_board(session, partner.organization_id)
+    board = await build_board(session, partner.organization_id)
+    record_partner_read(session, partner, "partner_feed_board_read", len(board.get("crops", [])))
+    await session.commit()
+    return board
 
 
 @feed_router.get("/farmers")
@@ -435,6 +439,13 @@ async def feed_farmers(
     need: Annotated[str | None, Query(max_length=40)] = None,
     harvest_month: Annotated[int | None, Query(ge=1, le=12)] = None,
 ):
-    return await farmer_rows(
+    rows = await farmer_rows(
         session, partner.organization_id, crop=crop, product=product, need=need, harvest_month=harvest_month
     )
+    # Machine feed = data minimisation: an API key can leak from a partner's
+    # website/server, so it never carries direct identifiers. Named contact
+    # details stay behind the MFA-protected staff portal.
+    feed = [{k: v for k, v in row.items() if k not in FEED_REDACTED_FIELDS} for row in rows]
+    record_partner_read(session, partner, "partner_feed_farmers_read", len(feed))
+    await session.commit()
+    return feed

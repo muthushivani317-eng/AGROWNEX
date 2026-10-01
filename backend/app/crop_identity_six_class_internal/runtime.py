@@ -78,7 +78,7 @@ class Runtime:
 
             m = mobilenet_v3_small(weights=None)
             m.classifier[3] = nn.Linear(m.classifier[3].in_features, 6)
-            ck = torch.load(self.root / "model.pt", map_location="cpu", weights_only=False)
+            ck = torch.load(self.root / "model.pt", map_location="cpu", weights_only=True)
             m.load_state_dict(ck["model_state_dict"], strict=True)
             self._model = m.eval()
 

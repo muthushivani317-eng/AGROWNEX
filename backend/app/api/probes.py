@@ -11,6 +11,7 @@ The existing ``/api/v1/health`` endpoints are kept as backward-compatible aliase
 from __future__ import annotations
 
 import asyncio
+import hmac
 from pathlib import Path
 
 from fastapi import APIRouter, Header
@@ -156,6 +157,8 @@ async def controlled_pilot_readiness():
 @router.get("/metrics")
 async def prometheus_metrics(x_metrics_token: str | None = Header(default=None)):
     """Prometheus metrics, guarded by an internal token (403 unless it matches)."""
-    if not settings.metrics_token or x_metrics_token != settings.metrics_token:
+    if not settings.metrics_token or not x_metrics_token or not hmac.compare_digest(
+        x_metrics_token.encode(), settings.metrics_token.encode()
+    ):
         raise ForbiddenError("Metrics access denied.")
     return PlainTextResponse(metrics.render())

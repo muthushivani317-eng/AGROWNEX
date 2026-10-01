@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, Linking, StyleSheet, View } from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
 import {
   ArrowLeft,
   BookOpen,
@@ -17,16 +17,11 @@ import { AgPressable, AgScreen, AgText } from "@/components/ui";
 
 import { OFFLINE_KNOWLEDGE, type OfflineKnowledgeArticle } from "./knowledge";
 import { ORGANIC_INPUTS_GUIDE, type OrganicRecipeText } from "./organicInputsGuide";
+import { openExternalUrl } from "@/lib/safeLinks";
 
 /** Open an online reference without turning a connectivity failure into an unhandled rejection. */
 export async function openOfficialKnowledgeSource(url: string): Promise<boolean> {
-  try {
-    if (!(await Linking.canOpenURL(url))) return false;
-    await Linking.openURL(url);
-    return true;
-  } catch {
-    return false;
-  }
+  return openExternalUrl(url);
 }
 
 const UI = {

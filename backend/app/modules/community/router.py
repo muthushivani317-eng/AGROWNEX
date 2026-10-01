@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import math
 import uuid
 from typing import Annotated
@@ -10,6 +11,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.database import get_session
 from app.modules.auth.dependencies import ControlledTester
 from app.modules.community.models import CommunityAnswer, CommunityQuestion, CommunityReport
@@ -33,7 +35,10 @@ DISCLAIMER = (
 
 
 def alias(user_id: uuid.UUID) -> str:
-    return f"Farmer-{hashlib.sha256(str(user_id).encode()).hexdigest()[:6].upper()}"
+    # Keyed with a server secret: a plain hash of the user id could be
+    # recomputed from ids exposed elsewhere and de-anonymise authors.
+    digest = hmac.new(settings.session_secret.encode(), str(user_id).encode(), hashlib.sha256)
+    return f"Farmer-{digest.hexdigest()[:6].upper()}"
 
 
 def question_out(row: CommunityQuestion, count: int) -> QuestionOut:

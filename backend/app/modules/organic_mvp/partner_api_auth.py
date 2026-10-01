@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 from fastapi import Depends, Header
@@ -22,6 +22,10 @@ from app.core.database import get_session
 from app.core.exceptions import UnauthorizedError
 from app.modules.auth.security import verify_token
 from app.modules.organic_mvp.models import OrganicPartnerApiKey, OrganicPartnerOrganization
+
+# Keys are long-lived bearer secrets that live on partner servers; force a
+# rotation at least twice a year so a silently leaked key stops working.
+PARTNER_API_KEY_MAX_AGE_DAYS = 180
 
 
 @dataclass(frozen=True)
@@ -52,6 +56,12 @@ async def get_partner_api_key_context(
             "Invalid or revoked partner API key.",
             error_code="PARTNER_API_KEY_INVALID",
         )
+    created = key.created_at if key.created_at.tzinfo else key.created_at.replace(tzinfo=UTC)
+    if datetime.now(UTC) - created > timedelta(days=PARTNER_API_KEY_MAX_AGE_DAYS):
+        raise UnauthorizedError(
+            "This partner API key has expired. Ask AgrowNex for a new key.",
+            error_code="PARTNER_API_KEY_EXPIRED",
+        )
     organization = await session.get(OrganicPartnerOrganization, key.organization_id)
     if organization is None:
         raise UnauthorizedError(
@@ -68,3 +78,22 @@ async def get_partner_api_key_context(
 
 
 PartnerApiKeyDep = Annotated[PartnerApiKeyContext, Depends(get_partner_api_key_context)]
+
+
+def record_partner_read(
+    session: AsyncSession, partner: PartnerApiKeyContext, action: str, rows: int, target_id: str | None = None
+) -> None:
+    """Audit every partner-feed read (which key, what, how many rows).
+
+    Added to the session; the caller's commit persists it.
+    """
+    from app.modules.admin.models import AuditLog
+
+    session.add(
+        AuditLog(
+            action=action,
+            target="organic_partner_org",
+            target_id=target_id or str(partner.organization_id),
+            meta={"key_id": str(partner.key_id), "organization_id": str(partner.organization_id), "rows": rows},
+        )
+    )

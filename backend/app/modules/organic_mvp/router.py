@@ -72,6 +72,18 @@ def _allow(admin, permission: AdminPermission):
         raise ForbiddenError("Organic pilot permission required.")
 
 
+# Pilot setup, enrolment and PGS cases span every district and expose
+# certification documents, so they are limited to platform-wide roles --
+# not district managers or customer support, who also hold MANAGE_FARMERS.
+ORGANIC_OPS_ROLES = frozenset({AdminRole.OWNER, AdminRole.SUPER_ADMIN, AdminRole.AGRICULTURE_OFFICER})
+
+
+def _allow_organic_ops(admin):
+    _allow(admin, AdminPermission.MANAGE_FARMERS)
+    if admin.admin.role not in ORGANIC_OPS_ROLES:
+        raise ForbiddenError("Organic pilot permission required.")
+
+
 async def _farm(session: AsyncSession, farm_id: uuid.UUID, user_id: uuid.UUID) -> Farm:
     farm = await session.scalar(select(Farm).where(Farm.id == farm_id, Farm.user_id == user_id, Farm.deleted_at.is_(None)))
     if farm is None:
@@ -335,7 +347,7 @@ async def today_task(farm_id: uuid.UUID, session: Session, user: CurrentUser):
 
 @admin_router.post("/pilot")
 async def setup_pilot(body: PilotSetupIn, session: Session, admin: AdminContextDep):
-    _allow(admin, AdminPermission.MANAGE_FARMERS)
+    _allow_organic_ops(admin)
     fpo = await session.get(OrganicFpo, body.fpo_id) if body.fpo_id else None
     if body.fpo_id and (fpo is None or fpo.is_test != body.is_test):
         raise ValidationError("Selected FPO does not exist in this data environment.")
@@ -363,7 +375,7 @@ async def setup_pilot(body: PilotSetupIn, session: Session, admin: AdminContextD
 
 @admin_router.post("/fpos")
 async def create_fpo(body: FpoIn, session: Session, admin: AdminContextDep):
-    _allow(admin, AdminPermission.MANAGE_FARMERS)
+    _allow_organic_ops(admin)
     row = OrganicFpo(**body.model_dump())
     session.add(row)
     await session.commit()
@@ -391,7 +403,7 @@ async def list_pilots(session: Session, admin: AdminContextDep):
 
 @admin_router.put("/pilot/{pilot_id}")
 async def update_pilot(pilot_id: uuid.UUID, body: PilotSetupIn, session: Session, admin: AdminContextDep):
-    _allow(admin, AdminPermission.MANAGE_FARMERS)
+    _allow_organic_ops(admin)
     pilot = await session.get(OrganicPilot, pilot_id)
     if pilot is None:
         raise NotFoundError("Pilot not found.")
@@ -437,7 +449,7 @@ async def pilot_detail(pilot_id: uuid.UUID, session: Session, admin: AdminContex
 
 @admin_router.post("/pilot/{pilot_id}/enroll")
 async def enroll(pilot_id: uuid.UUID, body: EnrollIn, session: Session, admin: AdminContextDep):
-    _allow(admin, AdminPermission.MANAGE_FARMERS)
+    _allow_organic_ops(admin)
     pilot = await session.get(OrganicPilot, pilot_id)
     if pilot is None:
         raise NotFoundError("Pilot not found.")
@@ -599,7 +611,7 @@ async def activate_plan(cycle_id: uuid.UUID, template_id: uuid.UUID, session: Se
 
 @admin_router.post("/farms/{farm_id}/pgs/review")
 async def review_pgs(farm_id: uuid.UUID, body: PgsReviewIn, session: Session, admin: AdminContextDep):
-    _allow(admin, AdminPermission.MANAGE_FARMERS)
+    _allow_organic_ops(admin)
     if admin.admin.role not in {AdminRole.AGRICULTURE_OFFICER.value, AdminRole.OWNER.value, AdminRole.SUPER_ADMIN.value}:
         raise ForbiddenError("PGS evidence review requires an agriculture-officer role.")
     row = await session.scalar(select(OrganicPgsCase).where(OrganicPgsCase.farm_id == farm_id))
@@ -654,7 +666,7 @@ async def review_pgs(farm_id: uuid.UUID, body: PgsReviewIn, session: Session, ad
 @admin_router.get("/pgs/review-queue")
 async def admin_pgs_review_queue(session: Session, admin: AdminContextDep):
     """PGS cases waiting for an agriculture officer, oldest update first."""
-    _allow(admin, AdminPermission.MANAGE_FARMERS)
+    _allow_organic_ops(admin)
     rows = (await session.execute(
         select(OrganicPgsCase, Farm.name)
         .join(Farm, Farm.id == OrganicPgsCase.farm_id)
@@ -670,7 +682,7 @@ async def admin_pgs_review_queue(session: Session, admin: AdminContextDep):
 
 @admin_router.get("/farms/{farm_id}/pgs")
 async def admin_pgs_case(farm_id: uuid.UUID, session: Session, admin: AdminContextDep):
-    _allow(admin, AdminPermission.MANAGE_FARMERS)
+    _allow_organic_ops(admin)
     row = await session.scalar(select(OrganicPgsCase).where(OrganicPgsCase.farm_id == farm_id))
     if row is None:
         return {"status": "No PGS case", "state": "pre_certification_trial", "notice": TRIAL_NOTICE}
@@ -686,7 +698,7 @@ async def admin_pgs_case(farm_id: uuid.UUID, session: Session, admin: AdminConte
 
 @admin_router.post("/farms/{farm_id}/pgs/appraisals")
 async def schedule_appraisal(farm_id: uuid.UUID, body: AppraisalIn, session: Session, admin: AdminContextDep):
-    _allow(admin, AdminPermission.MANAGE_FARMERS)
+    _allow_organic_ops(admin)
     case = await session.scalar(select(OrganicPgsCase).where(OrganicPgsCase.farm_id == farm_id))
     if case is None:
         raise NotFoundError("PGS case not found.")

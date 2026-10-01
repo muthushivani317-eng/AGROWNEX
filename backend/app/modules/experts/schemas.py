@@ -19,14 +19,15 @@ from app.modules.experts.models import (
     ConsultationMessage,
     Expert,
 )
+from app.shared.url_safety import HttpsUrl
 
 
 # --------------------------------------------------------------------------- #
 # Inputs
 # --------------------------------------------------------------------------- #
 class AttachmentIn(BaseModel):
-    file_url: str = Field(min_length=1, max_length=512)
-    thumbnail_url: str | None = Field(default=None, max_length=512)
+    file_url: HttpsUrl = Field(min_length=1, max_length=512)
+    thumbnail_url: HttpsUrl | None = Field(default=None, max_length=512)
     mime_type: str | None = Field(default=None, max_length=80)
     file_size: int | None = Field(default=None, ge=0)
     caption: str | None = Field(default=None, max_length=255)

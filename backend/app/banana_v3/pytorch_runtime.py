@@ -21,7 +21,7 @@ class PyTorchRuntime:
 
         model = mobilenet_v3_small(weights=None)
         model.classifier[3] = nn.Linear(model.classifier[3].in_features, classes)
-        checkpoint = torch.load(path, map_location="cpu", weights_only=False)
+        checkpoint = torch.load(path, map_location="cpu", weights_only=True)
         state = checkpoint
         if isinstance(checkpoint, dict):
             for key in ("model_state_dict", "state_dict", "model"):

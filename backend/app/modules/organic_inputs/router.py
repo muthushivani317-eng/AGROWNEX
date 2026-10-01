@@ -37,6 +37,7 @@ from app.modules.admin.constants import AdminPermission
 from app.modules.admin.dependencies import AdminContextDep
 from app.modules.admin.models import AuditLog
 from app.modules.auth.dependencies import CurrentUser
+from app.modules.farms.models import Farm
 from app.modules.organic_inputs.constants import (
     BATCH_ADMIN_DECISIONS,
     SUPPLIER_ADMIN_DECISIONS,
@@ -444,6 +445,12 @@ async def apply_as_supplier(body: SupplierApplyIn, session: Session, user: Curre
     )
     if existing and existing.status != SupplierStatus.DRAFT.value:
         raise ConflictError("A supplier application already exists.")
+    if body.farm_id is not None:
+        owned = await session.scalar(
+            select(Farm.id).where(Farm.id == body.farm_id, Farm.user_id == user.id, Farm.deleted_at.is_(None))
+        )
+        if owned is None:
+            raise NotFoundError("Farm not found.")
     if existing:
         for key, value in body.model_dump().items():
             setattr(existing, key, value)

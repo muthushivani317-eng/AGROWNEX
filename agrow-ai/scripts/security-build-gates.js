@@ -42,6 +42,15 @@ function validateSourceSecurityGates(values = loadPublicEnvironment(PROJECT_ROOT
     throw new Error('firebase_project_mismatch');
   }
   if (values.EXPO_PUBLIC_DEV_OTP?.trim()) throw new Error('static_otp_environment_forbidden');
+  // Anything EXPO_PUBLIC_* is readable in the APK; admin access is enforced by the server.
+  // Store builds must not ship it (pilot builds may use it as a sign-in lock).
+  if (result.profile === 'production' && values.EXPO_PUBLIC_ADMIN_ALLOWLIST?.trim()) {
+    throw new Error('admin_allowlist_in_public_bundle');
+  }
+  const manifestPath = path.join(PROJECT_ROOT, 'android', 'app', 'src', 'main', 'AndroidManifest.xml');
+  if (fs.existsSync(manifestPath) && !/android:allowBackup="false"/.test(fs.readFileSync(manifestPath, 'utf8'))) {
+    throw new Error('android_backup_enabled');
+  }
   if (values.EXPO_PUBLIC_S3_UPLOAD_ENDPOINT?.trim()) {
     let uploadUrl;
     try {
@@ -112,6 +121,7 @@ function validateApkSecurityGates(apkPath, expectedProfile) {
   if (!manifest.includes(`package="${EXPECTED_PACKAGE}"`)) throw new Error('apk_package_mismatch');
   if (/android:debuggable="true"/.test(manifest)) throw new Error('apk_debuggable');
   if (!/android:usesCleartextTraffic="false"/.test(manifest)) throw new Error('apk_cleartext_enabled');
+  if (!/android:allowBackup="false"/.test(manifest)) throw new Error('apk_backup_enabled');
   if (/devlauncher|devmenu|expo-dev-launcher|expo-dev-menu/i.test(`${manifest}\n${files}`)) {
     throw new Error('apk_developer_launcher_present');
   }

@@ -146,12 +146,25 @@ def _media_keys(row: Any, public_bases: tuple[str, ...]) -> set[str]:
     return keys
 
 
+_UNSAFE_KEY_PARTS = ("..", "%", "\\", "#", "?", "//")
+
+
+def _is_plain_key(key: str) -> bool:
+    """Server-issued keys are plain "a/b/c.ext" paths; anything else is refused."""
+    return bool(key) and not key.startswith("/") and not any(p in key for p in _UNSAFE_KEY_PARTS)
+
+
 class _Purger:
     def __init__(self, session: AsyncSession, tables: dict[str, Table], public_bases: tuple[str, ...]):
         self.session = session
         self.tables = tables
         self.public_bases = public_bases
         self.media: set[str] = set()
+        # Ids of every row erased for this user. A media object is deleted only
+        # if its key is scoped to one of them (".../{user_id}/...",
+        # "daily_task/{task_id}/..."), so a URL the farmer typed into a free-text
+        # column can never make the purge delete someone else's file.
+        self.owned_ids: set[str] = set()
         self.result = PurgeResult()
 
     async def erase(self, table: Table, where, depth: int = 0) -> None:
@@ -187,12 +200,23 @@ class _Purger:
                     return
         for row in rows:
             self.media |= _media_keys(row, self.public_bases)
+            if len(pk) == 1:
+                self.owned_ids.add(str(row._mapping[pk[0].name]))
         res = await self.session.execute(delete(table).where(where))
         count = res.rowcount or 0
         self.result.rows_deleted += count
         self.result.tables[table.name] = self.result.tables.get(table.name, 0) + count
 
+    def owned_media(self) -> set[str]:
+        owned = {i.lower() for i in self.owned_ids} | {i.replace("-", "").lower() for i in self.owned_ids}
+        return {
+            k
+            for k in self.media
+            if _is_plain_key(k) and owned & {seg.lower() for seg in k.split("/")}
+        }
+
     async def purge_user(self, user: User) -> None:
+        self.owned_ids.add(str(user.id))
         users = self.tables["users"]
         for table in self.tables.values():
             if table.name in RETAINED_TABLES:
@@ -271,7 +295,7 @@ async def purge_closed_accounts(
             logger.exception("purge failed for user %s; will retry next run", user.id)
             continue
         if delete_media:
-            await _delete_media(purger.media, purger.result)
+            await _delete_media(purger.owned_media(), purger.result)
         if delete_firebase and firebase_uid and not firebase_uid.startswith(PURGED_UID_PREFIX):
             try:
                 from app.modules.admin.farmer_deletion import delete_firebase_account

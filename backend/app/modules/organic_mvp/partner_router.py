@@ -215,7 +215,7 @@ async def delete_organization(organization_id: uuid.UUID, session: Session, admi
         raise ConflictError("This organization has an active API key; revoke it first.")
     open_link = await session.scalar(select(OrganicPartnerFarmerLink).where(
         OrganicPartnerFarmerLink.organization_id == organization_id,
-        OrganicPartnerFarmerLink.status.in_(["pending", "approved"]),
+        OrganicPartnerFarmerLink.status.in_(["pending", "active", "join_requested"]),
     ))
     if open_link is not None:
         raise ConflictError("This organization has a linked or pending farmer; resolve that first.")

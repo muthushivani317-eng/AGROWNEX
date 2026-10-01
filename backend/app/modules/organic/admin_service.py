@@ -40,6 +40,19 @@ class OrganicAdminService:
         data = await storage.get(key=document.object_key)
         if hashlib.sha256(data).hexdigest() != document.sha256 or len(data) != document.file_size:
             raise ValueError("CERTIFICATION_DOCUMENT_INTEGRITY_FAILED")
+        # Every staff view of a farmer's certificate is recorded.
+        self.session.add(
+            AuditLog(
+                admin_id=ctx.admin.id,
+                role=ctx.admin.role,
+                action="organic_certificate_viewed",
+                target="organic_certification_document",
+                target_id=str(document.id),
+                ip_address=ctx.ip_address,
+                meta={},
+            )
+        )
+        await self.session.commit()
         return data, document.mime_type, document.file_name
 
     async def review_certification(

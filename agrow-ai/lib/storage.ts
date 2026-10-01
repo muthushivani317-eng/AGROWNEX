@@ -57,10 +57,26 @@ export async function initSecureStorage(): Promise<void> {
     });
   } catch (e) {
     logger.error('storage.initSecure', e);
-    // Fall back to an unencrypted instance rather than crashing; tokens still
-    // live only on-device.
-    secureMMKV = createMMKV({ id: 'agrowai.secure' });
+    // Fail closed: never write tokens to an unencrypted file. Keep them in
+    // memory for this session only (the farmer signs in again next launch).
+    secureMMKV = createMemoryStore();
   }
+}
+
+/** Session-only store used when the OS keystore is unavailable. */
+function createMemoryStore(): MMKV {
+  const values = new Map<string, string>();
+  const store = {
+    getString: (key: string) => values.get(key),
+    set: (key: string, value: string | number | boolean) => {
+      values.set(key, String(value));
+    },
+    remove: (key: string) => values.delete(key),
+    contains: (key: string) => values.has(key),
+    clearAll: () => values.clear(),
+    getAllKeys: () => Array.from(values.keys()),
+  };
+  return store as unknown as MMKV;
 }
 
 function requireSecure(): MMKV {

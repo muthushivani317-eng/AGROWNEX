@@ -20,6 +20,7 @@ from app.modules.organic.certification_receipt import (
     store_and_attest_upload,
     upload_receipt_is_valid,
 )
+from app.modules.organic.constants import CertificationStatus
 from app.modules.organic.exceptions import (
     InvalidCertificationUploadError,
     OrganicInputNotFoundError,
@@ -38,6 +39,11 @@ from app.modules.organic.schemas import CertificationDocumentCreate, OrganicProf
 from app.modules.soil.repository import SoilRepository
 
 logger = get_logger("organic.service")
+
+
+FARMER_SETTABLE_CERTIFICATION = frozenset(
+    {CertificationStatus.NOT_CLAIMED, CertificationStatus.SELF_DECLARED}
+)
 
 
 class OrganicService:
@@ -125,7 +131,12 @@ class OrganicService:
         ):
             value = getattr(data, field)
             setattr(profile, field, value.value if hasattr(value, "value") else value)
-        if not current_verified:
+        # Certificate details are frozen once staff or the document flow own
+        # the status (submitted / rejected / expired / verified).
+        farmer_owns_status = (
+            profile.certification_status or CertificationStatus.NOT_CLAIMED.value
+        ) in {s.value for s in FARMER_SETTABLE_CERTIFICATION}
+        if not current_verified and farmer_owns_status:
             for field in (
                 "certification_scheme",
                 "certification_identifier",
@@ -135,7 +146,15 @@ class OrganicService:
                 if field in data.model_fields_set:
                     setattr(profile, field, getattr(data, field))
         # A farmer update cannot create or overwrite verified state.
-        if not current_verified and "certification_status" in data.model_fields_set:
+        # Farmers may only claim or withdraw a self-declaration. Review states
+        # (document_submitted / rejected / expired / verified) are set by the
+        # document flow and staff, so a rejection cannot be wiped by the farmer.
+        if (
+            "certification_status" in data.model_fields_set
+            and data.certification_status in FARMER_SETTABLE_CERTIFICATION
+            and (profile.certification_status or CertificationStatus.NOT_CLAIMED.value)
+            in {s.value for s in FARMER_SETTABLE_CERTIFICATION}
+        ):
             profile.certification_status = data.certification_status.value
         profile.last_idempotency_key = idempotency_key
         profile.plan_version = 1 if is_new else (profile.plan_version or 1) + 1

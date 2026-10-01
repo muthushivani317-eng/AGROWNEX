@@ -32,7 +32,7 @@ test('keeps the local library synchronous and handles online source failures', (
   expect(screen).toContain('ORGANIC_INPUTS_GUIDE.map');
   expect(screen).not.toContain('isLoading');
   expect(screen).not.toContain('RefreshControl');
-  expect(screen).toContain('Linking.canOpenURL');
+  expect(screen).toContain('openExternalUrl(url)');
   expect(screen).toContain('sourceUnavailableMessage');
   expect(en.offlineKnowledge.sourceUnavailableMessage).toBeTruthy();
   expect(ta.offlineKnowledge.sourceUnavailableMessage).toBeTruthy();

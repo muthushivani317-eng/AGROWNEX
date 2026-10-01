@@ -59,6 +59,7 @@ yarn-error.*
 # Only the Firebase config copy needs its own explicit rule, since the
 # existing /google-services.json rule only matches the root copy.
 /android/app/google-services.json
+/android/app/google-services.json.*
 
 # Local stale native-project backups must never be committed.
 /android.backup-before-standalone-*/

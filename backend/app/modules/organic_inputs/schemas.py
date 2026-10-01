@@ -15,6 +15,7 @@ from app.modules.organic_inputs.constants import (
     NewProductRequestStatus,
     SupplierStatus,
 )
+from app.shared.url_safety import HttpsUrl
 
 # ---------------------------------------------------------------------------
 # Catalogue (admin write / public read)
@@ -111,7 +112,7 @@ class NewProductTypeRequestIn(BaseModel):
     ingredients: str | None = Field(default=None, max_length=4000)
     preparation_process: str | None = Field(default=None, max_length=4000)
     intended_use: str | None = Field(default=None, max_length=2000)
-    photo_urls: list[str] = Field(default_factory=list, max_length=10)
+    photo_urls: list[HttpsUrl] = Field(default_factory=list, max_length=10)
 
 
 class NewProductTypeRequestOut(BaseModel):
@@ -162,7 +163,7 @@ class SupplierProfileOut(BaseModel):
 
 class SupplierDocumentIn(BaseModel):
     document_type: str = Field(min_length=2, max_length=40)
-    file_url: str = Field(min_length=1, max_length=512)
+    file_url: HttpsUrl = Field(min_length=1, max_length=512)
     file_name: str | None = Field(default=None, max_length=255)
     mime_type: str | None = Field(default=None, max_length=80)
     file_size: int | None = Field(default=None, ge=0)
@@ -236,7 +237,7 @@ class BatchUpdateIn(BaseModel):
 
 class BatchDocumentIn(BaseModel):
     document_type: str = Field(min_length=2, max_length=40)
-    file_url: str = Field(min_length=1, max_length=512)
+    file_url: HttpsUrl = Field(min_length=1, max_length=512)
     file_name: str | None = Field(default=None, max_length=255)
     mime_type: str | None = Field(default=None, max_length=80)
     file_size: int | None = Field(default=None, ge=0)
