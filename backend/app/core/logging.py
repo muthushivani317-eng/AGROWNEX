@@ -18,6 +18,17 @@ _CONFIGURED = False
 
 # Patterns redacted from every log record's message (defense in depth).
 _SCRUB_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
+    # Database/broker URLs can occur in connection exceptions.
+    (re.compile(r"(\b[a-z][a-z0-9+.-]*://)[^\s/@]+:[^\s/@]+@", re.IGNORECASE), r"\1***@"),
+    (
+        re.compile(
+            r"((?:password|passwd|secret|api[_-]?key|access[_-]?token|refresh[_-]?token)"
+            r"[\"'=:\s]+)([^\s\"',;&}]+)",
+            re.IGNORECASE,
+        ),
+        r"\1***",
+    ),
+    (re.compile(r"(\bbearer\s+)[a-z0-9._~+/-]+=*", re.IGNORECASE), r"\1***"),
     (re.compile(r"(otp[\"'=:\s]+)(\d{4,8})", re.IGNORECASE), r"\1***"),
     # Redact the actual credential after "authorization", keeping a "Bearer" label.
     (
@@ -44,16 +55,23 @@ class ScrubFilter(logging.Filter):
         return True
 
 
+class ScrubbingFormatter(logging.Formatter):
+    """Scrub the rendered record, including cached exception and stack text."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        return _scrub(super().format(record))
+
+
 class JsonFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         payload = {
             "ts": self.formatTime(record, "%Y-%m-%dT%H:%M:%S"),
             "level": record.levelname,
             "logger": record.name,
-            "message": record.getMessage(),
+            "message": _scrub(record.getMessage()),
         }
         if record.exc_info:
-            payload["exc"] = self.formatException(record.exc_info)
+            payload["exc"] = _scrub(self.formatException(record.exc_info))
         return json.dumps(payload, ensure_ascii=False)
 
 
@@ -68,7 +86,7 @@ def configure_logging() -> None:
         handler.setFormatter(JsonFormatter())
     else:
         handler.setFormatter(
-            logging.Formatter(
+            ScrubbingFormatter(
                 "%(asctime)s %(levelname)s [%(name)s] %(message)s",
                 datefmt="%Y-%m-%dT%H:%M:%S",
             )
