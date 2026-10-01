@@ -1,9 +1,38 @@
-# EAS reads .easignore from the REPOSITORY root (not agrow-ai/).
-# Upload only the mobile app; everything else (backend, models, caches) stays local.
-/*
-!/agrow-ai/
+# EAS reads .easignore from the REPOSITORY root. Upload only the mobile app (agrow-ai/).
+# No negated directory tricks: EAS's matcher drops everything if '/*' is used.
 
-# --- rules below mirror agrow-ai/.easignore, scoped to /agrow-ai ---
+# Everything at the repo root except agrow-ai/
+/.*
+/*.md
+/*.txt
+/*.json
+/*.py
+/*.yaml
+/*.yml
+/*.toml
+/admin-web/
+/artifacts/
+/backend/
+/docs/
+/notebooks/
+/recommendation_knowledge/
+/relay/
+/reports/
+/scripts/
+/training_tools/
+/website/
+/agrowai_autonomous_pipeline/
+/crop_identity_dataset_v1/
+/datasets/
+/graphify-out/
+/internal_challenge_sets/
+/lcc-educational-release/
+/lcc-production-mobile/
+/mobile-security-release-5b5918e/
+/release-worktrees/
+/Claude outputs/
+
+# --- agrow-ai/.easignore rules, anchored to /agrow-ai ---
 # EAS uses this file instead of .gitignore when preparing the remote archive.
 # Keep its exclusions aligned with .gitignore and omit generated native output.
 node_modules/
