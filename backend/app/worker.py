@@ -83,6 +83,17 @@ async def sync_firebase_deletions(ctx: dict[str, Any]) -> dict:
     return await _run(_firebase_account_sync)
 
 
+async def _purge_closed_accounts(session: AsyncSession) -> dict:
+    from app.modules.admin.account_purge import purge_closed_accounts
+
+    return await purge_closed_accounts(session)
+
+
+async def purge_closed_accounts_job(ctx: dict[str, Any]) -> dict:
+    """Permanently erase farmer accounts closed more than 30 days ago."""
+    return await _run(_purge_closed_accounts)
+
+
 async def evaluate_weather_alerts(ctx: dict[str, Any]) -> dict:
     return await _run(_evaluate_weather_alerts)
 
@@ -131,6 +142,7 @@ class WorkerSettings:
         render_satellite_images_job,
         generate_daily_tasks_job,
         send_verification_followups_job,
+        purge_closed_accounts_job,
     ]
     cron_jobs = [
         # State-wide price sync + targets; long budget for a slow data.gov.in.
@@ -139,6 +151,7 @@ class WorkerSettings:
         cron(sync_firebase_deletions, minute={20}),
         cron(retry_failed_notifications, minute=set(range(0, 60, 5))),
         cron(expire_stale_offers, hour={3}, minute=0),
+        cron(purge_closed_accounts_job, hour={21}, minute=0, timeout=1800),  # 02:30 IST
         # Fires well after the satellite/weather refresh cadence above so
         # its signal providers always read same-day already-computed data
         # (docs: app/modules/daily_task/jobs.py module docstring).

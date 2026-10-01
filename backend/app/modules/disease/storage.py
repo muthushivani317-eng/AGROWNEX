@@ -69,6 +69,9 @@ class MockStorage:
         except KeyError as exc:
             raise StorageError() from exc
 
+    async def delete(self, *, key: str) -> None:
+        self.objects.pop(key, None)
+
 
 class UnavailableStorage:
     """Production-safe null provider that never fabricates an object URL."""
@@ -77,6 +80,9 @@ class UnavailableStorage:
         raise StorageUnavailableError()
 
     async def get(self, *, key: str) -> bytes:
+        raise StorageUnavailableError()
+
+    async def delete(self, *, key: str) -> None:
         raise StorageUnavailableError()
 
 
@@ -186,7 +192,8 @@ class R2Client:
             raise StorageError() from exc
         return public_url
 
-    async def get(self, *, key: str) -> bytes:
+    def _signed_empty_request(self, method: str, key: str) -> tuple[str, dict[str, str]]:
+        """SigV4 headers for a body-less request (GET/DELETE) on ``key``."""
         now = _dt.datetime.now(_dt.UTC)
         amz_date = now.strftime("%Y%m%dT%H%M%SZ")
         stamp = now.strftime("%Y%m%d")
@@ -196,7 +203,7 @@ class R2Client:
             f"host:{self.host}\nx-amz-content-sha256:{payload_hash}\nx-amz-date:{amz_date}\n"
         )
         signed_headers = "host;x-amz-content-sha256;x-amz-date"
-        request = f"GET\n{canonical_uri}\n\n{canonical_headers}\n{signed_headers}\n{payload_hash}"
+        request = f"{method}\n{canonical_uri}\n\n{canonical_headers}\n{signed_headers}\n{payload_hash}"
         scope = f"{stamp}/{self.region}/{self.service}/aws4_request"
         string_to_sign = (
             f"AWS4-HMAC-SHA256\n{amz_date}\n{scope}\n{hashlib.sha256(request.encode()).hexdigest()}"
@@ -216,11 +223,26 @@ class R2Client:
             ),
         }
         url = f"https://{self.host}/{quote(f'{self.bucket}/{key}', safe='/')}"
+        return url, headers
+
+    async def get(self, *, key: str) -> bytes:
+        url, headers = self._signed_empty_request("GET", key)
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 response = await client.get(url, headers=headers)
                 response.raise_for_status()
                 return response.content
+        except httpx.HTTPError as exc:
+            raise StorageError() from exc
+
+    async def delete(self, *, key: str) -> None:
+        """Delete one object (idempotent: a missing key is not an error)."""
+        url, headers = self._signed_empty_request("DELETE", key)
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.delete(url, headers=headers)
+                if response.status_code not in (200, 204, 404):
+                    response.raise_for_status()
         except httpx.HTTPError as exc:
             raise StorageError() from exc
 
