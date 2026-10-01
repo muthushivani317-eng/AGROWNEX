@@ -47,7 +47,12 @@ jobs:
       - name: Audit installed environment
         # Reviewed exception: PYSEC-2025-194 / CVE-2025-3000 is a local memory bug in
         # torch.jit.script, which AgrowNex never calls. Remove when torch >= 2.13.
-        run: pip-audit --progress-spinner off --skip-editable --ignore-vuln PYSEC-2025-194
+        # Reviewed exception: PYSEC-2026-3447 / CVE-2026-59890 is setuptools sdist
+        # MANIFEST filtering on macOS filesystems (build-time only, never at runtime);
+        # torch 2.11 pins setuptools<82. Remove together with the torch upgrade.
+        run: >
+          pip-audit --progress-spinner off --skip-editable
+          --ignore-vuln PYSEC-2025-194 --ignore-vuln PYSEC-2026-3447
 
   python-sast:
     name: Backend SAST (bandit)
