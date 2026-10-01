@@ -28,7 +28,7 @@ async def test_auth_diagnostics_do_not_log_identity_or_token(
     monkeypatch.setattr(
         service_module,
         "verify_id_token",
-        lambda _token: {
+        lambda _token, **_kw: {
             "uid": sensitive_uid,
             "phone_number": sensitive_phone,
             "email": None,
@@ -56,7 +56,7 @@ async def test_session_failure_reports_only_safe_stage(
     monkeypatch.setattr(
         service_module,
         "verify_id_token",
-        lambda _token: {
+        lambda _token, **_kw: {
             "uid": "safe-test-uid",
             "phone_number": sensitive_phone,
             "email": None,

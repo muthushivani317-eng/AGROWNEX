@@ -45,7 +45,9 @@ jobs:
           python -m pip install --upgrade pip pip-audit
           pip install -r requirements.txt
       - name: Audit installed environment
-        run: pip-audit --progress-spinner off --skip-editable
+        # Reviewed exception: PYSEC-2025-194 / CVE-2025-3000 is a local memory bug in
+        # torch.jit.script, which AgrowNex never calls. Remove when torch >= 2.13.
+        run: pip-audit --progress-spinner off --skip-editable --ignore-vuln PYSEC-2025-194
 
   python-sast:
     name: Backend SAST (bandit)

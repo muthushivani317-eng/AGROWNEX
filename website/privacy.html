@@ -37,7 +37,7 @@
       <li><b>Farm records:</b> crops, farm products, expected harvest, tasks, diary entries.</li>
       <li><b>Photos and voice:</b> crop/leaf photos you take for disease checks, and voice notes you record.</li>
       <li><b>AI chat:</b> questions you ask the assistant and its answers.</li>
-      <li><b>Technical:</b> notification token, app version and error reports.</li>
+      <li><b>Technical:</b> an app-install ID, device model, app version and crash/error reports.</li>
     </ul>
     <p>We do not collect contacts, SMS, call logs, or payment card details.</p>
 
@@ -52,11 +52,11 @@
 
     <h2>4. Who we share it with</h2>
     <ul>
-      <li><b>Google Firebase</b> — phone sign-in and notifications.</li>
+      <li><b>Google Firebase</b> — phone sign-in and app crash reports (Crashlytics).</li>
       <li><b>OpenAI</b> and <b>Google Gemini</b> — process your crop photos, voice and chat questions to give answers.</li>
       <li><b>Cloudflare R2</b> — stores photos and voice notes.</li>
       <li><b>Railway</b> — hosts our servers and database.</li>
-      <li><b>Sentry</b> — error reports (sign-in tokens are removed first).</li>
+      <li><b>Sentry</b> — server error reports (no request bodies, tokens or phone numbers).</li>
       <li><b>FPO / KVK / buyers</b> — your profile or produce details, only after you give consent in the app. You can withdraw consent at any time.</li>
     </ul>
     <p>These providers may store data outside India, including in the United States. Market prices and weather are read from public sources (Agmarknet, data.gov.in, Open-Meteo); none of your data is sent to them.</p>
@@ -105,7 +105,7 @@
       <li><b>வயல் பதிவுகள்:</b> பயிர்கள், விளைபொருட்கள், அறுவடை எதிர்பார்ப்பு, பணிகள், குறிப்பேடு.</li>
       <li><b>புகைப்படம், குரல்:</b> நோய் பரிசோதனைக்கான பயிர்/இலை புகைப்படங்கள், குரல் பதிவுகள்.</li>
       <li><b>AI உரையாடல்:</b> நீங்கள் கேட்கும் கேள்விகளும் பதில்களும்.</li>
-      <li><b>தொழில்நுட்பம்:</b> அறிவிப்பு டோக்கன், செயலி பதிப்பு, பிழை அறிக்கைகள்.</li>
+      <li><b>தொழில்நுட்பம்:</b> செயலி நிறுவல் அடையாளம், கைபேசி மாடல், செயலி பதிப்பு, செயலிழப்பு/பிழை அறிக்கைகள்.</li>
     </ul>
     <p>தொடர்புகள், SMS, அழைப்புப் பதிவுகள், வங்கி அட்டை விவரங்களை நாங்கள் சேகரிப்பதில்லை.</p>
 
@@ -120,11 +120,11 @@
 
     <h2>4. யாருடன் பகிர்கிறோம்</h2>
     <ul>
-      <li><b>Google Firebase</b> — தொலைபேசி உள்நுழைவு, அறிவிப்புகள்.</li>
+      <li><b>Google Firebase</b> — தொலைபேசி உள்நுழைவு, செயலிழப்பு அறிக்கைகள் (Crashlytics).</li>
       <li><b>OpenAI</b>, <b>Google Gemini</b> — பதில் தர பயிர் புகைப்படம், குரல், கேள்விகளைச் செயலாக்குகின்றன.</li>
       <li><b>Cloudflare R2</b> — புகைப்படம், குரல் பதிவுகள் சேமிப்பு.</li>
       <li><b>Railway</b> — எங்கள் சர்வர், தரவுத்தளம்.</li>
-      <li><b>Sentry</b> — பிழை அறிக்கைகள் (உள்நுழைவு டோக்கன்கள் நீக்கப்பட்ட பின்).</li>
+      <li><b>Sentry</b> — சர்வர் பிழை அறிக்கைகள் (கோரிக்கை உள்ளடக்கம், டோக்கன், மொபைல் எண் இல்லாமல்).</li>
       <li><b>FPO / KVK / வாங்குபவர்கள்</b> — செயலியில் நீங்கள் ஒப்புதல் தந்த பின் மட்டும். ஒப்புதலை எப்போது வேண்டுமானாலும் திரும்பப் பெறலாம்.</li>
     </ul>
     <p>இந்த நிறுவனங்கள் தரவை இந்தியாவுக்கு வெளியே (அமெரிக்கா உட்பட) சேமிக்கலாம். சந்தை விலை, வானிலை பொது மூலங்களிலிருந்து (Agmarknet, data.gov.in, Open-Meteo) பெறப்படுகிறது; உங்கள் தரவு அவர்களுக்கு அனுப்பப்படுவதில்லை.</p>

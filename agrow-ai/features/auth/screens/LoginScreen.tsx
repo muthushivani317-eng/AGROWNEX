@@ -8,6 +8,8 @@ import { Keyboard, StyleSheet, TextInput, useWindowDimensions, View } from "reac
 
 import { AgButton, AgInput, AgScreen, AgText } from "@/components/ui";
 import { buildProfile, isFirebaseConfigured } from "@/config/env";
+import { PRIVACY_POLICY_URL } from "@/config/legal";
+import { openExternalUrl } from "@/lib/safeLinks";
 
 import { authErrorMessage } from "../authMessages";
 import { AuthErrorBanner } from "../components/AuthErrorBanner";
@@ -28,7 +30,7 @@ const LOGIN_COLORS = {
 };
 
 export function LoginScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const { height } = useWindowDimensions();
   const [keyboardVisible, setKeyboardVisible] = useState(false);
@@ -197,6 +199,22 @@ export function LoginScreen() {
             </AgText>
           </View>
 
+          {/* Notice at collection (DPDP Act): shown before the phone number is sent. */}
+          <AgText variant="caption" center style={styles.legalNotice} testID="login-privacy-notice">
+            {t("auth.consentNotice")}{" "}
+            <AgText
+              variant="caption"
+              weight="semibold"
+              style={styles.legalLink}
+              accessibilityRole="link"
+              onPress={() =>
+                void openExternalUrl(`${PRIVACY_POLICY_URL}?lang=${i18n.language === "ta" ? "ta" : "en"}`)
+              }
+            >
+              {t("settings.privacyPolicy")}
+            </AgText>
+          </AgText>
+
           {!keyboardVisible ? (
             <View style={styles.benefits}>
               <View style={styles.benefit}>
@@ -278,6 +296,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   reassuranceIcon: { marginRight: 8 },
+  legalNotice: { marginTop: 12, color: LOGIN_COLORS.muted, lineHeight: 18 },
+  legalLink: { color: LOGIN_COLORS.primary, textDecorationLine: "underline" },
   benefits: {
     marginTop: 30,
     paddingTop: 22,

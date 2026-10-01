@@ -27,7 +27,7 @@ FAKE_CLAIMS = {
 @pytest.fixture(autouse=True)
 def _stub_firebase(monkeypatch):
     """Bypass real Firebase verification; return fixed claims."""
-    monkeypatch.setattr(service_module, "verify_id_token", lambda _token: FAKE_CLAIMS)
+    monkeypatch.setattr(service_module, "verify_id_token", lambda _token, **_kw: FAKE_CLAIMS)
 
 
 async def test_send_otp_then_throttled(db_session):

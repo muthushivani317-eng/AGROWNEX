@@ -13,6 +13,7 @@ import time
 from functools import lru_cache
 from typing import Any
 
+from app.core.cache import build_cache
 from app.core.config import settings
 from app.core.exceptions import UnauthorizedError
 from app.core.logging import get_logger
@@ -65,10 +66,48 @@ def ensure_firebase_app() -> Any | None:
     return _get_firebase_app()
 
 
-def verify_id_token(token: str) -> dict[str, Any]:
+# Revocation/disabled state per Firebase user, cached briefly. Signature,
+# issuer, audience and expiry are still verified locally on EVERY request; only
+# the network lookup of "was this user revoked/disabled?" is cached, so a
+# revoked farmer loses access within REVOCATION_CACHE_SECONDS. Admin and login
+# paths pass strict_revocation=True and always check live.
+REVOCATION_CACHE_SECONDS = 60
+_revocation_cache = build_cache(namespace="firebase-revocation", ttl_seconds=REVOCATION_CACHE_SECONDS)
+
+
+def _ensure_not_revoked(claims: dict[str, Any], app: Any, *, strict: bool) -> None:
+    from firebase_admin import auth as firebase_auth
+
+    uid = claims.get("uid") or claims.get("sub")
+    state = None if strict else _revocation_cache.get(uid)
+    if state is None:
+        try:
+            user = firebase_auth.get_user(uid, app=app)
+        except Exception as exc:  # noqa: BLE001
+            # The token's signature/expiry are already verified. If only the
+            # revocation lookup is unreachable (Google outage, network blip),
+            # don't sign out every farmer: allow, uncached, and log. Admin and
+            # login paths (strict) still fail closed.
+            if strict or isinstance(exc, getattr(firebase_auth, "UserNotFoundError", ())):
+                raise
+            logger.warning("Revocation lookup unavailable (%s); allowing verified token", type(exc).__name__)
+            return
+        state = {
+            "disabled": bool(user.disabled),
+            "valid_after_ms": user.tokens_valid_after_timestamp or 0,
+        }
+        _revocation_cache.set(uid, state)
+    if state["disabled"]:
+        raise firebase_auth.UserDisabledError("The user record is disabled.")
+    issued_at = claims.get("iat")
+    if not isinstance(issued_at, int | float) or issued_at * 1000 < state["valid_after_ms"]:
+        raise firebase_auth.RevokedIdTokenError("The Firebase ID token has been revoked.")
+
+
+def verify_id_token(token: str, *, strict_revocation: bool = False) -> dict[str, Any]:
     """Verify a Firebase ID token and return its decoded claims.
 
-    Raises UnauthorizedError for missing config or invalid/expired tokens.
+    Raises UnauthorizedError for missing config or invalid/expired/revoked tokens.
     """
     app = _get_firebase_app()
     if app is None:
@@ -80,9 +119,10 @@ def verify_id_token(token: str) -> dict[str, Any]:
         claims = firebase_auth.verify_id_token(
             token,
             app=app,
-            check_revoked=True,
+            check_revoked=False,  # done below, with a short cache
             clock_skew_seconds=30,
         )
+        _ensure_not_revoked(claims, app, strict=strict_revocation)
         # The Firebase emulator deliberately relaxes cryptographic token handling.
         # Retain production-equivalent expiry enforcement in non-production E2E
         # validation so an emulator-only token mutation cannot appear valid.

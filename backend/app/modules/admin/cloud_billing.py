@@ -35,6 +35,16 @@ class CloudSpend:
     gemini_credits_inr: float | None = None
 
 
+def _bigquery_timestamp(value: object) -> datetime:
+    """BigQuery's REST API returns TIMESTAMP as epoch seconds ("1.7907192E9"),
+    not ISO text; accept both (Sentry AGROWAI-BACKEND-5)."""
+    text = str(value)
+    try:
+        return datetime.fromtimestamp(float(text), tz=UTC)
+    except ValueError:
+        return datetime.fromisoformat(text.replace("Z", "+00:00")).astimezone(UTC)
+
+
 class CloudBillingProvider:
     async def current_month_spend(self) -> CloudSpend:
         if not settings.gcp_billing_project_id or not settings.gcp_billing_export_table:
@@ -146,11 +156,7 @@ class CloudBillingProvider:
         spend = float(values[0] or 0) if values else 0.0
         currency = str(values[1]) if len(values) > 1 and values[1] else None
         currency_count = int(values[2] or 0) if len(values) > 2 else 0
-        last_usage = (
-            datetime.fromisoformat(str(values[3]).replace("Z", "+00:00")).astimezone(UTC)
-            if len(values) > 3 and values[3]
-            else None
-        )
+        last_usage = _bigquery_timestamp(values[3]) if len(values) > 3 and values[3] else None
         gross_spend = float(values[4] or 0) if len(values) > 4 else None
         credits = float(values[5] or 0) if len(values) > 5 else None
         gemini_spend = float(values[6] or 0) if len(values) > 6 else None

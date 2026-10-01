@@ -22,7 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import SessionLocal
-from app.core.logging import get_logger
+from app.core.logging import get_logger, init_sentry
 from app.core.metrics import metrics  # noqa: F401  (import warms the registry)
 from app.modules.daily_task.jobs import generate_daily_tasks as _generate_daily_tasks
 from app.modules.daily_task.jobs import send_verification_followups as _send_verification_followups
@@ -51,6 +51,9 @@ async def on_startup(ctx: dict[str, Any]) -> None:
     ``settings`` object, so the same guard now applies to both.
     """
     settings.validate_production()
+    # Report background-job failures (market sync, nightly purge, alerts) the
+    # same way as API errors; sentry-sdk's arq integration captures job errors.
+    init_sentry()
 
 
 async def _run(job: Callable[[AsyncSession], Awaitable[dict]]) -> dict:

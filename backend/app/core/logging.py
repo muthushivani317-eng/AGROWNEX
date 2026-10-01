@@ -79,6 +79,19 @@ def configure_logging() -> None:
     _CONFIGURED = True
 
 
+def _drop_expected_client_errors(event: dict, hint: dict) -> dict | None:
+    """Keep Sentry for real faults: expected 4xx outcomes (wrong OTP, expired
+    login, validation) are normal traffic, not incidents."""
+    exc_info = hint.get("exc_info")
+    if exc_info:
+        from app.core.exceptions import AppError
+
+        exc = exc_info[1]
+        if isinstance(exc, AppError) and getattr(exc, "status_code", 500) < 500:
+            return None
+    return event
+
+
 def init_sentry() -> bool:
     """Initialise Sentry when SENTRY_DSN is set; no-op (and safe) otherwise.
 
@@ -95,6 +108,11 @@ def init_sentry() -> bool:
             environment=settings.environment,
             traces_sample_rate=0.0,
             send_default_pii=False,  # never ship farmer PII to Sentry
+            # Stack-frame locals and request bodies can hold phone numbers,
+            # OTP/ID tokens and farm GPS; keep them out of error reports.
+            include_local_variables=False,
+            max_request_body_size="never",
+            before_send=_drop_expected_client_errors,
         )
         get_logger("observability").info("Sentry initialised")
         return True

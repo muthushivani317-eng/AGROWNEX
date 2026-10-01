@@ -13,6 +13,7 @@ import re
 import uuid
 from datetime import UTC, datetime
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -94,8 +95,15 @@ class ExpertService:
     async def ensure_seeded(self) -> None:
         if await self.repo.count_experts() > 0:
             return
-        for seed in await self.provider.fetch_experts():
-            await self._seed_expert(seed)
+        seeds = await self.provider.fetch_experts()
+        # Parallel first requests across API workers: the loser uses the winner's rows.
+        try:
+            async with self.repo.session.begin_nested():
+                for seed in seeds:
+                    await self._seed_expert(seed)
+        except IntegrityError:
+            logger.info("expert desks already seeded by a parallel request")
+            return
         logger.info("seeded verified expert desks")
 
     async def _seed_expert(self, seed: SeedExpert) -> Expert:

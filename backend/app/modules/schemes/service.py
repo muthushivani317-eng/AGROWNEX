@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import uuid
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -74,8 +75,15 @@ class SchemeService:
         if await self.repo.count() > 0:
             return
         schemes = await self.provider.fetch_schemes()
-        for record in schemes:
-            await self.repo.upsert_scheme(record)
+        # Several API workers can hit an empty table at once; whoever loses the
+        # race simply uses the rows the winner inserted (no 500 for the farmer).
+        try:
+            async with self.repo.session.begin_nested():
+                for record in schemes:
+                    await self.repo.upsert_scheme(record)
+        except IntegrityError:
+            logger.info("schemes already seeded by a parallel request")
+            return
         logger.info("seeded %s verified schemes", len(schemes))
 
     # ----------------------------------------------------------------- #

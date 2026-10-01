@@ -104,7 +104,7 @@ async def get_admin_context(
     cookie = request.cookies.get(settings.admin_session_cookie_name)
     bearer = authorization.startswith("Bearer ")
     if bearer:
-        claims = verify_id_token(authorization[7:])
+        claims = verify_id_token(authorization[7:], strict_revocation=True)
     elif cookie:
         if is_admin_session_revoked(cookie):
             raise UnauthorizedError(

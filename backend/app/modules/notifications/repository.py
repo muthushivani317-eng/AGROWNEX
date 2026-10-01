@@ -11,6 +11,7 @@ from datetime import datetime
 
 from sqlalchemy import Select, exists, func, or_, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.notifications.models import (
@@ -164,9 +165,22 @@ class NotificationRepository:
     async def add_preferences(
         self, preferences: NotificationPreferences
     ) -> NotificationPreferences:
-        self.session.add(preferences)
-        await self.session.flush()
-        return preferences
+        """Insert defaults; if a parallel request already created them, use theirs.
+
+        The app loads several screens at once on first launch, so two requests
+        can race to create the same row (unique per user). Production logged
+        this as a 500 on /notifications/unread.
+        """
+        try:
+            async with self.session.begin_nested():
+                self.session.add(preferences)
+                await self.session.flush()
+            return preferences
+        except IntegrityError:
+            existing = await self.get_preferences(preferences.user_id)
+            if existing is None:
+                raise
+            return existing
 
     # ----------------------------------------------------------------- #
     # Delivery log

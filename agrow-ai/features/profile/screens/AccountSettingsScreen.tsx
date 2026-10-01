@@ -44,7 +44,9 @@ import { AgLanguageToggle } from '@/components/AgLanguageToggle';
 import { AgAvatar, AgChip, AgScreen, AgText } from '@/components/ui';
 import { useAuth, useCloseAccount, useLogout } from '@/features/auth';
 import { useMyPartnerLinks, type PartnerLinkRequest } from '@/features/partnerLinks';
+import { PRIVACY_POLICY_URL } from '@/config/legal';
 import { useAppTheme } from '@/hooks/useAppTheme';
+import { openExternalUrl } from '@/lib/safeLinks';
 import { useThemeStore, type ThemePreference } from '@/stores/themeStore';
 import type { Palette as ThemePalette } from '@/theme';
 import { formatIndianPhone } from '@/utils/format';
@@ -225,8 +227,6 @@ function InfoLine({
     </View>
   );
 }
-
-const PRIVACY_POLICY_URL = 'https://www.agrowai.in/privacy';
 
 const THEME_OPTIONS: { value: ThemePreference; labelKey: string; icon: LucideIcon }[] = [
   { value: 'light', labelKey: 'settings.themeLight', icon: Sun },
@@ -572,7 +572,7 @@ export function AccountSettingsScreen() {
           label={tr('settings.privacyPolicy')}
           description={tr('settings.privacyPolicyDesc')}
           trailing={chevron}
-          onPress={() => void Linking.openURL(`${PRIVACY_POLICY_URL}?lang=${i18n.language === 'ta' ? 'ta' : 'en'}`)}
+          onPress={() => void openExternalUrl(`${PRIVACY_POLICY_URL}?lang=${i18n.language === 'ta' ? 'ta' : 'en'}`)}
           colors={colors}
           t={t}
         />

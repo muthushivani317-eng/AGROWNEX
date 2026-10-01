@@ -142,7 +142,7 @@ async def accept_admin_invitation(
     service: AdminServiceDep,
 ):
     authorization = request.headers.get("authorization", "")
-    claims = verify_id_token(authorization[7:]) if authorization.startswith("Bearer ") else {}
+    claims = verify_id_token(authorization[7:], strict_revocation=True) if authorization.startswith("Bearer ") else {}
     if not claims.get("email_verified"):
         raise UnauthorizedError(
             "A verified work email is required.", error_code="admin_email_unverified"
@@ -201,7 +201,7 @@ async def create_admin_web_session(
     authorization = request.headers.get("authorization", "")
     if not authorization.startswith("Bearer "):
         raise UnauthorizedError("Firebase authentication is required.")
-    claims = verify_id_token(authorization[7:])
+    claims = verify_id_token(authorization[7:], strict_revocation=True)
     require_admin_mfa(claims)
     max_age = settings.admin_session_ttl_hours * 60 * 60
     cookie = create_session_cookie(authorization[7:], expires_in_seconds=max_age)

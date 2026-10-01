@@ -349,7 +349,7 @@ def test_firebase_failure_categories_are_typed(
     }
 
     def reject(*_args, **kwargs):
-        assert kwargs["check_revoked"] is True
+        assert kwargs["check_revoked"] is False  # revocation is checked separately (cached)
         raise exception_types[exception_name]()
 
     fake_auth = SimpleNamespace(

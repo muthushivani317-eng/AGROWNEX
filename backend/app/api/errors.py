@@ -50,6 +50,22 @@ def _envelope(
     )
 
 
+def _is_database_unavailable(exc: BaseException) -> bool:
+    """Connection refused/dropped or connection-pool exhausted."""
+    from sqlalchemy.exc import DisconnectionError, InterfaceError, OperationalError
+    from sqlalchemy.exc import TimeoutError as PoolTimeoutError
+
+    seen = 0
+    while exc is not None and seen < 5:  # walk __cause__ chain (driver errors are wrapped)
+        if isinstance(exc, OperationalError | InterfaceError | DisconnectionError | PoolTimeoutError):
+            return True
+        if isinstance(exc, ConnectionRefusedError | ConnectionResetError):
+            return True
+        exc = exc.__cause__ or exc.__context__
+        seen += 1
+    return False
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(HTTPException)
     async def _http_error(request: Request, exc: HTTPException) -> JSONResponse:
@@ -94,6 +110,17 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(Exception)
     async def _unhandled(request: Request, exc: Exception) -> JSONResponse:
+        if _is_database_unavailable(exc):
+            # Outage, not a bug: tell the app to retry (it shows "try again"),
+            # and keep these distinct from real 500s in monitoring.
+            logger.error("Database unavailable: %s", type(exc).__name__)
+            return _envelope(
+                request,
+                status_code=503,
+                message="Service is temporarily unavailable. Please try again.",
+                error_code="SERVICE_TEMPORARILY_UNAVAILABLE",
+                headers={"Retry-After": "10"},
+            )
         logger.exception("Unhandled error: %s", type(exc).__name__)
         return _envelope(
             request,

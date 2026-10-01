@@ -15,6 +15,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -140,7 +141,7 @@ class AuthService:
     ) -> SessionResult:
         stage = "firebase_token_verification"
         try:
-            claims = verify_id_token(id_token)
+            claims = verify_id_token(id_token, strict_revocation=True)
             stage = "user_lookup_or_create"
             user = await self._get_or_create_from_claims(claims)
             stage = "last_login_update"
@@ -198,8 +199,20 @@ class AuthService:
             is_email_verified=bool(claims.get("email_verified")),
             status=UserStatus.ACTIVE,
         )
-        created = await self.users.add(user)
-        await self._assign_default_role(created.id)
+        # A double-tapped "Verify" (or two first requests) can race to create
+        # the same Firebase user; the loser re-reads the winner's row.
+        try:
+            async with self.session.begin_nested():
+                created = await self.users.add(user)
+                await self._assign_default_role(created.id)
+                await self.session.flush()
+        except IntegrityError:
+            existing = await self.users.get_by_firebase_uid(firebase_uid)
+            if existing is None:
+                raise
+            if existing.status != UserStatus.ACTIVE or existing.deleted_at is not None:
+                raise InvalidRefreshTokenError() from None
+            return existing
         logger.info("Created Firebase-authenticated user")
         return created
 
