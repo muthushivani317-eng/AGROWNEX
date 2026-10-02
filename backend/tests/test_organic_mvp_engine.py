@@ -184,3 +184,71 @@ async def test_saved_checklist_joins_officer_review_queue(db_session):
     assert result["state"] == "pgs_eligibility_review"
     queue = await admin_pgs_review_queue(db_session, context)
     assert [(row["farm_name"], row["items_ticked"]) for row in queue] == [("Queue farm", 1)]
+
+
+@pytest.mark.asyncio
+async def test_farmer_adds_sowing_date_later_and_plan_carries_kvk_approval(db_session):
+    from app.core.exceptions import NotFoundError as _NotFound
+    from app.modules.organic_mvp.router import update_crop_cycle_dates
+    from app.modules.organic_mvp.schemas import CropCycleDatesIn
+
+    owner = User(firebase_uid="organic-dates-owner", status="active")
+    other = User(firebase_uid="organic-dates-other", status="active")
+    db_session.add_all([owner, other])
+    await db_session.flush()
+    farm = Farm(user_id=owner.id, name="Dates farm")
+    db_session.add(farm)
+    await db_session.flush()
+    plot = await add_plot(farm.id, PlotIn(name="West plot"), db_session, owner)
+    cycle = await add_crop_cycle(plot["id"], CropCycleIn(crop_id="paddy"), db_session, owner)
+    assert (await crop_plan(cycle["id"], db_session, owner))["status"] == "needs_sowing_date"
+
+    # Another farmer cannot touch it.
+    with pytest.raises(_NotFound):
+        await update_crop_cycle_dates(cycle["id"], CropCycleDatesIn(sowing_date=date(2026, 10, 1)), db_session, other)
+    # Harvest before sowing is rejected.
+    with pytest.raises(ValidationError):
+        await update_crop_cycle_dates(cycle["id"], CropCycleDatesIn(
+            sowing_date=date(2026, 10, 1), expected_harvest_start=date(2026, 9, 1)), db_session, owner)
+
+    updated = await update_crop_cycle_dates(
+        cycle["id"], CropCycleDatesIn(sowing_date=date(2026, 10, 1)), db_session, owner)
+    assert updated["status"] == "ready"
+    plan = await crop_plan(cycle["id"], db_session, owner)
+    assert plan["status"] == "ready" and plan["tasks"]
+    assert plan["approval"]["approved_by_role"] == "kvk_officer"
+    assert {t["phase"] for t in plan["tasks"]} == {"prep", "growth", "harvest"}
+    # Approval record never carries a person's identity.
+    assert set(plan["approval"]) == {"version", "approved_by_role", "label_en", "label_ta"}
+
+
+@pytest.mark.asyncio
+async def test_farmer_marks_reviewed_task_done_and_it_leaves_today_card(db_session):
+    from app.core.exceptions import NotFoundError as _NotFound
+    from app.modules.organic_mvp.models import OrganicScheduledTask, OrganicTaskTemplate
+    from app.modules.organic_mvp.router import complete_scheduled_task
+
+    owner = User(firebase_uid="organic-done-owner", status="active")
+    other = User(firebase_uid="organic-done-other", status="active")
+    db_session.add_all([owner, other])
+    await db_session.flush()
+    farm = Farm(user_id=owner.id, name="Done farm")
+    db_session.add(farm)
+    await db_session.flush()
+    plot = await add_plot(farm.id, PlotIn(name="East plot"), db_session, owner)
+    cycle = await add_crop_cycle(plot["id"], CropCycleIn(crop_id="paddy", sowing_date=date.today() - timedelta(days=10)), db_session, owner)
+    template = OrganicTaskTemplate(crop_id="paddy", district="Madurai", version="done-v1", tasks=[])
+    db_session.add(template)
+    await db_session.flush()
+    task = OrganicScheduledTask(crop_cycle_id=cycle["id"], template_id=template.id, day_offset=3,
+                                due_on=date.today() - timedelta(days=2), title_ta="பணி", body_ta="விவரம்")
+    db_session.add(task)
+    await db_session.flush()
+    assert [t["id"] for t in (await today_task(farm.id, db_session, owner))["tasks"]] == [str(task.id)]
+
+    with pytest.raises(_NotFound):
+        await complete_scheduled_task(task.id, db_session, other)
+    done = await complete_scheduled_task(task.id, db_session, owner)
+    assert done == {"id": str(task.id), "status": "completed"}
+    assert (await complete_scheduled_task(task.id, db_session, owner))["status"] == "completed"
+    assert (await today_task(farm.id, db_session, owner))["tasks"] == []

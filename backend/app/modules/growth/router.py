@@ -15,12 +15,16 @@ import uuid
 
 from fastapi import APIRouter, HTTPException, Query
 
+from app.modules.farms.repositories import FarmRepository
 from app.modules.growth.dependencies import CurrentUser, GrowthServiceDep, StageTrackingServiceDep
+from app.modules.growth.exceptions import FarmNotFoundError
+from app.modules.growth.schedule_status import schedule_status
 from app.modules.growth.schemas import (
     GrowthImageOut,
     GrowthSessionDetailOut,
     GrowthSessionOut,
     GrowthTimelineOut,
+    ScheduleStatusOut,
     StageStateOut,
     StageTransitionOut,
     StageTransitionRequest,
@@ -136,6 +140,29 @@ async def delete_image(
     """Delete an uploaded growth photo (soft delete)."""
     await service.delete_image(current_user, image_id)
     return success(None, message="Photo deleted")
+
+
+@router.get("/schedule-status", response_model=SuccessResponse[ScheduleStatusOut])
+async def get_schedule_status(
+    current_user: CurrentUser,
+    service: GrowthServiceDep,
+    farm_id: uuid.UUID = Query(...),
+):
+    """Is this farm's crop behind schedule? (overdue organic task or stage lag)."""
+    farm = await FarmRepository(service.session).get_for_user(farm_id, current_user.id)
+    if farm is None:
+        raise FarmNotFoundError()
+    tracked = await service.repo.latest_session(current_user.id, farm_id=farm.id)
+    status = await schedule_status(
+        service.session,
+        user_id=current_user.id,
+        farm_id=farm.id,
+        crop=(tracked.crop if tracked and tracked.crop else farm.crop),
+        sowing_date=(
+            tracked.sowing_date if tracked and tracked.sowing_date else farm.sowing_date
+        ),
+    )
+    return success(ScheduleStatusOut(**status.as_dict()))
 
 
 @router.get("/stage", response_model=SuccessResponse[StageStateOut | None])

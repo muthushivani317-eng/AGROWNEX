@@ -15,6 +15,17 @@ from datetime import date, timedelta
 
 COMMON_PLAN_VERSION = "common-v1"
 
+# Approval record for this exact plan version (Sep 2026). A KVK officer
+# reviewed and approved it; by agreement the officer's identity and contact
+# details are NOT stored anywhere -- only the role. Changing any task text,
+# week or order requires a new version and a new approval.
+COMMON_PLAN_APPROVAL = {
+    "version": COMMON_PLAN_VERSION,
+    "approved_by_role": "kvk_officer",
+    "label_en": "Plan approved by a KVK officer",
+    "label_ta": "இத்திட்டம் KVK அலுவலரால் அங்கீகரிக்கப்பட்டது",
+}
+
 SOWING_WEEK = 6
 DEFAULT_HARVEST_WEEK = 19
 PRE_HARVEST_STOP_DAYS = 14
@@ -134,6 +145,7 @@ def build_common_plan(sowing_date: date, harvest_date: date | None = None) -> li
                 continue
         plan.append({
             "week": task["week"],
+            "phase": task["phase"],
             "due_on": due,
             "title_ta": task["title_ta"], "body_ta": task["body_ta"],
             "title_en": task["title_en"], "body_en": task["body_en"],

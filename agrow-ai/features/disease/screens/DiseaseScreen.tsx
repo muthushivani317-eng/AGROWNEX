@@ -64,6 +64,7 @@ import {
   loadDiseaseRecommendation,
   loadRestrictedDiseaseRecommendation,
 } from "../services/recommendationApi";
+import { useChemicalPolicy } from "@/features/organic/chemicalPolicy";
 import { logger } from "@/lib/logger";
 
 import { QUALITY_ISSUE_KEY } from "../constants";
@@ -124,6 +125,7 @@ export function DiseaseScreen() {
   const { colors } = useAppTheme();
   const { language } = useLanguage();
   const { selected: weatherFarm } = useSelectedFarm();
+  const chemicalPolicy = useChemicalPolicy(weatherFarm?.id);
   const hasCoords =
     weatherFarm?.latitude != null && weatherFarm?.longitude != null;
   const { data: weatherData } = useWeather(
@@ -1293,6 +1295,7 @@ export function DiseaseScreen() {
                   <RecommendationResultCard
                     recommendation={recommendation}
                     language={language === "en" ? "en" : "ta"}
+                    chemicalPolicy={chemicalPolicy}
                   />
                 ) : (
                   <AgCard

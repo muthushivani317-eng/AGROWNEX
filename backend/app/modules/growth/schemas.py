@@ -255,3 +255,14 @@ class StageTransitionOut(BaseModel):
     evidence_snapshot: dict
     expert_reviewed: bool
     created_at: datetime
+
+
+class ScheduleStatusOut(BaseModel):
+    """Growth Monitor "behind schedule" signal (overdue task or stage lag)."""
+
+    behind: bool
+    reasons: list[str]
+    overdue_tasks: int
+    expected_stage: str | None
+    observed_stage: str | None
+    calendar_available: bool

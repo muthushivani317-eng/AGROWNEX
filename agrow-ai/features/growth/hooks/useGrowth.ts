@@ -6,6 +6,7 @@ import { growthKeys } from "../constants";
 import { getGrowthProvider } from "../services/growthProvider";
 import type { UploadGrowthInput } from "../types";
 import {
+  getScheduleStatus,
   getStageHistory,
   getStageState,
   submitStageTransition,
@@ -20,6 +21,16 @@ export function useStageState(
     queryKey: ["growth", "stage", farmId, cropCycleId],
     queryFn: () => getStageState(farmId!, cropCycleId!),
     enabled: Boolean(farmId && cropCycleId),
+  });
+}
+
+/** Is the farm's crop behind schedule? Drives the organic growth boost. */
+export function useGrowthScheduleStatus(farmId?: string | null) {
+  return useQuery({
+    queryKey: ["growth", "scheduleStatus", farmId],
+    queryFn: () => getScheduleStatus(farmId!),
+    enabled: Boolean(farmId),
+    staleTime: 5 * 60 * 1000,
   });
 }
 

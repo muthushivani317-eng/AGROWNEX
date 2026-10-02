@@ -50,6 +50,7 @@ import { TimelineItem } from "../components/TimelineItem";
 import {
   useDeleteGrowthImage,
   useGrowthHistory,
+  useGrowthScheduleStatus,
   useGrowthTimeline,
   useUploadGrowth,
   useStageState,
@@ -85,6 +86,7 @@ export function GrowthMonitorScreen() {
   const farmQuery = useSelectedFarm();
   const { selected: farm } = farmQuery;
   const chemicalPolicy = useChemicalPolicy(farm?.id);
+  const scheduleQuery = useGrowthScheduleStatus(farm?.id);
   const pickLock = useRef(false);
   const mutationLock = useRef(false);
   const refreshLock = useRef(false);
@@ -477,7 +479,13 @@ export function GrowthMonitorScreen() {
         </View>
       )}
 
-      {latestAnalysis ? <GrowthBoostCard analysis={latestAnalysis} chemicalPolicy={chemicalPolicy} /> : null}
+      {latestAnalysis || scheduleQuery.data?.behind ? (
+        <GrowthBoostCard
+          analysis={latestAnalysis ?? null}
+          chemicalPolicy={chemicalPolicy}
+          scheduleStatus={scheduleQuery.data ?? null}
+        />
+      ) : null}
 
       <View style={styles.tabs} accessibilityRole="tablist">
         {VIEWS.map((v) => {

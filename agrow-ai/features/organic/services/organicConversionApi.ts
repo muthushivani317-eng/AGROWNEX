@@ -45,8 +45,13 @@ export interface OrganicCropCycleInput {
   expected_quantity_kg?: number | null;
 }
 
+/** Which stage of the season a common-plan step belongs to. */
+export type OrganicPlanPhase = "prep" | "growth" | "harvest";
+
 export interface OrganicScheduledTask {
   id: string;
+  /** Common plan only: season stage; null for crop-specific plans. */
+  phase?: OrganicPlanPhase | null;
   /** Week number (1 = season start, 6 = sowing) for the common plan; null for crop-specific plans. */
   week: number | null;
   due_on: string;
@@ -64,7 +69,20 @@ export interface OrganicCropCyclePlan {
   source: string;
   notice_ta: string;
   notice_en: string;
+  /** Present for the common plan: who approved this exact version. */
+  approval?: {
+    version: string;
+    approved_by_role: string;
+    label_en: string;
+    label_ta: string;
+  };
   tasks: OrganicScheduledTask[];
+}
+
+export interface OrganicCropCycleDatesInput {
+  sowing_date?: string | null;
+  expected_harvest_start?: string | null;
+  expected_harvest_end?: string | null;
 }
 
 export interface OrganicTodayTask {
@@ -112,6 +130,17 @@ export const organicConversionApi = {
     );
     return res.data;
   },
+  /** Add or correct dates later; the common plan re-dates itself. */
+  async updateCropCycleDates(
+    cycleId: string,
+    input: OrganicCropCycleDatesInput,
+  ): Promise<{ id: string; status: string }> {
+    const res = await httpClient.patch<{ id: string; status: string }>(
+      endpoints.organicMvp.cropCycle(cycleId),
+      input,
+    );
+    return res.data;
+  },
   async getCropCyclePlan(cycleId: string): Promise<OrganicCropCyclePlan> {
     const res = await httpClient.get<OrganicCropCyclePlan>(
       endpoints.organicMvp.cropCyclePlan(cycleId),
@@ -129,4 +158,15 @@ export const organicConversionApi = {
     );
     return res.data;
   },
+
+  /** Mark a reviewed-plan task done (common-plan steps have no stored task). */
+  async completeTask(taskId: string): Promise<{ id: string; status: string }> {
+    const res = await httpClient.post<{ id: string; status: string }>(
+      endpoints.organicMvp.completeTask(taskId),
+    );
+    return res.data;
+  },
 };
+
+/** Common-plan steps are computed per week, not stored, so they can't be marked done. */
+export const isCompletableTask = (taskId: string) => !taskId.startsWith("common:");

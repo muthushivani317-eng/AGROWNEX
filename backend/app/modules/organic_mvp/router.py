@@ -20,6 +20,7 @@ from app.modules.farms.models import Farm
 from app.modules.notifications.models import FutureNotificationQueue
 from app.modules.organic.models import OrganicCertificationDocument, OrganicFarmProfile
 from app.modules.organic_mvp.common_plan import (
+    COMMON_PLAN_APPROVAL,
     COMMON_PLAN_VERSION,
     NOTICE_EN,
     NOTICE_TA,
@@ -49,6 +50,7 @@ from app.modules.organic_mvp.models import (
 from app.modules.organic_mvp.schemas import (
     AppraisalCompleteIn,
     AppraisalIn,
+    CropCycleDatesIn,
     CropCycleIn,
     EnrollIn,
     FpoIn,
@@ -152,6 +154,39 @@ async def add_crop_cycle(plot_id: uuid.UUID, body: CropCycleIn, session: Session
     session.add(cycle)
     await session.commit()
     return {"id": str(cycle.id), "status": "ready" if cycle.sowing_date else "needs_sowing_date"}
+
+
+@router.patch("/crop-cycles/{cycle_id}")
+async def update_crop_cycle_dates(
+    cycle_id: uuid.UUID, body: CropCycleDatesIn, session: Session, user: CurrentUser
+):
+    """Add or correct sowing/harvest dates later (the common plan re-dates itself).
+
+    Blocked once a reviewed crop-specific plan has been activated, because its
+    tasks and reminders were already scheduled from the old dates.
+    """
+    cycle = await session.get(OrganicCropCycle, cycle_id)
+    if cycle is None:
+        raise NotFoundError("Crop cycle not found.")
+    await _plot(session, cycle.plot_id, user.id)
+    activated = await session.scalar(
+        select(OrganicScheduledTask.id).where(OrganicScheduledTask.crop_cycle_id == cycle.id).limit(1)
+    )
+    if activated:
+        raise ConflictError("This crop's reviewed plan is already scheduled; dates can't be changed.")
+    changes = body.model_dump(exclude_unset=True)
+    merged = {
+        "sowing_date": changes.get("sowing_date", cycle.sowing_date),
+        "expected_harvest_start": changes.get("expected_harvest_start", cycle.expected_harvest_start),
+        "expected_harvest_end": changes.get("expected_harvest_end", cycle.expected_harvest_end),
+    }
+    CropCycleDatesIn.check_order(**merged)
+    for key, value in changes.items():
+        setattr(cycle, key, value)
+    await session.commit()
+    return {"id": str(cycle.id), "status": "ready" if cycle.sowing_date else "needs_sowing_date",
+            "sowing_date": cycle.sowing_date, "expected_harvest_start": cycle.expected_harvest_start,
+            "expected_harvest_end": cycle.expected_harvest_end}
 
 
 @router.get("/plots/{plot_id}/crop-cycles")
@@ -282,8 +317,10 @@ async def crop_plan(cycle_id: uuid.UUID, session: Session, user: CurrentUser):
     # No crop-specific plan activated: fall back to the KVK-approved common plan.
     if not cycle.sowing_date:
         return {"status": "needs_sowing_date", "source": COMMON_PLAN_VERSION,
+                "approval": COMMON_PLAN_APPROVAL,
                 "notice_ta": NOTICE_TA, "notice_en": NOTICE_EN, "tasks": []}
     return {"status": "ready", "source": COMMON_PLAN_VERSION,
+            "approval": COMMON_PLAN_APPROVAL,
             "notice_ta": NOTICE_TA, "notice_en": NOTICE_EN,
             "tasks": [_common_task_out(cycle.id, t) for t in
                       build_common_plan(cycle.sowing_date, cycle.expected_harvest_start)]}
@@ -291,8 +328,24 @@ async def crop_plan(cycle_id: uuid.UUID, session: Session, user: CurrentUser):
 
 def _common_task_out(cycle_id: uuid.UUID, task: dict, **extra) -> dict:
     return {"id": f"common:{cycle_id}:{task['week']}", "week": task["week"],
-            "due_on": task["due_on"], "title_ta": task["title_ta"], "body_ta": task["body_ta"],
+            "phase": task.get("phase"), "due_on": task["due_on"], "title_ta": task["title_ta"], "body_ta": task["body_ta"],
             "title_en": task["title_en"], "body_en": task["body_en"], "status": "pending", **extra}
+
+
+@router.post("/scheduled-tasks/{task_id}/complete")
+async def complete_scheduled_task(task_id: uuid.UUID, session: Session, user: CurrentUser):
+    """Farmer marks a reviewed-plan task done. Idempotent; owner-only (404 otherwise)."""
+    task = await session.get(OrganicScheduledTask, task_id)
+    if task is None:
+        raise NotFoundError("Task not found.")
+    cycle = await session.get(OrganicCropCycle, task.crop_cycle_id)
+    if cycle is None:
+        raise NotFoundError("Task not found.")
+    await _plot(session, cycle.plot_id, user.id)
+    if task.status == "pending":
+        task.status = "completed"
+        await session.commit()
+    return {"id": str(task.id), "status": task.status}
 
 
 @router.get("/farms/{farm_id}/today-task")
@@ -301,7 +354,7 @@ async def today_task(farm_id: uuid.UUID, session: Session, user: CurrentUser):
     plans, not just one cycle. Surfaces overdue-but-unresolved tasks too (never
     hides a pending task just because its due date passed), same "don't hide
     unresolved work" principle as daily_task's own cooldown logic. Read-only;
-    marking a task done happens via the logbook, not here (no PATCH at MVP).
+    the farmer marks a task done via POST /scheduled-tasks/{id}/complete.
     """
     await _farm(session, farm_id, user.id)
     today = datetime.now(ZoneInfo("Asia/Kolkata")).date()

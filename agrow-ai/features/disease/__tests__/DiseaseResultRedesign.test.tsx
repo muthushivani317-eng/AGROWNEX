@@ -97,7 +97,7 @@ describe("Disease result redesign", () => {
     expect(JSON.stringify(tree.toJSON())).toContain("Runtime Banana");
   });
 
-  it("renders unchanged chemical state and existing official source links", async () => {
+  it("shows a readable chemical note (never the raw status) and official source links", async () => {
     const open = jest
       .spyOn(Linking, "openURL")
       .mockResolvedValueOnce(true as never);
@@ -137,13 +137,53 @@ describe("Disease result redesign", () => {
     });
     const output = JSON.stringify(tree.toJSON());
     expect(output).toContain("Runtime disease");
-    expect(output).toContain("CHEMICAL_RECOMMENDATION_WITHHELD");
+    expect(output).not.toContain("CHEMICAL_RECOMMENDATION_WITHHELD");
+    expect(output).toContain("disease.chemicalWithheld");
     expect(output).toContain("Runtime screening disclaimer");
     const link = tree.root
       .findAllByProps({ accessibilityLabel: "Runtime official source" })
       .find((node: any) => node.props.onPress);
     await TestRenderer.act(async () => link.props.onPress());
     expect(open).toHaveBeenCalledWith("https://example.gov/source");
+  });
+
+  it("follows the organic chemical policy: category when allowed, hidden during conversion", async () => {
+    const base = {
+      canonical_disease_name_en: "Runtime disease",
+      canonical_disease_name_ta: "நோய்",
+      why_it_occurs_en: [], why_it_occurs_ta: [], symptoms_en: [], symptoms_ta: [],
+      immediate_actions_en: [], immediate_actions_ta: [],
+      cultural_management_en: ["Remove infected leaves"], cultural_management_ta: [],
+      biological_options_en: [], biological_options_ta: [],
+      nutrient_correction_en: [], nutrient_correction_ta: [],
+      prevention_en: [], prevention_ta: [],
+      escalation_conditions_en: [], escalation_conditions_ta: [],
+      chemical_recommendation_status: "CHEMICAL_RECOMMENDATION_WITHHELD",
+      conventional_category_en: "Fungicide category",
+      conventional_category_ta: null,
+      agricultural_disclaimer: "",
+      official_sources: [],
+    };
+    const render = async (chemicalPolicy: string) => {
+      let tree: any;
+      await TestRenderer.act(async () => {
+        tree = TestRenderer.create(
+          React.createElement(RecommendationResultCard, {
+            recommendation: base,
+            language: "en",
+            chemicalPolicy,
+          }),
+        );
+      });
+      return JSON.stringify(tree.toJSON());
+    };
+    const shown = await render("show");
+    expect(shown).toContain("Fungicide category");
+    expect(shown.indexOf("Remove infected leaves")).toBeLessThan(shown.indexOf("Fungicide category"));
+    expect(await render("last_resort")).toContain("organic.chemicalLastResort");
+    const hidden = await render("hide");
+    expect(hidden).not.toContain("Fungicide category");
+    expect(hidden).toContain("organic.chemicalNotAllowed");
   });
 
   it("keeps runtime image handlers and never hardcodes reference confidence or disease values", () => {

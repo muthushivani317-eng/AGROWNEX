@@ -17,6 +17,9 @@ import type {
   StageTransitionInput,
   StageTransitionHistory,
   ApiStageTransitionHistory,
+  GrowthScheduleReason,
+  GrowthScheduleStatus,
+  GrowthStage,
 } from "../types";
 import {
   apiToImage,
@@ -25,6 +28,35 @@ import {
   apiToUploadResult,
   apiToStageState,
 } from "./growthMapper";
+
+type ApiScheduleStatus = {
+  behind: boolean;
+  reasons: string[];
+  overdue_tasks: number;
+  expected_stage: string | null;
+  observed_stage: string | null;
+};
+
+const KNOWN_STAGES: GrowthStage[] = [
+  "germination", "seedling", "vegetative", "flowering", "fruiting", "maturity", "harvest",
+];
+const asStage = (value: string | null): GrowthStage | null =>
+  KNOWN_STAGES.includes(value as GrowthStage) ? (value as GrowthStage) : null;
+
+export async function getScheduleStatus(farmId: string): Promise<GrowthScheduleStatus> {
+  const dto = await api.get<ApiScheduleStatus>(endpoints.growth.scheduleStatus, {
+    params: { farm_id: farmId },
+  });
+  return {
+    behind: dto.behind,
+    reasons: dto.reasons.filter(
+      (r): r is GrowthScheduleReason => r === "overdue_task" || r === "stage_lagging",
+    ),
+    overdueTasks: dto.overdue_tasks,
+    expectedStage: asStage(dto.expected_stage),
+    observedStage: asStage(dto.observed_stage),
+  };
+}
 
 export async function getStageState(
   farmId: string,

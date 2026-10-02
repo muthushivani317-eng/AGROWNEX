@@ -40,14 +40,6 @@ export interface ReadinessResult {
   certification_notice: string;
 }
 
-export interface ReadinessHistoryEntry {
-  id: string;
-  score: number | null;
-  pathway: string;
-  rules_version: string | null;
-  risk_flags: string[];
-}
-
 export const organicReadinessApi = {
   async getQuestions(): Promise<ReadinessQuestionsResponse> {
     const response = await httpClient.get<ReadinessQuestionsResponse>(
@@ -67,10 +59,4 @@ export const organicReadinessApi = {
     return response.data;
   },
 
-  async getHistory(farmId: string): Promise<ReadinessHistoryEntry[]> {
-    const response = await httpClient.get<ReadinessHistoryEntry[]>(
-      endpoints.organicMvp.readiness(farmId),
-    );
-    return response.data;
-  },
 };

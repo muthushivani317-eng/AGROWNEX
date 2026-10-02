@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AgText } from '@/components/ui';
+import type { ChemicalPolicy } from '@/features/organic/chemicalPolicy';
 import { useAppTheme } from '@/hooks/useAppTheme';
 import { openExternalUrl } from '@/lib/safeLinks';
 
@@ -40,6 +41,8 @@ export type DiseaseRecommendation = {
   escalation_conditions_en: string[];
   escalation_conditions_ta: string[];
   chemical_recommendation_status: string;
+  conventional_category_en?: string | null;
+  conventional_category_ta?: string | null;
   agricultural_disclaimer: string;
   official_sources: Array<{ title: string; url: string }>;
 };
@@ -50,9 +53,11 @@ type SectionData = { key: string; title: string; items: string[]; icon: LucideIc
 export function RecommendationResultCard({
   recommendation,
   language,
+  chemicalPolicy = 'show',
 }: {
   recommendation: DiseaseRecommendation;
   language: 'ta' | 'en';
+  chemicalPolicy?: ChemicalPolicy;
 }) {
   const { t } = useTranslation();
   const { colors } = useAppTheme();
@@ -70,6 +75,15 @@ export function RecommendationResultCard({
     { key: 'prevention', title: t('disease.prevention'), items: ta ? recommendation.prevention_ta : recommendation.prevention_en, icon: ShieldCheck },
     { key: 'expert', title: t('disease.whenToSeekExpertHelp'), items: ta ? recommendation.escalation_conditions_ta : recommendation.escalation_conditions_en, icon: Users },
   ].filter((section) => section.items.length > 0);
+  // Organic/cultural/biological sections above come first; the chemical card
+  // is last and follows the farm's organic mode (hidden during conversion).
+  const conventional = (ta
+    ? recommendation.conventional_category_ta
+    : recommendation.conventional_category_en) ?? null;
+  const chemicalText =
+    chemicalPolicy === 'hide'
+      ? t('organic.chemicalNotAllowed')
+      : conventional ?? t('disease.chemicalWithheld');
 
   return (
     <View testID="disease-recommendation-result" style={styles.wrapper}>
@@ -110,8 +124,13 @@ export function RecommendationResultCard({
           <AgText variant="bodyLarge" weight="semibold" style={{ color: colors.warning }}>
             {t('disease.chemicalUse')}
           </AgText>
-          <AgText variant="bodySmall" weight="medium">{recommendation.chemical_recommendation_status}</AgText>
-          <AgText variant="caption" color="muted">{t('disease.verifyOfficialSource').toLocaleUpperCase()}</AgText>
+          <AgText variant="bodySmall" weight="medium">{chemicalText}</AgText>
+          {chemicalPolicy === 'last_resort' ? (
+            <AgText variant="caption" color="muted">{t('organic.chemicalLastResort')}</AgText>
+          ) : null}
+          {chemicalPolicy !== 'hide' ? (
+            <AgText variant="caption" color="muted">{t('disease.verifyOfficialSource').toLocaleUpperCase()}</AgText>
+          ) : null}
         </View>
       </View>
 

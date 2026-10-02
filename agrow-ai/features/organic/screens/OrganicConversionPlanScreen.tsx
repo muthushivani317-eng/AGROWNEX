@@ -11,6 +11,7 @@ import { useRouter } from "expo-router";
 import {
   ArrowLeft,
   ArrowRight,
+  BadgeCheck,
   CalendarDays,
   ChevronDown,
   ChevronUp,
@@ -41,11 +42,39 @@ import {
   useOrganicCropCyclePlan,
   useOrganicCropCycles,
   useOrganicPlots,
+  useUpdateOrganicCropCycleDates,
 } from "../hooks/useOrganicConversion";
 import type {
   OrganicCropCycle,
+  OrganicPlanPhase,
   OrganicPlot,
+  OrganicScheduledTask,
 } from "../services/organicConversionApi";
+
+const PHASE_ORDER: OrganicPlanPhase[] = ["prep", "growth", "harvest"];
+const PHASE_LABEL_KEY: Record<OrganicPlanPhase, string> = {
+  prep: "organic.planPhasePrep",
+  growth: "organic.planPhaseGrowth",
+  harvest: "organic.planPhaseHarvest",
+};
+
+/** Group plan tasks by stage, keeping the server's week order inside each. */
+function groupByPhase(tasks: OrganicScheduledTask[]) {
+  const groups: { phase: OrganicPlanPhase | null; tasks: OrganicScheduledTask[] }[] = [];
+  for (const phase of PHASE_ORDER) {
+    const items = tasks.filter((task) => task.phase === phase);
+    if (items.length) groups.push({ phase, tasks: items });
+  }
+  const rest = tasks.filter(
+    (task) => !task.phase || !PHASE_ORDER.includes(task.phase),
+  );
+  if (rest.length) groups.push({ phase: null, tasks: rest });
+  return groups;
+}
+
+function httpStatus(error: unknown): number | undefined {
+  return (error as { response?: { status?: number } } | null)?.response?.status;
+}
 
 const C = {
   bg: "#F7FAF3",
@@ -337,7 +366,7 @@ function PlotCard({ plot }: { plot: OrganicPlot }) {
       ) : (
         <View style={styles.cycleList}>
           {(cyclesQuery.data ?? []).map((cycle) => (
-            <CropCycleRow key={cycle.id} cycle={cycle} />
+            <CropCycleRow key={cycle.id} cycle={cycle} plotId={plot.id} />
           ))}
         </View>
       )}
@@ -448,11 +477,33 @@ function PlotCard({ plot }: { plot: OrganicPlot }) {
   );
 }
 
-function CropCycleRow({ cycle }: { cycle: OrganicCropCycle }) {
+function CropCycleRow({
+  cycle,
+  plotId,
+}: {
+  cycle: OrganicCropCycle;
+  plotId: string;
+}) {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const planQuery = useOrganicCropCyclePlan(expanded ? cycle.id : null);
+  const updateDates = useUpdateOrganicCropCycleDates(plotId, cycle.id);
+  const [sowingDate, setSowingDate] = useState("");
+  const [harvestStart, setHarvestStart] = useState("");
+
+  const saveDates = () => {
+    if (!sowingDate) return;
+    updateDates.mutate({
+      sowing_date: sowingDate,
+      expected_harvest_start: harvestStart || null,
+    });
+  };
+  const datesError = updateDates.isError
+    ? httpStatus(updateDates.error) === 409
+      ? t("organic.planDatesLocked")
+      : t("organic.planDatesSaveError")
+    : null;
 
   return (
     <View style={styles.cycleRow}>
@@ -494,11 +545,46 @@ function CropCycleRow({ cycle }: { cycle: OrganicCropCycle }) {
             />
           ) : planQuery.data?.status !== "ready" ||
             !planQuery.data.tasks.length ? (
-            <View style={styles.awaitingPlan}>
-              <CalendarDays size={22} color={C.orange} />
-              <AgText style={styles.awaitingText}>
-                {t("organic.planNeedsSowingDate")}
-              </AgText>
+            <View style={styles.datesForm}>
+              <View style={styles.awaitingPlan}>
+                <CalendarDays size={22} color={C.orange} />
+                <AgText style={styles.awaitingText}>
+                  {t("organic.planNeedsSowingDate")}
+                </AgText>
+              </View>
+              <AgDatePicker
+                label={t("organic.sowingDate")}
+                placeholder="YYYY-MM-DD"
+                value={sowingDate}
+                onChange={setSowingDate}
+                leftAccessory={
+                  <CalendarDays size={24} color={C.green} strokeWidth={2.1} />
+                }
+                fieldStyle={styles.dateField}
+                textStyle={styles.dateText}
+                labelStyle={styles.fieldLabel}
+              />
+              <AgDatePicker
+                label={t("organic.harvestStart")}
+                placeholder="YYYY-MM-DD"
+                value={harvestStart}
+                onChange={setHarvestStart}
+                leftAccessory={
+                  <CalendarDays size={24} color={C.green} strokeWidth={2.1} />
+                }
+                fieldStyle={styles.dateField}
+                textStyle={styles.dateText}
+                labelStyle={styles.fieldLabel}
+              />
+              {datesError ? (
+                <AgText style={styles.datesError}>{datesError}</AgText>
+              ) : null}
+              <SaveButton
+                title={t("organic.showMyPlan")}
+                onPress={saveDates}
+                loading={updateDates.isPending}
+                disabled={!sowingDate}
+              />
             </View>
           ) : (
             <>
@@ -507,26 +593,45 @@ function CropCycleRow({ cycle }: { cycle: OrganicCropCycle }) {
                   ? planQuery.data.notice_ta
                   : planQuery.data.notice_en}
               </AgText>
-              {planQuery.data.tasks.map((task) => (
-                <View key={task.id} style={styles.taskRow}>
-                  <View style={styles.taskHeading}>
-                    <AgText weight="semibold" style={styles.taskTitle}>
-                      {language === "ta"
-                        ? task.title_ta
-                        : (task.title_en ?? task.title_ta)}
-                    </AgText>
-                    <AgBadge label={task.due_on} tone="neutral" />
-                  </View>
-                  {task.week != null ? (
-                    <AgText weight="semibold" style={styles.taskWeek}>
-                      {t("organic.planWeek", { week: task.week })}
+              {planQuery.data.approval ? (
+                <View style={styles.approvalRow}>
+                  <BadgeCheck size={18} color={C.green} />
+                  <AgText weight="semibold" style={styles.approvalText}>
+                    {language === "ta"
+                      ? planQuery.data.approval.label_ta
+                      : planQuery.data.approval.label_en}
+                  </AgText>
+                </View>
+              ) : null}
+              {groupByPhase(planQuery.data.tasks).map((group) => (
+                <View key={group.phase ?? "other"} style={styles.phaseGroup}>
+                  {group.phase ? (
+                    <AgText weight="bold" style={styles.phaseTitle}>
+                      {t(PHASE_LABEL_KEY[group.phase])}
                     </AgText>
                   ) : null}
-                  <AgText style={styles.taskBody}>
-                    {language === "ta"
-                      ? task.body_ta
-                      : (task.body_en ?? task.body_ta)}
-                  </AgText>
+                  {group.tasks.map((task) => (
+                    <View key={task.id} style={styles.taskRow}>
+                      <View style={styles.taskHeading}>
+                        <AgText weight="semibold" style={styles.taskTitle}>
+                          {language === "ta"
+                            ? task.title_ta
+                            : (task.title_en ?? task.title_ta)}
+                        </AgText>
+                        <AgBadge label={task.due_on} tone="neutral" />
+                      </View>
+                      {task.week != null ? (
+                        <AgText weight="semibold" style={styles.taskWeek}>
+                          {t("organic.planWeek", { week: task.week })}
+                        </AgText>
+                      ) : null}
+                      <AgText style={styles.taskBody}>
+                        {language === "ta"
+                          ? task.body_ta
+                          : (task.body_en ?? task.body_ta)}
+                      </AgText>
+                    </View>
+                  ))}
                 </View>
               ))}
             </>
@@ -795,6 +900,17 @@ const styles = StyleSheet.create({
     gap: 9,
     backgroundColor: C.orangeSoft,
   },
+  datesForm: { gap: 14 },
+  datesError: { color: "#B42318", fontSize: 14, lineHeight: 20 },
+  approvalRow: {
+    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  approvalText: { flex: 1, color: C.green, fontSize: 14, lineHeight: 20 },
+  phaseGroup: { marginTop: 12 },
+  phaseTitle: { color: C.text, fontSize: 16, lineHeight: 22 },
   awaitingText: { flex: 1, color: C.orange, fontSize: 14, lineHeight: 20 },
   taskRow: {
     marginTop: 8,

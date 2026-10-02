@@ -37,6 +37,23 @@ class PlotIn(BaseModel):
     boundary_geojson: dict | None = None
 
 
+class CropCycleDatesIn(BaseModel):
+    """Partial update of a crop cycle's dates (only sent fields change)."""
+
+    sowing_date: date | None = None
+    expected_harvest_start: date | None = None
+    expected_harvest_end: date | None = None
+
+    @staticmethod
+    def check_order(*, sowing_date, expected_harvest_start, expected_harvest_end) -> None:
+        from app.core.exceptions import ValidationError
+
+        if expected_harvest_start and expected_harvest_end and expected_harvest_start > expected_harvest_end:
+            raise ValidationError("Harvest end must follow harvest start.")
+        if sowing_date and expected_harvest_start and sowing_date > expected_harvest_start:
+            raise ValidationError("Harvest must follow sowing.")
+
+
 class CropCycleIn(BaseModel):
     crop_id: str = Field(min_length=1, max_length=80)
     sowing_date: date | None = None

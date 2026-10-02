@@ -1185,6 +1185,7 @@ export const en = {
     nutrientGuidance: "Nutrient guidance",
     whenToSeekExpertHelp: "When to seek expert help",
     chemicalUse: "Chemical use",
+    chemicalWithheld: "No chemical is suggested for this disease here. Ask your KVK or agriculture officer before spraying.",
     officialSources: "Official sources",
     titleDisease: "Disease",
     titleDetection: "Detection",
@@ -2628,6 +2629,10 @@ export const en = {
     boost: {
       title: "Boost your crop's growth",
       organicLabel: "Organic (recommended):",
+      behindTitle: "Your crop is behind schedule",
+      behindOverdue_one: "{{count}} organic task is overdue — finish it first.",
+      behindOverdue_other: "{{count}} organic tasks are overdue — finish them first.",
+      behindStage: "Crop looks {{observed}}, but by its age it should be {{expected}}. Give it the organic boost below.",
       chemicalLabel: "Chemical option:",
       notice:
         "Verify with official sources (KVK or Agriculture Department) before applying anything.",
@@ -3816,7 +3821,7 @@ export const en = {
         },
         medium: {
           title: "Moderate nitrogen",
-          body: "Apply nitrogen in split doses as per your crop’s need; avoid over-application.",
+          body: "Keep adding compost or green manure first. If more nitrogen is needed, apply it in split doses as per your crop’s need; avoid over-application.",
         },
         high: {
           title: "Sufficient nitrogen",
@@ -3826,11 +3831,11 @@ export const en = {
       phosphorus: {
         low: {
           title: "Low phosphorus",
-          body: "Apply a phosphorus source as advised by a soil test; adding organic matter and correcting acidity improves phosphorus availability.",
+          body: "Add compost enriched with rock phosphate or bone meal first; adding organic matter and correcting acidity frees more phosphorus. Use a phosphorus fertiliser only at the dose your soil test advises.",
         },
         medium: {
           title: "Moderate phosphorus",
-          body: "Apply phosphorus as per your crop’s recommendation to keep levels adequate.",
+          body: "Keep adding compost or farmyard manure; apply phosphorus only as per your crop’s recommendation.",
         },
         high: {
           title: "Sufficient phosphorus",
@@ -3840,11 +3845,11 @@ export const en = {
       potassium: {
         low: {
           title: "Low potassium",
-          body: "Apply a potassium source as advised by a soil test, recycle crop residue, and in sandy soils split the dose to reduce leaching.",
+          body: "Recycle crop residue and add compost or farmyard manure first. Use a potassium fertiliser only at the dose your soil test advises; in sandy soils split it to reduce leaching.",
         },
         medium: {
           title: "Moderate potassium",
-          body: "Apply potassium as per your crop’s recommendation to maintain levels.",
+          body: "Recycle crop residue and add compost; apply potassium only as per your crop’s recommendation.",
         },
         high: {
           title: "Sufficient potassium",
@@ -3854,7 +3859,7 @@ export const en = {
       micronutrient: {
         deficient: {
           title: "Micronutrient deficiency",
-          body: "A micronutrient is low. Correct it as advised by a soil test; a foliar spray can address the deficiency quickly.",
+          body: "A micronutrient is low. Regular compost or farmyard manure builds micronutrients over time; for a quick fix, use the foliar spray your soil test advises.",
         },
       },
       general: {
@@ -4412,7 +4417,7 @@ export const en = {
       nitrogen: {
         deficiency: {
           title: "Nitrogen deficiency",
-          body: "Older leaves yellowing evenly suggests low nitrogen. Top-dress a nitrogen source in split doses as per local guidance and re-check in 1–2 weeks.",
+          body: "Older leaves yellowing evenly suggests low nitrogen. Add nitrogen in small split doses — try the organic way first — and re-check in 1–2 weeks.",
           organicTip:
             "Well-rotted farmyard manure, vermicompost, or a green-manure crop (dhaincha, sunhemp) worked into the soil before sowing builds up nitrogen naturally; neem cake also helps release it slowly.",
           chemicalTip:
@@ -4921,12 +4926,12 @@ export const en = {
       address_nitrogen: {
         title: "Address low nitrogen",
         message:
-          "Soil and leaf signs agree on low nitrogen. Apply a nitrogen source per your plan.",
+          "Soil and leaf signs agree on low nitrogen. Start with an organic source (vermicompost, neem cake, green manure); use a chemical one only if needed.",
       },
       address_nutrient: {
         title: "Address the nutrient gap",
         message:
-          "Correct the identified nutrient deficiency with a generic source.",
+          "Correct the nutrient gap — organic way first. Open Nutrient Check for both options.",
       },
       check_irrigation: {
         title: "Check irrigation",
@@ -5708,6 +5713,15 @@ export const en = {
     planLoadError: "Unable to load the schedule.",
     planNeedsSowingDate: "Add a sowing date to see your week-by-week plan.",
     planWeek: "Week {{week}}",
+    taskMarkDone: "Mark as done",
+    taskMarkingDone: "Saving…",
+    taskMarkDoneError: "Couldn't save. Please try again.",
+    planPhasePrep: "Land preparation",
+    planPhaseGrowth: "Crop growth",
+    planPhaseHarvest: "Harvest",
+    showMyPlan: "Show my plan",
+    planDatesLocked: "Dates can't be changed after your reviewed plan is scheduled.",
+    planDatesSaveError: "Couldn't save the dates. Please try again.",
     todayTaskTitle: "Today's Organic Task",
     todayTaskLoadError: "Unable to load today's task.",
     todayTaskEmpty: "No organic task due today.",

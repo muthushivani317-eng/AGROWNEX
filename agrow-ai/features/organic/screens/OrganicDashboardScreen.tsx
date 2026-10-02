@@ -27,7 +27,8 @@ import { AuthLanguageSelector } from '@/features/auth/components/AuthLanguageSel
 import { useLanguage } from '@/hooks/useLanguage';
 
 import { useOrganicPractices, useOrganicProfile } from '../hooks/useOrganic';
-import { useOrganicTodayTask } from '../hooks/useOrganicConversion';
+import { useCompleteOrganicTask, useOrganicTodayTask } from '../hooks/useOrganicConversion';
+import { isCompletableTask } from '../services/organicConversionApi';
 import { useOrganicPlan } from '../hooks/useOrganicPlan';
 import type { OrganicPlanKind } from '../integrationTypes';
 import { buildOrganicDashboard } from '../organicExperience';
@@ -168,6 +169,7 @@ export function OrganicDashboardScreen({ farmId }: { farmId: string }) {
   const practices = useOrganicPractices(farmId);
   const plan = useOrganicPlan(farmId);
   const todayTask = useOrganicTodayTask(farmId);
+  const completeTask = useCompleteOrganicTask(farmId);
   const widgets = buildOrganicDashboard(plan.data?.actions ?? []);
   const firstTask = todayTask.data?.tasks[0];
   const compact = width < 420;
@@ -264,6 +266,26 @@ export function OrganicDashboardScreen({ farmId }: { farmId: string }) {
             <AgText variant="bodySmall" style={styles.todayBody}>
               {taskBody}
             </AgText>
+            {isCompletableTask(firstTask.id) ? (
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityState={{ disabled: completeTask.isPending }}
+                disabled={completeTask.isPending}
+                onPress={() => completeTask.mutate(firstTask.id)}
+                activeOpacity={0.76}
+                style={[styles.todayAction, styles.todayDone]}
+              >
+                <CalendarCheck size={18} color="#FFFFFF" />
+                <AgText variant="bodySmall" weight="semibold" style={styles.todayDoneText}>
+                  {t(completeTask.isPending ? 'organic.taskMarkingDone' : 'organic.taskMarkDone')}
+                </AgText>
+              </TouchableOpacity>
+            ) : null}
+            {completeTask.isError ? (
+              <AgText variant="caption" style={styles.todayError}>
+                {t('organic.taskMarkDoneError')}
+              </AgText>
+            ) : null}
             <TouchableOpacity
               accessibilityRole="button"
               onPress={() => router.push(`/organic/conversion-plan?farmId=${farmId}` as never)}
@@ -463,6 +485,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   todayActionText: { color: ORGANIC.green },
+  todayDone: {
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: ORGANIC.green,
+  },
+  todayDoneText: { color: '#FFFFFF' },
+  todayError: { marginTop: 6, color: '#B42318' },
   featureCard: {
     minHeight: 120,
     marginBottom: 16,

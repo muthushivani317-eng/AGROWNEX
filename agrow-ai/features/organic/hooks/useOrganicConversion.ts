@@ -3,6 +3,7 @@ import { queryClient } from '@/lib/queryClient';
 import { organicKeys } from '../constants';
 import {
   organicConversionApi,
+  type OrganicCropCycleDatesInput,
   type OrganicCropCycleInput,
   type OrganicPlotInput,
 } from '../services/organicConversionApi';
@@ -42,11 +43,35 @@ export function useCreateOrganicCropCycle(plotId: string) {
   });
 }
 
+export function useUpdateOrganicCropCycleDates(plotId: string, cycleId: string) {
+  return useMutation({
+    mutationFn: (input: OrganicCropCycleDatesInput) =>
+      organicConversionApi.updateCropCycleDates(cycleId, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: organicKeys.cropCycles(plotId) });
+      void queryClient.invalidateQueries({ queryKey: organicKeys.cropCyclePlan(cycleId) });
+      // Today's task card on the dashboard depends on the dates too.
+      void queryClient.invalidateQueries({ queryKey: ['organic', 'todayTask'] });
+    },
+  });
+}
+
 export function useOrganicCropCyclePlan(cycleId: string | null) {
   return useQuery({
     queryKey: organicKeys.cropCyclePlan(cycleId ?? 'none'),
     queryFn: () => organicConversionApi.getCropCyclePlan(cycleId as string),
     enabled: Boolean(cycleId),
+  });
+}
+
+export function useCompleteOrganicTask(farmId: string) {
+  return useMutation({
+    mutationFn: (taskId: string) => organicConversionApi.completeTask(taskId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: organicKeys.todayTask(farmId) });
+      // Clears the Growth Monitor "behind schedule" (overdue task) signal.
+      void queryClient.invalidateQueries({ queryKey: ['growth', 'scheduleStatus', farmId] });
+    },
   });
 }
 

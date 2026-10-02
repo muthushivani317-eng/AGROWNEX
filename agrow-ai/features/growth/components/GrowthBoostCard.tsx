@@ -1,11 +1,12 @@
-import { FlaskConical, Leaf, Sprout } from "lucide-react-native";
+import { FlaskConical, Leaf, Sprout, TriangleAlert } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import type { ChemicalPolicy } from "@/features/organic/chemicalPolicy";
 import { StyleSheet, View } from "react-native";
 
 import { AgText } from "@/components/ui";
 
-import type { GrowthAnalysis, GrowthStage } from "../types";
+import { STAGE_LABEL_KEY } from "../constants";
+import type { GrowthAnalysis, GrowthScheduleStatus, GrowthStage } from "../types";
 
 /** Stages that get a growth boost; maturity/harvest only get a "stop" note. */
 const BOOST_STAGES: Partial<Record<GrowthStage, string>> = {
@@ -25,6 +26,8 @@ const C = {
   muted: "#536158",
   primary: "#176B36",
   pale: "#E8F3E5",
+  amber: "#9A5B00",
+  amberSoft: "#FFF4E0",
 } as const;
 
 /**
@@ -35,15 +38,40 @@ const C = {
 export function GrowthBoostCard({
   analysis,
   chemicalPolicy = "show",
+  scheduleStatus = null,
 }: {
-  analysis: GrowthAnalysis;
+  analysis: GrowthAnalysis | null;
   /** Farm's organic mode decides whether the chemical option is shown. */
   chemicalPolicy?: ChemicalPolicy;
+  /** Behind schedule → organic boost leads the card. */
+  scheduleStatus?: GrowthScheduleStatus | null;
 }) {
   const { t } = useTranslation();
-  const group = BOOST_STAGES[analysis.growthStage];
-  if (!group && analysis.recommendations.length === 0) return null;
+  const behind = Boolean(scheduleStatus?.behind);
+  const stage =
+    analysis && BOOST_STAGES[analysis.growthStage]
+      ? analysis.growthStage
+      : behind
+        ? (scheduleStatus?.observedStage ?? scheduleStatus?.expectedStage ?? null)
+        : null;
+  const group = stage ? BOOST_STAGES[stage] : undefined;
+  const tips = analysis?.recommendations ?? [];
+  if (!group && tips.length === 0 && !behind) return null;
   const late = group === "late";
+  const stageLabel = (value: GrowthStage | null | undefined) =>
+    value ? t(STAGE_LABEL_KEY[value]) : "";
+
+  const organicBlock = group ? (
+    <View style={[styles.organic, behind && styles.organicLead]}>
+      <Leaf size={15} color={C.primary} />
+      <AgText variant="bodySmall" style={styles.ink}>
+        <AgText variant="bodySmall" weight="semibold" style={styles.ink}>
+          {t("growth.boost.organicLabel")}{" "}
+        </AgText>
+        {t(`growth.boost.${group}.organic`)}
+      </AgText>
+    </View>
+  ) : null;
 
   return (
     <View style={styles.card}>
@@ -54,24 +82,40 @@ export function GrowthBoostCard({
         </AgText>
       </View>
 
-      {analysis.recommendations.map((tip) => (
+      {behind && scheduleStatus ? (
+        <View style={styles.behind} accessibilityRole="alert">
+          <TriangleAlert size={16} color={C.amber} />
+          <View style={styles.behindCopy}>
+            <AgText variant="bodySmall" weight="bold" style={styles.amber}>
+              {t("growth.boost.behindTitle")}
+            </AgText>
+            {scheduleStatus.reasons.includes("overdue_task") ? (
+              <AgText variant="caption" style={styles.amber}>
+                {t("growth.boost.behindOverdue", { count: scheduleStatus.overdueTasks })}
+              </AgText>
+            ) : null}
+            {scheduleStatus.reasons.includes("stage_lagging") ? (
+              <AgText variant="caption" style={styles.amber}>
+                {t("growth.boost.behindStage", {
+                  observed: stageLabel(scheduleStatus.observedStage),
+                  expected: stageLabel(scheduleStatus.expectedStage),
+                })}
+              </AgText>
+            ) : null}
+          </View>
+        </View>
+      ) : null}
+
+      {behind ? organicBlock : null}
+
+      {tips.map((tip) => (
         <AgText key={tip} variant="bodySmall" style={styles.muted}>
           {"• "}
           {tip}
         </AgText>
       ))}
 
-      {group ? (
-        <View style={styles.organic}>
-          <Leaf size={15} color={C.primary} />
-          <AgText variant="bodySmall" style={styles.ink}>
-            <AgText variant="bodySmall" weight="semibold" style={styles.ink}>
-              {t("growth.boost.organicLabel")}{" "}
-            </AgText>
-            {t(`growth.boost.${group}.organic`)}
-          </AgText>
-        </View>
-      ) : null}
+      {behind ? null : organicBlock}
 
       {group && !late && chemicalPolicy !== "hide" ? (
         <View style={styles.chemical}>
@@ -101,6 +145,16 @@ export function GrowthBoostCard({
 }
 
 const styles = StyleSheet.create({
+  behind: {
+    flexDirection: "row",
+    gap: 8,
+    padding: 10,
+    borderRadius: 12,
+    backgroundColor: C.amberSoft,
+  },
+  behindCopy: { flex: 1, gap: 2 },
+  amber: { color: C.amber },
+  organicLead: { borderWidth: 1.5, borderColor: C.primary },
   card: {
     marginBottom: 16,
     padding: 15,

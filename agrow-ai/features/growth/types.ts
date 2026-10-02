@@ -282,3 +282,14 @@ export interface ApiUploadResult {
   image: ApiGrowthImage;
   timeline_entry: ApiTimelineEntry;
 }
+
+/** "Behind schedule" = an overdue organic task OR stage lagging the crop calendar. */
+export type GrowthScheduleReason = "overdue_task" | "stage_lagging";
+
+export interface GrowthScheduleStatus {
+  behind: boolean;
+  reasons: GrowthScheduleReason[];
+  overdueTasks: number;
+  expectedStage: GrowthStage | null;
+  observedStage: GrowthStage | null;
+}

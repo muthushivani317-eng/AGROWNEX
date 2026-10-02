@@ -22,10 +22,3 @@ export function useSubmitOrganicReadiness(farmId: string) {
       }),
   });
 }
-
-export function useOrganicReadinessHistory(farmId: string) {
-  return useQuery({
-    queryKey: organicKeys.readinessHistory(farmId),
-    queryFn: () => organicReadinessApi.getHistory(farmId),
-  });
-}
