@@ -14,6 +14,10 @@ ACCEPTED = {
     # the APK); the fix needs a Metro major upgrade. Review: 2026-11.
     "https://github.com/advisories/GHSA-5p2g-fcmc-qvqq": "build-time only (metro)",
     "https://github.com/advisories/GHSA-w3rx-r6r6-pgpr": "build-time only (metro)",
+    # node-forge <=1.4.0 (no fixed release yet) is pulled only by @expo/cli for
+    # EAS update code signing, which this app does not enable; never bundled
+    # into the APK. Re-check when node-forge ships a fix. Review: 2026-11.
+    "https://github.com/advisories/GHSA-86w9-cpqp-85rv": "build-time only (expo cli)",
 }
 BLOCKING = {"high", "critical"}
 
