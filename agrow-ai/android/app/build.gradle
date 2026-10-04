@@ -97,7 +97,7 @@ android {
 
     namespace 'com.agrowai.app'
     defaultConfig {
-        applicationId 'com.agrowai.app'
+        applicationId 'com.agrownex.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 20

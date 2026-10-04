@@ -9,7 +9,7 @@ Before a real-device pilot, an authorized Firebase administrator must:
 
 1. Enable **Authentication > Sign-in method > Phone**.
 2. Allow India in **Authentication > Settings > SMS region policy**.
-3. Confirm Android package `com.agrowai.app` in project `agrow-ai-8ba58`.
+3. Confirm Android package `com.agrownex.app` in project `agrow-ai-8ba58`.
 4. Register SHA-256 for Play Integrity and SHA-1 for reCAPTCHA fallback.
 5. Link the required Cloud Billing account and confirm the current SMS plan/quota.
 6. Download a fresh `google-services.json` if Firebase indicates configuration changed.

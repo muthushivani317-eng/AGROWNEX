@@ -4,7 +4,7 @@ const { spawnSync } = require('node:child_process');
 const { loadPublicEnvironment, validateBuildEnvironment } = require('./validate-release-env');
 
 const PROJECT_ROOT = path.resolve(__dirname, '..');
-const EXPECTED_PACKAGE = 'com.agrowai.app';
+const EXPECTED_PACKAGE = 'com.agrownex.app';
 const EXPECTED_FIREBASE_PROJECT = 'agrow-ai-8ba58';
 const RELEASE_PROFILES = new Set(['internal_testing', 'kvk_field_test', 'production']);
 const REQUIRED_FLAGS_BY_PROFILE = Object.freeze({

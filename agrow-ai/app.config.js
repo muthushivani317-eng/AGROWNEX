@@ -22,18 +22,18 @@ module.exports = {
     newArchEnabled: true,
     ios: {
       supportsTablet: true,
-      bundleIdentifier: "com.agrowai.app",
+      bundleIdentifier: "com.agrownex.app",
       infoPlist: {
         NSLocationWhenInUseUsageDescription:
-          "AgrowAI uses your location to show local weather, market prices, and to locate your farms.",
+          "AgrowNex uses your location to show local weather, market prices, and to locate your farms.",
         NSCameraUsageDescription:
-          "AgrowAI uses the camera to scan crops for disease detection.",
+          "AgrowNex uses the camera to scan crops for disease detection.",
         NSPhotoLibraryUsageDescription:
-          "AgrowAI needs access to your photos to upload crop and produce images.",
+          "AgrowNex needs access to your photos to upload crop and produce images.",
       },
     },
     android: {
-      package: "com.agrowai.app",
+      package: "com.agrownex.app",
       softwareKeyboardLayoutMode: "resize",
       allowBackup: false,
       googleServicesFile:
@@ -92,23 +92,23 @@ module.exports = {
         "expo-location",
         {
           locationWhenInUsePermission:
-            "AgrowAI uses your location to show local weather, market prices, and to locate your farms.",
+            "AgrowNex uses your location to show local weather, market prices, and to locate your farms.",
         },
       ],
       [
         "expo-image-picker",
         {
           photosPermission:
-            "AgrowAI needs access to your photos to upload crop and produce images.",
+            "AgrowNex needs access to your photos to upload crop and produce images.",
           cameraPermission:
-            "AgrowAI uses the camera to scan crops for disease detection.",
+            "AgrowNex uses the camera to scan crops for disease detection.",
         },
       ],
       [
         "expo-audio",
         {
           microphonePermission:
-            "AgrowAI uses your microphone to record short voice notes about your farm tasks.",
+            "AgrowNex uses your microphone to record short voice notes about your farm tasks.",
           enableBackgroundPlayback: false,
         },
       ],

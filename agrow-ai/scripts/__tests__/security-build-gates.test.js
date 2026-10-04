@@ -41,7 +41,7 @@ describe('security build gates', () => {
 
   it('accepts production APK metadata only when internal testing is disabled', () => {
     expect(() => validateEmbeddedReleaseConfig({
-      android: { package: 'com.agrowai.app' },
+      android: { package: 'com.agrownex.app' },
       extra: {
         releaseChannel: 'production',
         internalTesting: {
@@ -57,7 +57,7 @@ describe('security build gates', () => {
 
   it('rejects internal-testing capabilities in production APK metadata', () => {
     expect(() => validateEmbeddedReleaseConfig({
-      android: { package: 'com.agrowai.app' },
+      android: { package: 'com.agrownex.app' },
       extra: {
         releaseChannel: 'production',
         internalTesting: { enabled: true },

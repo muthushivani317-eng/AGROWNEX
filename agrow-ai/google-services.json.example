@@ -2,7 +2,7 @@
   "_comment": [
     "PLACEHOLDER TEMPLATE — this is NOT a working config.",
     "Download the real google-services.json from Firebase Console -> Project",
-    "Settings -> your Android app (package com.agrowai.app) and save it next to",
+    "Settings -> your Android app (package com.agrownex.app) and save it next to",
     "app.json as `google-services.json` (the real file is git-ignored).",
     "The values below only show the expected shape; project_number/project_id",
     "match the existing AgrowAI Firebase project for convenience."
@@ -17,7 +17,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:261385790274:android:REPLACE_WITH_REAL_ANDROID_APP_ID",
         "android_client_info": {
-          "package_name": "com.agrowai.app"
+          "package_name": "com.agrownex.app"
         }
       },
       "oauth_client": [],
