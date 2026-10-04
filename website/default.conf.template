@@ -14,7 +14,7 @@ server {
     add_header Cross-Origin-Opener-Policy "same-origin" always;
     # Inline script/handlers in index.html are pinned by hash: editing them
     # requires updating these hashes (see website/README or the CSP test).
-    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-hashes' 'sha256-3XdtjpKbDsWBSpnMkJQKEe3mMybEgJoYjnjHxb5+nPI=' 'sha256-tQ7AJlDDZqMCHb1qhGAkrv57jT+SrZKow7CLztcgh9g=' 'sha256-gvVzeGmq9AXgaSXayGpJt+4o0eBRsJ40WjZzDtkQJrQ='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests" always;
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests" always;
 
     location = /privacy        { try_files /privacy.html =404; }
     location = /delete-account { try_files /delete-account.html =404; }
