@@ -24,16 +24,16 @@
 
 <header class="site-header">
   <div class="wrap">
-    <a class="brand" href="#top" aria-label="AgrowNex home">
-      <img src="assets/img/emblem-128.png" alt="" width="40" height="40">
+    <a class="brand" href="/" aria-label="AgrowNex home">
+      <img src="/assets/img/emblem-128.png" alt="" width="40" height="40">
       <b>Agrow<span>Nex</span></b>
     </a>
     <nav class="nav" id="nav" aria-label="Main">
-      <a href="#check"><span lang="ta">நோய் பரிசோதனை</span><span lang="en">Disease check</span></a>
-      <a href="#app"><span lang="ta">செயலியில் என்ன</span><span lang="en">In the app</span></a>
-      <a href="#trust"><span lang="ta">தரவு மூலங்கள்</span><span lang="en">Our data</span></a>
-      <a href="#faq"><span lang="ta">கேள்விகள்</span><span lang="en">FAQ</span></a>
-      <a href="#get"><span lang="ta">செயலியைப் பெற</span><span lang="en">Get the app</span></a>
+      <a href="#app" aria-current="page"><span lang="ta">செயலி</span><span lang="en">The app</span></a>
+      <a href="/wholesale"><span lang="ta">மொத்த வாங்குபவர்கள்</span><span lang="en">Wholesale buyers</span></a>
+      <a href="/partners"><span lang="ta">FPO · KVK</span><span lang="en">FPO & KVK</span></a>
+      <a href="/about"><span lang="ta">எங்களைப் பற்றி</span><span lang="en">About</span></a>
+      <a href="/contact"><span lang="ta">தொடர்பு</span><span lang="en">Contact</span></a>
     </nav>
     <div class="lang-switch" role="group" aria-label="Language / மொழி">
       <button type="button" data-set-lang="ta" aria-pressed="true">தமிழ்</button>
@@ -208,6 +208,21 @@
     </div>
   </section>
 
+  <!-- For business -->
+  <section class="band band-mist" id="business">
+    <div class="wrap">
+      <p class="kicker" lang="ta">வணிகம், கூட்டாண்மை</p><p class="kicker" lang="en">For business</p>
+      <h2 lang="ta">விவசாயிகளின் விளைச்சல் சரியான வாங்குபவரைச் சேர.</h2>
+      <h2 lang="en">Helping farmers' harvests reach the right buyers.</h2>
+      <div class="biz">
+        <a href="/wholesale"><img src="/assets/img/mandi.jpg" alt="" width="1400" height="1045" loading="lazy">
+          <div class="t"><h3><span lang="ta">மொத்த வாங்குபவர்கள்</span><span lang="en">Wholesale buyers</span></h3><span lang="ta">நெல், வாழை, மிளகாய், தேங்காய் — விவசாயக் குழுக்களிடமிருந்து நேரடியாக <em>→</em></span><span lang="en">Paddy, banana, chilli, coconut — direct from farmer groups <em>→</em></span></div></a>
+        <a href="/partners"><img src="/assets/img/kvk-talk.jpg" alt="" width="900" height="1200" loading="lazy" style="object-position:50% 35%">
+          <div class="t"><h3><span lang="ta">FPO, KVK கூட்டாளர்கள்</span><span lang="en">FPO & KVK partners</span></h3><span lang="ta">உங்கள் விவசாயிகள் அனைவரும் ஒரே திரையில் <em>→</em></span><span lang="en">All your farmers on one screen <em>→</em></span></div></a>
+      </div>
+    </div>
+  </section>
+
   <!-- FAQ -->
   <section class="band" id="faq">
     <div class="wrap faq">
@@ -275,7 +290,7 @@
           <h3 lang="ta">FPO, KVK, நிறுவனங்கள்</h3><h3 lang="en">FPOs, KVKs and partners</h3>
           <p lang="ta">உங்கள் விவசாயிகளுடன் சோதனை முயற்சி அல்லது கூட்டாண்மைக்கு.</p>
           <p lang="en">For a pilot with your farmers, or a partnership.</p>
-          <a class="btn btn-line" href="mailto:agrowai.tn@gmail.com?subject=AgrowNex%20partnership"><span lang="ta">எங்களைத் தொடர்புகொள்ளுங்கள்</span><span lang="en">Talk to us</span></a>
+          <a class="btn btn-line" href="/partners#join"><span lang="ta">எங்களைத் தொடர்புகொள்ளுங்கள்</span><span lang="en">Talk to us</span></a>
         </article>
       </div>
     </div>
@@ -283,14 +298,26 @@
 </main>
 
 <footer>
-  <div class="wrap">
-    <div>© <span id="year">2026</span> AgrowNex · SANTA MARIA ENTERPRISES, Thoothukudi, Tamil Nadu<br>
-      <a href="mailto:agrowai.tn@gmail.com">agrowai.tn@gmail.com</a></div>
-    <nav aria-label="Legal">
-      <a href="/privacy"><span lang="ta">தனியுரிமைக் கொள்கை</span><span lang="en">Privacy policy</span></a>
-      <a href="/delete-account"><span lang="ta">கணக்கை நீக்குதல்</span><span lang="en">Delete account</span></a>
-    </nav>
+  <div class="wrap foot">
+    <div class="brandline">
+      <b>Agrow<span>Nex</span></b>
+      <p><span lang="ta">தமிழ் விவசாயிகளுக்கான செயலி. தூத்துக்குடியில் உருவாக்கப்பட்டது.</span><span lang="en">A farming app for Tamil Nadu, built in Thoothukudi.</span></p>
+      <a href="mailto:agrowai.tn@gmail.com">agrowai.tn@gmail.com</a>
+    </div>
+    <div><h4><span lang="ta">விவசாயிகள்</span><span lang="en">Farmers</span></h4><ul>
+      <li><a href="/#app"><span lang="ta">செயலி</span><span lang="en">The app</span></a></li>
+      <li><a href="/#faq"><span lang="ta">கேள்விகள்</span><span lang="en">Questions</span></a></li>
+      <li><a href="/#get"><span lang="ta">முன்பதிவு</span><span lang="en">Early access</span></a></li></ul></div>
+    <div><h4><span lang="ta">வணிகம்</span><span lang="en">Business</span></h4><ul>
+      <li><a href="/wholesale"><span lang="ta">மொத்த வாங்குபவர்கள்</span><span lang="en">Wholesale buyers</span></a></li>
+      <li><a href="/partners"><span lang="ta">FPO, KVK கூட்டாண்மை</span><span lang="en">FPO & KVK partners</span></a></li></ul></div>
+    <div><h4><span lang="ta">நிறுவனம்</span><span lang="en">Company</span></h4><ul>
+      <li><a href="/about"><span lang="ta">எங்களைப் பற்றி</span><span lang="en">About</span></a></li>
+      <li><a href="/contact"><span lang="ta">தொடர்பு</span><span lang="en">Contact</span></a></li>
+      <li><a href="/privacy"><span lang="ta">தனியுரிமைக் கொள்கை</span><span lang="en">Privacy policy</span></a></li>
+      <li><a href="/delete-account"><span lang="ta">கணக்கை நீக்குதல்</span><span lang="en">Delete account</span></a></li></ul></div>
   </div>
+  <div class="wrap foot-bottom">© <span id="year">2026</span> AgrowNex · SANTA MARIA ENTERPRISES, Thoothukudi, Tamil Nadu</div>
 </footer>
 </body>
 </html>

@@ -57,6 +57,31 @@
     items.forEach(function (el) { el.classList.add('in'); });
   }
 
+  // Enquiry forms: nothing is stored here. The visitor's own email app or
+  // WhatsApp opens with the message written out, and they choose to send it.
+  var EMAIL = 'agrowai.tn@gmail.com';
+  var WHATSAPP = '918667237404';
+  document.querySelectorAll('form[data-enquiry]').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (!form.reportValidity()) return;
+      var lines = [form.getAttribute('data-enquiry'), ''];
+      form.querySelectorAll('input, select, textarea').forEach(function (f) {
+        if (!f.name || !f.value.trim()) return;
+        var label = form.querySelector('label[for="' + f.id + '"] [lang="en"]');
+        lines.push((label ? label.textContent : f.name) + ': ' + f.value.trim());
+      });
+      var text = lines.join('\n');
+      var via = e.submitter && e.submitter.value;
+      if (via === 'whatsapp') {
+        window.open('https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(text), '_blank', 'noopener');
+      } else {
+        window.location.href = 'mailto:' + EMAIL + '?subject=' + encodeURIComponent(form.getAttribute('data-enquiry')) +
+          '&body=' + encodeURIComponent(text);
+      }
+    });
+  });
+
   var y = document.getElementById('year');
   if (y) y.textContent = String(new Date().getFullYear());
 })();
