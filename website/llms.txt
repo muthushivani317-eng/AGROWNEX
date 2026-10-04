@@ -1,0 +1,29 @@
+# AgrowNex
+
+> AgrowNex is an AI-based agritech company from Thoothukudi, Tamil Nadu, India. It builds a Tamil-first farming app for smallholder farmers and connects farmer groups (FPOs, KVKs) with wholesale buyers. Operated by SANTA MARIA ENTERPRISES (Udyam-registered MSME, UDYAM-TN-26-0095328). Website: https://agrowai.in
+
+## What AgrowNex does
+- AI crop disease detection from a leaf photo, with organic care first and a chemical option only if needed. When unsure, it says so and suggests an expert.
+- Official mandi (market) prices from the Government of India's Agmarknet / data.gov.in. Prices are never estimated.
+- Village-level weather and spray/irrigation advice (Open-Meteo).
+- Crop calendar and daily farm tasks for 15 crops, based on TNAU and ICAR guidance.
+- AI help in Tamil by voice or text; government scheme finder; soil health card and Sentinel-2 satellite crop view; growth and nutrient checks.
+- Sell-your-produce listings, and direct sourcing for wholesale buyers (processors, rice mills, spice companies, exporters, traders).
+- Partner tools for FPOs and KVKs: consent-based member join requests, member and crop lists, harvest calendar, member needs, CSV export and a data feed.
+
+## Key facts
+- Category: agritech, AI in agriculture, farming app, FPO software
+- Region: Tamil Nadu, India (Thoothukudi, Tirunelveli, Kanyakumari, Ramanathapuram and beyond)
+- Languages: Tamil and English
+- Platform: Android app (Google Play launch coming soon); free for farmers, no ads
+- Crops: paddy, banana, chilli, cotton, groundnut, coconut, pulses, vegetables and more
+- Field presence: presented to farmers at the Agricultural Science Centre (KVK), Thirupathisaram, Kanyakumari
+- Contact: agrowai.tn@gmail.com · WhatsApp +91 86672 37404 · 232/1 North Raja Street, Thoothukudi 628001
+
+## Pages
+- [Home](https://agrowai.in/): the app, how the disease check works, data sources, FAQ
+- [Wholesale buyers](https://agrowai.in/wholesale): source produce directly from farmer groups
+- [FPO & KVK partners](https://agrowai.in/partners): digital platform for farmer organisations
+- [About](https://agrowai.in/about): story, principles, field photos, company details
+- [Contact](https://agrowai.in/contact)
+- [Privacy policy](https://agrowai.in/privacy)

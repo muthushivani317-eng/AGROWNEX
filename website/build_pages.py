@@ -50,6 +50,54 @@ def header(current):
 </header>'''
 
 
+import json
+
+SITE = 'https://agrowai.in'
+ABOUT_EN = ('AgrowNex is an AI-based agritech company from Thoothukudi, Tamil Nadu, India. It builds a Tamil-first '
+            'farming app with AI crop disease detection from a leaf photo, official mandi prices, village weather and '
+            'spray advice, crop calendars and AI help in Tamil, and connects farmer groups (FPOs, KVKs) with wholesale buyers.')
+
+ORG = {
+    "@type": "Organization", "@id": SITE + "/#org", "name": "AgrowNex", "alternateName": ["Agrow Nex", "AgrowNex Agritech"],
+    "legalName": "SANTA MARIA ENTERPRISES", "url": SITE + "/", "logo": SITE + "/assets/img/emblem-128.png",
+    "image": SITE + "/assets/img/og.jpg", "description": ABOUT_EN, "email": "agrowai.tn@gmail.com",
+    "foundingDate": "2026", "foundingLocation": "Thoothukudi, Tamil Nadu, India",
+    "address": {"@type": "PostalAddress", "streetAddress": "232/1 North Raja Street, Near Mattakadai",
+                "addressLocality": "Thoothukudi", "postalCode": "628001", "addressRegion": "Tamil Nadu", "addressCountry": "IN"},
+    "areaServed": {"@type": "State", "name": "Tamil Nadu"},
+    "identifier": {"@type": "PropertyValue", "propertyID": "Udyam", "value": "UDYAM-TN-26-0095328"},
+    "knowsAbout": ["Agritech", "AI in agriculture", "Crop disease detection", "Precision agriculture", "Organic farming",
+                   "Mandi prices", "Farmer Producer Organisations", "Tamil Nadu agriculture", "Smart farming"],
+    "contactPoint": {"@type": "ContactPoint", "contactType": "customer support", "email": "agrowai.tn@gmail.com",
+                     "telephone": "+91-8667237404", "availableLanguage": ["Tamil", "English"]},
+}
+
+
+def ld(*nodes):
+    return ('<script type="application/ld+json">' +
+            json.dumps({"@context": "https://schema.org", "@graph": list(nodes)}, ensure_ascii=False) + '</script>')
+
+
+def seo_head(path, title, desc, og, extra=()):
+    url = SITE + path
+    page_node = {"@type": "WebPage", "@id": url + "#page", "url": url, "name": title, "description": desc,
+                 "isPartOf": {"@id": SITE + "/#site"}, "about": {"@id": SITE + "/#org"}, "inLanguage": ["ta", "en"]}
+    site_node = {"@type": "WebSite", "@id": SITE + "/#site", "url": SITE + "/", "name": "AgrowNex",
+                 "publisher": {"@id": SITE + "/#org"}, "inLanguage": ["ta", "en"]}
+    return f"""<link rel="canonical" href="{url}">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="keywords" content="AgrowNex, agritech Tamil Nadu, AI agriculture, AI farming app, crop disease detection, Tamil farming app, mandi prices, FPO software, agritech startup Thoothukudi">
+<meta property="og:site_name" content="AgrowNex">
+<meta property="og:url" content="{url}">
+<meta property="og:locale" content="ta_IN">
+<meta property="og:locale:alternate" content="en_IN">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{title}">
+<meta name="twitter:description" content="{desc}">
+<meta name="twitter:image" content="{SITE}{og}">
+{ld(ORG, site_node, page_node, *extra)}"""
+
+
 FOOTER = f'''<footer>
   <div class="wrap foot">
     <div class="brandline">
@@ -70,11 +118,11 @@ FOOTER = f'''<footer>
       <li><a href="/privacy">{t("தனியுரிமைக் கொள்கை", "Privacy policy")}</a></li>
       <li><a href="/delete-account">{t("கணக்கை நீக்குதல்", "Delete account")}</a></li></ul></div>
   </div>
-  <div class="wrap foot-bottom">© <span id="year">2026</span> AgrowNex · SANTA MARIA ENTERPRISES, Thoothukudi, Tamil Nadu</div>
+  <div class="wrap foot-bottom"><p class="about-line">{ABOUT_EN}</p>© <span id="year">2026</span> AgrowNex · SANTA MARIA ENTERPRISES, Thoothukudi, Tamil Nadu</div>
 </footer>'''
 
 
-def page(slug, title, desc, current, body, og='/assets/img/og.jpg'):
+def page(slug, title, desc, current, body, og='/assets/img/og.jpg', extra=()):
     return f'''<!doctype html>
 <html lang="ta" data-lang="ta" class="no-js">
 <head>
@@ -86,8 +134,9 @@ def page(slug, title, desc, current, body, og='/assets/img/og.jpg'):
 <link rel="icon" type="image/png" href="/assets/img/emblem-64.png">
 <meta property="og:title" content="{title}">
 <meta property="og:description" content="{desc}">
-<meta property="og:image" content="https://www.agrowai.in{og}">
+<meta property="og:image" content="{SITE}{og}">
 <meta property="og:type" content="website">
+{seo_head('/' + slug, title, desc, og, extra)}
 {FONTS}
 <link rel="stylesheet" href="/assets/site.css">
 <script src="/assets/site.js" defer></script>
@@ -161,7 +210,7 @@ CROPS = [('நெல்', 'Paddy'), ('வாழை', 'Banana'), ('காய்�
 crop_chips = ''.join(f'<li>{t(a, b)}</li>' for a, b in CROPS) + \
     f'<li class="org">{t("சான்றளிக்கப்பட்ட இயற்கை விளைபொருள்", "Certified organic lots")}</li>'
 
-wholesale = page('wholesale', 'Wholesale buyers — AgrowNex',
+wholesale = page('wholesale', 'Wholesale farm produce from Tamil Nadu — AgrowNex agritech',
     'Source paddy, banana, chilli, coconut, pulses and organic produce directly from farmer groups in South Tamil Nadu through AgrowNex.',
     'wholesale', f'''{hero("/assets/img/mandi.jpg", "Heaps of dried red chillies and onions at a wholesale market",
     "For processors · traders · exporters",
@@ -252,7 +301,7 @@ wholesale = page('wholesale', 'Wholesale buyers — AgrowNex',
   </section>''', og='/assets/img/mandi.jpg')
 
 # ---------------------------------------------------------------- partners
-partners = page('partners', 'FPO & KVK partners — AgrowNex',
+partners = page('partners', 'FPO & KVK digital platform — AgrowNex agritech',
     'Bring your member farmers onto AgrowNex: join requests with consent, member crops, harvest calendar, needs and a data feed for FPOs, KVKs and NGOs in Tamil Nadu.',
     'partners', f'''{hero("/assets/img/aerial.jpg", "Aerial view of small farm plots in different growth stages",
     "For FPOs · KVKs · NGOs · CSR programmes",
@@ -344,7 +393,7 @@ partners = page('partners', 'FPO & KVK partners — AgrowNex',
   </section>''', og='/assets/img/kvk-talk.jpg')
 
 # ---------------------------------------------------------------- about
-about = page('about', 'About AgrowNex — SANTA MARIA ENTERPRISES, Thoothukudi',
+about = page('about', 'About AgrowNex — AI agritech company, Thoothukudi, Tamil Nadu',
     'AgrowNex is built in Thoothukudi by SANTA MARIA ENTERPRISES, an Udyam-registered MSME, to give Tamil Nadu farmers clear answers in Tamil from sources they can check.',
     'about', f'''{hero("/assets/img/soil.jpg", "A farmer's hand holding red soil over a ploughed field with young seedlings",
     "Thoothukudi · since 2026",
@@ -432,7 +481,7 @@ about = page('about', 'About AgrowNex — SANTA MARIA ENTERPRISES, Thoothukudi',
   </section>''', og='/assets/img/kvk-talk.jpg')
 
 # ---------------------------------------------------------------- contact
-contact = page('contact', 'Contact AgrowNex',
+contact = page('contact', 'Contact AgrowNex — AI agriculture, Tamil Nadu',
     'Contact AgrowNex by email or WhatsApp — for farmers, wholesale buyers, FPOs, KVKs and partners.',
     'contact', f'''{hero("/assets/img/monsoon.jpg", "Monsoon clouds over flat green farmland",
     "agrowai.tn@gmail.com",
@@ -508,3 +557,56 @@ else:
 idx = idx.replace('href="mailto:agrowai.tn@gmail.com?subject=AgrowNex%20partnership"', 'href="/partners#join"')
 (W / 'index.html').write_text(idx)
 print('index updated')
+
+# ---------------------------------------------------------------- index SEO
+HOME_TITLE = 'AgrowNex — AI agriculture app and agritech company for Tamil Nadu farmers'
+HOME_DESC = ('AgrowNex is an AI-based agritech company from Thoothukudi, Tamil Nadu. Its Tamil-first farming app detects crop '
+             'disease from a leaf photo and gives official mandi prices, village weather, crop calendars and AI help in Tamil.')
+FAQ = [
+    ("What is AgrowNex?", ABOUT_EN),
+    ("Is the AgrowNex app free?", "Yes. It is free for farmers, and there are no ads."),
+    ("How accurate is the disease check?", "It works best with a clear photo. When it isn't sure, it asks for another photo "
+     "or tells you to consult an expert. Always confirm with your KVK or agriculture officer before spraying."),
+    ("Where do AgrowNex market prices come from?", "Only from the Government of India's Agmarknet / data.gov.in data. "
+     "Prices are never estimated or made up, and every price shows its date."),
+    ("Which crops does AgrowNex support?", "Paddy, banana, chilli, cotton, groundnut and more, with crop calendars for "
+     "15 crops based on TNAU and ICAR guidance."),
+    ("Can wholesale buyers source produce through AgrowNex?", "Yes. Processors, rice mills, exporters and traders can send "
+     "a requirement on agrowai.in/wholesale and are matched with farmer groups who have listed that harvest."),
+]
+APP = {"@type": "MobileApplication", "@id": SITE + "/#app", "name": "AgrowNex", "operatingSystem": "Android",
+       "applicationCategory": "LifestyleApplication", "applicationSubCategory": "Agriculture",
+       "inLanguage": ["ta", "en"], "description": HOME_DESC, "publisher": {"@id": SITE + "/#org"},
+       "offers": {"@type": "Offer", "price": "0", "priceCurrency": "INR"},
+       "featureList": ["AI crop disease detection from a leaf photo", "Official mandi prices (Agmarknet)",
+                       "Village weather and spray advice", "Crop calendar and daily farm tasks",
+                       "AI help in Tamil by voice or text", "Government scheme finder",
+                       "Soil and satellite crop view", "Sell produce to buyers"]}
+FAQ_NODE = {"@type": "FAQPage", "@id": SITE + "/#faq",
+            "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
+                           for q, a in FAQ]}
+WHAT_IS = (
+    '<div class="faq-list">\n'
+    '        <details>\n'
+    '          <summary><span lang="ta">AgrowNex என்றால் என்ன?</span><span lang="en">What is AgrowNex?</span></summary>\n'
+    '          <p lang="ta">AgrowNex தூத்துக்குடியைச் சேர்ந்த AI அடிப்படையிலான வேளாண் தொழில்நுட்ப (agritech) நிறுவனம். '
+    'இலைப் படத்திலிருந்து பயிர் நோய் கண்டறிதல், அரசு மண்டி விலை, கிராம வானிலை, பயிர் காலண்டர், தமிழில் AI உதவி தரும் '
+    'செயலியை உருவாக்குகிறது. FPO, KVK-களையும் மொத்த வாங்குபவர்களையும் இணைக்கிறது.</p>\n'
+    f'          <p lang="en">{ABOUT_EN}</p>\n'
+    '        </details>')
+
+idx = (W / 'index.html').read_text()
+idx = re.sub(r'<title>.*?</title>', f'<title>{HOME_TITLE}</title>', idx, count=1, flags=re.S)
+idx = re.sub(r'<meta name="description" content="[^"]*">', f'<meta name="description" content="{HOME_DESC}">', idx, count=1)
+idx = re.sub(r'<meta property="og:title" content="[^"]*">', f'<meta property="og:title" content="{HOME_TITLE}">', idx, count=1)
+idx = re.sub(r'<meta property="og:description" content="[^"]*">',
+             f'<meta property="og:description" content="{HOME_DESC}">', idx, count=1)
+idx = idx.replace('content="https://www.agrowai.in/assets/img/og.jpg"', f'content="{SITE}/assets/img/og.jpg"')
+idx = re.sub(r'\n<!-- seo -->.*?<!-- /seo -->', '', idx, flags=re.S)
+idx = idx.replace('\n<link rel="preconnect" href="https://fonts.googleapis.com">',
+                  '\n<!-- seo -->\n' + seo_head('/', HOME_TITLE, HOME_DESC, '/assets/img/og.jpg', (APP, FAQ_NODE)) +
+                  '\n<!-- /seo -->\n<link rel="preconnect" href="https://fonts.googleapis.com">', 1)
+if 'AgrowNex என்றால் என்ன' not in idx:
+    idx = idx.replace('<div class="faq-list">', WHAT_IS, 1)
+(W / 'index.html').write_text(idx)
+print('index SEO done')

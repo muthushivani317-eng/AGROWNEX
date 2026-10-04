@@ -3,6 +3,9 @@ server {
     server_name _;
     server_tokens off;
 
+    # One canonical address for search engines: www → agrowai.in
+    if ($host = "www.agrowai.in") { return 301 https://agrowai.in$request_uri; }
+
     root /usr/share/nginx/html;
     index index.html;
 

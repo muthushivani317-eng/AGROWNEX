@@ -1,6 +1,6 @@
 FROM nginx:alpine
 
-COPY *.html legal.css legal.js /usr/share/nginx/html/
+COPY *.html legal.css legal.js robots.txt sitemap.xml llms.txt /usr/share/nginx/html/
 COPY assets /usr/share/nginx/html/assets
 COPY default.conf.template /etc/nginx/templates/default.conf.template
 

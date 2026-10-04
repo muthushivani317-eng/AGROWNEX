@@ -352,3 +352,4 @@ footer nav { display: flex; flex-wrap: wrap; gap: 8px 24px; }
   .result h4 { font-size: 18px; }
   .result p { display: none; }
 }
+.about-line { max-width: 90ch; color: #9fb0a6; font-size: 14px; line-height: 1.6; margin: 0 0 12px; }

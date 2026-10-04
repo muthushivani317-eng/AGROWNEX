@@ -26,7 +26,8 @@ def main() -> int:
     missing = []
     for page in sorted(HERE.glob("*.html")):
         html = page.read_text(encoding="utf-8")
-        inline = re.findall(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", html, re.S)
+        # JSON-LD data blocks are never executed, so CSP does not apply to them.
+        inline = re.findall(r'<script(?![^>]*\b(?:src=|type="application/ld\+json"))[^>]*>(.*?)</script>', html, re.S)
         handlers = re.findall(r'\son[a-z]+="([^"]*)"', html)
         for snippet in inline + handlers:
             if _hash(snippet) not in csp.group(1):
