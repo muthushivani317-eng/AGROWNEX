@@ -373,7 +373,7 @@ about = page('about', 'About AgrowNex — SANTA MARIA ENTERPRISES, Thoothukudi',
     </div>
   </section>
 
-  <section class="band band-mist">
+  <section class="band band-mist" id="field">
     <div class="wrap">
       <p class="kicker" lang="ta">களத்தில்</p><p class="kicker" lang="en">In the field</p>
       <h2 lang="ta">விவசாயிகளுடன் நேரில்.</h2>
@@ -385,6 +385,15 @@ about = page('about', 'About AgrowNex — SANTA MARIA ENTERPRISES, Thoothukudi',
           <figcaption>{t("விவசாயிகள் விழிப்புணர்வு முகாம், KVK திருப்பதிசாரம்.", "Farmers' awareness camp, KVK Thirupathisaram.")}</figcaption></figure>
         <figure class="reveal"><img src="/assets/img/kvk-handover.jpg" alt="Handing over the AgrowNex information booklet at the KVK office" width="1100" height="997" loading="lazy">
           <figcaption>{t("KVK அலுவலகத்தில் எங்கள் செயலி விவரக் கையேட்டை வழங்கியபோது.", "Handing over our app booklet at the KVK office.")}</figcaption></figure>
+      </div>
+      <h3 style="margin-top:56px">{t("விவசாயிகள் சொன்னது", "Farmers speaking up")}</h3>
+      <p class="intro" lang="ta">அதே முகாமில், AgrowNex-ஐப் பற்றி விவசாயிகள் தங்கள் கருத்துகளை நேரடியாகப் பகிர்ந்தனர்.</p>
+      <p class="intro" lang="en">At the same camp, farmers took the microphone to share their views on AgrowNex.</p>
+      <div class="gallery pair">
+        <figure class="reveal"><img src="/assets/img/farmer-feedback-1.jpg" alt="A farmer speaking into a microphone about AgrowNex at the KVK camp" width="719" height="1280" loading="lazy">
+          <figcaption>{t("ஒரு விவசாயி தன் கருத்தைப் பகிர்கிறார், KVK திருப்பதிசாரம்.", "A farmer shares his feedback, KVK Thirupathisaram.")}</figcaption></figure>
+        <figure class="reveal"><img src="/assets/img/farmer-feedback-2.jpg" alt="Another farmer giving feedback on AgrowNex at the KVK camp" width="720" height="1280" loading="lazy">
+          <figcaption>{t("விவசாயிகளின் கேள்விகளுக்கு நேரடிப் பதில்.", "Answering farmers' questions in person.")}</figcaption></figure>
       </div>
     </div>
   </section>
@@ -487,11 +496,14 @@ biz = f'''  <!-- For business -->
         <a href="/partners"><img src="/assets/img/kvk-talk.jpg" alt="" width="900" height="1200" loading="lazy" style="object-position:50% 35%">
           <div class="t"><h3>{t("FPO, KVK கூட்டாளர்கள்", "FPO & KVK partners")}</h3><span lang="ta">உங்கள் விவசாயிகள் அனைவரும் ஒரே திரையில் <em>→</em></span><span lang="en">All your farmers on one screen <em>→</em></span></div></a>
       </div>
+      <p style="margin-top:28px"><a href="/about#field">{t("களத்தில்: கன்னியாகுமரி KVK முகாமில் விவசாயிகளின் கருத்துகள் →", "In the field: farmers' feedback at the Kanyakumari KVK camp →")}</a></p>
     </div>
   </section>
 
   <!-- FAQ -->'''
-if 'id="business"' not in idx:
+if 'id="business"' in idx:
+    idx = re.sub(r'  <!-- For business -->.*?  <!-- FAQ -->', lambda m: biz, idx, flags=re.S)
+else:
     idx = idx.replace('  <!-- FAQ -->', biz, 1)
 idx = idx.replace('href="mailto:agrowai.tn@gmail.com?subject=AgrowNex%20partnership"', 'href="/partners#join"')
 (W / 'index.html').write_text(idx)

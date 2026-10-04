@@ -256,6 +256,8 @@ footer nav { display: flex; flex-wrap: wrap; gap: 8px 24px; }
 .gallery { display: grid; grid-template-columns: 1.15fr .85fr; gap: 22px; margin-top: 44px; }
 .gallery figure { margin: 0; }
 .gallery img { width: 100%; height: 100%; max-height: 640px; object-fit: cover; border-radius: 18px; }
+.gallery.pair { grid-template-columns: 1fr 1fr; margin-top: 28px; }
+.gallery.pair img { aspect-ratio: 9 / 14; max-height: 720px; }
 .gallery figcaption { font-size: 15px; color: var(--ink-2); padding-top: 10px; }
 .facts { display: grid; grid-template-columns: 200px 1fr; margin: 28px 0 0; border-top: 2px solid var(--ink); }
 .facts dt, .facts dd { margin: 0; padding: 14px 0; border-bottom: 1px solid var(--line); }
