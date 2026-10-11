@@ -16,7 +16,7 @@ p,ul,ol{margin:0 0 12px}
 ul,ol{padding-left:22px}
 li{margin-bottom:6px}
 .meta{color:var(--muted);font-size:14px}
-.steps{background:var(--tint);border:1px solid var(--line);border-radius:12px;padding:16px 16px 10px 38px}
+.lsteps{background:var(--tint);border:1px solid var(--line);border-radius:12px;padding:16px 16px 10px 38px}
 .note{margin-top:32px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted)}
 .foot{border-top:1px solid var(--line);padding:20px 0;font-size:14px;color:var(--muted)}
 [lang="ta"],[lang="ta"] h1,[lang="ta"] h2{font-family:"Noto Sans Tamil",system-ui,sans-serif;letter-spacing:0}

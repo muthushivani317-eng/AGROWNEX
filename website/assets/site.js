@@ -33,7 +33,7 @@
   }
 
   // Hero film: phone-shaped clip on narrow screens, none when motion is reduced or data saver is on.
-  var video = document.querySelector('.hero-media video');
+  var video = document.querySelector('.hero-media video[data-src]');
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var saveData = navigator.connection && navigator.connection.saveData;
   if (video && !reduce && !saveData) {

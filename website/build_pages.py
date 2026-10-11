@@ -10,11 +10,22 @@ FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">\n'
          '&family=IBM+Plex+Mono:wght@500&family=Noto+Sans+Tamil:wght@400;600;800&display=swap" rel="stylesheet">')
 
 NAV = [
-    ('/#app', 'செயலி', 'The app', 'home'),
-    ('/wholesale', 'மொத்த வாங்குபவர்கள்', 'Wholesale buyers', 'wholesale'),
+    ('/app', 'செயலி', 'The app', 'app'),
     ('/partners', 'FPO · KVK', 'FPO & KVK', 'partners'),
     ('/about', 'எங்களைப் பற்றி', 'About', 'about'),
     ('/contact', 'தொடர்பு', 'Contact', 'contact'),
+]
+
+# (slug, number, ta title, en title, ta line, en line)
+SOLUTIONS = [
+    ('inputs', '01', 'இடுபொருட்கள்', 'Farm inputs', 'விதை, உரம், பயிர் பாதுகாப்பு, கருவிகள்', 'Seeds, nutrition, crop care, equipment'),
+    ('advisory', '02', 'AI ஆலோசனை', 'AI advisory', 'பயிர் மருத்துவர், தமிழ் உதவி, வானிலை', 'Crop doctor, Tamil help, weather'),
+    ('produce', '03', 'விளைபொருள், ஏற்றுமதி', 'Produce & export', 'பெரிய வாங்குபவர்கள், வெளிநாட்டுச் சந்தை', 'Large buyers and overseas markets'),
+    ('finance', '04', 'கடன், காப்பீடு', 'Finance', 'முறைப்படுத்தப்பட்ட கூட்டாளர்கள் மூலம்', 'Credit and insurance via partners'),
+    ('brands', '05', 'சொந்த பிராண்டுகள்', 'Own brands', 'மதிப்புக் கூட்டல், GI பொருட்கள்', 'Value-add foods and GI products'),
+    ('export-support', '06', 'ஏற்றுமதி உதவி', 'Export support', 'FPO-க்கள் ஏற்றுமதி செய்ய உதவி', 'Helping FPOs ship abroad'),
+    ('programmes', '07', 'தளம், திட்டங்கள்', 'Platform & programmes', 'பயிற்சி, வாடகை, இயற்கைச் சான்று', 'Training, rentals, organic certification'),
+    ('future', '→', 'எதிர்காலம்', 'What comes next', 'கார்பன், தரவு அறிக்கை, இறக்குமதி', 'Carbon, insights, imports'),
 ]
 
 
@@ -28,6 +39,13 @@ def header(current):
     links = '\n'.join(
         f'      <a href="{h}"{cur if k == current else ""}>{t(ta, en)}</a>'
         for h, ta, en, k in NAV)
+    items = ''.join(
+        f'<a href="/{s}"{cur if s == current else ""}><i>{n}</i><span><b>{t(ta, en)}</b><small>{t(lta, len_)}</small></span></a>'
+        for s, n, ta, en, lta, len_ in SOLUTIONS)
+    mega = (f'      <div class="has-menu"><button type="button" aria-expanded="false" aria-haspopup="true">{t("தீர்வுகள்", "Solutions")}</button>\n'
+            f'        <div class="mega">{items}<p class="mega-foot"><a href="/solutions">{t("அனைத்துத் தீர்வுகளும் →", "All solutions →")}</a> '
+            f'<a href="/wholesale">{t("மொத்த வாங்குபவர்கள் →", "Wholesale buyers →")}</a></p></div></div>')
+    links = mega + '\n' + links
     return f'''<a class="skip" href="#main">{t("உள்ளடக்கத்துக்குச் செல்", "Skip to content")}</a>
 
 <header class="site-header">
@@ -102,14 +120,20 @@ FOOTER = f'''<footer>
   <div class="wrap foot">
     <div class="brandline">
       <b>Agrow<span>Nex</span></b>
-      <p>{t("தமிழ் விவசாயிகளுக்கான செயலி. தூத்துக்குடியில் உருவாக்கப்பட்டது.", "A farming app for Tamil Nadu, built in Thoothukudi.")}</p>
+      <p>{t("தமிழக விவசாயத்துக்கான முழுமையான வேளாண் தொழில்நுட்ப நிறுவனம். தூத்துக்குடியில் உருவாக்கப்பட்டது.", "A full-stack agritech company for Tamil Nadu, built in Thoothukudi.")}</p>
       <a href="mailto:agrowai.tn@gmail.com">agrowai.tn@gmail.com</a>
     </div>
-    <div><h4>{t("விவசாயிகள்", "Farmers")}</h4><ul>
-      <li><a href="/#app">{t("செயலி", "The app")}</a></li>
-      <li><a href="/#faq">{t("கேள்விகள்", "Questions")}</a></li>
-      <li><a href="/#get">{t("முன்பதிவு", "Early access")}</a></li></ul></div>
+    <div><h4>{t("தீர்வுகள்", "Solutions")}</h4><ul>
+      <li><a href="/inputs">{t("இடுபொருட்கள்", "Farm inputs")}</a></li>
+      <li><a href="/advisory">{t("AI ஆலோசனை", "AI advisory")}</a></li>
+      <li><a href="/produce">{t("விளைபொருள், ஏற்றுமதி", "Produce & export")}</a></li>
+      <li><a href="/finance">{t("கடன், காப்பீடு", "Finance")}</a></li>
+      <li><a href="/brands">{t("சொந்த பிராண்டுகள்", "Own brands")}</a></li>
+      <li><a href="/export-support">{t("ஏற்றுமதி உதவி", "Export support")}</a></li>
+      <li><a href="/programmes">{t("தளம், திட்டங்கள்", "Platform & programmes")}</a></li>
+      <li><a href="/future">{t("எதிர்காலம்", "What comes next")}</a></li></ul></div>
     <div><h4>{t("வணிகம்", "Business")}</h4><ul>
+      <li><a href="/app">{t("AgrowNex செயலி", "The AgrowNex app")}</a></li>
       <li><a href="/wholesale">{t("மொத்த வாங்குபவர்கள்", "Wholesale buyers")}</a></li>
       <li><a href="/partners">{t("FPO, KVK கூட்டாண்மை", "FPO & KVK partners")}</a></li></ul></div>
     <div><h4>{t("நிறுவனம்", "Company")}</h4><ul>
@@ -122,7 +146,7 @@ FOOTER = f'''<footer>
 </footer>'''
 
 
-def page(slug, title, desc, current, body, og='/assets/img/og.jpg', extra=()):
+def page(slug, title, desc, current, body, og='/assets/img/og.jpg', extra=(), preload=''):
     return f'''<!doctype html>
 <html lang="ta" data-lang="ta" class="no-js">
 <head>
@@ -136,10 +160,12 @@ def page(slug, title, desc, current, body, og='/assets/img/og.jpg', extra=()):
 <meta property="og:description" content="{desc}">
 <meta property="og:image" content="{SITE}{og}">
 <meta property="og:type" content="website">
-{seo_head('/' + slug, title, desc, og, extra)}
+{seo_head('/' + slug, title, desc, og, extra)}{preload}
 {FONTS}
 <link rel="stylesheet" href="/assets/site.css">
+<link rel="stylesheet" href="/assets/premium.css">
 <script src="/assets/site.js" defer></script>
+<script src="/assets/premium.js" defer></script>
 </head>
 <body>
 {header(current)}
@@ -495,7 +521,7 @@ contact = page('contact', 'Contact AgrowNex — AI agriculture, Tamil Nadu',
       <div class="tiles">
         <div class="tile"><span class="mono">{t("விவசாயிகள்", "Farmers")}</span><b lang="ta">செயலியை முதலில் பெற</b><b lang="en">Get the app first</b>
           <p lang="ta">பெயர், கிராமம், பயிரை அனுப்புங்கள்.</p><p lang="en">Send your name, village and crop.</p>
-          <p style="margin-top:14px"><a href="/#get">{t("முன்பதிவு →", "Early access →")}</a></p></div>
+          <p style="margin-top:14px"><a href="/app#get">{t("முன்பதிவு →", "Early access →")}</a></p></div>
         <div class="tile"><span class="mono">{t("வாங்குபவர்கள்", "Buyers")}</span><b lang="ta">மொத்தக் கொள்முதல்</b><b lang="en">Wholesale sourcing</b>
           <p lang="ta">பயிர், அளவு, தரம், தேதி.</p><p lang="en">Crop, volume, grade and dates.</p>
           <p style="margin-top:14px"><a href="/wholesale#enquire">{t("தேவையைப் பதிவு செய்யுங்கள் →", "Send a requirement →")}</a></p></div>
@@ -530,8 +556,8 @@ for slug, html in [('wholesale', wholesale), ('partners', partners), ('about', a
     print('wrote', slug, len(html))
 
 # ---------------------------------------------------------------- index: shared header/footer + business section
-idx = (W / 'index.html').read_text()
-idx = re.sub(r'<a class="skip".*?</header>', header('home').replace('href="/#app"', 'href="#app"'), idx, flags=re.S)
+idx = (W / 'app.html').read_text()
+idx = re.sub(r'<a class="skip".*?</header>', header('app'), idx, flags=re.S)
 idx = re.sub(r'<footer>.*?</footer>', FOOTER, idx, flags=re.S)
 biz = f'''  <!-- For business -->
   <section class="band band-mist" id="business">
@@ -555,11 +581,11 @@ if 'id="business"' in idx:
 else:
     idx = idx.replace('  <!-- FAQ -->', biz, 1)
 idx = idx.replace('href="mailto:agrowai.tn@gmail.com?subject=AgrowNex%20partnership"', 'href="/partners#join"')
-(W / 'index.html').write_text(idx)
-print('index updated')
+(W / 'app.html').write_text(idx)
+print('app updated')
 
 # ---------------------------------------------------------------- index SEO
-HOME_TITLE = 'AgrowNex — AI agriculture app and agritech company for Tamil Nadu farmers'
+HOME_TITLE = 'AgrowNex app — AI crop doctor, mandi prices and weather in Tamil'
 HOME_DESC = ('AgrowNex is an AI-based agritech company from Thoothukudi, Tamil Nadu. Its Tamil-first farming app detects crop '
              'disease from a leaf photo and gives official mandi prices, village weather, crop calendars and AI help in Tamil.')
 FAQ = [
@@ -574,7 +600,7 @@ FAQ = [
     ("Can wholesale buyers source produce through AgrowNex?", "Yes. Processors, rice mills, exporters and traders can send "
      "a requirement on agrowai.in/wholesale and are matched with farmer groups who have listed that harvest."),
 ]
-APP = {"@type": "MobileApplication", "@id": SITE + "/#app", "name": "AgrowNex", "operatingSystem": "Android",
+APP = {"@type": "MobileApplication", "@id": SITE + "/app#app", "name": "AgrowNex", "operatingSystem": "Android",
        "applicationCategory": "LifestyleApplication", "applicationSubCategory": "Agriculture",
        "inLanguage": ["ta", "en"], "description": HOME_DESC, "publisher": {"@id": SITE + "/#org"},
        "offers": {"@type": "Offer", "price": "0", "priceCurrency": "INR"},
@@ -582,7 +608,7 @@ APP = {"@type": "MobileApplication", "@id": SITE + "/#app", "name": "AgrowNex", 
                        "Village weather and spray advice", "Crop calendar and daily farm tasks",
                        "AI help in Tamil by voice or text", "Government scheme finder",
                        "Soil and satellite crop view", "Sell produce to buyers"]}
-FAQ_NODE = {"@type": "FAQPage", "@id": SITE + "/#faq",
+FAQ_NODE = {"@type": "FAQPage", "@id": SITE + "/app#faq",
             "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
                            for q, a in FAQ]}
 WHAT_IS = (
@@ -595,7 +621,7 @@ WHAT_IS = (
     f'          <p lang="en">{ABOUT_EN}</p>\n'
     '        </details>')
 
-idx = (W / 'index.html').read_text()
+idx = (W / 'app.html').read_text()
 idx = re.sub(r'<title>.*?</title>', f'<title>{HOME_TITLE}</title>', idx, count=1, flags=re.S)
 idx = re.sub(r'<meta name="description" content="[^"]*">', f'<meta name="description" content="{HOME_DESC}">', idx, count=1)
 idx = re.sub(r'<meta property="og:title" content="[^"]*">', f'<meta property="og:title" content="{HOME_TITLE}">', idx, count=1)
@@ -604,9 +630,13 @@ idx = re.sub(r'<meta property="og:description" content="[^"]*">',
 idx = idx.replace('content="https://www.agrowai.in/assets/img/og.jpg"', f'content="{SITE}/assets/img/og.jpg"')
 idx = re.sub(r'\n<!-- seo -->.*?<!-- /seo -->', '', idx, flags=re.S)
 idx = idx.replace('\n<link rel="preconnect" href="https://fonts.googleapis.com">',
-                  '\n<!-- seo -->\n' + seo_head('/', HOME_TITLE, HOME_DESC, '/assets/img/og.jpg', (APP, FAQ_NODE)) +
+                  '\n<!-- seo -->\n' + seo_head('/app', HOME_TITLE, HOME_DESC, '/assets/img/og.jpg', (APP, FAQ_NODE)) +
                   '\n<!-- /seo -->\n<link rel="preconnect" href="https://fonts.googleapis.com">', 1)
 if 'AgrowNex என்றால் என்ன' not in idx:
     idx = idx.replace('<div class="faq-list">', WHAT_IS, 1)
-(W / 'index.html').write_text(idx)
+if 'premium.css' not in idx:
+    idx = idx.replace('<link rel="stylesheet" href="assets/site.css">', '<link rel="stylesheet" href="/assets/site.css">\n<link rel="stylesheet" href="/assets/premium.css">')
+    idx = idx.replace('<script src="assets/site.js" defer></script>', '<script src="/assets/site.js" defer></script>\n<script src="/assets/premium.js" defer></script>')
+idx = idx.replace('src="assets/', 'src="/assets/').replace('href="assets/', 'href="/assets/').replace('srcset="assets/', 'srcset="/assets/').replace('poster="assets/', 'poster="/assets/').replace('data-src="assets/', 'data-src="/assets/').replace('data-src-mobile="assets/', 'data-src-mobile="/assets/').replace('data-poster-mobile="assets/', 'data-poster-mobile="/assets/')
+(W / 'app.html').write_text(idx)
 print('index SEO done')

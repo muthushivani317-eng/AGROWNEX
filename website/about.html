@@ -27,7 +27,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Catamaran:wght@600;700;800&family=Hind+Madurai:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Noto+Sans+Tamil:wght@400;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/site.css">
+<link rel="stylesheet" href="/assets/premium.css">
 <script src="/assets/site.js" defer></script>
+<script src="/assets/premium.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#main"><span lang="ta">உள்ளடக்கத்துக்குச் செல்</span><span lang="en">Skip to content</span></a>
@@ -39,8 +41,9 @@
       <b>Agrow<span>Nex</span></b>
     </a>
     <nav class="nav" id="nav" aria-label="Main">
-      <a href="/#app"><span lang="ta">செயலி</span><span lang="en">The app</span></a>
-      <a href="/wholesale"><span lang="ta">மொத்த வாங்குபவர்கள்</span><span lang="en">Wholesale buyers</span></a>
+      <div class="has-menu"><button type="button" aria-expanded="false" aria-haspopup="true"><span lang="ta">தீர்வுகள்</span><span lang="en">Solutions</span></button>
+        <div class="mega"><a href="/inputs"><i>01</i><span><b><span lang="ta">இடுபொருட்கள்</span><span lang="en">Farm inputs</span></b><small><span lang="ta">விதை, உரம், பயிர் பாதுகாப்பு, கருவிகள்</span><span lang="en">Seeds, nutrition, crop care, equipment</span></small></span></a><a href="/advisory"><i>02</i><span><b><span lang="ta">AI ஆலோசனை</span><span lang="en">AI advisory</span></b><small><span lang="ta">பயிர் மருத்துவர், தமிழ் உதவி, வானிலை</span><span lang="en">Crop doctor, Tamil help, weather</span></small></span></a><a href="/produce"><i>03</i><span><b><span lang="ta">விளைபொருள், ஏற்றுமதி</span><span lang="en">Produce & export</span></b><small><span lang="ta">பெரிய வாங்குபவர்கள், வெளிநாட்டுச் சந்தை</span><span lang="en">Large buyers and overseas markets</span></small></span></a><a href="/finance"><i>04</i><span><b><span lang="ta">கடன், காப்பீடு</span><span lang="en">Finance</span></b><small><span lang="ta">முறைப்படுத்தப்பட்ட கூட்டாளர்கள் மூலம்</span><span lang="en">Credit and insurance via partners</span></small></span></a><a href="/brands"><i>05</i><span><b><span lang="ta">சொந்த பிராண்டுகள்</span><span lang="en">Own brands</span></b><small><span lang="ta">மதிப்புக் கூட்டல், GI பொருட்கள்</span><span lang="en">Value-add foods and GI products</span></small></span></a><a href="/export-support"><i>06</i><span><b><span lang="ta">ஏற்றுமதி உதவி</span><span lang="en">Export support</span></b><small><span lang="ta">FPO-க்கள் ஏற்றுமதி செய்ய உதவி</span><span lang="en">Helping FPOs ship abroad</span></small></span></a><a href="/programmes"><i>07</i><span><b><span lang="ta">தளம், திட்டங்கள்</span><span lang="en">Platform & programmes</span></b><small><span lang="ta">பயிற்சி, வாடகை, இயற்கைச் சான்று</span><span lang="en">Training, rentals, organic certification</span></small></span></a><a href="/future"><i>→</i><span><b><span lang="ta">எதிர்காலம்</span><span lang="en">What comes next</span></b><small><span lang="ta">கார்பன், தரவு அறிக்கை, இறக்குமதி</span><span lang="en">Carbon, insights, imports</span></small></span></a><p class="mega-foot"><a href="/solutions"><span lang="ta">அனைத்துத் தீர்வுகளும் →</span><span lang="en">All solutions →</span></a> <a href="/wholesale"><span lang="ta">மொத்த வாங்குபவர்கள் →</span><span lang="en">Wholesale buyers →</span></a></p></div></div>
+      <a href="/app"><span lang="ta">செயலி</span><span lang="en">The app</span></a>
       <a href="/partners"><span lang="ta">FPO · KVK</span><span lang="en">FPO & KVK</span></a>
       <a href="/about" aria-current="page"><span lang="ta">எங்களைப் பற்றி</span><span lang="en">About</span></a>
       <a href="/contact"><span lang="ta">தொடர்பு</span><span lang="en">Contact</span></a>
@@ -151,14 +154,20 @@
   <div class="wrap foot">
     <div class="brandline">
       <b>Agrow<span>Nex</span></b>
-      <p><span lang="ta">தமிழ் விவசாயிகளுக்கான செயலி. தூத்துக்குடியில் உருவாக்கப்பட்டது.</span><span lang="en">A farming app for Tamil Nadu, built in Thoothukudi.</span></p>
+      <p><span lang="ta">தமிழக விவசாயத்துக்கான முழுமையான வேளாண் தொழில்நுட்ப நிறுவனம். தூத்துக்குடியில் உருவாக்கப்பட்டது.</span><span lang="en">A full-stack agritech company for Tamil Nadu, built in Thoothukudi.</span></p>
       <a href="mailto:agrowai.tn@gmail.com">agrowai.tn@gmail.com</a>
     </div>
-    <div><h4><span lang="ta">விவசாயிகள்</span><span lang="en">Farmers</span></h4><ul>
-      <li><a href="/#app"><span lang="ta">செயலி</span><span lang="en">The app</span></a></li>
-      <li><a href="/#faq"><span lang="ta">கேள்விகள்</span><span lang="en">Questions</span></a></li>
-      <li><a href="/#get"><span lang="ta">முன்பதிவு</span><span lang="en">Early access</span></a></li></ul></div>
+    <div><h4><span lang="ta">தீர்வுகள்</span><span lang="en">Solutions</span></h4><ul>
+      <li><a href="/inputs"><span lang="ta">இடுபொருட்கள்</span><span lang="en">Farm inputs</span></a></li>
+      <li><a href="/advisory"><span lang="ta">AI ஆலோசனை</span><span lang="en">AI advisory</span></a></li>
+      <li><a href="/produce"><span lang="ta">விளைபொருள், ஏற்றுமதி</span><span lang="en">Produce & export</span></a></li>
+      <li><a href="/finance"><span lang="ta">கடன், காப்பீடு</span><span lang="en">Finance</span></a></li>
+      <li><a href="/brands"><span lang="ta">சொந்த பிராண்டுகள்</span><span lang="en">Own brands</span></a></li>
+      <li><a href="/export-support"><span lang="ta">ஏற்றுமதி உதவி</span><span lang="en">Export support</span></a></li>
+      <li><a href="/programmes"><span lang="ta">தளம், திட்டங்கள்</span><span lang="en">Platform & programmes</span></a></li>
+      <li><a href="/future"><span lang="ta">எதிர்காலம்</span><span lang="en">What comes next</span></a></li></ul></div>
     <div><h4><span lang="ta">வணிகம்</span><span lang="en">Business</span></h4><ul>
+      <li><a href="/app"><span lang="ta">AgrowNex செயலி</span><span lang="en">The AgrowNex app</span></a></li>
       <li><a href="/wholesale"><span lang="ta">மொத்த வாங்குபவர்கள்</span><span lang="en">Wholesale buyers</span></a></li>
       <li><a href="/partners"><span lang="ta">FPO, KVK கூட்டாண்மை</span><span lang="en">FPO & KVK partners</span></a></li></ul></div>
     <div><h4><span lang="ta">நிறுவனம்</span><span lang="en">Company</span></h4><ul>

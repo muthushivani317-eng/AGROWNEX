@@ -1,6 +1,6 @@
 # AgrowNex
 
-> AgrowNex is an AI-based agritech company from Thoothukudi, Tamil Nadu, India. It builds a Tamil-first farming app for smallholder farmers and connects farmer groups (FPOs, KVKs) with wholesale buyers. Operated by SANTA MARIA ENTERPRISES (Udyam-registered MSME, UDYAM-TN-26-0095328). Website: https://agrowai.in
+> AgrowNex is a full-stack agritech company from Thoothukudi, Tamil Nadu, India. It runs a Tamil-first AI farming app and serves farmers and FPOs across seven engines: farm inputs, AI advisory, produce trading and export, finance through regulated partners, own brands and value-add, export support for FPOs, and programmes (training, equipment rental, organic certification). Operated by SANTA MARIA ENTERPRISES (Udyam-registered MSME, UDYAM-TN-26-0095328). Website: https://agrowai.in
 
 ## What AgrowNex does
 - AI crop disease detection from a leaf photo, with organic care first and a chemical option only if needed. When unsure, it says so and suggests an expert.
@@ -21,7 +21,10 @@
 - Contact: agrowai.tn@gmail.com · WhatsApp +91 86672 37404 · 232/1 North Raja Street, Thoothukudi 628001
 
 ## Pages
-- [Home](https://agrowai.in/): the app, how the disease check works, data sources, FAQ
+- [Home](https://agrowai.in/): company overview and the seven engines
+- [Solutions](https://agrowai.in/solutions): all engines, now / next / later
+- [Farm inputs](https://agrowai.in/inputs) · [AI advisory](https://agrowai.in/advisory) · [Produce & export](https://agrowai.in/produce) · [Finance](https://agrowai.in/finance) · [Own brands](https://agrowai.in/brands) · [Export support](https://agrowai.in/export-support) · [Platform & programmes](https://agrowai.in/programmes) · [What comes next](https://agrowai.in/future)
+- [The app](https://agrowai.in/app): how the disease check works, data sources, FAQ
 - [Wholesale buyers](https://agrowai.in/wholesale): source produce directly from farmer groups
 - [FPO & KVK partners](https://agrowai.in/partners): digital platform for farmer organisations
 - [About](https://agrowai.in/about): story, principles, field photos, company details
