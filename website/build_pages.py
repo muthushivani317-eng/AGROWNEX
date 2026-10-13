@@ -14,6 +14,7 @@ NAV = [
     ('/app', 'செயலி', 'The app', 'app'),
     ('/partners', 'FPO · KVK', 'FPO & KVK', 'partners'),
     ('/about', 'எங்களைப் பற்றி', 'About', 'about'),
+    ('/mabif', 'MABIF', 'MABIF', 'mabif'),
     ('/contact', 'தொடர்பு', 'Contact', 'contact'),
 ]
 
@@ -545,6 +546,8 @@ contact = page('contact', 'Contact AgrowNex — AI agriculture, Tamil Nadu',
         <dl class="facts">
           <dt>{t("மின்னஞ்சல்", "Email")}</dt><dd><a href="mailto:agrowai.tn@gmail.com">agrowai.tn@gmail.com</a></dd>
           <dt>WhatsApp</dt><dd><a href="https://wa.me/918667237404" target="_blank" rel="noopener">+91 86672 37404</a></dd>
+          <dt>LinkedIn</dt><dd><a href="https://www.linkedin.com/company/agrownex" target="_blank" rel="noopener">linkedin.com/company/agrownex</a></dd>
+          <dt>Instagram</dt><dd><a href="https://www.instagram.com/agrowai/" target="_blank" rel="noopener">instagram.com/agrowai</a></dd>
           <dt>{t("முகவரி", "Address")}</dt><dd>SANTA MARIA ENTERPRISES, 232/1 North Raja Street, Near Mattakadai, Thoothukudi 628001</dd>
         </dl>
       </div>
