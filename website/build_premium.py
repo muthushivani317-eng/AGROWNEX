@@ -647,7 +647,7 @@ for slug, e in ENGINES.items():
     write(slug, engine_page(slug, e))
 
 # ================================================================= sitemap + llms
-PAGES = ['', 'solutions'] + list(ENGINES) + ['app', 'wholesale', 'partners', 'about', 'contact', 'privacy', 'delete-account']
+PAGES = ['', 'solutions'] + list(ENGINES) + ['app', 'wholesale', 'partners', 'about', 'mabif', 'contact', 'privacy', 'delete-account']
 sm = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
 for p in PAGES:
     pr = '1.0' if p == '' else ('0.9' if p in ENGINES or p in ('solutions', 'app') else '0.6')

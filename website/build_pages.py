@@ -140,6 +140,7 @@ FOOTER = f'''<footer>
       <li><a href="/partners">{t("FPO, KVK கூட்டாண்மை", "FPO & KVK partners")}</a></li></ul></div>
     <div><h4>{t("நிறுவனம்", "Company")}</h4><ul>
       <li><a href="/about">{t("எங்களைப் பற்றி", "About")}</a></li>
+      <li><a href="/mabif">{t("MABIF உறுப்பினர்", "MABIF member")}</a></li>
       <li><a href="/contact">{t("தொடர்பு", "Contact")}</a></li>
       <li><a href="/privacy">{t("தனியுரிமைக் கொள்கை", "Privacy policy")}</a></li>
       <li><a href="/delete-account">{t("கணக்கை நீக்குதல்", "Delete account")}</a></li></ul></div>
@@ -472,6 +473,7 @@ about = page('about', 'About AgrowNex — AI agritech company, Thoothukudi, Tami
         <figure class="reveal"><img src="/assets/img/farmer-feedback-2.jpg" alt="Another farmer giving feedback on AgrowNex at the KVK camp" width="720" height="1280" loading="lazy">
           <figcaption>{t("விவசாயிகளின் கேள்விகளுக்கு நேரடிப் பதில்.", "Answering farmers' questions in person.")}</figcaption></figure>
       </div>
+      <p style="margin-top:28px"><a href="/mabif">{t("புதியது: NABARD–MABIF உறுப்பினர் ஆனோம் →", "New: we're now a NABARD–MABIF member →")}</a></p>
     </div>
   </section>
 
@@ -553,7 +555,78 @@ contact = page('contact', 'Contact AgrowNex — AI agriculture, Tamil Nadu',
     </div>
   </section>''')
 
-for slug, html in [('wholesale', wholesale), ('partners', partners), ('about', about), ('contact', contact)]:
+# ---------------------------------------------------------------- mabif
+mabif = page('mabif', 'AgrowNex is a member of MABIF — NABARD-Madurai Agribusiness Incubation Forum',
+    'AgrowNex has joined MABIF, the Madurai Agribusiness Incubation Forum backed by NABARD and TNAU, gaining mentorship, '
+    'market linkages and trade-fair access for Tamil Nadu farmers.',
+    'mabif', f'''{hero("/assets/img/mabif-handover.jpg", "AgrowNex team handing over their booklet at the MABIF office, Madurai",
+    "New · October 2026",
+    "AgrowNex இப்போது <em>MABIF உறுப்பினர்.</em>",
+    "AgrowNex is now a <em>member of MABIF.</em>",
+    "NABARD, TNAU ஆதரவுடன் இயங்கும் மதுரை வேளாண் வணிகத் தொடக்க ஊக்குவிப்பு மையத்தில் (MABIF) இணைந்துள்ளோம்.",
+    "We've joined the Madurai Agribusiness Incubation Forum (MABIF), backed by NABARD and TNAU.")}
+
+  <section class="band">
+    <div class="wrap grid-2">
+      <div class="reveal">
+        <p class="kicker" lang="ta">MABIF என்றால் என்ன</p><p class="kicker" lang="en">What is MABIF</p>
+        <h2 lang="ta">NABARD, TNAU ஆதரவுடன் ஒரு வேளாண் தொடக்க நிறுவன ஊக்குவிப்பு மையம்.</h2>
+        <h2 lang="en">An agribusiness incubation forum backed by NABARD and TNAU.</h2>
+        <p class="intro" lang="ta">MABIF தமிழ்நாட்டு வேளாண் தொழில்நுட்பத் தொடக்க நிறுவனங்களுக்கு வழிகாட்டுதல், சந்தை இணைப்பு, முதலீட்டாளர் அறிமுகம் ஆகியவற்றை வழங்குகிறது.</p>
+        <p class="intro" lang="en">MABIF supports Tamil Nadu agritech startups with mentorship, market linkages and investor introductions.</p>
+        <p class="intro" lang="ta">2026 அக்டோபரில், AgrowNex இந்த மன்றத்தின் உறுப்பினராக ஏற்கப்பட்டது.</p>
+        <p class="intro" lang="en">In October 2026, AgrowNex was accepted as a member of this forum.</p>
+      </div>
+      <figure class="split-photo reveal"><img src="/assets/img/mabif-plaque.jpg" alt="MABIF plaque with NABARD and Government of Tamil Nadu emblems at the Madurai office" width="960" height="1280" loading="lazy"></figure>
+    </div>
+  </section>
+
+  <section class="band band-mist" id="field">
+    <div class="wrap">
+      <p class="kicker" lang="ta">மதுரையில்</p><p class="kicker" lang="en">At MABIF, Madurai</p>
+      <h2 lang="ta">உறுப்பினராக ஏற்கப்பட்ட நாள்.</h2>
+      <h2 lang="en">The day we were welcomed as a member.</h2>
+      <div class="gallery pair">
+        <figure class="reveal"><img src="/assets/img/mabif-handover.jpg" alt="AgrowNex team with MABIF mentors, handing over the AgrowNex booklet" width="1280" height="960" loading="lazy">
+          <figcaption>{t("AgrowNex குழு, MABIF வல்லுநர்களுடன் — எங்கள் செயலி கையேட்டை வழங்கியபோது.", "The AgrowNex team with MABIF's mentors, handing over our app booklet.")}</figcaption></figure>
+        <figure class="reveal"><img src="/assets/img/mabif-sign.jpg" alt="I love MABIF sign at the MABIF campus" width="960" height="1280" loading="lazy">
+          <figcaption>{t("MABIF வளாகம், மதுரை.", "The MABIF campus, Madurai.")}</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <p class="kicker" lang="ta">இது எங்களுக்கு என்ன தரும்</p><p class="kicker" lang="en">What membership brings</p>
+      <h2 lang="ta">ஆலோசனை முதல் ஏற்றுமதி வரை.</h2>
+      <h2 lang="en">From mentorship to export.</h2>
+      <div class="tiles">
+        <div class="tile"><b lang="ta">நிபுணர் வழிகாட்டுதல்</b><b lang="en">Expert mentorship</b>
+          <p lang="ta">சந்தை வளர்ச்சி, வணிக மாதிரி குறித்த நேரடி ஆலோசனை.</p><p lang="en">Direct guidance on market growth and business model.</p></div>
+        <div class="tile"><b lang="ta">சந்தை இணைப்பு</b><b lang="en">Market linkages</b>
+          <p lang="ta">FPO, வாங்குபவர்கள், முதலீட்டாளர்களுடன் அறிமுகம்.</p><p lang="en">Introductions to FPOs, buyers and investors.</p></div>
+        <div class="tile"><b lang="ta">வர்த்தக கண்காட்சிகள்</b><b lang="en">Trade fair access</b>
+          <p lang="ta">Gulfood 2025, துபாய் உள்ளிட்ட சர்வதேச கண்காட்சிகளில் MABIF-உடன் பங்கேற்பு வாய்ப்பு.</p>
+          <p lang="en">A route to international fairs — MABIF exhibited at Gulfood 2025, Dubai.</p></div>
+        <div class="tile"><b lang="ta">நம்பகத்தன்மை</b><b lang="en">Credibility</b>
+          <p lang="ta">NABARD, TNAU ஆதரவு — வாங்குபவர்கள், முதலீட்டாளர்களிடம் நம்பிக்கை கூடுதல்.</p>
+          <p lang="en">NABARD and TNAU backing builds trust with buyers and investors.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band band-ink">
+    <div class="wrap">
+      <p class="kicker" lang="ta">நன்றி</p><p class="kicker" lang="en">Thank you</p>
+      <h2 lang="ta">எங்களுக்கு வழிகாட்டிய வல்லுநர்களுக்கு நன்றி.</h2>
+      <h2 lang="en">Thank you to the mentors who guided us.</h2>
+      <p class="intro" lang="ta">மன்றத் தலைவரை சந்தித்த கூட்டத்தில் AgrowNex-க்கு வழிகாட்டிய மூன்று வல்லுநர்களுக்கும், சந்தை வளர்ச்சி குறித்து விளக்கியதற்கும் எங்கள் நன்றி.</p>
+      <p class="intro" lang="en">Our thanks to the three mentors who guided AgrowNex and explained how the market grows, at the meeting where we met the forum's chairperson.</p>
+      <p style="margin-top:28px"><a href="https://www.startupgrantsindia.com/providers/madurai-agribusiness-incubation-forum-mabif" target="_blank" rel="noopener">{t("MABIF பற்றி மேலும் →", "More about MABIF →")}</a></p>
+    </div>
+  </section>''', og='/assets/img/mabif-handover.jpg')
+
+for slug, html in [('wholesale', wholesale), ('partners', partners), ('about', about), ('contact', contact), ('mabif', mabif)]:
     (W / f'{slug}.html').write_text(html, encoding='utf-8')
     print('wrote', slug, len(html))
 
