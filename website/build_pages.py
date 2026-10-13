@@ -1,4 +1,5 @@
 """Generate AgrowNex inner pages with a shared header and footer."""
+import os
 import re
 from pathlib import Path
 
@@ -70,15 +71,15 @@ def header(current):
 
 import json
 
-SITE = 'https://agrowai.in'
+SITE_URL = os.getenv('SITE_URL', 'https://agrownex.com').rstrip('/')
 ABOUT_EN = ('AgrowNex is an AI-based agritech company from Thoothukudi, Tamil Nadu, India. It builds a Tamil-first '
             'farming app with AI crop disease detection from a leaf photo, official mandi prices, village weather and '
             'spray advice, crop calendars and AI help in Tamil, and connects farmer groups (FPOs, KVKs) with wholesale buyers.')
 
 ORG = {
-    "@type": "Organization", "@id": SITE + "/#org", "name": "AgrowNex", "alternateName": ["Agrow Nex", "AgrowNex Agritech"],
-    "legalName": "SANTA MARIA ENTERPRISES", "url": SITE + "/", "logo": SITE + "/assets/img/emblem-128.png",
-    "image": SITE + "/assets/img/og.jpg", "description": ABOUT_EN, "email": "agrowai.tn@gmail.com",
+    "@type": "Organization", "@id": SITE_URL + "/#org", "name": "AgrowNex", "alternateName": ["Agrow Nex", "AgrowNex Agritech"],
+    "legalName": "SANTA MARIA ENTERPRISES", "url": SITE_URL, "logo": SITE_URL + "/assets/img/emblem-128.png",
+    "image": SITE_URL + "/assets/img/og.jpg", "description": ABOUT_EN, "email": "agrowai.tn@gmail.com",
     "foundingDate": "2026", "foundingLocation": "Thoothukudi, Tamil Nadu, India",
     "address": {"@type": "PostalAddress", "streetAddress": "232/1 North Raja Street, Near Mattakadai",
                 "addressLocality": "Thoothukudi", "postalCode": "628001", "addressRegion": "Tamil Nadu", "addressCountry": "IN"},
@@ -88,6 +89,7 @@ ORG = {
                    "Mandi prices", "Farmer Producer Organisations", "Tamil Nadu agriculture", "Smart farming"],
     "contactPoint": {"@type": "ContactPoint", "contactType": "customer support", "email": "agrowai.tn@gmail.com",
                      "telephone": "+91-8667237404", "availableLanguage": ["Tamil", "English"]},
+    "sameAs": ["https://www.linkedin.com/company/agrownex", "https://www.instagram.com/agrowai/"],
 }
 
 
@@ -97,11 +99,11 @@ def ld(*nodes):
 
 
 def seo_head(path, title, desc, og, extra=()):
-    url = SITE + path
+    url = SITE_URL + path
     page_node = {"@type": "WebPage", "@id": url + "#page", "url": url, "name": title, "description": desc,
-                 "isPartOf": {"@id": SITE + "/#site"}, "about": {"@id": SITE + "/#org"}, "inLanguage": ["ta", "en"]}
-    site_node = {"@type": "WebSite", "@id": SITE + "/#site", "url": SITE + "/", "name": "AgrowNex",
-                 "publisher": {"@id": SITE + "/#org"}, "inLanguage": ["ta", "en"]}
+                 "isPartOf": {"@id": SITE_URL + "/#site"}, "about": {"@id": SITE_URL + "/#org"}, "inLanguage": ["ta", "en"]}
+    site_node = {"@type": "WebSite", "@id": SITE_URL + "/#site", "url": SITE_URL, "name": "AgrowNex",
+                 "publisher": {"@id": SITE_URL + "/#org"}, "inLanguage": ["ta", "en"]}
     return f"""<link rel="canonical" href="{url}">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <meta name="keywords" content="AgrowNex, agritech Tamil Nadu, AI agriculture, AI farming app, crop disease detection, Tamil farming app, mandi prices, FPO software, agritech startup Thoothukudi">
@@ -112,7 +114,7 @@ def seo_head(path, title, desc, og, extra=()):
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{title}">
 <meta name="twitter:description" content="{desc}">
-<meta name="twitter:image" content="{SITE}{og}">
+<meta name="twitter:image" content="{SITE_URL}{og}">
 {ld(ORG, site_node, page_node, *extra)}"""
 
 
@@ -158,7 +160,7 @@ def page(slug, title, desc, current, body, og='/assets/img/og.jpg', extra=(), pr
 <link rel="icon" type="image/png" href="/assets/img/emblem-64.png">
 <meta property="og:title" content="{title}">
 <meta property="og:description" content="{desc}">
-<meta property="og:image" content="{SITE}{og}">
+<meta property="og:image" content="{SITE_URL}{og}">
 <meta property="og:type" content="website">
 {seo_head('/' + slug, title, desc, og, extra)}{preload}
 {FONTS}
@@ -552,11 +554,11 @@ contact = page('contact', 'Contact AgrowNex — AI agriculture, Tamil Nadu',
   </section>''')
 
 for slug, html in [('wholesale', wholesale), ('partners', partners), ('about', about), ('contact', contact)]:
-    (W / f'{slug}.html').write_text(html)
+    (W / f'{slug}.html').write_text(html, encoding='utf-8')
     print('wrote', slug, len(html))
 
 # ---------------------------------------------------------------- index: shared header/footer + business section
-idx = (W / 'app.html').read_text()
+idx = (W / 'app.html').read_text(encoding='utf-8')
 idx = re.sub(r'<a class="skip".*?</header>', header('app'), idx, flags=re.S)
 idx = re.sub(r'<footer>.*?</footer>', FOOTER, idx, flags=re.S)
 biz = f'''  <!-- For business -->
@@ -581,7 +583,7 @@ if 'id="business"' in idx:
 else:
     idx = idx.replace('  <!-- FAQ -->', biz, 1)
 idx = idx.replace('href="mailto:agrowai.tn@gmail.com?subject=AgrowNex%20partnership"', 'href="/partners#join"')
-(W / 'app.html').write_text(idx)
+(W / 'app.html').write_text(idx, encoding='utf-8')
 print('app updated')
 
 # ---------------------------------------------------------------- index SEO
@@ -598,17 +600,17 @@ FAQ = [
     ("Which crops does AgrowNex support?", "Paddy, banana, chilli, cotton, groundnut and more, with crop calendars for "
      "15 crops based on TNAU and ICAR guidance."),
     ("Can wholesale buyers source produce through AgrowNex?", "Yes. Processors, rice mills, exporters and traders can send "
-     "a requirement on agrowai.in/wholesale and are matched with farmer groups who have listed that harvest."),
+    "a requirement on our wholesale page and are matched with farmer groups who have listed that harvest."),
 ]
-APP = {"@type": "MobileApplication", "@id": SITE + "/app#app", "name": "AgrowNex", "operatingSystem": "Android",
+APP = {"@type": "MobileApplication", "@id": SITE_URL + "/app#app", "name": "AgrowNex", "operatingSystem": "Android",
        "applicationCategory": "LifestyleApplication", "applicationSubCategory": "Agriculture",
-       "inLanguage": ["ta", "en"], "description": HOME_DESC, "publisher": {"@id": SITE + "/#org"},
+       "inLanguage": ["ta", "en"], "description": HOME_DESC, "publisher": {"@id": SITE_URL + "/#org"},
        "offers": {"@type": "Offer", "price": "0", "priceCurrency": "INR"},
        "featureList": ["AI crop disease detection from a leaf photo", "Official mandi prices (Agmarknet)",
                        "Village weather and spray advice", "Crop calendar and daily farm tasks",
                        "AI help in Tamil by voice or text", "Government scheme finder",
                        "Soil and satellite crop view", "Sell produce to buyers"]}
-FAQ_NODE = {"@type": "FAQPage", "@id": SITE + "/app#faq",
+FAQ_NODE = {"@type": "FAQPage", "@id": SITE_URL + "/app#faq",
             "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
                            for q, a in FAQ]}
 WHAT_IS = (
@@ -621,13 +623,13 @@ WHAT_IS = (
     f'          <p lang="en">{ABOUT_EN}</p>\n'
     '        </details>')
 
-idx = (W / 'app.html').read_text()
+idx = (W / 'app.html').read_text(encoding='utf-8')
 idx = re.sub(r'<title>.*?</title>', f'<title>{HOME_TITLE}</title>', idx, count=1, flags=re.S)
 idx = re.sub(r'<meta name="description" content="[^"]*">', f'<meta name="description" content="{HOME_DESC}">', idx, count=1)
 idx = re.sub(r'<meta property="og:title" content="[^"]*">', f'<meta property="og:title" content="{HOME_TITLE}">', idx, count=1)
 idx = re.sub(r'<meta property="og:description" content="[^"]*">',
              f'<meta property="og:description" content="{HOME_DESC}">', idx, count=1)
-idx = idx.replace('content="https://www.agrowai.in/assets/img/og.jpg"', f'content="{SITE}/assets/img/og.jpg"')
+idx = re.sub(r'content="https://[^"]+/assets/img/og\.jpg"', f'content="{SITE_URL}/assets/img/og.jpg"', idx)
 idx = re.sub(r'\n<!-- seo -->.*?<!-- /seo -->', '', idx, flags=re.S)
 idx = idx.replace('\n<link rel="preconnect" href="https://fonts.googleapis.com">',
                   '\n<!-- seo -->\n' + seo_head('/app', HOME_TITLE, HOME_DESC, '/assets/img/og.jpg', (APP, FAQ_NODE)) +
@@ -638,5 +640,5 @@ if 'premium.css' not in idx:
     idx = idx.replace('<link rel="stylesheet" href="assets/site.css">', '<link rel="stylesheet" href="/assets/site.css">\n<link rel="stylesheet" href="/assets/premium.css">')
     idx = idx.replace('<script src="assets/site.js" defer></script>', '<script src="/assets/site.js" defer></script>\n<script src="/assets/premium.js" defer></script>')
 idx = idx.replace('src="assets/', 'src="/assets/').replace('href="assets/', 'href="/assets/').replace('srcset="assets/', 'srcset="/assets/').replace('poster="assets/', 'poster="/assets/').replace('data-src="assets/', 'data-src="/assets/').replace('data-src-mobile="assets/', 'data-src-mobile="/assets/').replace('data-poster-mobile="assets/', 'data-poster-mobile="/assets/')
-(W / 'app.html').write_text(idx)
+(W / 'app.html').write_text(idx, encoding='utf-8')
 print('index SEO done')

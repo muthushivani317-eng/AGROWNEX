@@ -2,7 +2,9 @@
 
 Run:  python website/build_premium.py   (also rebuilds the inner pages via build_pages)
 """
-from build_pages import W, t, page, SOLUTIONS, SITE, ORG  # noqa: F401  (import also rebuilds old pages)
+import re
+
+from build_pages import W, t, page, seo_head, SOLUTIONS, SITE_URL, ORG  # noqa: F401  (import also rebuilds old pages)
 
 IMG = '/assets/img/x/'
 
@@ -145,13 +147,13 @@ def pager(slug):
 
 
 def service_ld(name, desc, slug):
-    return {"@type": "Service", "@id": f"{SITE}/{slug}#service", "name": name, "description": desc,
-            "provider": {"@id": SITE + "/#org"}, "areaServed": {"@type": "State", "name": "Tamil Nadu"},
-            "url": f"{SITE}/{slug}"}
+    return {"@type": "Service", "@id": f"{SITE_URL}/{slug}#service", "name": name, "description": desc,
+            "provider": {"@id": SITE_URL + "/#org"}, "areaServed": {"@type": "State", "name": "Tamil Nadu"},
+            "url": f"{SITE_URL}/{slug}"}
 
 
 def write(slug, html):
-    (W / f'{slug}.html').write_text(html)
+    (W / f'{slug}.html').write_text(html, encoding='utf-8')
     print('wrote', slug, len(html))
 
 
@@ -303,9 +305,9 @@ home_body = f'''  <section class="hero hero-premium" id="top">
      TALK + PARTNER)}
 '''
 
-HOME_TITLE = 'AgrowNex — full-stack agritech company for Tamil Nadu farmers and FPOs'
-HOME_DESC = ('AgrowNex is a full-stack agritech company from Thoothukudi, Tamil Nadu: AI crop advice in Tamil, farm inputs, '
-             'produce trading and export, finance through partners, own brands and programmes for FPOs.')
+HOME_TITLE = 'AgrowNex – Tamil AI Farming App for Farmers & FPOs | Grow better. Sell better.'
+HOME_DESC = ('AgrowNex is a Tamil-first agri-tech platform for farmers and FPOs in South Tamil Nadu – AI crop disease '
+             'detection, mandi prices, quality inputs and market linkages.')
 home = page('', HOME_TITLE, HOME_DESC, 'home', home_body, og='/assets/img/og.jpg',
             preload=f'\n<link rel="preload" as="image" href="{IMG}aerial.jpg">')
 write('index', home)
@@ -649,7 +651,66 @@ PAGES = ['', 'solutions'] + list(ENGINES) + ['app', 'wholesale', 'partners', 'ab
 sm = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
 for p in PAGES:
     pr = '1.0' if p == '' else ('0.9' if p in ENGINES or p in ('solutions', 'app') else '0.6')
-    sm.append(f'  <url><loc>{SITE}/{p}</loc><lastmod>2026-10-11</lastmod><priority>{pr}</priority></url>')
+    sm.append(f'  <url><loc>{SITE_URL}/{p}</loc><lastmod>2026-10-11</lastmod><priority>{pr}</priority></url>')
 sm.append('</urlset>')
-(W / 'sitemap.xml').write_text('\n'.join(sm) + '\n')
+(W / 'sitemap.xml').write_text('\n'.join(sm) + '\n', encoding='utf-8')
 print('sitemap', len(PAGES))
+
+robots = f'''# AgrowNex — {SITE_URL}
+# Search engines and AI assistants are welcome to read this site.
+User-agent: *
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+Sitemap: {SITE_URL}/sitemap.xml
+'''
+(W / 'robots.txt').write_text(robots, encoding='utf-8')
+
+
+def add_static_seo(slug, title, desc):
+    path = W / f'{slug}.html'
+    html = path.read_text(encoding='utf-8')
+    html = re.sub(r'\n<!-- seo -->.*?<!-- /seo -->', '', html, flags=re.S)
+    social = f'''<!-- seo -->
+<meta property="og:title" content="{title}">
+<meta property="og:description" content="{desc}">
+<meta property="og:image" content="{SITE_URL}/assets/img/og.jpg">
+<meta property="og:type" content="website">
+{seo_head('/' + slug, title, desc, '/assets/img/og.jpg')}
+<!-- /seo -->'''
+    html = html.replace(f'<title>{title}</title>', f'<title>{title}</title>\n{social}', 1)
+    path.write_text(html, encoding='utf-8')
+
+
+add_static_seo('privacy', 'AgrowNex Privacy Policy',
+               'AgrowNex privacy policy — what farmer data we collect, why, who we share it with, and how to delete it.')
+add_static_seo('delete-account', 'Delete AgrowNex Account', 'How to delete your AgrowNex account and data.')

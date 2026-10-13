@@ -1,4 +1,4 @@
-# AgrowNex — https://agrowai.in
+# AgrowNex — https://agrownex.com
 # Search engines and AI assistants are welcome to read this site.
 User-agent: *
 Allow: /
@@ -33,4 +33,4 @@ Allow: /
 User-agent: Applebot-Extended
 Allow: /
 
-Sitemap: https://agrowai.in/sitemap.xml
+Sitemap: https://agrownex.com/sitemap.xml

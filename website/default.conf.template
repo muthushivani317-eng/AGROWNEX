@@ -1,10 +1,23 @@
+map $http_x_forwarded_host $effective_host {
+    "" $host;
+    ~*^(?<forwarded_hostname>[^,:]+)(?::\d+)?(?:,\s*.*)?$ $forwarded_hostname;
+    default $host;
+}
+
+map $effective_host $redirect_to_canonical {
+    default 0;
+    agrowai.in 1;
+    www.agrowai.in 1;
+    www.agrownex.com 1;
+}
+
 server {
     listen ${PORT};
     server_name _;
     server_tokens off;
 
-    # One canonical address for search engines: www → agrowai.in
-    if ($host = "www.agrowai.in") { return 301 https://agrowai.in$request_uri; }
+    # Preserve the complete path and query while consolidating legacy/www hosts.
+    if ($redirect_to_canonical) { return 301 https://agrownex.com$request_uri; }
 
     root /usr/share/nginx/html;
     index index.html;
