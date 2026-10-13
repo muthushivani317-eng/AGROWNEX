@@ -183,6 +183,6 @@ async def backup_ingest(
     session: SessionDep,
     x_market_ingest_token: Annotated[str | None, Header()] = None,
 ):
-    """Store one official Agmarknet 2.0 state report uploaded from India."""
+    """Store official prices (data.gov.in records or an Agmarknet 2.0 report) uploaded from India."""
     verify_ingest_token(x_market_ingest_token)
     return success(await ingest_state_report(session, payload), message="Prices stored")

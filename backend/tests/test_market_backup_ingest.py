@@ -113,3 +113,38 @@ async def test_ingest_refuses_a_short_configured_token(app, monkeypatch):
     res = await _call(app, "POST", "/market/backup/ingest", json=_body(),
                       headers={"X-Market-Ingest-Token": "short"})
     assert res.status_code == 401
+
+
+def _datagov_body(day):
+    d = day.strftime("%d/%m/%Y")
+    row = {"state": "Tamil Nadu", "district": "Salem", "market": "Salem(Uzhavar Sandhai)",
+           "commodity": "Tomato", "variety": "Local", "grade": "FAQ", "arrival_date": d,
+           "min_price": "1800", "max_price": "2200", "modal_price": "2000"}
+    other_state = {**row, "state": "Kerala"}
+    other_day = {**row, "arrival_date": (day - timedelta(days=1)).strftime("%d/%m/%Y")}
+    no_date = {**row, "arrival_date": ""}
+    return {"state": "Tamil Nadu", "trade_day": day.isoformat(),
+            "records": [row, other_state, other_day, no_date]}
+
+
+async def test_ingest_stores_datagov_records_for_state_and_day_only(app, db_session):
+    day = today_ist() - timedelta(days=1)
+    res = await _call(app, "POST", "/market/backup/ingest", json=_datagov_body(day),
+                      headers={"X-Market-Ingest-Token": TOKEN})
+
+    assert res.status_code == 200, res.text
+    assert res.json()["data"]["saved"] == 1
+    (price,) = (await db_session.execute(select(MarketPrice))).scalars().all()
+    assert (price.commodity, price.source, price.modal_price, price.price_date) == ("Tomato", "agmarknet", 2000, day)
+
+
+@pytest.mark.parametrize("change", ["neither", "both"])
+async def test_ingest_needs_exactly_one_source(app, change):
+    body = _body()
+    if change == "neither":
+        body.pop("report")
+    else:
+        body["records"] = []
+    res = await _call(app, "POST", "/market/backup/ingest", json=body,
+                      headers={"X-Market-Ingest-Token": TOKEN})
+    assert res.status_code in (400, 422)
