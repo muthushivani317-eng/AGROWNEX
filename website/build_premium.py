@@ -4,7 +4,7 @@ Run:  python website/build_premium.py   (also rebuilds the inner pages via build
 """
 import re
 
-from build_pages import W, t, page, seo_head, SOLUTIONS, SITE_URL, ORG  # noqa: F401  (import also rebuilds old pages)
+from build_pages import W, t, page, seo_head, SOLUTIONS, SITE_URL, ORG, SOCIAL_FLOAT  # noqa: F401  (import also rebuilds old pages)
 
 IMG = '/assets/img/x/'
 
@@ -714,3 +714,10 @@ def add_static_seo(slug, title, desc):
 add_static_seo('privacy', 'AgrowNex Privacy Policy',
                'AgrowNex privacy policy — what farmer data we collect, why, who we share it with, and how to delete it.')
 add_static_seo('delete-account', 'Delete AgrowNex Account', 'How to delete your AgrowNex account and data.')
+
+for _slug in ('privacy', 'delete-account'):
+    _p = W / f'{_slug}.html'
+    _html = _p.read_text(encoding='utf-8')
+    if 'social-float' not in _html:
+        _html = _html.replace('</body>', SOCIAL_FLOAT + '\n</body>', 1)
+        _p.write_text(_html, encoding='utf-8')
