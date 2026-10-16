@@ -80,5 +80,7 @@ class CalendarEvent(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     registry_version: Mapped[str | None] = mapped_column(String(40))
     registry_content_hash: Mapped[str | None] = mapped_column(String(64))
     registry_verification_status: Mapped[str | None] = mapped_column(String(24))
-    registry_source_reference: Mapped[str | None] = mapped_column(String(240))
+    # Verified schedules cite multiple TNAU/ICAR URLs (up to ~1,000 chars), so
+    # this must be unbounded text; String(240) broke /calendar/generate.
+    registry_source_reference: Mapped[str | None] = mapped_column(Text)
     organic_practice: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
