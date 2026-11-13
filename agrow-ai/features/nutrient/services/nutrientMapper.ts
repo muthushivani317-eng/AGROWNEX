@@ -44,7 +44,7 @@ export function apiToAnalysis(dto: ApiNutrientAnalysis): NutrientAnalysis {
     explanationTamil: dto.explanation_tamil,
     explanationEnglish: dto.explanation_english,
     resultCode: dto.result_code ?? "abstained",
-    confidenceBand: dto.confidence_band ?? "low",
+    confidenceBand: dto.confidence_band === undefined ? "low" : dto.confidence_band,
     evidenceObserved: dto.evidence_observed ?? [],
     evidenceMissing: dto.evidence_missing ?? ["compatible_corroboration"],
     conflicts: dto.conflicts ?? [],
@@ -54,8 +54,56 @@ export function apiToAnalysis(dto: ApiNutrientAnalysis): NutrientAnalysis {
   };
 }
 
-export function apiToReport(dto: ApiNutrientReport): NutrientReport {
+export function applyGroundnutNutrientSafety(report: NutrientReport): NutrientReport {
+  const groundnut = /^(groundnut|peanut|arachis hypogaea)$/i.test(
+    (report.crop ?? "").trim(),
+  );
+  const groundnutSpecific = Boolean(groundnut && report.analysis?.primaryDeficiency);
+  if (!groundnutSpecific || !report.analysis) return report;
+  const evidenceRecommendations = report.recommendations.filter(
+    (rec) => rec.category === "test" || rec.category === "expert",
+  );
+  if (!evidenceRecommendations.some((rec) => rec.category === "test")) {
+    evidenceRecommendations.push({
+      category: "test",
+      code: "nutrient.rec.test.soil_test",
+      nutrient: null,
+      severity: "warning",
+      priority: "medium",
+    });
+  }
+  if (!evidenceRecommendations.some((rec) => rec.category === "expert")) {
+    evidenceRecommendations.push({
+      category: "expert",
+      code: "nutrient.rec.expert.consult",
+      nutrient: null,
+      severity: "warning",
+      priority: "medium",
+    });
+  }
   return {
+    ...report,
+    analysis: {
+      ...report.analysis,
+      status: report.analysis.resultCode === "abstained" ? "not_confirmed" : "possible",
+      confidence: null,
+      needsTest: true,
+      needsExpert: true,
+      explanationTamil: null,
+      explanationEnglish: null,
+      resultCode:
+        report.analysis.resultCode === "abstained" ? "abstained" : "possible_finding",
+      confidenceBand: null,
+      suggestedNextEvidence: ["soil_or_tissue_test", "expert_review"],
+      expertVerified: false,
+    },
+    recommendations: evidenceRecommendations,
+  };
+}
+
+export function apiToReport(dto: ApiNutrientReport): NutrientReport {
+  const mappedAnalysis = dto.analysis ? apiToAnalysis(dto.analysis) : null;
+  return applyGroundnutNutrientSafety({
     id: dto.id,
     farmId: dto.farm_id,
     crop: dto.crop,
@@ -69,11 +117,11 @@ export function apiToReport(dto: ApiNutrientReport): NutrientReport {
     latitude: dto.latitude,
     longitude: dto.longitude,
     weatherSnapshot: dto.weather_snapshot,
-    analysis: dto.analysis ? apiToAnalysis(dto.analysis) : null,
+    analysis: mappedAnalysis,
     symptoms: dto.symptoms ?? [],
     recommendations: (dto.recommendations ?? []).map(apiToRecommendation),
     createdAt: dto.created_at,
-  };
+  });
 }
 
 export function apiToHistoryEntry(

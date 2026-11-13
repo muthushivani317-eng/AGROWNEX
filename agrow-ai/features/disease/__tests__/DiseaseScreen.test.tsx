@@ -11,6 +11,7 @@ const mockIdentifyCrop = jest.fn();
 const mockConfirmIdentifiedCrop = jest.fn();
 const mockIdentifyCropInternalOnly = jest.fn();
 const mockConfirmInternalCrop = jest.fn();
+const mockSetGroundnutGrowthPhoto = jest.fn();
 const mockRestrictedPredict = jest.fn();
 const mockCropDiagnosisAdapter = jest.fn();
 const mockLoadDiseaseRecommendation = jest.fn();
@@ -125,6 +126,33 @@ jest.mock('@/features/bananaV3/screens/BananaDiseaseDetectionScreen', () => {
       ),
   };
 });
+jest.mock('@/features/groundnutExperimental', () => {
+  const { Pressable, Text, View } = require('react-native');
+  return {
+    GroundnutDiseaseDetectionScreen: ({
+      onChangeCrop,
+      onCheckGrowthStage,
+      initialImage,
+    }: any) =>
+      mockReact.createElement(
+        View,
+        { testID: 'groundnut-experimental-screen' },
+        mockReact.createElement(Text, null, initialImage?.uri),
+        mockReact.createElement(Pressable, {
+          accessibilityLabel: 'groundnut-change-crop',
+          onPress: onChangeCrop,
+        }),
+        mockReact.createElement(Pressable, {
+          accessibilityLabel: 'groundnut-check-growth-stage',
+          onPress: onCheckGrowthStage,
+        }),
+      ),
+  };
+});
+jest.mock('@/features/growth/services/groundnutPhotoHandoff', () => ({
+  setGroundnutGrowthPhoto: (...args: unknown[]) =>
+    mockSetGroundnutGrowthPhoto(...args),
+}));
 jest.mock('../utils/pickDiseaseImage', () => ({
   captureFromCamera: jest.fn(),
   pickFromGallery: jest.fn(),
@@ -823,7 +851,6 @@ test('accepted chilli dispatches to restricted inference and authenticated recom
 test.each([
   ['paddy', 'rice_blast', false],
   ['cotton', 'cotton_fusarium_wilt', false],
-  ['groundnut', 'groundnut_rust', false],
   ['chilli', 'chilli__bacterial_spot', true],
   ['redgram', 'redgram__sterility_mosaic', true],
 ] as const)(
@@ -905,7 +932,6 @@ test.each([
 test.each([
   ['paddy', 'rice', 'rice_blast', false],
   ['cotton', 'cotton', 'cotton_fusarium_wilt', false],
-  ['groundnut', 'groundnut', 'groundnut_rust', false],
   ['redgram', 'redgram', 'redgram__sterility_mosaic', true],
 ] as const)(
   '%s confirmation enables Analyze and dispatches the crop-specific prediction',
@@ -1001,6 +1027,59 @@ test.each([
     ).toBeTruthy();
   },
 );
+
+test('authorized Groundnut selection opens the dedicated experimental screen', async () => {
+  mockIdentifyCropInternalOnly.mockResolvedValueOnce({
+    request_id: '0123456789abcdef0123456789abcdef',
+    status: 'identified',
+    identified_crop: 'groundnut',
+    confidence: 0.91,
+    margin: 0.72,
+    calibrated_probabilities: { groundnut: 0.91 },
+    farmer_confirmation_required: true,
+  });
+  mockConfirmInternalCrop.mockResolvedValueOnce({
+    request_id: '0123456789abcdef0123456789abcdef',
+    confirmed_crop: 'groundnut',
+    crop_source: 'internal_six_class_confirmed',
+    confirmation_token: 'g'.repeat(43),
+    confirmed_at: '2026-08-03T00:00:00Z',
+    expires_at: '2026-08-03T00:15:00Z',
+  });
+  const picker = require('../utils/pickDiseaseImage')
+    .pickFromGallery as jest.Mock;
+  picker.mockResolvedValueOnce({
+    uri: 'file://groundnut.jpg',
+    mimeType: 'image/jpeg',
+    width: 1000,
+    height: 1000,
+    fileSize: 100000,
+  });
+  let tree: any;
+  await TestRenderer.act(async () => {
+    tree = TestRenderer.create(mockReact.createElement(DiseaseScreen));
+  });
+  await pickPhoto(tree);
+  await TestRenderer.act(async () => {
+    tree.root.findByProps({ accessibilityLabel: 'Confirm crop' }).props.onPress();
+    await Promise.resolve();
+  });
+
+  expect(
+    tree.root.findByProps({ testID: 'groundnut-experimental-screen' }),
+  ).toBeTruthy();
+  expect(tree.root.findByProps({ children: 'file://groundnut.jpg' })).toBeTruthy();
+  expect(mockCropDiagnosisAdapter).not.toHaveBeenCalledWith('groundnut');
+
+  await TestRenderer.act(async () => {
+    tree.root
+      .findByProps({ accessibilityLabel: 'groundnut-check-growth-stage' })
+      .props.onPress();
+  });
+  expect(mockSetGroundnutGrowthPhoto).toHaveBeenCalledWith(
+    expect.objectContaining({ uri: 'file://groundnut.jpg' }),
+  );
+});
 
 test('successful legacy analysis disables Analyze and blocks a second request with the consumed token', async () => {
   mockIdentifyCropInternalOnly.mockResolvedValueOnce({

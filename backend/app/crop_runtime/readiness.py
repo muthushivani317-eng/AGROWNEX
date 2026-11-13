@@ -7,6 +7,7 @@ from typing import Final
 
 from app.banana_v3.artifact_integrity import verify_artifacts
 from app.banana_v3.config import ARTIFACT_ROOT as BANANA_ROOT
+from app.core.config import settings
 from app.legacy_joint.artifacts import (
     verify_bundle_for_controlled_field_test as verify_legacy_bundle,
 )
@@ -16,11 +17,11 @@ from .registry import CropRegistry
 from .resolver import RuntimeResolver
 
 RESTRICTED_CROPS = {"redgram", "chilli"}
-APP_INTEGRATED = {"banana", "paddy", "cotton", "groundnut", *RESTRICTED_CROPS}
+APP_INTEGRATED = {"banana", "paddy", "cotton", "groundnut", "greengram", *RESTRICTED_CROPS}
 # Programmatic invalid-image checks are integrated, but crop-domain/wrong-crop
 # validation still requires approved fixtures. Keep eligibility fail-closed.
 OOD_SAFETY_INTEGRATED: set[str] = set()
-LEGACY_CROPS = {"paddy", "cotton", "groundnut"}
+LEGACY_CROPS = {"paddy", "cotton"}
 _RESTRICTED_FAILURE_REASONS: Final = {
     "RUNTIME_PACKAGE_MISSING": "file_missing",
     "SHA256_MANIFEST_MISSING": "manifest_missing",
@@ -149,6 +150,26 @@ class ReadinessResolver:
 
     def _integrity(self, crop_id: str) -> tuple[bool, bool, str]:
         try:
+            if crop_id == "groundnut":
+                if not settings.groundnut_experimental_enabled:
+                    return False, False, "feature_disabled"
+                try:
+                    from app.groundnut_experimental.service import GroundnutPredictionService
+
+                    GroundnutPredictionService().load()
+                    return True, True, "ready"
+                except Exception:
+                    return True, False, "load_failed"
+            if crop_id == "greengram":
+                if not settings.green_gram_experimental_enabled:
+                    return False, False, "feature_disabled"
+                try:
+                    from app.green_gram_experimental.service import GreenGramPredictionService
+
+                    GreenGramPredictionService().load()
+                    return True, True, "ready"
+                except Exception:
+                    return True, False, "load_failed"
             if crop_id == "banana":
                 present = BANANA_ROOT.is_dir()
                 if present:
@@ -219,4 +240,8 @@ class ReadinessResolver:
                 return True
             except Exception:
                 return False
+        if crop_id == "greengram":
+            return settings.green_gram_experimental_enabled and integrity_verified
+        if crop_id == "groundnut":
+            return settings.groundnut_experimental_enabled and integrity_verified
         return crop_id in APP_INTEGRATED

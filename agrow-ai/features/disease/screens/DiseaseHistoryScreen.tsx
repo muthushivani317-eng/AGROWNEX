@@ -19,6 +19,7 @@ import { useSelectedFarm } from '@/features/weather';
 
 import { SeverityBadge } from '../components/SeverityBadge';
 import { DiseaseReportImage } from '../components/DiseaseReportImage';
+import { GroundnutPestObservationStatus } from '../components/GroundnutPestObservationStatus';
 import { useDiseaseHistory } from '../hooks/useDisease';
 import { formatDiagnosisName } from '../utils/diagnosisName';
 
@@ -141,7 +142,13 @@ export function DiseaseHistoryScreen() {
             <AgPressable
               onPress={() => router.push(`/disease/${item.id}`)}
               accessibilityRole="button"
-              accessibilityLabel={item.disease ?? t('disease.resultTitle')}
+              accessibilityLabel={
+                item.pestObservation
+                  ? t('disease.pestObservation.title', {
+                      defaultValue: 'Groundnut pest-damage observation',
+                    })
+                  : item.disease ?? t('disease.resultTitle')
+              }
             >
               <AgCard style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 {item.privateImageAvailable || item.imageUrl ? (
@@ -153,15 +160,22 @@ export function DiseaseHistoryScreen() {
                   />
                 ) : null}
                 <View style={{ flex: 1 }}>
-                  <AgText variant="body" weight="semibold" numberOfLines={1}>
-                    {item.disease ? formatDiagnosisName(item.disease) : t('disease.cropUnknown')}
-                  </AgText>
+                  {item.pestObservation ? (
+                    <GroundnutPestObservationStatus
+                      observation={item.pestObservation}
+                      compact
+                    />
+                  ) : (
+                    <AgText variant="body" weight="semibold" numberOfLines={1}>
+                      {item.disease ? formatDiagnosisName(item.disease) : t('disease.cropUnknown')}
+                    </AgText>
+                  )}
                   {item.testMode?.display_required ? (
                     <AgText variant="caption" color="danger" className="mt-1" numberOfLines={3}>
                       {item.testMode.banner_text}
                     </AgText>
                   ) : null}
-                  <View className="mt-1 flex-row flex-wrap items-center gap-2">
+                  {!item.pestObservation ? <View className="mt-1 flex-row flex-wrap items-center gap-2">
                     <SeverityBadge severity={item.severity} />
                     <AgText variant="caption" color="muted" style={{ flexShrink: 1 }}>
                       {Number.isFinite(item.confidence)
@@ -170,7 +184,7 @@ export function DiseaseHistoryScreen() {
                       ·{' '}
                       {dayjs(item.createdAt).format('YYYY-MM-DD')}
                     </AgText>
-                  </View>
+                  </View> : null}
                 </View>
               </AgCard>
             </AgPressable>

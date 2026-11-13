@@ -98,7 +98,7 @@ export const localGrowthProvider: GrowthProvider = {
     };
     growthStorage.upsertSession(updatedSession);
 
-    return { session: updatedSession, image, timelineEntry };
+    return { session: updatedSession, image, timelineEntry, stageComparison: null };
   },
 
   async history(

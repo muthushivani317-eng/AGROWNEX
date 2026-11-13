@@ -3,8 +3,12 @@ from __future__ import annotations
 
 import base64
 import uuid
+from datetime import UTC, datetime, timedelta
 
 import pytest
+from sqlalchemy import select
+
+from app.modules.ai.models import TokenUsage
 from app.modules.auth.models import User
 from app.modules.disease.quality import QualityResult
 from app.modules.disease.storage import MockStorage
@@ -14,6 +18,7 @@ from app.modules.growth.analyzer import GrowthAnalysis
 from app.modules.growth.constants import GrowthStage, PlantVigor
 from app.modules.growth.exceptions import (
     FarmNotFoundError,
+    GroundnutStageConfirmationError,
     GrowthImageNotFoundError,
     GrowthSessionNotFoundError,
     NoPlantDetectedError,
@@ -21,8 +26,6 @@ from app.modules.growth.exceptions import (
 )
 from app.modules.growth.schemas import UploadGrowthRequest
 from app.modules.growth.service import GrowthService
-from app.modules.ai.models import TokenUsage
-from sqlalchemy import select
 
 
 def make_analysis(
@@ -133,6 +136,102 @@ async def test_upload_creates_session_image_analysis_timeline(
     usage_rows = (await db_session.execute(select(TokenUsage))).scalars().all()
     assert len(usage_rows) == 1
     assert usage_rows[0].module == "growth"
+
+
+async def test_groundnut_gemini_stage_requires_farmer_confirmation(
+    db_session, session_factory, monkeypatch
+):
+    monkeypatch.setattr("app.modules.ai.usage_ledger.SessionLocal", session_factory)
+    _accept_quality(monkeypatch)
+    service = _service(db_session, FakeProvider(make_analysis(stage="vegetative")))
+    user = await _make_user(db_session, uid="fb-groundnut-stage")
+    farm = await _make_farm(db_session, user, crop="groundnut")
+
+    outcome = await service.upload(user, _req(farm.id))
+
+    assert outcome.analysis.growth_stage == "vegetative"
+    assert outcome.session.current_growth_stage == GrowthStage.UNKNOWN.value
+
+    confirmed = await service.confirm_groundnut_stage(
+        user,
+        session_id=outcome.session.id,
+        image_id=outcome.image.id,
+        action="confirm",
+        stage="vegetative",
+    )
+    assert confirmed.current_growth_stage == "vegetative"
+
+
+async def test_groundnut_stage_allows_correction_and_rejects_false_confirmation(
+    db_session, session_factory, monkeypatch
+):
+    monkeypatch.setattr("app.modules.ai.usage_ledger.SessionLocal", session_factory)
+    _accept_quality(monkeypatch)
+    service = _service(db_session, FakeProvider(make_analysis(stage="vegetative")))
+    user = await _make_user(db_session, uid="fb-groundnut-correction")
+    farm = await _make_farm(db_session, user, crop="groundnut")
+    outcome = await service.upload(user, _req(farm.id))
+
+    with pytest.raises(GroundnutStageConfirmationError):
+        await service.confirm_groundnut_stage(
+            user,
+            session_id=outcome.session.id,
+            image_id=outcome.image.id,
+            action="confirm",
+            stage="flowering",
+        )
+    corrected = await service.confirm_groundnut_stage(
+        user,
+        session_id=outcome.session.id,
+        image_id=outcome.image.id,
+        action="correct",
+        stage="flowering",
+    )
+    assert corrected.current_growth_stage == "flowering"
+
+
+async def test_groundnut_calendar_mismatch_warns_without_rejecting_upload(
+    db_session, session_factory, monkeypatch
+):
+    monkeypatch.setattr("app.modules.ai.usage_ledger.SessionLocal", session_factory)
+    _accept_quality(monkeypatch)
+    service = _service(db_session, FakeProvider(make_analysis(stage="vegetative")))
+    user = await _make_user(db_session, uid="fb-groundnut-mismatch")
+    farm = await _make_farm(db_session, user, crop="groundnut")
+    farm.sowing_date = datetime.now(UTC).date() - timedelta(days=30)
+    await db_session.flush()
+
+    outcome = await service.upload(user, _req(farm.id))
+
+    assert outcome.image.id is not None
+    assert outcome.stage_comparison == {
+        "gemini_stage": "vegetative",
+        "calendar_stage": "flowering_pegging",
+        "expected_gemini_stages": ["flowering", "fruiting"],
+        "mismatch": True,
+        "warning_code": "GROUNDNUT_STAGE_CALENDAR_MISMATCH",
+    }
+    assert outcome.session.current_growth_stage == GrowthStage.UNKNOWN.value
+
+
+async def test_groundnut_calendar_match_has_no_warning_and_still_needs_confirmation(
+    db_session, session_factory, monkeypatch
+):
+    monkeypatch.setattr("app.modules.ai.usage_ledger.SessionLocal", session_factory)
+    _accept_quality(monkeypatch)
+    service = _service(db_session, FakeProvider(make_analysis(stage="vegetative")))
+    user = await _make_user(db_session, uid="fb-groundnut-match")
+    farm = await _make_farm(db_session, user, crop="groundnut")
+    farm.sowing_date = datetime.now(UTC).date() - timedelta(days=10)
+    await db_session.flush()
+
+    outcome = await service.upload(user, _req(farm.id))
+
+    assert outcome.stage_comparison is not None
+    assert outcome.stage_comparison["calendar_stage"] == "vegetative_growth"
+    assert outcome.stage_comparison["mismatch"] is False
+    assert outcome.stage_comparison["warning_code"] is None
+    assert outcome.session.current_growth_stage == GrowthStage.UNKNOWN.value
 
 
 async def test_poor_quality_rejected_before_ai(db_session):

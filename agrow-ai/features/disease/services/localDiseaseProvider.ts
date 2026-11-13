@@ -15,6 +15,7 @@ function toSummary(report: DiseaseReport): DiseaseReportSummary {
     testMode: report.testMode,
     verificationLevel: report.verificationLevel,
     createdAt: report.createdAt,
+    pestObservation: report.pestObservation ?? null,
   };
 }
 

@@ -44,6 +44,8 @@ _GENERIC_SUFFIXES = frozenset(
     }
 )
 
+_GROUNDNUT_NAMES = frozenset({"groundnut", "peanut", "arachis hypogaea"})
+
 
 def normalize_nutrient_crop(value: str) -> str:
     """Return a comparable crop identifier without imposing a fixed crop list.
@@ -78,3 +80,14 @@ def normalize_observed_nutrient_crop(value: str) -> str:
     while len(words) > 1 and words[-1] in _GENERIC_SUFFIXES:
         words.pop()
     return " ".join(words)
+
+
+def is_groundnut_nutrient_crop(value: str | None) -> bool:
+    """True only for explicit Groundnut names used by the crop-scoped safety policy."""
+    if not value:
+        return False
+    try:
+        normalized = normalize_observed_nutrient_crop(value)
+    except ValueError:
+        return False
+    return normalized in _GROUNDNUT_NAMES

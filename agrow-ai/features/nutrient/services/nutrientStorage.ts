@@ -7,6 +7,7 @@ import {
   NUT_REPORT_CACHE_KEY,
 } from '../constants';
 import type { NutrientReport } from '../types';
+import { applyGroundnutNutrientSafety } from './nutrientMapper';
 
 /**
  * Local Nutrient store in MMKV:
@@ -25,7 +26,8 @@ export const nutrientStorage = {
     appStorage.setJSON(NUT_HISTORY_CACHE_KEY, map);
   },
   getCachedHistory(farmId: string): NutrientReport[] | null {
-    return read<Record<string, NutrientReport[]>>(NUT_HISTORY_CACHE_KEY)[farmId] ?? null;
+    const reports = read<Record<string, NutrientReport[]>>(NUT_HISTORY_CACHE_KEY)[farmId];
+    return reports?.map(applyGroundnutNutrientSafety) ?? null;
   },
   cacheLatest(farmId: string, report: NutrientReport | null): void {
     const map = read<Record<string, NutrientReport | null>>(NUT_LATEST_CACHE_KEY);
@@ -33,7 +35,8 @@ export const nutrientStorage = {
     appStorage.setJSON(NUT_LATEST_CACHE_KEY, map);
   },
   getCachedLatest(farmId: string): NutrientReport | null {
-    return read<Record<string, NutrientReport | null>>(NUT_LATEST_CACHE_KEY)[farmId] ?? null;
+    const report = read<Record<string, NutrientReport | null>>(NUT_LATEST_CACHE_KEY)[farmId];
+    return report ? applyGroundnutNutrientSafety(report) : null;
   },
   cacheReport(report: NutrientReport): void {
     const map = read<Record<string, NutrientReport>>(NUT_REPORT_CACHE_KEY);
@@ -41,23 +44,26 @@ export const nutrientStorage = {
     appStorage.setJSON(NUT_REPORT_CACHE_KEY, map);
   },
   getCachedReport(id: string): NutrientReport | null {
-    return read<Record<string, NutrientReport>>(NUT_REPORT_CACHE_KEY)[id] ?? null;
+    const report = read<Record<string, NutrientReport>>(NUT_REPORT_CACHE_KEY)[id];
+    return report ? applyGroundnutNutrientSafety(report) : null;
   },
 
   // --- Local provider store: reports per farm (newest first) ---
   localReports(farmId: string): NutrientReport[] {
-    return read<Record<string, NutrientReport[]>>(NUT_LOCAL_KEY)[farmId] ?? [];
+    return (read<Record<string, NutrientReport[]>>(NUT_LOCAL_KEY)[farmId] ?? []).map(
+      applyGroundnutNutrientSafety,
+    );
   },
   addLocalReport(farmId: string, report: NutrientReport): void {
     const map = read<Record<string, NutrientReport[]>>(NUT_LOCAL_KEY);
-    map[farmId] = [report, ...(map[farmId] ?? [])];
+    map[farmId] = [applyGroundnutNutrientSafety(report), ...(map[farmId] ?? [])];
     appStorage.setJSON(NUT_LOCAL_KEY, map);
   },
   getLocalReport(id: string): NutrientReport | null {
     const map = read<Record<string, NutrientReport[]>>(NUT_LOCAL_KEY);
     for (const list of Object.values(map)) {
       const found = list.find((r) => r.id === id);
-      if (found) return found;
+      if (found) return applyGroundnutNutrientSafety(found);
     }
     return null;
   },

@@ -27,6 +27,7 @@ from app.modules.ai.repositories import TokenUsageRepository
 from app.modules.ai.usage_ledger import record_usage_durable
 from app.modules.auth.models import User
 from app.modules.auth.repositories import FarmerProfileRepository
+from app.modules.calendar.registry import ACTIVE_CROP_STAGE_REGISTRY, CropStageRegistry
 from app.modules.disease.constants import CaptureMethod, QualityIssue
 from app.modules.disease.quality import (
     QualityMetrics,
@@ -53,6 +54,7 @@ from app.modules.growth.constants import (
 )
 from app.modules.growth.exceptions import (
     FarmNotFoundError,
+    GroundnutStageConfirmationError,
     GrowthImageNotFoundError,
     GrowthSessionNotFoundError,
     NoPlantDetectedError,
@@ -112,6 +114,16 @@ class UploadOutcome:
     image: CropGrowthImage
     analysis: CropGrowthAnalysis
     timeline_entry: CropGrowthTimeline
+    stage_comparison: dict | None = None
+
+
+_GROUNDNUT_CALENDAR_TO_GEMINI = {
+    "sowing_and_establishment": {"germination", "seedling"},
+    "vegetative_growth": {"vegetative"},
+    "flowering_pegging": {"flowering", "fruiting"},
+    "pod_development": {"fruiting"},
+    "maturity_and_harvest": {"maturity", "harvest"},
+}
 
 
 class GrowthService:
@@ -123,6 +135,7 @@ class GrowthService:
         storage: ObjectStorage | None = None,
         weather_service: WeatherService | None = None,
         nutrient_provider: NutrientProvider | None = None,
+        stage_registry: CropStageRegistry | None = None,
     ) -> None:
         self.session = session
         self.repo = GrowthRepository(session)
@@ -134,6 +147,7 @@ class GrowthService:
         self.weather_service = weather_service
         # Optional nutrient seam that returns None until a model is configured.
         self.nutrient_provider = nutrient_provider or NullNutrientProvider()
+        self.stage_registry = stage_registry or ACTIVE_CROP_STAGE_REGISTRY
 
     # ----------------------------------------------------------------- #
     # Upload
@@ -278,6 +292,12 @@ class GrowthService:
             )
         )
 
+        stage_comparison = self._groundnut_stage_comparison(
+            crop=crop,
+            sowing_date=farm.sowing_date,
+            gemini_stage=analysis.growth_stage,
+        )
+
         # Roll up the session with the latest observation.
         await self._roll_up(session, analysis, risk, crop, req.variety)
 
@@ -299,6 +319,7 @@ class GrowthService:
             image=image,
             analysis=analysis_row,
             timeline_entry=timeline_entry,
+            stage_comparison=stage_comparison,
         )
 
     # ----------------------------------------------------------------- #
@@ -384,6 +405,48 @@ class GrowthService:
             session.image_count = await self.repo.count_images_for_session(session.id)
         await self.session.flush()
 
+    async def confirm_groundnut_stage(
+        self,
+        user: User,
+        *,
+        session_id: uuid.UUID,
+        image_id: uuid.UUID,
+        action: str,
+        stage: str,
+    ) -> CropGrowthSession:
+        """Apply an explicit farmer decision to a Groundnut Gemini suggestion."""
+        session = await self.repo.get_session(session_id, user.id)
+        if session is None:
+            raise GrowthSessionNotFoundError()
+        if (session.crop or "").strip().lower() not in {"groundnut", "peanut"}:
+            raise GroundnutStageConfirmationError("This endpoint is only for Groundnut.")
+
+        row = await self.repo.get_image_analysis(image_id, user.id)
+        if row is None:
+            raise GrowthImageNotFoundError()
+        image, analysis = row
+        if image.session_id != session.id:
+            raise GroundnutStageConfirmationError(
+                "The growth photo does not belong to this session."
+            )
+        if action == "confirm" and stage != analysis.growth_stage:
+            raise GroundnutStageConfirmationError(
+                "Confirmation must match the Gemini suggestion; use correction otherwise."
+            )
+
+        session.current_growth_stage = stage
+        analysis.raw_response = {
+            **(analysis.raw_response or {}),
+            "farmer_stage_decision": {
+                "action": action,
+                "stage": stage,
+                "recorded_at": datetime.now(UTC).isoformat(),
+            },
+        }
+        await self.session.flush()
+        await self.session.refresh(session)
+        return session
+
     # ----------------------------------------------------------------- #
     # Helpers
     # ----------------------------------------------------------------- #
@@ -439,7 +502,10 @@ class GrowthService:
         crop: str | None,
         variety: str | None,
     ) -> None:
-        session.current_growth_stage = analysis.growth_stage
+        # Groundnut Gemini output is advisory until the farmer explicitly
+        # confirms or corrects it through confirm_groundnut_stage().
+        if (session.crop or crop or "").strip().lower() not in {"groundnut", "peanut"}:
+            session.current_growth_stage = analysis.growth_stage
         session.latest_health_score = analysis.health_score
         session.latest_risk_level = risk
         session.image_count = await self.repo.count_images_for_session(session.id)
@@ -448,6 +514,40 @@ class GrowthService:
         if not session.variety and variety:
             session.variety = variety
         await self.session.flush()
+
+    def _groundnut_stage_comparison(
+        self,
+        *,
+        crop: str | None,
+        sowing_date,
+        gemini_stage: str,
+    ) -> dict | None:
+        """Compare advisory image output with the dated Groundnut calendar."""
+        if (crop or "").strip().lower() not in {"groundnut", "peanut"} or sowing_date is None:
+            return None
+        schedule = self.stage_registry.resolve("groundnut")
+        if schedule is None:
+            return None
+        age_days = (datetime.now(UTC).date() - sowing_date).days
+        calendar_stage = next(
+            (
+                stage.code
+                for stage in schedule.stages
+                if stage.start_offset <= age_days <= stage.end_offset
+            ),
+            None,
+        )
+        expected = _GROUNDNUT_CALENDAR_TO_GEMINI.get(calendar_stage or "")
+        if calendar_stage is None or expected is None:
+            return None
+        mismatch = gemini_stage not in expected
+        return {
+            "gemini_stage": gemini_stage,
+            "calendar_stage": calendar_stage,
+            "expected_gemini_stages": sorted(expected),
+            "mismatch": mismatch,
+            "warning_code": "GROUNDNUT_STAGE_CALENDAR_MISMATCH" if mismatch else None,
+        }
 
     async def _load_farm(self, user: User, farm_id: uuid.UUID) -> Farm:
         farm = await self.farms.get_for_user(farm_id, user.id)

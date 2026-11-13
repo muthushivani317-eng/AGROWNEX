@@ -39,9 +39,9 @@ from app.schemas.response import PaginatedData, SuccessResponse, success
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
 
-def _page_out(page) -> PaginatedData[NotificationOut]:
+async def _page_out(page, service, user) -> PaginatedData[NotificationOut]:
     return PaginatedData(
-        items=[NotificationOut.from_model(n) for n in page.items],
+        items=[await service.notification_out(user, n) for n in page.items],
         page=page.page,
         page_size=page.page_size,
         total=page.total,
@@ -68,7 +68,7 @@ async def list_notifications(
         page=page,
         page_size=page_size,
     )
-    return success(_page_out(page_data))
+    return success(await _page_out(page_data, service, current_user))
 
 
 @router.get("/unread", response_model=SuccessResponse[UnreadCountOut])
@@ -151,7 +151,10 @@ async def mark_read(
 ):
     """Mark a single notification as read."""
     notification = await service.mark_read(current_user, notification_id)
-    return success(NotificationOut.from_model(notification), message="Marked read")
+    return success(
+        await service.notification_out(current_user, notification),
+        message="Marked read",
+    )
 
 
 @router.delete("/{notification_id}", response_model=SuccessResponse[None])

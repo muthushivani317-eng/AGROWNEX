@@ -91,6 +91,12 @@ export const endpoints = {
     history: "/disease/history",
     byId: (id: string) => `/disease/${id}`,
     predict: "/disease/predict",
+    groundnutExperimental: "/doctor/groundnut/predict",
+    groundnutSymptoms: "/doctor/groundnut/symptoms",
+    groundnutTranscribe: "/doctor/groundnut/transcribe",
+    groundnutMapTranscript: "/doctor/groundnut/symptoms/map-transcript",
+    groundnutPestObservations: "/doctor/groundnut/pest-observations",
+    greenGramExperimental: "/doctor/green-gram/predict",
   },
   calendar: {
     root: "/calendar",
@@ -114,6 +120,8 @@ export const endpoints = {
     scheduleStatus: "/growth/schedule-status",
     stageTransition: "/growth/stage/transition",
     stageHistory: (id: string) => `/growth/stage/${id}/history`,
+    groundnutStageConfirmation: (id: string) =>
+      `/growth/groundnut/session/${id}/stage-confirmation`,
   },
   market: {
     root: "/market",

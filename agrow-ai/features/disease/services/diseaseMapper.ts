@@ -6,6 +6,8 @@ import type {
   DiseaseReport,
   DiseaseReportSummary,
   WeatherSnapshot,
+  ApiGroundnutPestObservation,
+  GroundnutPestObservation,
 } from '../types';
 
 const toLang = (v: string): SupportedLanguage => (v === 'en' ? 'en' : 'ta');
@@ -18,6 +20,19 @@ function toSnapshot(raw: Record<string, unknown> | null): WeatherSnapshot | null
     humidityPct: (raw.humidity_pct as number | null | undefined) ?? null,
     windSpeedKmh: (raw.wind_speed_kmh as number | null | undefined) ?? null,
     fetchedAt: raw.fetched_at as string | undefined,
+  };
+}
+
+function toPestObservation(
+  raw: ApiGroundnutPestObservation | null | undefined,
+): GroundnutPestObservation | null {
+  if (!raw) return null;
+  return {
+    damageExtent: raw.damage_extent,
+    spreadSpeed: raw.spread_speed,
+    reviewStatus: raw.review_status,
+    feedback: raw.feedback,
+    reviewTimestamp: raw.review_timestamp,
   };
 }
 
@@ -50,6 +65,7 @@ export function apiToReport(dto: ApiDiseaseReport): DiseaseReport {
     longitude: dto.longitude,
     language: toLang(dto.language),
     createdAt: dto.created_at,
+    pestObservation: toPestObservation(dto.pest_observation),
   };
 }
 
@@ -66,5 +82,6 @@ export function apiToSummary(dto: ApiDiseaseReportSummary): DiseaseReportSummary
     testMode: dto.test_mode ?? null,
     verificationLevel: dto.verification_level ?? null,
     createdAt: dto.created_at,
+    pestObservation: toPestObservation(dto.pest_observation),
   };
 }

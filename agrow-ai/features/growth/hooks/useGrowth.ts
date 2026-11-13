@@ -10,8 +10,12 @@ import {
   getStageHistory,
   getStageState,
   submitStageTransition,
+  submitGroundnutStageDecision,
 } from "../services/apiGrowthProvider";
-import type { StageTransitionInput } from "../types";
+import type {
+  GroundnutStageDecisionInput,
+  StageTransitionInput,
+} from "../types";
 
 export function useStageState(
   farmId?: string | null,
@@ -53,6 +57,17 @@ export function useStageTransition() {
       void queryClient.invalidateQueries({
         queryKey: ["growth", "stage", "history", state.id],
       });
+    },
+  });
+}
+
+export function useGroundnutStageDecision() {
+  return useMutation({
+    mutationFn: (input: GroundnutStageDecisionInput) =>
+      submitGroundnutStageDecision(input),
+    onSuccess: (session) => {
+      queryClient.setQueryData(growthKeys.session(session.id), session);
+      void queryClient.invalidateQueries({ queryKey: growthKeys.all });
     },
   });
 }

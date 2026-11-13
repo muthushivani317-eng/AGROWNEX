@@ -28,14 +28,15 @@ CONTROLLED_ROLES = {
     RoleName.PILOT_TESTER.value,
     RoleName.KVK_REVIEWER.value,
 }
-LEGACY_CROPS = {"paddy", "cotton", "groundnut"}
+LEGACY_CROPS = {"paddy", "cotton"}
 PREDICTION_KINDS = {
     "banana": "banana_v3",
     "paddy": "legacy_joint",
     "cotton": "legacy_joint",
-    "groundnut": "legacy_joint",
+    "groundnut": "groundnut_experimental",
     "chilli": "restricted",
     "redgram": "restricted",
+    "greengram": "green_gram_experimental",
 }
 
 
@@ -126,7 +127,11 @@ def build_disease_capabilities(
             "pilot"
             if entry.crop_id in {"banana", "chilli", "redgram"}
             else "internal"
-            if prediction_kind == "legacy_joint"
+            if prediction_kind in {
+                "legacy_joint",
+                "groundnut_experimental",
+                "green_gram_experimental",
+            }
             else "blocked"
         )
         rows.append(

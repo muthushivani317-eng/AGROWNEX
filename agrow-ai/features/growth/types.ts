@@ -181,6 +181,22 @@ export interface UploadResult {
   session: GrowthSession;
   image: GrowthImage;
   timelineEntry: TimelineEntry;
+  stageComparison: GroundnutStageComparison | null;
+}
+
+export interface GroundnutStageComparison {
+  geminiStage: GrowthStage;
+  calendarStage: string;
+  expectedGeminiStages: GrowthStage[];
+  mismatch: boolean;
+  warningCode: string | null;
+}
+
+export interface GroundnutStageDecisionInput {
+  sessionId: string;
+  imageId: string;
+  action: "confirm" | "correct";
+  stage: Exclude<GrowthStage, "unknown">;
 }
 
 export interface UploadGrowthInput {
@@ -281,6 +297,13 @@ export interface ApiUploadResult {
   session: ApiGrowthSession;
   image: ApiGrowthImage;
   timeline_entry: ApiTimelineEntry;
+  stage_comparison?: {
+    gemini_stage: GrowthStage;
+    calendar_stage: string;
+    expected_gemini_stages: GrowthStage[];
+    mismatch: boolean;
+    warning_code: string | null;
+  } | null;
 }
 
 /** "Behind schedule" = an overdue organic task OR stage lagging the crop calendar. */

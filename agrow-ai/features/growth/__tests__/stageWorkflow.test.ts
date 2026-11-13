@@ -1,6 +1,9 @@
 import { api } from "@/services/apiClient";
 
-import { submitStageTransition } from "../services/apiGrowthProvider";
+import {
+  submitGroundnutStageDecision,
+  submitStageTransition,
+} from "../services/apiGrowthProvider";
 import {
   pendingStageTransitions,
   queueStageTransition,
@@ -67,6 +70,41 @@ describe("crop-stage farmer workflow", () => {
 
     removePendingStageTransition("stage-correction-0001");
     expect(pendingStageTransitions()).toEqual([]);
+  });
+
+  it("sends a Groundnut correction to the dedicated confirmation endpoint", async () => {
+    (api.post as jest.Mock).mockResolvedValue({
+      id: "session-1",
+      farm_id: "farm-1",
+      crop: "groundnut",
+      variety: null,
+      title: null,
+      sowing_date: "2026-08-01",
+      status: "active",
+      current_growth_stage: "flowering",
+      latest_health_score: 80,
+      latest_risk_level: "low",
+      image_count: 1,
+      created_at: "2026-08-01T00:00:00Z",
+      updated_at: "2026-08-15T00:00:00Z",
+    });
+
+    const session = await submitGroundnutStageDecision({
+      sessionId: "session-1",
+      imageId: "image-1",
+      action: "correct",
+      stage: "flowering",
+    });
+
+    expect(api.post).toHaveBeenCalledWith(
+      "/growth/groundnut/session/session-1/stage-confirmation",
+      {
+        image_id: "image-1",
+        action: "correct",
+        stage: "flowering",
+      },
+    );
+    expect(session.currentGrowthStage).toBe("flowering");
   });
 
   it("syncs a queued action once and removes it only after server success", async () => {

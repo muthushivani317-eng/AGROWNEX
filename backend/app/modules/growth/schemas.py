@@ -191,10 +191,27 @@ class GrowthTimelineOut(BaseModel):
     timeline: list[TimelineEntryOut] = Field(default_factory=list)
 
 
+class GroundnutStageComparisonOut(BaseModel):
+    gemini_stage: str
+    calendar_stage: str
+    expected_gemini_stages: list[str]
+    mismatch: bool
+    warning_code: str | None = None
+
+
 class UploadResultOut(BaseModel):
     session: GrowthSessionOut
     image: GrowthImageOut
     timeline_entry: TimelineEntryOut
+    stage_comparison: GroundnutStageComparisonOut | None = None
+
+
+class GroundnutStageConfirmationRequest(BaseModel):
+    image_id: uuid.UUID
+    action: str = Field(pattern="^(confirm|correct)$")
+    stage: str = Field(
+        pattern="^(germination|seedling|vegetative|flowering|fruiting|maturity|harvest)$"
+    )
 
 
 class StageEvidenceIn(BaseModel):

@@ -15,6 +15,8 @@ from app.disease_recommendations.router import router as disease_recommendations
 from app.gemini_crop_identification.router import (
     router as gemini_crop_identification_router,
 )
+from app.groundnut_experimental.router import router as groundnut_experimental_router
+from app.green_gram_experimental.router import router as green_gram_experimental_router
 from app.legacy_joint.api_router import router as legacy_joint_router
 from app.model_boundaries.router import router as model_boundaries_router
 from app.modules.action_verification.router import router as action_verification_router
@@ -84,6 +86,8 @@ api_router.include_router(farm_team_router)
 api_router.include_router(weather_router)
 api_router.include_router(ai_router)
 api_router.include_router(disease_router)
+api_router.include_router(groundnut_experimental_router)
+api_router.include_router(green_gram_experimental_router)
 api_router.include_router(disease_risk_router)
 api_router.include_router(disease_comparison_router)
 api_router.include_router(equipment_router)

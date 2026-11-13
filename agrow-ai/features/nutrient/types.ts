@@ -45,7 +45,7 @@ export interface NutrientAnalysis {
   primaryDeficiency: string | null;
   secondaryDeficiency: string | null;
   status: DeficiencyStatus;
-  confidence: number;
+  confidence: number | null;
   severity: Severity;
   affectedArea: string | null;
   diseaseConflict: boolean;
@@ -57,7 +57,7 @@ export interface NutrientAnalysis {
   explanationTamil: string | null;
   explanationEnglish: string | null;
   resultCode: NutrientResultCode;
-  confidenceBand: "low" | "medium" | "high";
+  confidenceBand: "low" | "medium" | "high" | null;
   evidenceObserved: string[];
   evidenceMissing: string[];
   conflicts: string[];
@@ -93,7 +93,7 @@ export interface NutrientHistoryEntry {
   crop: string | null;
   primaryDeficiency: string | null;
   status: DeficiencyStatus;
-  confidence: number;
+  confidence: number | null;
   severity: Severity | null;
   recordedAt: string;
 }
@@ -133,7 +133,7 @@ export interface ApiNutrientAnalysis {
   primary_deficiency: string | null;
   secondary_deficiency: string | null;
   status: DeficiencyStatus;
-  confidence: number;
+  confidence: number | null;
   severity: Severity;
   affected_area: string | null;
   disease_conflict: boolean;
@@ -145,7 +145,7 @@ export interface ApiNutrientAnalysis {
   explanation_tamil: string | null;
   explanation_english: string | null;
   result_code?: NutrientResultCode;
-  confidence_band?: "low" | "medium" | "high";
+  confidence_band?: "low" | "medium" | "high" | null;
   evidence_observed?: string[];
   evidence_missing?: string[];
   conflicts?: string[];

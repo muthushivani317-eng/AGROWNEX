@@ -20,6 +20,7 @@ from app.modules.growth.dependencies import CurrentUser, GrowthServiceDep, Stage
 from app.modules.growth.exceptions import FarmNotFoundError
 from app.modules.growth.schedule_status import schedule_status
 from app.modules.growth.schemas import (
+    GroundnutStageConfirmationRequest,
     GrowthImageOut,
     GrowthSessionDetailOut,
     GrowthSessionOut,
@@ -51,6 +52,7 @@ async def upload(
         session=GrowthSessionOut.from_row(outcome.session),
         image=GrowthImageOut.from_row(outcome.image, analysis=outcome.analysis),
         timeline_entry=TimelineEntryOut.from_row(outcome.timeline_entry, image=outcome.image),
+        stage_comparison=outcome.stage_comparison,
     )
     return success(result, message="Photo added to growth history")
 
@@ -129,6 +131,27 @@ async def session_detail(
         timeline=[TimelineEntryOut.from_row(entry, image=image) for entry, image in timeline_rows],
     )
     return success(data)
+
+
+@router.post(
+    "/groundnut/session/{session_id}/stage-confirmation",
+    response_model=SuccessResponse[GrowthSessionOut],
+)
+async def confirm_groundnut_stage(
+    session_id: uuid.UUID,
+    payload: GroundnutStageConfirmationRequest,
+    current_user: CurrentUser,
+    service: GrowthServiceDep,
+):
+    """Confirm or correct the latest Groundnut Gemini stage suggestion."""
+    session = await service.confirm_groundnut_stage(
+        current_user,
+        session_id=session_id,
+        image_id=payload.image_id,
+        action=payload.action,
+        stage=payload.stage,
+    )
+    return success(GrowthSessionOut.from_row(session), message="Growth stage saved")
 
 
 @router.delete("/image/{image_id}", response_model=SuccessResponse[None])

@@ -84,7 +84,16 @@ def _claim_variant(token: str, **claims: object) -> str:
 
 async def _prepare_database(accounts: dict[str, dict]) -> None:
     async with engine.begin() as connection:
-        await connection.run_sync(Base.metadata.create_all)
+        # This auth-only check needs only the identity/RBAC tables. Creating the
+        # entire application metadata couples the emulator check to unrelated
+        # feature models whose foreign-key targets may not be imported here.
+        auth_tables = [User.__table__, Role.__table__, UserRole.__table__]
+        await connection.run_sync(
+            lambda sync_connection: Base.metadata.create_all(
+                sync_connection,
+                tables=auth_tables,
+            )
+        )
     async with SessionLocal() as session:
         roles = {}
         for name in RoleName:

@@ -9,6 +9,7 @@ never breaks the dashboard. Counts and group-bys are real — nothing is fabrica
 from __future__ import annotations
 
 import uuid
+from collections import Counter
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -195,7 +196,8 @@ class AdminMetrics:
 
     async def _avg_confidence(self) -> int | None:
         from app.modules.disease.models import DiseaseReport
-        from app.modules.nutrient.models import NutrientAnalysis
+        from app.modules.nutrient.models import NutrientAnalysis, NutrientReport
+        from app.modules.nutrient.safety import consumer_safe_nutrient_finding
 
         try:
             d = (
@@ -205,18 +207,75 @@ class AdminMetrics:
                     )
                 )
             ).scalar_one_or_none()
-            n = (
+            nutrient_rows = (
                 await self.session.execute(
-                    select(func.avg(NutrientAnalysis.confidence)).where(
-                        NutrientAnalysis.confidence.is_not(None)
-                    )
+                    select(
+                        NutrientAnalysis.confidence,
+                        NutrientAnalysis.primary_deficiency,
+                        NutrientAnalysis.status,
+                        NutrientAnalysis.needs_test,
+                        NutrientAnalysis.needs_expert,
+                        NutrientReport.crop,
+                    ).join(NutrientReport, NutrientReport.id == NutrientAnalysis.report_id)
                 )
-            ).scalar_one_or_none()
+            ).all()
+            safe_confidences = [
+                safe.confidence
+                for confidence, primary, status, needs_test, needs_expert, crop in nutrient_rows
+                if (
+                    safe := consumer_safe_nutrient_finding(
+                        crop=crop,
+                        primary_deficiency=primary,
+                        status=status,
+                        confidence=confidence,
+                        needs_test=bool(needs_test),
+                        needs_expert=bool(needs_expert),
+                    )
+                ).confidence is not None
+            ]
+            n = sum(safe_confidences) / len(safe_confidences) if safe_confidences else None
             vals = [v for v in (d, n) if v is not None]
             return round(sum(vals) / len(vals)) if vals else None
         except Exception:  # noqa: BLE001
             logger.exception("admin avg confidence failed")
             return None
+
+    async def _nutrient_distribution(self) -> list[dict]:
+        from app.modules.nutrient.models import NutrientAnalysis, NutrientReport
+        from app.modules.nutrient.safety import consumer_safe_nutrient_finding
+
+        try:
+            rows = (
+                await self.session.execute(
+                    select(
+                        NutrientAnalysis.primary_deficiency,
+                        NutrientAnalysis.status,
+                        NutrientAnalysis.confidence,
+                        NutrientAnalysis.needs_test,
+                        NutrientAnalysis.needs_expert,
+                        NutrientReport.crop,
+                    ).join(NutrientReport, NutrientReport.id == NutrientAnalysis.report_id)
+                )
+            ).all()
+            counts = Counter()
+            for primary, status, confidence, needs_test, needs_expert, crop in rows:
+                safe = consumer_safe_nutrient_finding(
+                    crop=crop,
+                    primary_deficiency=primary,
+                    status=status,
+                    confidence=confidence,
+                    needs_test=bool(needs_test),
+                    needs_expert=bool(needs_expert),
+                )
+                if primary and not safe.groundnut_specific_restricted:
+                    counts[primary] += 1
+            return [
+                {"label": label, "count": count}
+                for label, count in counts.most_common()
+            ]
+        except Exception:  # noqa: BLE001
+            logger.exception("admin nutrient distribution failed")
+            return []
 
     async def _daily_ai_series(self, *, days: int) -> list[dict]:
         from app.modules.ai.models import AIConversation
@@ -262,7 +321,6 @@ class AdminMetrics:
         from app.modules.disease.models import DiseaseReport
         from app.modules.experts.models import Consultation
         from app.modules.farms.models import Farm
-        from app.modules.nutrient.models import NutrientAnalysis
         from app.modules.produce.models import ProduceOffer
 
         crop_distribution = await self._group(
@@ -273,13 +331,7 @@ class AdminMetrics:
             DiseaseReport.disease,
             select(DiseaseReport.disease, func.count()).where(DiseaseReport.disease.is_not(None)),
         )
-        nutrient_deficiencies = await self._group(
-            "nutrient",
-            NutrientAnalysis.primary_deficiency,
-            select(NutrientAnalysis.primary_deficiency, func.count()).where(
-                NutrientAnalysis.primary_deficiency.is_not(None)
-            ),
-        )
+        nutrient_deficiencies = await self._nutrient_distribution()
         soil_categories = await self._group(
             "soil",
             Farm.soil_type,

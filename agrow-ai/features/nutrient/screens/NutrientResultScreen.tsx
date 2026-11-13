@@ -22,6 +22,7 @@ import { useChemicalPolicy } from "@/features/organic/chemicalPolicy";
 import { NutrientRecommendationCard } from "../components/NutrientRecommendationCard";
 import { SymptomList } from "../components/SymptomList";
 import { useNutrientReport } from "../hooks/useNutrient";
+import { mayDisplayNutrientConfidence } from "../services/nutrientPresentation";
 import { NUTRIENT_SHADOW, NUTRIENT_UI } from "../design";
 
 /** A full nutrient-analysis report: verdict, symptoms, evidence and generic advice. */
@@ -80,11 +81,14 @@ export function NutrientResultScreen({ reportId }: { reportId: string }) {
                 <AgText variant="bodySmall" weight="semibold" style={styles.primaryText}>
                   {t(`nutrient.resultCode.${report.analysis.resultCode}`)}
                 </AgText>
-                <AgText variant="caption" style={styles.mutedText}>
-                  {t(
-                    `nutrient.confidenceBand.${report.analysis.confidenceBand}`,
-                  )}
-                </AgText>
+                {mayDisplayNutrientConfidence(
+                  report.analysis.confidence,
+                  report.analysis.confidenceBand,
+                ) ? (
+                  <AgText variant="caption" style={styles.mutedText}>
+                    {t(`nutrient.confidenceBand.${report.analysis.confidenceBand}`)}
+                  </AgText>
+                ) : null}
                 {!report.analysis.expertVerified ? (
                   <AgText variant="caption" style={styles.mutedText}>
                     {t("nutrient.notExpertVerified")}

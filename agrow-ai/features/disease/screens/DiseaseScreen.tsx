@@ -39,6 +39,8 @@ import {
   type SupportedCropId,
 } from "@/features/cropIdentification";
 import { BananaDiseaseDetectionScreen } from "@/features/bananaV3/screens/BananaDiseaseDetectionScreen";
+import { GroundnutDiseaseDetectionScreen } from "@/features/groundnutExperimental";
+import { GreenGramUnavailableScreen } from "@/features/greenGramExperimental";
 import { GeneralDiagnosisScreen } from "./GeneralDiagnosisScreen";
 import {
   AcceptedDiagnosisCard,
@@ -66,6 +68,7 @@ import {
 } from "../services/recommendationApi";
 import { useChemicalPolicy } from "@/features/organic/chemicalPolicy";
 import { logger } from "@/lib/logger";
+import { setGroundnutGrowthPhoto } from "@/features/growth/services/groundnutPhotoHandoff";
 
 import { QUALITY_ISSUE_KEY } from "../constants";
 import type { CaptureMethod, PickedImage } from "../types";
@@ -941,6 +944,25 @@ export function DiseaseScreen() {
       />
     );
   }
+  if (crop === "groundnut") {
+    return (
+      <GroundnutDiseaseDetectionScreen
+        initialImage={picked}
+        onChangeCrop={changeCrop}
+        onCheckGrowthStage={
+          picked
+            ? () => {
+                setGroundnutGrowthPhoto(picked);
+                router.push("/growth" as never);
+              }
+            : undefined
+        }
+      />
+    );
+  }
+  if (crop === "greengram") {
+    return <GreenGramUnavailableScreen initialImage={picked} onChangeCrop={changeCrop} />;
+  }
   const onPick = async (source: CaptureMethod) => {
     await identifyPhotoCrop(source);
   };
@@ -1029,7 +1051,7 @@ export function DiseaseScreen() {
         }
         return;
       }
-      if (crop === "paddy" || crop === "cotton" || crop === "groundnut") {
+      if (crop === "paddy" || crop === "cotton") {
         const result = await cropDiagnosisAdapter(
           crop === "paddy" ? "rice" : crop,
           selectedCapability,

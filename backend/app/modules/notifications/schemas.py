@@ -40,15 +40,30 @@ class NotificationOut(BaseModel):
     expires_at: datetime | None
 
     @classmethod
-    def from_model(cls, n: Notification) -> NotificationOut:
+    def from_model(
+        cls, n: Notification, *, restrict_groundnut_nutrient: bool = False
+    ) -> NotificationOut:
+        payload = n.payload_json or {}
+        event_type = n.event_type
+        title_key = n.title_key
+        message_key = n.message_key
+        if restrict_groundnut_nutrient:
+            event_type = "test_recommended"
+            title_key = "notifications.nutrient.test_recommended.title"
+            message_key = "notifications.nutrient.test_recommended.message"
+            payload = {
+                key: value
+                for key, value in payload.items()
+                if key in {"report_id", "farm_id"}
+            }
         return cls(
             id=n.id,
             module=n.module,
-            event_type=n.event_type,
+            event_type=event_type,
             farm_id=n.farm_id,
-            title_key=n.title_key,
-            message_key=n.message_key,
-            payload=n.payload_json or {},
+            title_key=title_key,
+            message_key=message_key,
+            payload=payload,
             severity=n.severity,
             priority=n.priority,
             action_route=n.action_route,

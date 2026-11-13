@@ -1185,7 +1185,8 @@ export const en = {
     nutrientGuidance: "Nutrient guidance",
     whenToSeekExpertHelp: "When to seek expert help",
     chemicalUse: "Chemical use",
-    chemicalWithheld: "No chemical is suggested for this disease here. Ask your KVK or agriculture officer before spraying.",
+    chemicalWithheld:
+      "No chemical is suggested for this disease here. Ask your KVK or agriculture officer before spraying.",
     officialSources: "Official sources",
     titleDisease: "Disease",
     titleDetection: "Detection",
@@ -2626,13 +2627,24 @@ export const en = {
     },
   },
   growth: {
+    stageMismatchTitle: "Growth-stage check",
+    stageMismatchMessage:
+      "The photo suggestion differs from the sowing-date calendar. Please review and confirm or correct the stage.",
+    groundnutStageReviewTitle: "Review Groundnut growth stage",
+    groundnutStageSuggestion: "Gemini suggestion: {{stage}}",
+    groundnutConfirmStage: "Confirm suggested stage",
+    groundnutCorrectStage: "Correct stage",
+    groundnutStageSaved: "Saved Groundnut stage: {{stage}}",
+    groundnutStageSaveError: "The stage could not be saved. Please try again.",
     boost: {
       title: "Boost your crop's growth",
       organicLabel: "Organic (recommended):",
       behindTitle: "Your crop is behind schedule",
       behindOverdue_one: "{{count}} organic task is overdue — finish it first.",
-      behindOverdue_other: "{{count}} organic tasks are overdue — finish them first.",
-      behindStage: "Crop looks {{observed}}, but by its age it should be {{expected}}. Give it the organic boost below.",
+      behindOverdue_other:
+        "{{count}} organic tasks are overdue — finish them first.",
+      behindStage:
+        "Crop looks {{observed}}, but by its age it should be {{expected}}. Give it the organic boost below.",
       chemicalLabel: "Chemical option:",
       notice:
         "Verify with official sources (KVK or Agriculture Department) before applying anything.",
@@ -4096,11 +4108,13 @@ export const en = {
   },
   inputsSell: {
     title: "Sell to AgrowNex",
-    intro: "Make organic inputs like vermicompost or panchagavya? AgrowNex buys them after a quality check and sells them to other farmers.",
+    intro:
+      "Make organic inputs like vermicompost or panchagavya? AgrowNex buys them after a quality check and sells them to other farmers.",
     entryTitle: "Sell your organic products to us",
     entryBody: "We check quality, buy your batch and resell it.",
     applyTitle: "Apply as a seller",
-    applyBody: "Tell us who you are. Our team will review and may visit your farm.",
+    applyBody:
+      "Tell us who you are. Our team will review and may visit your farm.",
     name: "Your name",
     phone: "Mobile number",
     village: "Village",
@@ -4110,19 +4124,23 @@ export const en = {
     submitApplication: "Submit application",
     applied: "Application sent. We will contact you soon.",
     applicationReview: "Application under review",
-    applicationReviewBody: "Our team is checking your application. We will call you, and may visit your farm.",
+    applicationReviewBody:
+      "Our team is checking your application. We will call you, and may visit your farm.",
     applicationClosed: "Application not approved",
     applicationClosedBody: "Please contact AgrowNex support for details.",
     approvedTitle: "You are an approved seller",
-    approvedBody: "Offer a batch whenever you have product ready. We check quality and send you a purchase offer.",
+    approvedBody:
+      "Offer a batch whenever you have product ready. We check quality and send you a purchase offer.",
     offerBatch: "Offer a new batch",
     product: "Product",
     chooseProduct: "Choose a product",
-    noProductTypes: "No products are open for buying right now. Please check later.",
+    noProductTypes:
+      "No products are open for buying right now. Please check later.",
     quantity: "Quantity",
     unit: "Unit",
     expectedPrice: "Your expected price per {{unit}} (₹, optional)",
-    qualityNote: "Our team will inspect and test a sample before making an offer.",
+    qualityNote:
+      "Our team will inspect and test a sample before making an offer.",
     sendBatch: "Send",
     batchSent: "Batch sent. We will review it and contact you.",
     myBatches: "My batches",
@@ -4133,13 +4151,27 @@ export const en = {
     error: "Something went wrong. Please try again.",
     units: { kg: "kg", litre: "litre", bag: "bag", packet: "packet" },
     batchStatus: {
-      draft: "Draft", submitted: "Sent", under_review: "Under review",
-      clarification_required: "More details needed", inspection_required: "Inspection planned",
-      inspection_completed: "Inspected", sample_collected: "Sample taken", testing: "Testing",
-      retest_required: "Retest needed", approved: "Quality passed", partially_approved: "Partly passed",
-      rejected: "Not accepted", procurement_offered: "Offer received", offer_accepted: "Offer accepted",
-      offer_rejected: "Offer declined", received: "Received by us", quarantined: "On hold",
-      released_for_sale: "On sale", sold_out: "Sold out", expired: "Expired", recalled: "Recalled",
+      draft: "Draft",
+      submitted: "Sent",
+      under_review: "Under review",
+      clarification_required: "More details needed",
+      inspection_required: "Inspection planned",
+      inspection_completed: "Inspected",
+      sample_collected: "Sample taken",
+      testing: "Testing",
+      retest_required: "Retest needed",
+      approved: "Quality passed",
+      partially_approved: "Partly passed",
+      rejected: "Not accepted",
+      procurement_offered: "Offer received",
+      offer_accepted: "Offer accepted",
+      offer_rejected: "Offer declined",
+      received: "Received by us",
+      quarantined: "On hold",
+      released_for_sale: "On sale",
+      sold_out: "Sold out",
+      expired: "Expired",
+      recalled: "Recalled",
     },
   },
   inputs: {
@@ -4166,7 +4198,8 @@ export const en = {
     orderReference: "Reference: {{reference}}",
     orderHistory: "Order history",
     noMatchesTitle: "No inputs available yet",
-    noMatchesBody: "Try another category or check back after suppliers add stock.",
+    noMatchesBody:
+      "Try another category or check back after suppliers add stock.",
     eta: "Expected delivery: {{date}}",
     status: {
       placed: "Placed",
@@ -4298,7 +4331,8 @@ export const en = {
       "This photo does not match the selected farm crop. Check the crop and try again.",
     cropMismatchDetailed:
       "This photo looks like {{observed}}, but your farm is registered for {{expected}}. Take a photo of your {{expected}} crop, or change the farm's crop in Farm details.",
-    analysingCrop: "Crop: {{crop}} (from your farm). Take a photo of this crop.",
+    analysingCrop:
+      "Crop: {{crop}} (from your farm). Take a photo of this crop.",
     cropNames: {
       banana: "Banana",
       paddy: "Paddy",
@@ -4337,7 +4371,8 @@ export const en = {
     recommendationsTitle: "What you can do",
     organicWay: "Organic way:",
     chemicalWay: "Chemical option:",
-    chemicalCautionDisease: "A disease was also found on this farm. Confirm with an expert before applying chemicals.",
+    chemicalCautionDisease:
+      "A disease was also found on this farm. Confirm with an expert before applying chemicals.",
     evidenceTitle: "Cross-checked with",
     evidenceSoil: "Your soil profile",
     evidenceSatellite: "Satellite vegetation",
@@ -5067,6 +5102,10 @@ export const en = {
         title: "Nutrient deficiency detected",
         message: "{{nutrient}} deficiency ({{status}}).",
       },
+      nutrient_review_required: {
+        title: "Nutrient review required",
+        message: "Use a soil or tissue test and expert review before acting.",
+      },
       soil_report_uploaded: {
         title: "Soil report added",
         message: "A soil report was processed for this farm.",
@@ -5501,7 +5540,8 @@ export const en = {
     cancelConfirmTitle: "Cancel join request?",
     cancelConfirmMessage: "Your request to join {{name}} will be cancelled.",
     leaveConfirmTitle: "Leave organization?",
-    leaveConfirmMessage: "You will leave {{name}} and it will no longer have access to your farm data.",
+    leaveConfirmMessage:
+      "You will leave {{name}} and it will no longer have access to your farm data.",
     approveConfirmTitle: "Allow access?",
     approveConfirmMessage:
       "{{name}} will be able to see your farm activity and progress. You can remove access anytime.",
@@ -5582,7 +5622,8 @@ export const en = {
       "Source-backed actions from disease, soil, calendar, weather and satellite modules. Weather-blocked actions cannot be logged yet.",
     planError: "Unable to load the organic action plan.",
     noActions: "No organic actions available",
-    noStepThisWeek: "No plan step this week. Open the conversion plan to see what is next.",
+    noStepThisWeek:
+      "No plan step this week. Open the conversion plan to see what is next.",
     thisWeekTitle: "This week's organic steps",
     openConversionPlan: "Open conversion plan",
     checkBeforeApply: "Check before you apply",
@@ -5606,13 +5647,17 @@ export const en = {
       apply_approved_input: "Apply the approved organic input",
       no_approved_treatment: "No approved organic input yet - ask an expert",
       reinspect: "Check the crop again",
-      postpone_organic_application_for_rain: "Wait - rain expected, do not spray",
+      postpone_organic_application_for_rain:
+        "Wait - rain expected, do not spray",
       postpone_organic_application_for_wind: "Wait - strong wind, do not spray",
-      postpone_organic_application_for_heavy_rain: "Wait - heavy rain expected, do not apply",
+      postpone_organic_application_for_heavy_rain:
+        "Wait - heavy rain expected, do not apply",
       review_farmer_reported_field_findings: "Review your field findings",
     },
-    chemicalNotAllowed: "Chemicals are not allowed during organic conversion. Use the organic option.",
-    chemicalLastResort: "Use the chemical option only if the organic option does not work.",
+    chemicalNotAllowed:
+      "Chemicals are not allowed during organic conversion. Use the organic option.",
+    chemicalLastResort:
+      "Use the chemical option only if the organic option does not work.",
     noActionsMessage:
       "The app will show actions here only when the backend has applicable, source-reviewed guidance.",
     scoutingOnly:
@@ -5720,7 +5765,8 @@ export const en = {
     planPhaseGrowth: "Crop growth",
     planPhaseHarvest: "Harvest",
     showMyPlan: "Show my plan",
-    planDatesLocked: "Dates can't be changed after your reviewed plan is scheduled.",
+    planDatesLocked:
+      "Dates can't be changed after your reviewed plan is scheduled.",
     planDatesSaveError: "Couldn't save the dates. Please try again.",
     todayTaskTitle: "Today's Organic Task",
     todayTaskLoadError: "Unable to load today's task.",
@@ -5835,6 +5881,241 @@ export const en = {
       scouting: "Scouting",
       harvest: "Harvest",
       custom: "Other practice",
+    },
+  },
+  groundnut: {
+    checkGrowthStage: "Check Growth Stage",
+    title: "Groundnut Crop Doctor",
+    subtitle: "Experimental leaf classification for authorized testers",
+    changeCrop: "Change selected crop",
+    selectedCrop: "Selected crop",
+    cropName: "Groundnut",
+    experimentalTitle: "Experimental model",
+    experimentalBody:
+      "External test accuracy was 70.22%. Results are not agronomically validated and are not confirmed diagnoses.",
+    selectedImage: "Selected Groundnut leaf photograph",
+    replaceImage: "Replace image",
+    uploadTitle: "Upload a Groundnut leaf photograph",
+    uploadRequirements:
+      "JPEG, PNG, or WebP · maximum 8 MiB · minimum 224 × 224",
+    camera: "Take photo",
+    gallery: "Choose from gallery",
+    errorTitle: "Unable to analyze photograph",
+    analyze: "Analyze Leaf",
+    analyzing: "Analyzing leaf…",
+    analyzeAccessibility: "Analyze Groundnut leaf",
+    processing: "Applying image-quality and confidence safety checks…",
+    retry: "Analyze another photograph",
+    likelyClassification: "Likely classification",
+    possibleClassification: "Possible classification",
+    photoRejected: "Photograph not accepted",
+    confidence: "Confidence",
+    topThree: "Top three model candidates",
+    imageQuality: "Image quality",
+    accepted: "Accepted",
+    rejected: "Rejected",
+    about: "About",
+    noTreatmentAdvice:
+      "No pesticide or dosage recommendation is made from this experimental result.",
+    expertReviewTitle: "Expert review required",
+    expertReviewBody:
+      "Do not treat this possible classification as a confirmed diagnosis.",
+    model: "Model",
+    symptoms: {
+      title: "Describe visible symptoms",
+      subtitle: "Select up to eight observations. Text symptoms provide preliminary guidance only.",
+      check: "Check selected symptoms",
+      checking: "Checking symptoms…",
+      preliminary: "Preliminary symptom guidance",
+      expertReview: "Expert review is required. This is not a confirmed disease diagnosis.",
+      error: "Symptom guidance is temporarily unavailable. Try again.",
+      apiErrors: {
+        authentication: "Your session expired. Sign in again before checking symptoms.",
+        authorization: "Symptom guidance is available only to authorized Groundnut testers.",
+        too_large: "The symptom request is too large. Select fewer symptoms and try again.",
+        unsupported_type: "This symptom request format is not supported.",
+        invalid_input: "One or more symptoms could not be accepted. Review the selection and try again.",
+        unavailable: "Symptom guidance is temporarily unavailable. Try again later.",
+        unknown: "Symptoms could not be checked. Try again.",
+      },
+      values: {
+        dark_leaf_spots: "Dark leaf spots",
+        light_leaf_spots: "Light leaf spots",
+        yellow_halo_around_spots: "Yellow halo around spots",
+        rust_colored_leaf_marks: "Rust-coloured leaf marks",
+        general_leaf_yellowing: "General leaf yellowing",
+        yellowing_between_leaf_veins: "Yellowing between leaf veins",
+        leaf_curling: "Leaf curling",
+        wilting: "Wilting",
+        stunted_growth: "Stunted growth",
+        holes_or_chewed_edges: "Holes or chewed leaf edges",
+        uniform_green_leaves: "Uniform green leaves",
+      },
+    },
+    voice: {
+      title: "Describe symptoms by voice",
+      start: "Record symptom voice note",
+      stop: "Stop symptom recording",
+      error: "The voice note could not be transcribed. Try again or select symptoms manually.",
+      transcript: "Transcript",
+      suggestions: "Suggested symptoms",
+      noSuggestions: "No explicit supported symptoms were found.",
+      unmatched: "Unmatched text — review manually",
+      ambiguous: "Ambiguous text — review manually",
+      confirm: "Confirm and add suggested symptoms",
+      confirmed: "Suggested symptoms added",
+      reviewWarning: "Review the transcript before confirming. Voice suggestions never submit a diagnosis automatically.",
+      apiErrors: {
+        authentication: "Your session expired. Sign in again before using voice symptoms.",
+        authorization: "Voice symptoms are available only to authorized Groundnut testers.",
+        too_large: "The recording is too large. Record a shorter voice note.",
+        unsupported_type: "This audio format is not supported. Record a new voice note.",
+        invalid_input: "The recording contained no usable speech or could not be processed.",
+        unavailable: "Voice transcription is temporarily unavailable. Select symptoms manually or try later.",
+        unknown: "The voice note could not be processed. Try again or select symptoms manually.",
+      },
+    },
+    confidenceCopy: {
+      HIGH: "Likely experimental classification. It is not a confirmed diagnosis.",
+      MEDIUM: "Possible classification only. Expert review is recommended.",
+      LOW: "Confidence is low. Upload a clearer photograph and request expert review.",
+    },
+    errors: {
+      invalid_type: "Choose a JPEG, PNG, or WebP photograph.",
+      too_large: "The photograph must be 8 MiB or smaller.",
+      corrupted: "This photograph could not be read. Choose another image.",
+      authentication: "Your session has expired. Sign in again to continue.",
+      authorization:
+        "This experimental model is available only to authorized testers.",
+      rate_limited: "Too many requests were made. Wait briefly and try again.",
+      feature_disabled:
+        "Groundnut experimental detection is currently disabled.",
+      backend_unavailable:
+        "The prediction service is temporarily unavailable. Try again later.",
+      server_error: "The photograph could not be analyzed. Try again.",
+    },
+    qualityReasons: {
+      IMAGE_TOO_SMALL: "Move closer and take a larger photograph of the leaf.",
+      IMAGE_TOO_DARK: "Retake the photograph in better light.",
+      IMAGE_TOO_BRIGHT: "Avoid glare and harsh direct light.",
+      INSUFFICIENT_CONTRAST:
+        "Use a plain background and keep the leaf clearly visible.",
+      IMAGE_TOO_BLURRY: "Hold the camera steady and focus on the leaf.",
+      LOW_CONFIDENCE: "The model was not confident enough in this photograph.",
+      REQUEST_NEW_PHOTO:
+        "Upload a clearer, close photograph of one Groundnut leaf.",
+      EXPERT_REVIEW_REQUIRED:
+        "Ask a KVK or agriculture officer to review this result.",
+    },
+    diseases: {
+      early_leaf_spot: {
+        name: "Early Leaf Spot",
+        description:
+          "Possible early leaf spot; confirm visible symptoms with a KVK or agriculture officer.",
+      },
+      healthy_leaf: {
+        name: "Healthy Leaf",
+        description:
+          "No strong sign of the model's four disease classes was detected.",
+      },
+      late_leaf_spot: {
+        name: "Late Leaf Spot",
+        description:
+          "Possible late leaf spot; expert confirmation is needed before treatment decisions.",
+      },
+      nutrition_deficiency: {
+        name: "Nutrition Deficiency",
+        description:
+          "Possible nutrient-related symptoms; confirm through crop inspection and appropriate soil or leaf testing.",
+      },
+      rust: {
+        name: "Rust",
+        description:
+          "Possible Groundnut rust; confirm signs with a KVK or agriculture officer.",
+      },
+    },
+  },
+  greenGram: {
+    title: "Green Gram — Experimental Test",
+    subtitle: "Three-class research model",
+    experimental:
+      "Experimental research model. Supports only Healthy, Leaf Curl and Yellow Mosaic. Results are not independently field-validated and must not be used as a confirmed diagnosis.",
+    language: "Language",
+    introTitle: "Photograph one Green Gram leaf",
+    introBody:
+      "Use a sharp, well-lit JPEG, PNG, or WebP photo showing the whole leaf.",
+    camera: "Take photo",
+    gallery: "Choose from gallery",
+    selectedImage: "Selected Green Gram leaf photograph",
+    replaceImage: "Replace image",
+    analyze: "Analyze leaf",
+    analyzing: "Analyzing leaf…",
+    changeCrop: "Change crop",
+    resultTitle: "Experimental result",
+    confidenceLabel: "Model confidence",
+    topPredictions: "Ranked predictions",
+    reviewRequired:
+      "Expert review is required. This is not a confirmed diagnosis.",
+    unavailableTitle: "Model not available",
+    unavailableBody:
+      "Prediction remains disabled until genuine expert-labelled images, independent testing, and deployment approval are complete.",
+    retry: "Try another photograph",
+    targetClasses: "Supported provisional classes",
+    confidence: {
+      high: "High confidence",
+      medium: "Medium confidence — expert review",
+      low: "Low confidence — retake photo",
+    },
+    errors: {
+      permission: "Camera or gallery permission is required.",
+      invalid: "Choose a clear JPEG, PNG, or WebP image.",
+      unsupported_type: "Choose a JPEG, PNG, or WebP image.",
+      too_large: "The image must be 8 MiB or smaller.",
+      unavailable: "Green Gram experimental prediction is disabled.",
+      retry: "Prediction failed. Please retry with another photograph.",
+    },
+    diseases: {
+      healthy: {
+        name: "Healthy",
+        description: "No clear signs of the four target diseases are visible.",
+        guidance:
+          "Continue regular field scouting; a model result never replaces crop inspection.",
+      },
+      yellowMosaic: {
+        name: "Yellow Mosaic",
+        description:
+          "Yellow and green mosaic patterns may occur across the leaf.",
+        guidance:
+          "Request expert confirmation before management decisions; inspect nearby plants and possible vector activity.",
+      },
+      leafCurl: {
+        name: "Leaf Curl",
+        description:
+          "The provisional dataset label for curled or distorted leaves.",
+        guidance:
+          "This must not be interpreted as Leaf Crinkle without expert confirmation.",
+      },
+      leafCrinkle: {
+        name: "Leaf Crinkle",
+        description:
+          "Leaves may appear crinkled, puckered, distorted, or reduced in size.",
+        guidance:
+          "Confirm the symptom and cause with an agriculture expert; do not treat ordinary leaf curl as confirmed Leaf Crinkle.",
+      },
+      powderyMildew: {
+        name: "Powdery Mildew",
+        description:
+          "White powder-like fungal growth may occur on leaf surfaces.",
+        guidance:
+          "Seek field confirmation and use locally approved management guidance; no dosage is prescribed here.",
+      },
+      cercospora: {
+        name: "Cercospora Leaf Spot",
+        description:
+          "Small brown or grey lesions, sometimes with darker margins, may develop.",
+        guidance:
+          "Have lesions confirmed by an expert before selecting any treatment.",
+      },
     },
   },
   errors: {

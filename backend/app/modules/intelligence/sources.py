@@ -102,6 +102,7 @@ class IntelligenceSources:
 
     async def _read_nutrient(self, user: User, farm: Farm) -> NutrientSignal | None:
         from app.modules.nutrient.repository import NutrientRepository
+        from app.modules.nutrient.safety import consumer_safe_nutrient_finding
 
         report = await NutrientRepository(self.session).latest_report(user.id, farm.id)
         if report is None or report.analysis is None:
@@ -110,12 +111,20 @@ class IntelligenceSources:
         if not self._fresh("nutrient", observed_at):
             return None
         a = report.analysis
-        return NutrientSignal(
-            primary=a.primary_deficiency,
+        safe = consumer_safe_nutrient_finding(
+            crop=report.crop or getattr(farm, "crop", None),
+            primary_deficiency=a.primary_deficiency,
             status=a.status,
             confidence=a.confidence,
-            severity=a.severity,
             needs_test=bool(a.needs_test),
+            needs_expert=bool(a.needs_expert),
+        )
+        return NutrientSignal(
+            primary=safe.primary_deficiency,
+            status=safe.status,
+            confidence=safe.confidence,
+            severity=a.severity,
+            needs_test=safe.needs_test,
         )
 
     async def _read_soil(self, user: User, farm: Farm) -> SoilSignal | None:

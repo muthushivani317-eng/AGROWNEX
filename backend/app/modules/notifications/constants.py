@@ -192,6 +192,14 @@ _RULE_LIST: tuple[NotificationRule, ...] = (
     ),
     _rule(
         _M.DISEASE,
+        "groundnut_pest_review_completed",
+        severity=_S.WARNING,
+        priority=_P.HIGH,
+        expires_after_hours=168,
+        action_route="/disease/{observation_id}",
+    ),
+    _rule(
+        _M.DISEASE,
         "poor_image_quality",
         severity=_S.INFO,
         priority=_P.LOW,

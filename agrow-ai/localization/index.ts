@@ -5,14 +5,17 @@ import { appStorage, StorageKeys } from '@/lib/storage';
 import type { SupportedLanguage } from '@/types';
 
 import { en } from './locales/en';
+import { ml } from './locales/ml';
 import { ta } from './locales/ta';
 
 export const resources = {
   en: { translation: en },
+  ml: { translation: ml },
   ta: { translation: ta },
 } as const;
 
-export const SUPPORTED_LANGUAGES: SupportedLanguage[] = ['ta', 'en'];
+export type LocalizationLanguage = SupportedLanguage | 'ml';
+export const SUPPORTED_LANGUAGES: LocalizationLanguage[] = ['ta', 'en', 'ml'];
 export const DEFAULT_LANGUAGE: SupportedLanguage = 'ta';
 
 /**
@@ -22,7 +25,7 @@ export const DEFAULT_LANGUAGE: SupportedLanguage = 'ta';
 export async function initI18n(): Promise<typeof i18n> {
   const saved = appStorage.getString(
     StorageKeys.languagePref,
-  ) as SupportedLanguage | null;
+  ) as LocalizationLanguage | null;
   const lng =
     saved && SUPPORTED_LANGUAGES.includes(saved) ? saved : DEFAULT_LANGUAGE;
 
@@ -61,13 +64,13 @@ export async function initI18n(): Promise<typeof i18n> {
   return i18n;
 }
 
-export function setLanguage(lng: SupportedLanguage): Promise<unknown> {
+export function setLanguage(lng: LocalizationLanguage): Promise<unknown> {
   appStorage.set(StorageKeys.languagePref, lng);
   return i18n.changeLanguage(lng);
 }
 
 export function getLanguage(): SupportedLanguage {
-  return (i18n.language as SupportedLanguage) ?? DEFAULT_LANGUAGE;
+  return i18n.language === 'ta' ? 'ta' : 'en';
 }
 
 export default i18n;

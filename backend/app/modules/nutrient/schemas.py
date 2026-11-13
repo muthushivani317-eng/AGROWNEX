@@ -12,6 +12,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.modules.nutrient.crops import is_groundnut_nutrient_crop
 from app.modules.nutrient.engine import NutrientAssessment, SoilReference, soil_signal
 from app.modules.nutrient.models import (
     NutrientHistory,
@@ -62,7 +63,7 @@ class NutrientAnalysisOut(BaseModel):
     primary_deficiency: str | None
     secondary_deficiency: str | None
     status: str
-    confidence: int
+    confidence: int | None
     severity: str
     affected_area: str | None
     disease_conflict: bool
@@ -74,13 +75,27 @@ class NutrientAnalysisOut(BaseModel):
     explanation_tamil: str | None
     explanation_english: str | None
     result_code: str
-    confidence_band: str
+    confidence_band: str | None
     evidence_observed: list[str]
     evidence_missing: list[str]
     conflicts: list[str]
     abstention_reason: str | None
     suggested_next_evidence: list[str]
     expert_verified: bool
+
+
+def _groundnut_required_recommendations() -> list[NutrientRecommendationOut]:
+    """Only evidence/review actions are safe for a Groundnut-specific finding."""
+    return [
+        NutrientRecommendationOut(
+            category="test", code="nutrient.rec.test.soil_test", nutrient=None,
+            severity="warning", priority="medium",
+        ),
+        NutrientRecommendationOut(
+            category="expert", code="nutrient.rec.expert.consult", nutrient=None,
+            severity="warning", priority="medium",
+        ),
+    ]
 
 
 class NutrientReportOut(BaseModel):
@@ -105,6 +120,8 @@ class NutrientReportOut(BaseModel):
     @classmethod
     def from_report(cls, report: NutrientReport) -> NutrientReportOut:
         analysis = None
+        groundnut_specific_claim = False
+        groundnut_specific_finding = False
         if report.analysis is not None:
             a = report.analysis
             soil = a.soil_reference or {}
@@ -141,28 +158,39 @@ class NutrientReportOut(BaseModel):
                     needs_expert=a.needs_expert,
                 )
             )
+            groundnut_specific_claim = bool(
+                is_groundnut_nutrient_crop(report.crop) and a.primary_deficiency
+            )
+            groundnut_specific_finding = bool(
+                groundnut_specific_claim and safe.code.value != "abstained"
+            )
             analysis = NutrientAnalysisOut(
                 primary_deficiency=a.primary_deficiency,
                 secondary_deficiency=a.secondary_deficiency,
-                status=a.status,
-                confidence=a.confidence,
+                status="possible" if groundnut_specific_finding else a.status,
+                # Groundnut has no validated nutrient-specific calibration.
+                confidence=None if groundnut_specific_claim else a.confidence,
                 severity=a.severity,
                 affected_area=a.affected_area,
                 disease_conflict=a.disease_conflict,
-                needs_test=a.needs_test,
-                needs_expert=a.needs_expert,
+                needs_test=True if groundnut_specific_claim else a.needs_test,
+                needs_expert=True if groundnut_specific_claim else a.needs_expert,
                 soil_reference=a.soil_reference,
                 satellite_reference=a.satellite_reference,
                 weather_reference=a.weather_reference,
-                explanation_tamil=a.explanation_tamil,
-                explanation_english=a.explanation_english,
-                result_code=safe.code.value,
-                confidence_band=safe.confidence_band,
+                explanation_tamil=None if groundnut_specific_claim else a.explanation_tamil,
+                explanation_english=None if groundnut_specific_claim else a.explanation_english,
+                result_code="possible_finding" if groundnut_specific_finding else safe.code.value,
+                confidence_band=None if groundnut_specific_claim else safe.confidence_band,
                 evidence_observed=safe.evidence_observed,
                 evidence_missing=safe.evidence_missing,
                 conflicts=safe.conflicts,
                 abstention_reason=safe.abstention_reason,
-                suggested_next_evidence=safe.suggested_next_evidence,
+                suggested_next_evidence=(
+                    ["soil_or_tissue_test", "expert_review"]
+                    if groundnut_specific_claim
+                    else safe.suggested_next_evidence
+                ),
                 expert_verified=False,
             )
         return cls(
@@ -181,9 +209,11 @@ class NutrientReportOut(BaseModel):
             weather_snapshot=report.weather_snapshot,
             analysis=analysis,
             symptoms=[s.code for s in report.symptoms],
-            recommendations=[
-                NutrientRecommendationOut.from_model(r) for r in report.recommendations
-            ],
+            recommendations=(
+                _groundnut_required_recommendations()
+                if groundnut_specific_claim
+                else [NutrientRecommendationOut.from_model(r) for r in report.recommendations]
+            ),
             created_at=report.created_at,
         )
 

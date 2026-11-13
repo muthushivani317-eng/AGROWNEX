@@ -135,7 +135,7 @@ function HistoryRow({
           </View>
           <AgText variant="caption" style={styles.mutedText}>
             {(report.captureDate ?? report.createdAt).slice(0, 10)}
-            {a
+            {a && a.confidence !== null
               ? ` · ${t("nutrient.confidence")} ${Math.round(a.confidence)}%`
               : ""}
           </AgText>

@@ -16,6 +16,7 @@ from app.modules.memory.models import (
     MemoryLink,
     MemorySummary,
 )
+from app.modules.nutrient.crops import is_groundnut_nutrient_crop
 
 
 class MemoryLinkOut(BaseModel):
@@ -59,14 +60,23 @@ class MemoryOut(BaseModel):
     def from_memory(
         cls, memory: FarmMemory, *, links: list[MemoryLink] | None = None
     ) -> MemoryOut:
+        restricted = bool(
+            memory.source_module == "nutrient"
+            and is_groundnut_nutrient_crop(memory.crop)
+            and (memory.params or {}).get("nutrient")
+        )
         return cls(
             id=memory.id,
             farm_id=memory.farm_id,
             source_module=memory.source_module,
             event_type=memory.event_type,
-            summary=memory.summary,
-            params=memory.params,
-            confidence=memory.confidence,
+            summary=(
+                "memory.event.nutrient_review_required"
+                if restricted
+                else memory.summary
+            ),
+            params={} if restricted else memory.params,
+            confidence=None if restricted else memory.confidence,
             importance=memory.importance,
             importance_score=memory.importance_score,
             observation=memory.observation,
@@ -76,7 +86,11 @@ class MemoryOut(BaseModel):
             location=memory.location,
             occurred_at=memory.occurred_at,
             created_at=memory.created_at,
-            tags=[t.tag for t in memory.tags],
+            tags=(
+                ["nutrient", "needs_test", "expert_review"]
+                if restricted
+                else [t.tag for t in memory.tags]
+            ),
             occurrences=len(memory.events),
             links=[MemoryLinkOut.from_link(link) for link in (links or [])],
         )

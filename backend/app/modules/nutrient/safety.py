@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
+from app.modules.nutrient.crops import is_groundnut_nutrient_crop
 from app.modules.nutrient.engine import NutrientAssessment
 
 
@@ -27,6 +28,55 @@ class SafeNutrientResult:
     abstention_reason: str | None
     suggested_next_evidence: list[str]
     expert_verified: bool = False
+
+
+@dataclass(frozen=True)
+class ConsumerSafeNutrientFinding:
+    """Sanitized read view; raw provider evidence remains unchanged in storage."""
+
+    primary_deficiency: str | None
+    status: str
+    confidence: int | None
+    needs_test: bool
+    needs_expert: bool
+    groundnut_specific_restricted: bool = False
+
+
+def consumer_safe_nutrient_finding(
+    *,
+    crop: str | None,
+    primary_deficiency: str | None,
+    status: str,
+    confidence: int | None,
+    needs_test: bool,
+    needs_expert: bool = False,
+) -> ConsumerSafeNutrientFinding:
+    """Apply crop-scoped policy whenever persisted/provider data is consumed.
+
+    A Groundnut-specific nutrient name is audit evidence only. Downstream engines
+    must not treat it as confirmed, calibrated, or automatically actionable.
+    """
+    restricted = bool(
+        is_groundnut_nutrient_crop(crop) and primary_deficiency
+    )
+    if restricted:
+        return ConsumerSafeNutrientFinding(
+            # Downstream engines do not need the unvalidated nutrient name; keeping
+            # it here could accidentally trigger nutrient-specific actions.
+            primary_deficiency=None,
+            status="not_confirmed",
+            confidence=None,
+            needs_test=True,
+            needs_expert=True,
+            groundnut_specific_restricted=True,
+        )
+    return ConsumerSafeNutrientFinding(
+        primary_deficiency=primary_deficiency,
+        status=status,
+        confidence=confidence,
+        needs_test=needs_test,
+        needs_expert=needs_expert,
+    )
 
 
 def build_safe_result(assessment: NutrientAssessment) -> SafeNutrientResult:

@@ -249,6 +249,22 @@ class GrowthRepository:
         await self.session.flush()
         return analysis
 
+    async def get_image_analysis(
+        self, image_id: uuid.UUID, user_id: uuid.UUID
+    ) -> tuple[CropGrowthImage, CropGrowthAnalysis] | None:
+        row = (
+            await self.session.execute(
+                select(CropGrowthImage, CropGrowthAnalysis)
+                .join(CropGrowthAnalysis, CropGrowthAnalysis.image_id == CropGrowthImage.id)
+                .where(
+                    CropGrowthImage.id == image_id,
+                    CropGrowthImage.user_id == user_id,
+                    CropGrowthImage.is_deleted.is_(False),
+                )
+            )
+        ).one_or_none()
+        return (row[0], row[1]) if row is not None else None
+
     # ----------------------------------------------------------------- #
     # Timeline
     # ----------------------------------------------------------------- #

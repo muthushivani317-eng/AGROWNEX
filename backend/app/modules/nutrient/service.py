@@ -506,7 +506,28 @@ class NutrientService:
 
     async def recommendations(self, user: User, farm_id: uuid.UUID) -> list[NutrientRecommendation]:
         await self._require_farm(user, farm_id)
-        return await self.repo.latest_recommendations(user.id, farm_id)
+        report = await self.repo.latest_report(user.id, farm_id)
+        if report is None:
+            return []
+        from app.modules.nutrient.safety import consumer_safe_nutrient_finding
+
+        analysis = report.analysis
+        if analysis is None:
+            return []
+        safe = consumer_safe_nutrient_finding(
+            crop=report.crop,
+            primary_deficiency=analysis.primary_deficiency,
+            status=analysis.status,
+            confidence=analysis.confidence,
+            needs_test=bool(analysis.needs_test),
+            needs_expert=bool(analysis.needs_expert),
+        )
+        if safe.groundnut_specific_restricted:
+            return [
+                rec for rec in report.recommendations
+                if rec.category in {"test", "expert"}
+            ]
+        return list(report.recommendations)
 
     async def get_report(self, user: User, report_id: uuid.UUID) -> NutrientReport:
         report = await self.repo.get_report(report_id, user.id)

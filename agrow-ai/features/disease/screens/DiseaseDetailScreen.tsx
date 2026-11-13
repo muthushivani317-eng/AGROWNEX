@@ -30,6 +30,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 
 import { ConfidenceMeter } from '../components/ConfidenceMeter';
 import { DiseaseReportImage } from '../components/DiseaseReportImage';
+import { GroundnutPestObservationStatus } from '../components/GroundnutPestObservationStatus';
 import { InfoList } from '../components/InfoList';
 import { SeverityBadge } from '../components/SeverityBadge';
 import { applyChemicalPolicy, useChemicalPolicy } from '@/features/organic/chemicalPolicy';
@@ -106,7 +107,11 @@ export function DiseaseDetailScreen({ reportId }: { reportId: string }) {
             <ArrowLeft size={24} color={colors.text} />
           </AgPressable>
           <AgText variant="headingM" weight="bold">
-            {t('disease.resultTitle')}
+            {report.pestObservation
+              ? t('disease.pestObservation.title', {
+                  defaultValue: 'Groundnut pest-damage observation',
+                })
+              : t('disease.resultTitle')}
           </AgText>
         </View>
       </View>
@@ -131,9 +136,15 @@ export function DiseaseDetailScreen({ reportId }: { reportId: string }) {
         </AgText>
       </View>
 
-      <AgText variant="headingS" weight="bold" style={{ marginTop: 4 }}>
-        {formatDiagnosisName(report.disease) ?? t('disease.cropUnknown')}
-      </AgText>
+      {!report.pestObservation ? (
+        <AgText variant="headingS" weight="bold" style={{ marginTop: 4 }}>
+          {formatDiagnosisName(report.disease) ?? t('disease.cropUnknown')}
+        </AgText>
+      ) : null}
+
+      {report.pestObservation ? (
+        <GroundnutPestObservationStatus observation={report.pestObservation} />
+      ) : null}
 
       {report.testMode?.display_required ? (
         <AgCard className="mt-3 border-2 border-danger bg-danger/10">
@@ -143,7 +154,7 @@ export function DiseaseDetailScreen({ reportId }: { reportId: string }) {
         </AgCard>
       ) : null}
 
-      <View style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+      {!report.pestObservation ? <><View style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <SeverityBadge severity={report.severity} />
         {report.needsExpertReview ? (
           <View className="flex-row items-center gap-1">
@@ -180,6 +191,8 @@ export function DiseaseDetailScreen({ reportId }: { reportId: string }) {
         title={t('disease.prevention')}
         items={report.prevention}
       />
+
+      </> : null}
 
       {report.weatherSnapshot?.condition ? (
         <AgCard className="mt-4 flex-row items-center gap-3">

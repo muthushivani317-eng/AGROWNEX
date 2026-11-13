@@ -1,7 +1,15 @@
 import {
+  mayDisplayNutrientConfidence,
   mayDisplayNutrientFinding,
   safeDisplayStatus,
 } from "../services/nutrientPresentation";
+
+test("suppresses Groundnut-specific confidence when score and band are unavailable", () => {
+  expect(mayDisplayNutrientConfidence(null, null)).toBe(false);
+  expect(mayDisplayNutrientConfidence(68, null)).toBe(false);
+  expect(mayDisplayNutrientConfidence(null, "medium")).toBe(false);
+  expect(mayDisplayNutrientConfidence(68, "medium")).toBe(true);
+});
 
 describe("nutrient presentation safety", () => {
   it.each([

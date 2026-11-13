@@ -16,6 +16,7 @@ from app.modules.intelligence.models import (
     CropDecisionHistory,
     CropIntelligenceReport,
 )
+from app.modules.nutrient.crops import is_groundnut_nutrient_crop
 
 
 class HealthScoresOut(BaseModel):
@@ -48,7 +49,7 @@ class IntelligenceReportOut(BaseModel):
     crop: str | None
     generated_at: datetime
     overall_health_score: int | None
-    confidence: int
+    confidence: int | None
     overall_risk: str
     risk_score: int | None
     sources_used: list[str]
@@ -61,7 +62,12 @@ class IntelligenceReportOut(BaseModel):
     def from_report(cls, report: CropIntelligenceReport) -> IntelligenceReportOut:
         # Reports created before evidence gating may contain an aggregate derived from
         # only one module. Preserve the module finding, but fail closed at the API.
-        sufficient = len(set(report.sources_used or [])) >= MIN_OVERALL_EVIDENCE_MODULES
+        restricted = is_groundnut_nutrient_crop(report.crop)
+        safe_sources = set(report.sources_used or [])
+        if restricted:
+            safe_sources.discard("nutrient")
+
+        sufficient = "nutrient" not in (report.sources_used or []) and len(safe_sources) >= MIN_OVERALL_EVIDENCE_MODULES
         safe_overall = report.overall_health_score if sufficient else None
         health = None
         if report.health is not None:
@@ -76,6 +82,7 @@ class IntelligenceReportOut(BaseModel):
                 weather_score=h.weather_score,
                 growth_score=h.growth_score,
             )
+        restricted = is_groundnut_nutrient_crop(report.crop)
         issues = [
             PriorityIssueOut(
                 code=i.get("code", ""),
@@ -83,16 +90,23 @@ class IntelligenceReportOut(BaseModel):
                 modules=list(i.get("modules", [])),
             )
             for i in ((report.risk.priority_issues or []) if report.risk else [])
+            if not (restricted and "nutrient" in i.get("modules", []))
         ]
-        recs = sorted(report.recommendations, key=lambda r: r.rank)
+        recs = [
+            r
+            for r in sorted(report.recommendations, key=lambda r: r.rank)
+            if not (restricted and "nutrient" in (r.modules or []))
+        ]
+        if restricted and health is not None:
+            health.nutrient_score = None
         return cls(
             id=report.id,
             farm_id=report.farm_id,
             crop=report.crop,
             generated_at=report.generated_at,
             overall_health_score=safe_overall,
-            confidence=report.confidence,
-            overall_risk=report.overall_risk,
+            confidence=report.confidence if sufficient else None,
+            overall_risk=report.overall_risk if sufficient else "unknown",
             risk_score=(report.risk.risk_score if report.risk else None) if sufficient else None,
             sources_used=list(report.sources_used or []),
             health=health,
@@ -125,7 +139,7 @@ class IntelligenceHistoryOut(BaseModel):
     report_id: uuid.UUID | None
     overall_health_score: int | None
     overall_risk: str
-    confidence: int
+    confidence: int | None
     recorded_at: datetime
 
     @classmethod
@@ -139,7 +153,8 @@ class IntelligenceHistoryOut(BaseModel):
                 if getattr(h, "_sufficient_evidence", False)
                 else None
             ),
-            overall_risk=h.overall_risk,
-            confidence=h.confidence,
+
+            overall_risk=h.overall_risk if getattr(h, "_sufficient_evidence", False) else "unknown",
+            confidence=h.confidence if getattr(h, "_sufficient_evidence", False) else None,
             recorded_at=h.recorded_at,
         )

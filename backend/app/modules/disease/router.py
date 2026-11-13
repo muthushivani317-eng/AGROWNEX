@@ -26,18 +26,33 @@ from app.modules.disease.farmer_diagnosis_service import (
     diagnose_for_farmer,
 )
 from app.modules.disease.ml_runtime import get_model_runtime
-from app.modules.disease.review import review_redgram_report
+from app.modules.disease.review import (
+    get_pending_groundnut_pest_observation,
+    complete_groundnut_pest_observation,
+    groundnut_pest_observation_for_review,
+    list_pending_groundnut_pest_observations,
+    review_redgram_report,
+)
 from app.modules.disease.schemas import (
     DiseaseReportOut,
     DiseaseReportSummaryOut,
     DiseaseReviewOut,
     DiseaseReviewRequest,
+    GroundnutPestObservationReviewOut,
+    GroundnutPestObservationCompletionOut,
+    GroundnutPestObservationCompletionRequest,
     ModelMetadataOut,
 )
 from app.modules.disease.storage import get_private_storage
 from app.schemas.response import PaginatedData, SuccessResponse, success
 
 router = APIRouter(prefix="/disease", tags=["disease"])
+
+
+async def require_kvk_reviewer(
+    reviewer: TesterContext = Depends(require_any_role(RoleName.KVK_REVIEWER.value)),
+) -> TesterContext:
+    return reviewer
 
 _DIAGNOSIS_ERROR_STATUS = {
     "IMAGE_FORMAT_UNSUPPORTED": 415,
@@ -104,6 +119,101 @@ async def save_kvk_review(
         corrected_label=report.corrected_label,
         reviewer_role="kvk_officer",
         review_timestamp=report.review_timestamp,
+    )
+
+
+@router.get(
+    "/kvk/groundnut-pest-observations",
+    response_model=list[GroundnutPestObservationReviewOut],
+)
+async def list_groundnut_pest_observations_for_review(
+    reviewer: TesterContext = Depends(require_kvk_reviewer),
+    session: AsyncSession = Depends(get_session),
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+):
+    del reviewer
+    return await list_pending_groundnut_pest_observations(
+        session, limit=limit, offset=offset
+    )
+
+
+@router.get(
+    "/kvk/groundnut-pest-observations/{observation_id}",
+    response_model=GroundnutPestObservationReviewOut,
+)
+async def inspect_groundnut_pest_observation(
+    observation_id: uuid.UUID,
+    reviewer: TesterContext = Depends(require_kvk_reviewer),
+    session: AsyncSession = Depends(get_session),
+):
+    del reviewer
+    try:
+        record = await get_pending_groundnut_pest_observation(session, observation_id)
+    except LookupError as exc:
+        raise HTTPException(404, detail={"code": str(exc)}) from exc
+    return groundnut_pest_observation_for_review(record)
+
+
+@router.get("/kvk/groundnut-pest-observations/{observation_id}/image")
+async def get_groundnut_pest_observation_image(
+    observation_id: uuid.UUID,
+    reviewer: TesterContext = Depends(require_kvk_reviewer),
+    session: AsyncSession = Depends(get_session),
+):
+    del reviewer
+    try:
+        record = await get_pending_groundnut_pest_observation(session, observation_id)
+    except LookupError as exc:
+        raise HTTPException(404, detail={"code": str(exc)}) from exc
+    if not record.image_key:
+        raise HTTPException(404, detail={"code": "IMAGE_NOT_AVAILABLE"})
+    ext = record.image_key.rsplit(".", 1)[-1].lower()
+    media_type = {
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "png": "image/png",
+        "webp": "image/webp",
+    }.get(ext, "application/octet-stream")
+    data = await get_private_storage().get(key=record.image_key)
+    return Response(
+        content=data,
+        media_type=media_type,
+        headers={
+            "Cache-Control": "private, no-store",
+            "Content-Disposition": "inline",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
+
+
+@router.post(
+    "/kvk/groundnut-pest-observations/{observation_id}/complete",
+    response_model=GroundnutPestObservationCompletionOut,
+)
+async def complete_groundnut_pest_observation_review(
+    observation_id: uuid.UUID,
+    payload: GroundnutPestObservationCompletionRequest,
+    reviewer: TesterContext = Depends(require_kvk_reviewer),
+    session: AsyncSession = Depends(get_session),
+):
+    del reviewer
+    try:
+        record = await complete_groundnut_pest_observation(
+            session,
+            report_id=observation_id,
+            feedback=payload.feedback,
+        )
+    except LookupError as exc:
+        raise HTTPException(404, detail={"code": str(exc)}) from exc
+    except ValueError as exc:
+        raise HTTPException(422, detail={"code": str(exc)}) from exc
+    except RuntimeError as exc:
+        raise HTTPException(409, detail={"code": str(exc)}) from exc
+    return GroundnutPestObservationCompletionOut(
+        observation_id=record.id,
+        feedback=record.raw_response["review"]["feedback"],
+        review_timestamp=record.review_timestamp,
     )
 
 

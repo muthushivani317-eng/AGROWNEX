@@ -153,6 +153,6 @@ test("light nutrient surfaces use fixed readable text across entry and results",
   expect(files[0]).toContain("<TouchableOpacity");
   expect(files[0]).toContain("{ backgroundColor: NUTRIENT_UI.chlorophyll }");
   expect(files[0]).not.toContain("style={({ pressed })");
-  expect(files[1]).toContain("<AgEmptyState\n            light");
+  expect(files[1]).toMatch(/<AgEmptyState\s+light/);
   expect(files[2]).toContain("<AgErrorState light");
 });

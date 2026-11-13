@@ -6,7 +6,7 @@ handles a single, consistent set of error codes across photo features.
 
 from __future__ import annotations
 
-from app.core.exceptions import AppError, NotFoundError
+from app.core.exceptions import AppError, NotFoundError, ValidationError
 
 # Reuse the Disease pipeline's image errors (docs: reuse, no duplication).
 from app.modules.disease.exceptions import (  # noqa: F401 — re-exported
@@ -36,3 +36,8 @@ class GrowthImageNotFoundError(NotFoundError):
 class FarmNotFoundError(NotFoundError):
     error_code = "farm_not_found"
     message = "Farm not found."
+
+
+class GroundnutStageConfirmationError(ValidationError):
+    error_code = "groundnut_stage_confirmation_invalid"
+    message = "The Groundnut growth-stage decision is invalid."

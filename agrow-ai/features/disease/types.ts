@@ -34,6 +34,28 @@ export interface TestModeProvenance {
   session_id?: string;
 }
 
+export type GroundnutPestReviewFeedback =
+  | 'monitor_field_conditions'
+  | 'submit_clearer_photo'
+  | 'seek_in_person_field_assessment'
+  | 'no_actionable_conclusion_from_photo';
+
+export interface GroundnutPestObservation {
+  damageExtent: 'few' | 'several' | 'widespread';
+  spreadSpeed: 'unknown' | 'stable' | 'rapid';
+  reviewStatus: 'pending' | 'reviewed';
+  feedback: GroundnutPestReviewFeedback | null;
+  reviewTimestamp: string | null;
+}
+
+export interface ApiGroundnutPestObservation {
+  damage_extent: 'few' | 'several' | 'widespread';
+  spread_speed: 'unknown' | 'stable' | 'rapid';
+  review_status: 'pending' | 'reviewed';
+  feedback: GroundnutPestReviewFeedback | null;
+  review_timestamp: string | null;
+}
+
 /**
  * Whether a diagnosis was confirmed by a trained local classifier or is an
  * OpenAI-vision-only estimate (docs/AI_DECISION_MATRIX.md → DISEASE
@@ -71,6 +93,7 @@ export interface DiseaseReport {
   longitude: number | null;
   language: SupportedLanguage;
   createdAt: string;
+  pestObservation?: GroundnutPestObservation | null;
 }
 
 export interface DiseaseReportSummary {
@@ -85,6 +108,7 @@ export interface DiseaseReportSummary {
   testMode: TestModeProvenance | null;
   verificationLevel: VerificationLevel;
   createdAt: string;
+  pestObservation?: GroundnutPestObservation | null;
 }
 
 // --------------------------------------------------------------------------- //
@@ -119,6 +143,7 @@ export interface ApiDiseaseReport {
   longitude: number | null;
   language: string;
   created_at: string;
+  pest_observation?: ApiGroundnutPestObservation | null;
 }
 
 export interface ApiDiseaseReportSummary {
@@ -133,4 +158,5 @@ export interface ApiDiseaseReportSummary {
   test_mode?: TestModeProvenance | null;
   verification_level?: VerificationLevel;
   created_at: string;
+  pest_observation?: ApiGroundnutPestObservation | null;
 }

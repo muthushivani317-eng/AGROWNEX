@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from app.core.config import settings
 from app.crop_runtime.readiness import ReadinessResolver
 from app.crop_runtime.registry import load_registry
 from app.modules.auth.constants import RoleName
@@ -49,6 +50,29 @@ def test_pilot_only_gets_ready_pilot_eligible_restricted_crops() -> None:
     assert rows["redgram"].user_authorized is True
     assert rows["redgram"].prediction_kind == "restricted"
     assert rows["paddy"].user_authorized is False
+
+
+def test_internal_tester_gets_approved_groundnut_experimental_runtime(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(settings, "groundnut_experimental_enabled", True)
+    rows = {
+        row.crop_id: row
+        for row in _rows(roles={RoleName.INTERNAL_TESTER.value}).crops
+    }
+
+    assert rows["groundnut"].runtime_ready is True
+    assert rows["groundnut"].integrity_verified is True
+    assert rows["groundnut"].user_authorized is True
+    assert rows["groundnut"].prediction_kind == "groundnut_experimental"
+    assert rows["groundnut"].release_scope == "internal"
+    assert rows["groundnut"].supported_class_ids == [
+        "early_leaf_spot",
+        "healthy_leaf",
+        "late_leaf_spot",
+        "nutrition_deficiency",
+        "rust",
+    ]
 
 
 def test_capability_output_redacts_runtime_secrets() -> None:

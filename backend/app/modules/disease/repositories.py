@@ -4,7 +4,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Select, func, select
+from sqlalchemy import Select, func, or_, select
 
 from app.modules.disease.models import DiseaseReport
 from app.shared.base_repository import BaseRepository
@@ -24,6 +24,13 @@ class DiseaseReportRepository(BaseRepository[DiseaseReport]):
         stmt = select(DiseaseReport).where(
             DiseaseReport.user_id == user_id,
             DiseaseReport.is_deleted.is_(False),
+            or_(
+                func.coalesce(
+                    DiseaseReport.raw_response["record_type"].as_string(), ""
+                )
+                != "farmer_pest_damage_observation",
+                DiseaseReport.review_consent.is_(True),
+            ),
         )
         if unassigned_only:
             stmt = stmt.where(DiseaseReport.farm_id.is_(None))
@@ -41,6 +48,13 @@ class DiseaseReportRepository(BaseRepository[DiseaseReport]):
                 DiseaseReport.id == report_id,
                 DiseaseReport.user_id == user_id,
                 DiseaseReport.is_deleted.is_(False),
+                or_(
+                    func.coalesce(
+                        DiseaseReport.raw_response["record_type"].as_string(), ""
+                    )
+                    != "farmer_pest_damage_observation",
+                    DiseaseReport.review_consent.is_(True),
+                ),
             )
         )
         return result.scalar_one_or_none()
@@ -68,6 +82,68 @@ class DiseaseReportRepository(BaseRepository[DiseaseReport]):
             ).order_by(DiseaseReport.created_at.asc())
         )
         return list(result.scalars().all())
+
+    async def list_pending_groundnut_pest_observations(
+        self, *, limit: int, offset: int
+    ) -> list[DiseaseReport]:
+        """Reviewer queue containing consented evidence only."""
+        result = await self.session.execute(
+            select(DiseaseReport)
+            .where(
+                DiseaseReport.crop == "groundnut",
+                DiseaseReport.disease.is_(None),
+                DiseaseReport.needs_expert_review.is_(True),
+                DiseaseReport.review_status == "pending",
+                DiseaseReport.review_consent.is_(True),
+                DiseaseReport.kvk_session.is_(True),
+                DiseaseReport.raw_response["record_type"].as_string()
+                == "farmer_pest_damage_observation",
+                DiseaseReport.is_deleted.is_(False),
+            )
+            .order_by(DiseaseReport.created_at.asc())
+            .limit(limit)
+            .offset(offset)
+        )
+        return list(result.scalars().all())
+
+    async def get_pending_groundnut_pest_observation(
+        self, report_id: uuid.UUID
+    ) -> DiseaseReport | None:
+        result = await self.session.execute(
+            select(DiseaseReport).where(
+                DiseaseReport.id == report_id,
+                DiseaseReport.crop == "groundnut",
+                DiseaseReport.disease.is_(None),
+                DiseaseReport.needs_expert_review.is_(True),
+                DiseaseReport.review_status == "pending",
+                DiseaseReport.review_consent.is_(True),
+                DiseaseReport.kvk_session.is_(True),
+                DiseaseReport.raw_response["record_type"].as_string()
+                == "farmer_pest_damage_observation",
+                DiseaseReport.is_deleted.is_(False),
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def get_groundnut_pest_observation_for_completion(
+        self, report_id: uuid.UUID
+    ) -> DiseaseReport | None:
+        """Lock a consented observation so completion is a single transition."""
+        result = await self.session.execute(
+            select(DiseaseReport)
+            .where(
+                DiseaseReport.id == report_id,
+                DiseaseReport.crop == "groundnut",
+                DiseaseReport.disease.is_(None),
+                DiseaseReport.review_consent.is_(True),
+                DiseaseReport.kvk_session.is_(True),
+                DiseaseReport.raw_response["record_type"].as_string()
+                == "farmer_pest_damage_observation",
+                DiseaseReport.is_deleted.is_(False),
+            )
+            .with_for_update()
+        )
+        return result.scalar_one_or_none()
 
     async def list_for_user(
         self,

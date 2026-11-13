@@ -144,10 +144,24 @@ describe('apiToTimeline & apiToUploadResult', () => {
         image_url: null,
         thumbnail_url: null,
       },
+      stage_comparison: {
+        gemini_stage: 'vegetative',
+        calendar_stage: 'flowering_pegging',
+        expected_gemini_stages: ['flowering', 'fruiting'],
+        mismatch: true,
+        warning_code: 'GROUNDNUT_STAGE_CALENDAR_MISMATCH',
+      },
     };
     const result = apiToUploadResult(dto);
     expect(result.session.id).toBe('s1');
     expect(result.image.id).toBe('img1');
     expect(result.timelineEntry.imageId).toBe('img1');
+    expect(result.stageComparison).toEqual({
+      geminiStage: 'vegetative',
+      calendarStage: 'flowering_pegging',
+      expectedGeminiStages: ['flowering', 'fruiting'],
+      mismatch: true,
+      warningCode: 'GROUNDNUT_STAGE_CALENDAR_MISMATCH',
+    });
   });
 });

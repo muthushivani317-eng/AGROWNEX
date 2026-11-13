@@ -31,7 +31,12 @@ from app.modules.notifications.constants import (
     Severity,
     severity_at_least,
 )
-from app.modules.notifications.engine import NotificationDraft, build_drafts
+from app.modules.notifications.engine import (
+    CandidateEvent,
+    NotificationDraft,
+    build_drafts,
+    draft_from_candidate,
+)
 from app.modules.notifications.exceptions import NotificationNotFoundError
 from app.modules.notifications.models import (
     DeviceToken,
@@ -47,7 +52,7 @@ from app.modules.notifications.provider import (
     get_default_provider,
 )
 from app.modules.notifications.repository import NotificationRepository
-from app.modules.notifications.schemas import NotificationPreferencesUpdate
+from app.modules.notifications.schemas import NotificationOut, NotificationPreferencesUpdate
 from app.modules.notifications.sources import NotificationSources
 from app.schemas.response import PaginatedData
 
@@ -175,6 +180,22 @@ class NotificationService:
         await self.session.flush()
         return created
 
+    async def emit(self, user: User, candidate: CandidateEvent) -> bool:
+        """Persist one explicit event through the normal rules and preference gates."""
+        now = self._now_dt()
+        await self.ensure_templates_seeded()
+        prefs = await self._get_or_create_preferences(user)
+        draft = draft_from_candidate(candidate, now=now)
+        if draft is None or not self._passes_preferences(prefs, draft):
+            return False
+        if draft.scheduled_for is not None and draft.scheduled_for > now:
+            await self._enqueue(user, draft)
+            await self.session.flush()
+            return True
+        created = await self._store(user, draft, now) is not None
+        await self.session.flush()
+        return created
+
     async def _store(
         self, user: User, draft: NotificationDraft, now: datetime
     ) -> Notification | None:
@@ -281,17 +302,18 @@ class NotificationService:
     ) -> None:
         prefs = await self.repo.get_preferences(user.id)
         channels = self._channels_for(prefs) if prefs else DEFAULT_DELIVERY_CHANNELS
+        safe = await self.notification_out(user, notification)
         request = DeliveryRequest(
             notification_id=str(notification.id),
             user_id=str(user.id),
-            module=notification.module,
-            event_type=notification.event_type,
-            title_key=notification.title_key,
-            message_key=notification.message_key,
-            severity=notification.severity,
-            priority=notification.priority,
-            payload=notification.payload_json or {},
-            action_route=notification.action_route,
+            module=safe.module,
+            event_type=safe.event_type,
+            title_key=safe.title_key,
+            message_key=safe.message_key,
+            severity=safe.severity,
+            priority=safe.priority,
+            payload=safe.payload,
+            action_route=safe.action_route,
         )
         results = await self.provider.deliver(request, channels=channels)
         delivered = False
@@ -345,6 +367,32 @@ class NotificationService:
             page_size=page_size,
             total=total,
             total_pages=total_pages,
+        )
+
+    async def notification_out(self, user: User, notification: Notification) -> NotificationOut:
+        """Sanitize legacy stored nutrient notifications at the read boundary."""
+        restricted = False
+        if notification.module == "nutrient" and notification.event_type == "deficiency_detected":
+            # A legacy deficiency notification is unsafe until its report proves
+            # both ownership and crop provenance. The owned-report repository also
+            # excludes soft-deleted rows, so missing, malformed, deleted and
+            # cross-user references all fail closed without altering audit storage.
+            restricted = True
+            raw_id = (notification.payload_json or {}).get("report_id")
+            try:
+                report_id = uuid.UUID(str(raw_id))
+            except (TypeError, ValueError):
+                report_id = None
+            if report_id is not None:
+                from app.modules.nutrient.crops import is_groundnut_nutrient_crop
+                from app.modules.nutrient.repository import NutrientRepository
+
+                report = await NutrientRepository(self.session).get_report(report_id, user.id)
+                crop = str(report.crop).strip() if report is not None and report.crop else ""
+                if crop:
+                    restricted = is_groundnut_nutrient_crop(crop)
+        return NotificationOut.from_model(
+            notification, restrict_groundnut_nutrient=restricted
         )
 
     async def unread_count(self, user: User, *, sync: bool = True) -> int:

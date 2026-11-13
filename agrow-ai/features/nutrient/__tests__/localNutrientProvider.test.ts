@@ -53,6 +53,22 @@ describe('localNutrientProvider (offline)', () => {
     expect(recs.length).toBeGreaterThan(0);
   });
 
+  it('sanitizes stored Groundnut history and recommendations', async () => {
+    const created = await localNutrientProvider.analyze(input({ crop: 'Groundnut' }));
+    const report = await localNutrientProvider.getReport(created.id);
+    expect(report.analysis).toMatchObject({
+      status: 'not_confirmed',
+      confidence: null,
+      confidenceBand: null,
+      needsTest: true,
+      needsExpert: true,
+      explanationEnglish: null,
+      explanationTamil: null,
+    });
+    expect(report.recommendations.map((rec) => rec.category)).toEqual(['test', 'expert']);
+    expect((await localNutrientProvider.history(FARM))[0].analysis?.confidenceBand).toBeNull();
+  });
+
   it('fetches a report by id and throws when missing', async () => {
     const report = await localNutrientProvider.analyze(input());
     expect((await localNutrientProvider.getReport(report.id)).id).toBe(report.id);

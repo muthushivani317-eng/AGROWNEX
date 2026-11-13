@@ -30,6 +30,68 @@ LIMITATION = "This is a provisional dataset evaluation, not official Tamil Nadu 
 VERIFY_EN = "Verify against official source."
 VERIFY_TA = "மேலாண்மை பரிந்துரைகளை அதிகாரப்பூர்வ மூலத்துடன் சரிபார்க்கவும்."
 
+# Closed vocabulary for farmer-observable Groundnut symptoms.  These values are
+# intentionally descriptive rather than diagnoses so text input cannot be
+# presented as an image-model result.
+GROUNDNUT_TEXT_SYMPTOMS = frozenset(
+    {
+        "dark_leaf_spots",
+        "light_leaf_spots",
+        "yellow_halo_around_spots",
+        "rust_colored_leaf_marks",
+        "general_leaf_yellowing",
+        "yellowing_between_leaf_veins",
+        "leaf_curling",
+        "wilting",
+        "stunted_growth",
+        "holes_or_chewed_edges",
+        "uniform_green_leaves",
+    }
+)
+
+
+def preliminary_groundnut_text_guidance(symptoms: list[str]) -> dict[str, Any]:
+    """Return non-diagnostic guidance for validated Groundnut observations.
+
+    This is the text-only counterpart to :func:`decide`.  It deliberately has
+    no ``Prediction`` input, disease acceptance, or confidence fields.
+    """
+    supplied = {item.strip().casefold() for item in symptoms if item.strip()}
+    unsupported = sorted(supplied - GROUNDNUT_TEXT_SYMPTOMS)
+    if unsupported:
+        raise ValueError("unsupported_groundnut_symptom")
+
+    patterns: list[str] = []
+    if supplied & {"dark_leaf_spots", "light_leaf_spots", "yellow_halo_around_spots"}:
+        patterns.append("leaf_spot_pattern")
+    if "rust_colored_leaf_marks" in supplied:
+        patterns.append("rust_like_pattern")
+    if supplied & {"general_leaf_yellowing", "yellowing_between_leaf_veins"}:
+        patterns.append("nutrient_or_stress_pattern")
+    if supplied & {"leaf_curling", "wilting", "stunted_growth"}:
+        patterns.append("general_stress_pattern")
+    if "holes_or_chewed_edges" in supplied:
+        patterns.append("possible_pest_damage_pattern")
+    if "uniform_green_leaves" in supplied:
+        patterns.append("no_obvious_symptom_pattern")
+
+    return {
+        "status": "preliminary_guidance",
+        "observed_symptoms": sorted(supplied),
+        "possible_patterns": patterns,
+        "guidance": (
+            "These observations can have multiple causes. Upload a clear leaf photograph "
+            "and ask a qualified agriculture expert before treatment decisions."
+        ),
+        "expert_review_required": True,
+        "confirmed_disease": None,
+        "image_model_confidence": None,
+        "warnings": [
+            "Text symptoms alone cannot confirm a disease.",
+            "This response is preliminary guidance, not a diagnosis.",
+        ],
+    }
+
 
 def _wording(decision: str, predicted: str | None) -> tuple[str, str]:
     display = (predicted or "").replace("_", " ")

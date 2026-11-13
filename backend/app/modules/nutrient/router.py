@@ -19,7 +19,6 @@ from fastapi import APIRouter, Query, status
 from app.modules.nutrient.dependencies import CurrentUser, NutrientServiceDep
 from app.modules.nutrient.schemas import (
     AnalyzeNutrientRequest,
-    NutrientHistoryOut,
     NutrientRecommendationOut,
     NutrientReportOut,
 )
@@ -44,7 +43,7 @@ async def analyze(
     return success(NutrientReportOut.from_report(report), message="Analysis complete")
 
 
-@router.get("/history", response_model=SuccessResponse[PaginatedData[NutrientHistoryOut]])
+@router.get("/history", response_model=SuccessResponse[PaginatedData[NutrientReportOut]])
 async def get_history(
     current_user: CurrentUser,
     service: NutrientServiceDep,
@@ -86,8 +85,10 @@ async def get_recommendations(
     farm_id: uuid.UUID = Query(...),
 ):
     """Generic agronomic recommendations from the farm's latest analysis (no brands)."""
-    recs = await service.recommendations(current_user, farm_id)
-    return success([NutrientRecommendationOut.from_model(r) for r in recs])
+    # Serialize through the same crop-scoped safety boundary as report endpoints;
+    # this prevents the convenience endpoint leaking remedies suppressed in a report.
+    report = await service.latest(current_user, farm_id)
+    return success(NutrientReportOut.from_report(report).recommendations)
 
 
 @router.get("/report/{report_id}", response_model=SuccessResponse[NutrientReportOut])

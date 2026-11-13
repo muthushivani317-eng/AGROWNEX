@@ -6,6 +6,7 @@ import type {
   NutrientReport,
 } from '../types';
 import { mockNutrientReport } from './mockNutrient';
+import { applyGroundnutNutrientSafety } from './nutrientMapper';
 import { NutrientError, type NutrientProvider } from './nutrientProvider';
 import { nutrientStorage } from './nutrientStorage';
 
@@ -17,7 +18,7 @@ import { nutrientStorage } from './nutrientStorage';
  */
 export const localNutrientProvider: NutrientProvider = {
   async analyze(input: AnalyzeInput): Promise<NutrientReport> {
-    const report = mockNutrientReport(input, uuid());
+    const report = applyGroundnutNutrientSafety(mockNutrientReport(input, uuid()));
     nutrientStorage.addLocalReport(input.farmId, report);
     return report;
   },

@@ -35,6 +35,60 @@ class CropCapabilityOut(BaseModel):
     production_approved: bool
 
 
+GroundnutPestReviewFeedback = Literal[
+    "monitor_field_conditions",
+    "submit_clearer_photo",
+    "seek_in_person_field_assessment",
+    "no_actionable_conclusion_from_photo",
+]
+
+
+class FarmerGroundnutPestObservationOut(BaseModel):
+    damage_extent: Literal["few", "several", "widespread"]
+    spread_speed: Literal["unknown", "stable", "rapid"]
+    review_status: Literal["pending", "reviewed"]
+    feedback: GroundnutPestReviewFeedback | None = None
+    review_timestamp: datetime | None = None
+
+
+def _farmer_pest_observation(
+    report: DiseaseReport,
+) -> FarmerGroundnutPestObservationOut | None:
+    if report.crop != "groundnut" or report.review_consent is not True:
+        return None
+    raw = report.raw_response if isinstance(report.raw_response, dict) else {}
+    if raw.get("record_type") != "farmer_pest_damage_observation":
+        return None
+    reported = raw.get("farmer_reported")
+    if not isinstance(reported, dict) or report.review_status not in {"pending", "reviewed"}:
+        return None
+    extent = reported.get("damage_extent")
+    spread = reported.get("spread_speed")
+    if extent not in {"few", "several", "widespread"} or spread not in {
+        "unknown",
+        "stable",
+        "rapid",
+    }:
+        return None
+    review = raw.get("review") if isinstance(raw.get("review"), dict) else {}
+    feedback = review.get("feedback")
+    if feedback not in {
+        None,
+        "monitor_field_conditions",
+        "submit_clearer_photo",
+        "seek_in_person_field_assessment",
+        "no_actionable_conclusion_from_photo",
+    }:
+        feedback = None
+    return FarmerGroundnutPestObservationOut(
+        damage_extent=extent,
+        spread_speed=spread,
+        review_status=report.review_status,
+        feedback=feedback,
+        review_timestamp=report.review_timestamp,
+    )
+
+
 class DiseaseReportOut(BaseModel):
     id: uuid.UUID
     farm_id: uuid.UUID | None
@@ -70,6 +124,7 @@ class DiseaseReportOut(BaseModel):
     longitude: float | None
     language: str
     created_at: datetime
+    pest_observation: FarmerGroundnutPestObservationOut | None = None
 
     @classmethod
     def from_report(cls, report: DiseaseReport) -> DiseaseReportOut:
@@ -112,6 +167,7 @@ class DiseaseReportOut(BaseModel):
             longitude=report.longitude,
             language=report.language,
             created_at=report.created_at,
+            pest_observation=_farmer_pest_observation(report),
         )
 
 
@@ -129,10 +185,14 @@ class DiseaseReportSummaryOut(BaseModel):
     test_mode: dict | None
     verification_level: str | None
     created_at: datetime
+    pest_observation: FarmerGroundnutPestObservationOut | None = None
 
     @classmethod
     def from_report(cls, report: DiseaseReport) -> DiseaseReportSummaryOut:
-        updates = {"private_image_available": bool(report.image_key)}
+        updates = {
+            "private_image_available": bool(report.image_key),
+            "pest_observation": _farmer_pest_observation(report),
+        }
         if settings.private_disease_images_enabled and report.image_key:
             updates["image_url"] = None
         return cls.model_validate(report).model_copy(update=updates)
@@ -150,4 +210,27 @@ class DiseaseReviewOut(BaseModel):
     review_status: Literal["confirmed", "corrected"]
     corrected_label: str | None
     reviewer_role: Literal["kvk_officer"]
+    review_timestamp: datetime
+
+
+class GroundnutPestObservationReviewOut(BaseModel):
+    """Privacy-minimized KVK view; farmer and farm identifiers are excluded."""
+
+    observation_id: uuid.UUID
+    damage_extent: Literal["few", "several", "widespread"]
+    spread_speed: Literal["unknown", "stable", "rapid"]
+    review_status: Literal["pending"] = "pending"
+    private_photo_available: bool
+    submitted_at: datetime
+
+
+class GroundnutPestObservationCompletionRequest(BaseModel):
+    feedback: GroundnutPestReviewFeedback
+
+
+class GroundnutPestObservationCompletionOut(BaseModel):
+    observation_id: uuid.UUID
+    review_status: Literal["reviewed"] = "reviewed"
+    feedback: GroundnutPestReviewFeedback
+    reviewer_role: Literal["kvk_officer"] = "kvk_officer"
     review_timestamp: datetime

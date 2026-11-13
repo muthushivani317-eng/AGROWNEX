@@ -99,6 +99,7 @@ class MemorySources:
 
     async def _read_nutrient(self, user: User, farm: Farm) -> list[MemoryEventDraft]:
         from app.modules.nutrient.repository import NutrientRepository
+        from app.modules.nutrient.safety import consumer_safe_nutrient_finding
 
         reports, _ = await NutrientRepository(self.session).list_reports(
             user.id, farm.id, limit=_LIMIT, offset=0
@@ -108,14 +109,22 @@ class MemorySources:
             a = r.analysis
             if a is None:
                 continue
-            draft = collectors.collect_nutrient(
-                occurred_at=r.created_at,
-                primary=a.primary_deficiency,
+            safe = consumer_safe_nutrient_finding(
+                crop=r.crop or getattr(farm, "crop", None),
+                primary_deficiency=a.primary_deficiency,
                 status=a.status,
                 confidence=a.confidence,
+                needs_test=bool(a.needs_test),
+                needs_expert=bool(a.needs_expert),
+            )
+            draft = collectors.collect_nutrient(
+                occurred_at=r.created_at,
+                primary=safe.primary_deficiency,
+                status=safe.status,
+                confidence=safe.confidence,
                 severity=a.severity,
                 crop=r.crop or getattr(farm, "crop", None),
-                needs_test=bool(a.needs_test),
+                needs_test=safe.needs_test,
                 source_ref=str(r.id),
             )
             if draft:

@@ -28,6 +28,7 @@ const dto: ApiDiseaseReport = {
   longitude: 78.1,
   language: 'ta',
   created_at: '2026-07-10T09:00:00Z',
+  pest_observation: null,
 };
 
 describe('diseaseMapper', () => {
@@ -60,10 +61,24 @@ describe('diseaseMapper', () => {
       private_image_available: true,
       needs_expert_review: false,
       created_at: '2026-07-10T09:00:00Z',
+      pest_observation: {
+        damage_extent: 'several',
+        spread_speed: 'rapid',
+        review_status: 'reviewed',
+        feedback: 'seek_in_person_field_assessment',
+        review_timestamp: '2026-07-11T09:00:00Z',
+      },
     };
     const mapped = apiToSummary(summary);
     expect(mapped.disease).toBe('Wilt');
     expect(mapped.severity).toBe('high');
     expect(mapped.privateImageAvailable).toBe(true);
+    expect(mapped.pestObservation).toEqual({
+      damageExtent: 'several',
+      spreadSpeed: 'rapid',
+      reviewStatus: 'reviewed',
+      feedback: 'seek_in_person_field_assessment',
+      reviewTimestamp: '2026-07-11T09:00:00Z',
+    });
   });
 });

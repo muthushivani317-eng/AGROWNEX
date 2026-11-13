@@ -8,10 +8,115 @@ from datetime import UTC, datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.disease.repositories import DiseaseReportRepository
+from app.modules.disease.schemas import GroundnutPestObservationReviewOut
+from app.modules.auth.repositories import UserRepository
+from app.modules.notifications.constants import NotificationModule
+from app.modules.notifications.engine import CandidateEvent
+from app.modules.notifications.service import NotificationService
 
 REDGRAM_REVIEW_LABELS = frozenset(
     {"redgram__healthy", "redgram__leaf_spot", "redgram__sterility_mosaic"}
 )
+
+GROUNDNUT_DAMAGE_EXTENTS = frozenset({"few", "several", "widespread"})
+GROUNDNUT_SPREAD_SPEEDS = frozenset({"unknown", "stable", "rapid"})
+GROUNDNUT_REVIEW_FEEDBACK = frozenset(
+    {
+        "monitor_field_conditions",
+        "submit_clearer_photo",
+        "seek_in_person_field_assessment",
+        "no_actionable_conclusion_from_photo",
+    }
+)
+
+
+def groundnut_pest_observation_for_review(record) -> GroundnutPestObservationReviewOut:  # noqa: ANN001
+    raw = record.raw_response if isinstance(record.raw_response, dict) else {}
+    reported = raw.get("farmer_reported")
+    if raw.get("record_type") != "farmer_pest_damage_observation" or not isinstance(
+        reported, dict
+    ):
+        raise LookupError("GROUNDNUT_PEST_OBSERVATION_NOT_FOUND")
+    extent = reported.get("damage_extent")
+    spread = reported.get("spread_speed")
+    if extent not in GROUNDNUT_DAMAGE_EXTENTS or spread not in GROUNDNUT_SPREAD_SPEEDS:
+        raise LookupError("GROUNDNUT_PEST_OBSERVATION_NOT_FOUND")
+    return GroundnutPestObservationReviewOut(
+        observation_id=record.id,
+        damage_extent=extent,
+        spread_speed=spread,
+        private_photo_available=bool(record.image_key),
+        submitted_at=record.created_at,
+    )
+
+
+async def list_pending_groundnut_pest_observations(
+    session: AsyncSession, *, limit: int, offset: int
+) -> list[GroundnutPestObservationReviewOut]:
+    records = await DiseaseReportRepository(session).list_pending_groundnut_pest_observations(
+        limit=limit, offset=offset
+    )
+    return [groundnut_pest_observation_for_review(record) for record in records]
+
+
+async def get_pending_groundnut_pest_observation(session: AsyncSession, report_id: uuid.UUID):  # noqa: ANN201
+    record = await DiseaseReportRepository(session).get_pending_groundnut_pest_observation(
+        report_id
+    )
+    if record is None:
+        raise LookupError("GROUNDNUT_PEST_OBSERVATION_NOT_FOUND")
+    # Validate the stored evidence envelope before exposing it to a reviewer.
+    groundnut_pest_observation_for_review(record)
+    return record
+
+
+async def complete_groundnut_pest_observation(
+    session: AsyncSession,
+    *,
+    report_id: uuid.UUID,
+    feedback: str,
+):
+    if feedback not in GROUNDNUT_REVIEW_FEEDBACK:
+        raise ValueError("INVALID_GROUNDNUT_PEST_REVIEW_FEEDBACK")
+    report = await DiseaseReportRepository(
+        session
+    ).get_groundnut_pest_observation_for_completion(report_id)
+    if report is None:
+        raise LookupError("GROUNDNUT_PEST_OBSERVATION_NOT_FOUND")
+    if report.review_status != "pending":
+        raise RuntimeError("GROUNDNUT_PEST_OBSERVATION_ALREADY_COMPLETED")
+    # Fail closed if the stored envelope is malformed; never turn it into a label.
+    groundnut_pest_observation_for_review(report)
+    raw = dict(report.raw_response or {})
+    raw["review"] = {
+        "feedback": feedback,
+        "diagnostic": False,
+    }
+    report.raw_response = raw
+    report.review_status = "reviewed"
+    report.reviewer_role = "kvk_officer"
+    report.review_timestamp = datetime.now(UTC)
+    report.needs_expert_review = False
+    report.corrected_label = None
+
+    farmer = await UserRepository(session).get(report.user_id)
+    if farmer is None:
+        raise LookupError("GROUNDNUT_PEST_OBSERVATION_OWNER_NOT_FOUND")
+    await NotificationService(session).emit(
+        farmer,
+        CandidateEvent(
+            module=NotificationModule.DISEASE.value,
+            event_type="groundnut_pest_review_completed",
+            dedup_key=f"disease:groundnut_pest_review_completed:{report.id}",
+            payload={
+                "observation_id": str(report.id),
+                "feedback": feedback,
+            },
+        ),
+    )
+    await session.flush()
+    await session.refresh(report)
+    return report
 
 
 async def review_redgram_report(

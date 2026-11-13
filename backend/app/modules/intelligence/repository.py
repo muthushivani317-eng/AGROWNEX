@@ -1,3 +1,4 @@
+
 """Crop Intelligence repository (docs/BACKEND_ARCHITECTURE.md → Repository Pattern).
 
 The only layer that queries the intelligence tables. Source-module data is read by
@@ -156,10 +157,27 @@ class IntelligenceRepository:
     ) -> dict[uuid.UUID, int]:
         if not report_ids:
             return {}
+
         rows = await self.session.execute(
-            select(CropIntelligenceReport.id, CropIntelligenceReport.sources_used).where(
+            select(
+                CropIntelligenceReport.id,
+                CropIntelligenceReport.crop,
+                CropIntelligenceReport.sources_used,
+            ).where(
                 CropIntelligenceReport.user_id == user_id,
                 CropIntelligenceReport.id.in_(report_ids),
             )
         )
-        return {report_id: len(set(sources or [])) for report_id, sources in rows.all()}
+
+        counts = {}
+        for report_id, crop, sources in rows.all():
+            source_set = set(sources or [])
+
+            # Legacy Groundnut aggregates may contain unverified nutrient evidence.
+            # Fail closed rather than trusting a potentially contaminated score.
+            if str(crop).strip().lower() == "groundnut" and "nutrient" in source_set:
+                counts[report_id] = 0
+            else:
+                counts[report_id] = len(source_set)
+
+        return counts

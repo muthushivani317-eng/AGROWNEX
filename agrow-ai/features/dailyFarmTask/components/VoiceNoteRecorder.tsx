@@ -9,12 +9,15 @@
 // no other screen records audio today. Needs a native rebuild (a new dev
 // client / EAS build) before this ships -- see the integration report.
 import {
+  AudioQuality,
+  IOSOutputFormat,
   RecordingPresets,
   requestRecordingPermissionsAsync,
   setAudioModeAsync,
   useAudioRecorder,
   useAudioRecorderState,
 } from "expo-audio";
+import type { RecordingOptions } from "expo-audio";
 import { Mic, Square } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -26,19 +29,45 @@ import { useAppTheme } from "@/hooks/useAppTheme";
 import { MAX_VOICE_NOTE_SECONDS } from "../constants";
 import { useUploadTaskVoiceNote } from "../hooks/useDailyTask";
 
+export const GROUNDNUT_SPEECH_RECORDING_OPTIONS: RecordingOptions = {
+  extension: ".amr",
+  sampleRate: 16_000,
+  numberOfChannels: 1,
+  bitRate: 12_200,
+  android: { outputFormat: "amrnb", audioEncoder: "amr_nb" },
+  ios: { outputFormat: IOSOutputFormat.AMR, audioQuality: AudioQuality.MEDIUM },
+  web: { mimeType: "audio/webm", bitsPerSecond: 64_000 },
+};
+
 interface Props {
-  taskId: string;
-  onDone: () => void;
-  onSkip: () => void;
+  taskId?: string;
+  onDone?: () => void;
+  onSkip?: () => void;
+  onRecorded?: (uri: string) => Promise<void>;
+  recordingOptions?: RecordingOptions;
+  labels?: {
+    title: string;
+    start: string;
+    stop: string;
+    error: string;
+  };
 }
 
-export function VoiceNoteRecorder({ taskId, onDone, onSkip }: Props) {
+export function VoiceNoteRecorder({
+  taskId,
+  onDone,
+  onSkip,
+  onRecorded,
+  recordingOptions = RecordingPresets.HIGH_QUALITY,
+  labels,
+}: Props) {
   const { t } = useTranslation();
   const { colors } = useAppTheme();
-  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const recorder = useAudioRecorder(recordingOptions);
   const state = useAudioRecorderState(recorder, 200);
   const [error, setError] = useState<string | null>(null);
-  const upload = useUploadTaskVoiceNote(taskId);
+  const upload = useUploadTaskVoiceNote(taskId ?? "");
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     if (state.isRecording && state.durationMillis / 1000 >= MAX_VOICE_NOTE_SECONDS) {
@@ -65,9 +94,13 @@ export function VoiceNoteRecorder({ taskId, onDone, onSkip }: Props) {
     if (!uri) return;
     const durationSeconds = Math.round(state.durationMillis / 1000);
     try {
-      await upload.mutateAsync({ fileUri: uri, durationSeconds });
+      setProcessing(true);
+      if (onRecorded) await onRecorded(uri);
+      else if (taskId) await upload.mutateAsync({ fileUri: uri, durationSeconds });
     } catch {
-      setError(t("dailyTask.voiceUploadFailed"));
+      setError(labels?.error ?? t("dailyTask.voiceUploadFailed"));
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -76,7 +109,7 @@ export function VoiceNoteRecorder({ taskId, onDone, onSkip }: Props) {
   return (
     <View style={styles.container}>
       <AgText variant="body" weight="semibold" center style={styles.title}>
-        {t("dailyTask.recordVoiceNote")}
+        {labels?.title ?? t("dailyTask.recordVoiceNote")}
       </AgText>
 
       <Pressable
@@ -87,7 +120,9 @@ export function VoiceNoteRecorder({ taskId, onDone, onSkip }: Props) {
         ]}
         accessibilityRole="button"
         accessibilityLabel={
-          state.isRecording ? t("dailyTask.voiceStop") : t("dailyTask.recordVoiceNote")
+          state.isRecording
+            ? (labels?.stop ?? t("dailyTask.voiceStop"))
+            : (labels?.start ?? t("dailyTask.recordVoiceNote"))
         }
       >
         {state.isRecording ? (
@@ -102,7 +137,7 @@ export function VoiceNoteRecorder({ taskId, onDone, onSkip }: Props) {
           {seconds}s / {MAX_VOICE_NOTE_SECONDS}s
         </AgText>
       ) : null}
-      {upload.isPending ? <ActivityIndicator style={styles.spinner} /> : null}
+      {upload.isPending || processing ? <ActivityIndicator style={styles.spinner} /> : null}
       {error ? (
         <AgText variant="bodySmall" center style={{ color: colors.danger, marginTop: 8 }}>
           {error}
@@ -110,10 +145,12 @@ export function VoiceNoteRecorder({ taskId, onDone, onSkip }: Props) {
       ) : null}
 
       <View style={styles.footerRow}>
-        {!state.isRecording && !upload.isPending ? (
+        {onDone && !state.isRecording && !upload.isPending && !processing ? (
           <AgButton title={t("dailyTask.voiceDone")} onPress={onDone} size="sm" />
         ) : null}
-        <AgButton title={t("dailyTask.voiceSkip")} onPress={onSkip} variant="ghost" size="sm" />
+        {onSkip ? (
+          <AgButton title={t("dailyTask.voiceSkip")} onPress={onSkip} variant="ghost" size="sm" />
+        ) : null}
       </View>
     </View>
   );

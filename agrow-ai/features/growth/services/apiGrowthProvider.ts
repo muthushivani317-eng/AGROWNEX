@@ -4,6 +4,7 @@ import { type Paginated } from "@/types";
 
 import type {
   ApiGrowthImage,
+  ApiGrowthSession,
   ApiGrowthSessionDetail,
   ApiGrowthTimeline,
   ApiUploadResult,
@@ -19,6 +20,8 @@ import type {
   ApiStageTransitionHistory,
   GrowthScheduleReason,
   GrowthScheduleStatus,
+  GroundnutStageDecisionInput,
+  GrowthSession,
   GrowthStage,
 } from "../types";
 import {
@@ -27,6 +30,7 @@ import {
   apiToTimeline,
   apiToUploadResult,
   apiToStageState,
+  apiToSession,
 } from "./growthMapper";
 
 type ApiScheduleStatus = {
@@ -90,6 +94,20 @@ export async function submitStageTransition(
     },
   });
   return apiToStageState(dto);
+}
+
+export async function submitGroundnutStageDecision(
+  input: GroundnutStageDecisionInput,
+): Promise<GrowthSession> {
+  const dto = await api.post<ApiGrowthSession>(
+    endpoints.growth.groundnutStageConfirmation(input.sessionId),
+    {
+      image_id: input.imageId,
+      action: input.action,
+      stage: input.stage,
+    },
+  );
+  return apiToSession(dto);
 }
 
 export async function getStageHistory(

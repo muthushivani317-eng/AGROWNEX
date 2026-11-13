@@ -33,6 +33,7 @@ import {
   checkImageQuality,
   pickFromGallery,
   QUALITY_ISSUE_KEY,
+  readDiseaseImageBase64,
   type CaptureMethod,
   type PickedImage,
 } from "@/features/disease";
@@ -47,18 +48,30 @@ import { GrowthCard } from "../components/GrowthCard";
 import { GrowthComparison } from "../components/GrowthComparison";
 import { ImageViewer } from "../components/ImageViewer";
 import { TimelineItem } from "../components/TimelineItem";
+import { STAGE_LABEL_KEY } from "../constants";
+import { consumeGroundnutGrowthPhoto } from "../services/groundnutPhotoHandoff";
 import {
   useDeleteGrowthImage,
+  useGroundnutStageDecision,
   useGrowthHistory,
   useGrowthScheduleStatus,
   useGrowthTimeline,
   useUploadGrowth,
   useStageState,
 } from "../hooks/useGrowth";
-import type { GrowthImage, TimelineEntry } from "../types";
+import type { GrowthImage, GrowthStage, TimelineEntry } from "../types";
 
 type View3 = "timeline" | "history" | "compare";
 const VIEWS: View3[] = ["timeline", "history", "compare"];
+const GROUNDNUT_STAGES: Exclude<GrowthStage, "unknown">[] = [
+  "germination",
+  "seedling",
+  "vegetative",
+  "flowering",
+  "fruiting",
+  "maturity",
+  "harvest",
+];
 const VIEW_KEY: Record<View3, string> = {
   timeline: "growth.tabTimeline",
   history: "growth.tabHistory",
@@ -94,9 +107,20 @@ export function GrowthMonitorScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const [view, setView] = useState<View3>("timeline");
-  const [picked, setPicked] = useState<PickedImage | null>(null);
+  const [picked, setPicked] = useState<PickedImage | null>(() =>
+    consumeGroundnutGrowthPhoto(),
+  );
   const [method, setMethod] = useState<CaptureMethod>("camera");
   const [issues, setIssues] = useState<string[]>([]);
+  const [pendingGroundnutStage, setPendingGroundnutStage] = useState<{
+    sessionId: string;
+    imageId: string;
+    suggestedStage: Exclude<GrowthStage, "unknown">;
+  } | null>(null);
+  const [correctingGroundnutStage, setCorrectingGroundnutStage] =
+    useState(false);
+  const [savedGroundnutStage, setSavedGroundnutStage] =
+    useState<GrowthStage | null>(null);
   const [viewer, setViewer] = useState<{
     uri: string;
     caption?: string | null;
@@ -109,6 +133,7 @@ export function GrowthMonitorScreen() {
   );
   const historyQuery = useGrowthHistory(null, farm?.id ?? null, Boolean(farm));
   const upload = useUploadGrowth();
+  const groundnutStageDecision = useGroundnutStageDecision();
   const del = useDeleteGrowthImage();
 
   const timeline = timelineQuery.data?.timeline ?? [];
@@ -118,6 +143,9 @@ export function GrowthMonitorScreen() {
   const sessionId = timelineQuery.data?.session.id ?? null;
   const stageQuery = useStageState(farm?.id, sessionId);
   const images = useMemo(() => historyQuery.data ?? [], [historyQuery.data]);
+  const isGroundnut = ["groundnut", "peanut"].includes(
+    (farm?.crop ?? "").trim().toLowerCase(),
+  );
 
   const sessionImages = useMemo(() => {
     const forSession = sessionId
@@ -163,7 +191,7 @@ export function GrowthMonitorScreen() {
     upload.reset();
   };
 
-  const onUpload = () => {
+  const onUpload = async () => {
     if (
       !picked ||
       !farm ||
@@ -173,9 +201,19 @@ export function GrowthMonitorScreen() {
     )
       return;
     mutationLock.current = true;
+    let imageBase64 = picked.base64;
+    if (!imageBase64) {
+      try {
+        imageBase64 = await readDiseaseImageBase64(picked.uri);
+      } catch {
+        mutationLock.current = false;
+        Alert.alert(t("common.somethingWrong"), t("growth.captureFailed"));
+        return;
+      }
+    }
     upload.mutate(
       {
-        imageBase64: picked.base64,
+        imageBase64,
         mimeType: picked.mimeType,
         imageUri: picked.uri,
         farmId: farm.id,
@@ -186,12 +224,54 @@ export function GrowthMonitorScreen() {
         longitude: farm.longitude,
       },
       {
-        onSuccess: () => {
+        onSuccess: (result) => {
+          const suggestion = result.image.analysis?.growthStage;
+          if (
+            isGroundnut &&
+            suggestion &&
+            suggestion !== "unknown"
+          ) {
+            setPendingGroundnutStage({
+              sessionId: result.session.id,
+              imageId: result.image.id,
+              suggestedStage: suggestion,
+            });
+            setSavedGroundnutStage(null);
+            setCorrectingGroundnutStage(false);
+          }
+          if (result.stageComparison?.mismatch) {
+            Alert.alert(
+              t("growth.stageMismatchTitle"),
+              t("growth.stageMismatchMessage"),
+            );
+          }
           resetUpload();
           setView("timeline");
         },
         onSettled: () => {
           mutationLock.current = false;
+        },
+      },
+    );
+  };
+
+  const saveGroundnutStage = (
+    action: "confirm" | "correct",
+    stage: Exclude<GrowthStage, "unknown">,
+  ) => {
+    if (!pendingGroundnutStage || !isGroundnut) return;
+    groundnutStageDecision.mutate(
+      {
+        sessionId: pendingGroundnutStage.sessionId,
+        imageId: pendingGroundnutStage.imageId,
+        action,
+        stage,
+      },
+      {
+        onSuccess: (session) => {
+          setSavedGroundnutStage(session.currentGrowthStage);
+          setPendingGroundnutStage(null);
+          setCorrectingGroundnutStage(false);
         },
       },
     );
@@ -417,7 +497,10 @@ export function GrowthMonitorScreen() {
           ) : (
             <View className="mt-4 gap-2">
               {!issues.length ? (
-                <AgButton title={t("growth.addPhoto")} onPress={onUpload} />
+                <AgButton
+                  title={t("growth.addPhoto")}
+                  onPress={() => void onUpload()}
+                />
               ) : null}
               <AgButton
                 title={t("growth.retake")}
@@ -478,6 +561,63 @@ export function GrowthMonitorScreen() {
           </AgPressable>
         </View>
       )}
+
+      {isGroundnut && pendingGroundnutStage ? (
+        <AgCard style={styles.uploadCard}>
+          <AgText variant="headingS" weight="bold" style={styles.inkText}>
+            {t("growth.groundnutStageReviewTitle")}
+          </AgText>
+          <AgText variant="bodySmall" style={styles.mutedText}>
+            {t("growth.groundnutStageSuggestion", {
+              stage: t(STAGE_LABEL_KEY[pendingGroundnutStage.suggestedStage]),
+            })}
+          </AgText>
+          <AgButton
+            title={t("growth.groundnutConfirmStage")}
+            onPress={() =>
+              saveGroundnutStage(
+                "confirm",
+                pendingGroundnutStage.suggestedStage,
+              )
+            }
+            loading={groundnutStageDecision.isPending}
+          />
+          <AgButton
+            title={t("growth.groundnutCorrectStage")}
+            variant="outline"
+            onPress={() => setCorrectingGroundnutStage((value) => !value)}
+            disabled={groundnutStageDecision.isPending}
+          />
+          {correctingGroundnutStage ? (
+            <View style={{ gap: 8 }}>
+              {GROUNDNUT_STAGES.map((stage) => (
+                <AgButton
+                  key={stage}
+                  title={t(STAGE_LABEL_KEY[stage])}
+                  variant="outline"
+                  onPress={() => saveGroundnutStage("correct", stage)}
+                  disabled={groundnutStageDecision.isPending}
+                />
+              ))}
+            </View>
+          ) : null}
+          {groundnutStageDecision.isError ? (
+            <AgText color="danger">
+              {t("growth.groundnutStageSaveError")}
+            </AgText>
+          ) : null}
+        </AgCard>
+      ) : null}
+
+      {isGroundnut && savedGroundnutStage ? (
+        <AgCard style={styles.uploadCard}>
+          <AgText variant="body" weight="bold" style={styles.inkText}>
+            {t("growth.groundnutStageSaved", {
+              stage: t(STAGE_LABEL_KEY[savedGroundnutStage]),
+            })}
+          </AgText>
+        </AgCard>
+      ) : null}
 
       {latestAnalysis || scheduleQuery.data?.behind ? (
         <GrowthBoostCard

@@ -9,6 +9,20 @@ const isProductionSecurity = buildValidation.productionSecurityEnforced;
 const isControlledTesting =
   buildValidation.profile === "internal_testing" ||
   buildValidation.profile === "kvk_field_test";
+const firebaseFreeDebug = process.env.AGROWAI_FIREBASE_FREE_DEBUG === "true";
+
+if (
+  firebaseFreeDebug &&
+  !["development", "localStandalone"].includes(buildValidation.profile)
+) {
+  throw new Error(
+    "AGROWAI_FIREBASE_FREE_DEBUG is restricted to development/localStandalone builds.",
+  );
+}
+
+const nativeFirebasePlugins = firebaseFreeDebug
+  ? []
+  : ["@react-native-firebase/app", "@react-native-firebase/crashlytics"];
 
 module.exports = {
   expo: {
@@ -36,8 +50,12 @@ module.exports = {
       package: "com.agrownex.app",
       softwareKeyboardLayoutMode: "resize",
       allowBackup: false,
-      googleServicesFile:
-        process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json",
+      ...(firebaseFreeDebug
+        ? {}
+        : {
+            googleServicesFile:
+              process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json",
+          }),
       adaptiveIcon: {
         backgroundColor: "#FFFFFF",
         foregroundImage: "./assets/images/android-icon-foreground.png",
@@ -60,9 +78,9 @@ module.exports = {
       "expo-asset",
       "./plugins/withReleaseEnvironmentValidation",
       "./plugins/withProductionSigning",
-      "@react-native-firebase/app",
-      "@react-native-firebase/crashlytics",
+      ...nativeFirebasePlugins,
       "expo-router",
+      "expo-web-browser",
       "expo-secure-store",
       "expo-localization",
       "expo-image",

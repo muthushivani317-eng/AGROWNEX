@@ -138,6 +138,35 @@ class Settings(BaseSettings):
     disease_max_image_bytes: int = 8 * 1024 * 1024
     disease_max_image_pixels: int = 25_000_000
 
+    # --- Experimental Groundnut EfficientNet-B2 controlled-test runtime ---
+    # Disabled by default. This model reached only 70.22% on the external
+    # four-class test and is restricted to authenticated controlled testers.
+    groundnut_experimental_enabled: bool = False
+    groundnut_inference_module_path: str = "C:/AGRONEX/tools/groundnut_inference.py"
+    groundnut_model_release_dir: str = (
+        "C:/AGRONEX/models/approved/groundnut-efficientnet-b2-v1"
+    )
+    groundnut_inference_device: Literal["auto", "cpu", "cuda"] = "auto"
+    groundnut_allow_cpu_fallback: bool = True
+    groundnut_max_upload_bytes: int = 8 * 1024 * 1024
+    groundnut_max_image_pixels: int = 25_000_000
+    groundnut_min_image_dimension: int = 224
+    # Server-side Google Cloud Speech-to-Text V1. Disabled until explicitly
+    # enabled with ADC or a server-only service-account JSON value.
+    groundnut_stt_enabled: bool = False
+    google_cloud_stt_credentials_json: str = ""
+    groundnut_stt_max_audio_bytes: int = 5 * 1024 * 1024
+    groundnut_stt_timeout_seconds: float = Field(default=30.0, gt=0, le=60)
+
+    # --- Green Gram three-class research runtime; disabled by default ---
+    green_gram_experimental_enabled: bool = False
+    green_gram_inference_module_path: str = "C:/AGRONEX/tools/green_gram_exploratory_inference.py"
+    green_gram_model_release_dir: str = "C:/AGRONEX/models/experimental/green-gram-mendeley-3class-b0"
+    green_gram_inference_device: Literal["auto", "cpu", "cuda"] = "auto"
+    green_gram_max_upload_bytes: int = 8 * 1024 * 1024
+    green_gram_max_image_pixels: int = 25_000_000
+    green_gram_min_image_dimension: int = 224
+
     # --- Per-farmer daily AI quota (protects the Gemini budget from abuse) ---
     ai_daily_disease_quota: int = Field(default=5, ge=1)
     ai_daily_chat_quota: int = Field(default=10, ge=1)

@@ -144,5 +144,14 @@ export function apiToUploadResult(dto: ApiUploadResult): UploadResult {
     session: apiToSession(dto.session),
     image: apiToImage(dto.image),
     timelineEntry: apiToTimelineEntry(dto.timeline_entry),
+    stageComparison: dto.stage_comparison
+      ? {
+          geminiStage: dto.stage_comparison.gemini_stage,
+          calendarStage: dto.stage_comparison.calendar_stage,
+          expectedGeminiStages: dto.stage_comparison.expected_gemini_stages,
+          mismatch: dto.stage_comparison.mismatch,
+          warningCode: dto.stage_comparison.warning_code,
+        }
+      : null,
   };
 }

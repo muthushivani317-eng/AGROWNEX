@@ -80,6 +80,48 @@ describe('nutrientMapper', () => {
     expect(r.recommendations).toEqual([]);
   });
 
+  it('applies the Groundnut-specific safety gate to specific findings', () => {
+    const r = apiToReport({
+      ...apiReport,
+      crop: 'Groundnut',
+      analysis: {
+        ...apiAnalysis,
+        status: 'confirmed',
+        confidence: 94,
+        needs_test: false,
+        needs_expert: false,
+        result_code: 'supported_finding',
+        expert_verified: true,
+      },
+      recommendations: [
+        ...apiReport.recommendations,
+        { category: 'test', code: 'nutrient.rec.test.soil_test', nutrient: null, severity: 'warning', priority: 'medium' },
+        { category: 'expert', code: 'nutrient.rec.expert.consult', nutrient: null, severity: 'warning', priority: 'medium' },
+      ],
+    });
+
+    expect(r.analysis).toMatchObject({
+      status: 'possible',
+      confidence: null,
+      confidenceBand: null,
+      needsTest: true,
+      needsExpert: true,
+      expertVerified: false,
+    });
+    expect(r.recommendations.map((item) => item.category)).toEqual(['test', 'expert']);
+  });
+
+  it('does not change the same specific result for another crop', () => {
+    const r = apiToReport({
+      ...apiReport,
+      crop: 'paddy',
+      analysis: { ...apiAnalysis, confidence: 94 },
+    });
+    expect(r.analysis?.confidence).toBe(94);
+    expect(r.analysis?.confidenceBand).toBe('low');
+    expect(r.recommendations[0].category).toBe('nutrient');
+  });
+
   it('maps analysis and recommendation directly', () => {
     expect(apiToAnalysis(apiAnalysis).affectedArea).toBe('widespread');
     expect(

@@ -493,6 +493,7 @@ class NotificationSources:
     async def _collect_nutrient(self, user: User) -> list[CandidateEvent]:
         from app.modules.nutrient.constants import DeficiencyStatus
         from app.modules.nutrient.repository import NutrientRepository
+        from app.modules.nutrient.safety import consumer_safe_nutrient_finding
 
         reports = await NutrientRepository(self.session).recent_reports(user.id, limit=50)
         events: list[CandidateEvent] = []
@@ -500,14 +501,22 @@ class NotificationSources:
             analysis = report.analysis
             if analysis is None:
                 continue
+            safe = consumer_safe_nutrient_finding(
+                crop=report.crop,
+                primary_deficiency=analysis.primary_deficiency,
+                status=analysis.status,
+                confidence=analysis.confidence,
+                needs_test=bool(analysis.needs_test),
+                needs_expert=bool(analysis.needs_expert),
+            )
             events.extend(
                 collect_nutrient(
                     NutrientReportView(
                         report_id=str(report.id),
                         farm_id=str(report.farm_id),
-                        primary_deficiency=analysis.primary_deficiency,
-                        confirmed=analysis.status == DeficiencyStatus.CONFIRMED.value,
-                        needs_test=bool(analysis.needs_test),
+                        primary_deficiency=safe.primary_deficiency,
+                        confirmed=safe.status == DeficiencyStatus.CONFIRMED.value,
+                        needs_test=safe.needs_test,
                     )
                 )
             )

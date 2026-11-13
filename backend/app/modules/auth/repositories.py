@@ -15,10 +15,15 @@ from app.modules.auth.models import (
     OtpRequest,
     RefreshToken,
     UserSession,
+    User,
 )
 from app.modules.auth.profile_models import FarmerProfile
 from app.modules.auth.rbac_models import Role, UserRole
 from app.shared.base_repository import BaseRepository
+
+
+class UserRepository(BaseRepository[User]):
+    model = User
 
 
 class OtpRepository(BaseRepository[OtpRequest]):

@@ -14,6 +14,7 @@ import {
 } from "../constants";
 import type { NutrientAnalysis } from "../types";
 import {
+  mayDisplayNutrientConfidence,
   mayDisplayNutrientFinding,
   safeDisplayStatus,
 } from "../services/nutrientPresentation";
@@ -89,7 +90,10 @@ export function DeficiencyResultCard({
         </View>
       )}
 
-      {displayFinding ? <ConfidenceMeter value={analysis.confidence} /> : null}
+      {displayFinding &&
+      mayDisplayNutrientConfidence(analysis.confidence, analysis.confidenceBand) ? (
+        <ConfidenceMeter value={analysis.confidence} />
+      ) : null}
 
       {displayFinding && explanation ? (
         <AgText variant="bodySmall" style={styles.mutedText}>
